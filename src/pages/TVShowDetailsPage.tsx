@@ -1,5 +1,4 @@
 // src/pages/TVShowDetailsPage.tsx
-
 import { useEffect, useState } from 'react';
 import { useParams, useNavigate, Link } from 'react-router-dom';
 import { ArrowLeft, Calendar, Clock, Star, Tv, PlayCircle } from 'lucide-react';
@@ -105,12 +104,13 @@ export function TVShowDetailsPage() {
   }
 
   const posterUrl = tmdbService.getImageUrl(tvShow.poster_path);
-  const firstAirDate = formatDate(tvShow.first_air_date);
+  // Reverted to standard year format for details page per your instruction
+  const firstAirYear = tvShow.first_air_date ? new Date(tvShow.first_air_date).getFullYear() : '';
   const rating = tvShow.vote_average.toFixed(1);
   const episodeRuntime = tvShow.episode_run_time?.[0];
 
   const trailer = tvShow.videos?.results.find((v) => v.type === 'Trailer' && v.site === 'YouTube');
-  const cast = tvShow.credits?.cast.slice(0, 12) || [];
+  const cast = tvShow.credits?.cast.slice(0, 14) || [];
   const similarShows = tvShow.similar?.results || [];
 
   return (
@@ -125,9 +125,8 @@ export function TVShowDetailsPage() {
           Back
         </Button>
 
-        {/* RESTORED: Your exact original grid layout */}
         <div className="grid md:grid-cols-[200px_1fr] gap-6">
-          <div>
+          <div className="space-y-4">
             {posterUrl ? (
               <img
                 src={posterUrl}
@@ -139,6 +138,25 @@ export function TVShowDetailsPage() {
                 No image
               </div>
             )}
+            
+            {/* Status and Seasons moved below the poster */}
+            <div className="space-y-2 text-sm text-center">
+              {tvShow.status && (
+                <div>
+                  <span className="text-muted-foreground">Status: </span>
+                  <span className="font-medium">{tvShow.status}</span>
+                </div>
+              )}
+              {tvShow.number_of_seasons !== undefined && (
+                <div className="flex items-center justify-center gap-1">
+                  <Tv className="h-4 w-4 text-muted-foreground" />
+                  <span className="font-medium">
+                    {tvShow.number_of_seasons} Season{tvShow.number_of_seasons !== 1 ? 's' : ''} • {' '}
+                    {tvShow.number_of_episodes} Episode{tvShow.number_of_episodes !== 1 ? 's' : ''}
+                  </span>
+                </div>
+              )}
+            </div>
           </div>
 
           <div className="space-y-8">
@@ -153,10 +171,10 @@ export function TVShowDetailsPage() {
                     <p className="text-sm italic text-muted-foreground mt-1">"{tvShow.tagline}"</p>
                   )}
                   <div className="flex flex-wrap items-center gap-4 mt-2 text-sm text-muted-foreground">
-                    {firstAirDate && (
+                    {firstAirYear && (
                       <div className="flex items-center gap-1">
                         <Calendar className="h-4 w-4" />
-                        <span>{firstAirDate}</span>
+                        <span>{firstAirYear}</span>
                       </div>
                     )}
                     {episodeRuntime && (
@@ -176,9 +194,11 @@ export function TVShowDetailsPage() {
                 {tvShow.genres && tvShow.genres.length > 0 && (
                   <div className="flex flex-wrap gap-2">
                     {tvShow.genres.map((genre) => (
-                      <Badge key={genre.id} variant="secondary">
-                        {genre.name}
-                      </Badge>
+                      <Link key={genre.id} to={`/category/genre-tv-${genre.id}`} className="inline-flex">
+                        <Badge variant="secondary">
+                          {genre.name}
+                        </Badge>
+                      </Link>
                     ))}
                   </div>
                 )}
@@ -191,24 +211,6 @@ export function TVShowDetailsPage() {
                     </p>
                   </div>
                 )}
-
-                <div className="space-y-2 text-sm">
-                  {tvShow.status && (
-                    <div>
-                      <span className="text-muted-foreground">Status: </span>
-                      <span className="font-medium">{tvShow.status}</span>
-                    </div>
-                  )}
-                  {tvShow.number_of_seasons !== undefined && (
-                    <div className="flex items-center gap-1">
-                      <Tv className="h-4 w-4 text-muted-foreground" />
-                      <span className="font-medium">
-                        {tvShow.number_of_seasons} Season{tvShow.number_of_seasons !== 1 ? 's' : ''} • {' '}
-                        {tvShow.number_of_episodes} Episode{tvShow.number_of_episodes !== 1 ? 's' : ''}
-                      </span>
-                    </div>
-                  )}
-                </div>
               </div>
 
               {/* Parallel Trailer */}
@@ -235,34 +237,34 @@ export function TVShowDetailsPage() {
         </div>
 
         {/* Top Cast Section */}
-            {cast.length > 0 && (
-              <div className="pt-4 border-t">
-                <h2 className="text-xl font-semibold mb-4">Top Cast</h2>
-                <div className="grid grid-cols-4 sm:grid-cols-6 md:grid-cols-8 lg:grid-cols-10 xl:grid-cols-12 gap-4">
-                  {cast.map((actor) => (
-                    <Link key={actor.id} to={`/person/${actor.id}`} className="text-center space-y-2 block group">
-                      <div className="overflow-hidden rounded-md border bg-muted">
-                        {actor.profile_path ? (
-                          <img
-                            src={tmdbService.getImageUrl(actor.profile_path, 'w500')}
-                            alt={actor.name}
-                            className="w-full aspect-[2/3] object-cover transition-transform duration-300 group-hover:scale-105"
-                          />
-                        ) : (
-                          <div className="w-full aspect-[2/3] flex items-center justify-center">
-                            <span className="text-xs text-muted-foreground">No image</span>
-                          </div>
-                        )}
+        {cast.length > 0 && (
+          <div className="mt-8 pt-8 border-t">
+            <h2 className="text-xl font-semibold mb-4">Top Cast</h2>
+            <div className="grid grid-cols-[repeat(auto-fill,minmax(75px,1fr))] gap-3">
+              {cast.map((actor) => (
+                <Link key={actor.id} to={`/person/${actor.id}`} className="text-center space-y-2 block group">
+                  <div className="overflow-hidden rounded-md border bg-muted">
+                    {actor.profile_path ? (
+                      <img
+                        src={tmdbService.getImageUrl(actor.profile_path, 'w500')}
+                        alt={actor.name}
+                        className="w-full aspect-[2/3] object-cover transition-transform duration-300 group-hover:scale-105"
+                      />
+                    ) : (
+                      <div className="w-full aspect-[2/3] flex items-center justify-center">
+                        <span className="text-[10px] text-muted-foreground">No image</span>
                       </div>
-                      <div>
-                        <p className="text-xs font-medium line-clamp-1 group-hover:text-primary transition-colors">{actor.name}</p>
-                        <p className="text-[10px] text-muted-foreground line-clamp-1">{actor.character}</p>
-                      </div>
-                    </Link>
-                  ))}
-                </div>
-              </div>
-            )}
+                    )}
+                  </div>
+                  <div>
+                    <p className="text-[11px] font-medium line-clamp-1 group-hover:text-primary transition-colors">{actor.name}</p>
+                    <p className="text-[9px] text-muted-foreground line-clamp-1">{actor.character}</p>
+                  </div>
+                </Link>
+              ))}
+            </div>
+          </div>
+        )}
 
         {/* Dynamic Episodes Section */}
         {tvShow.seasons && tvShow.seasons.length > 0 && (
@@ -273,6 +275,8 @@ export function TVShowDetailsPage() {
               <select
                 value={selectedSeason}
                 onChange={(e) => setSelectedSeason(Number(e.target.value))}
+                aria-label="Select season"
+                title="Select season"
                 className="flex h-10 w-full sm:w-[250px] items-center justify-between rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
               >
                 {tvShow.seasons.map((season) => (
@@ -284,15 +288,15 @@ export function TVShowDetailsPage() {
             </div>
 
             {loadingEpisodes ? (
-              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
-                {[...Array(4)].map((_, i) => (
-                  <Skeleton key={i} className="h-64 w-full rounded-lg" />
+              <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-6">
+                {[...Array(5)].map((_, i) => (
+                  <Skeleton key={i} className="h-64 w-full rounded-xl" />
                 ))}
               </div>
             ) : (
-              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+              <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-6">
                 {episodes.map((episode) => (
-                  <div key={episode.id} className="flex flex-col rounded-lg border bg-card text-card-foreground shadow-sm overflow-hidden">
+                  <div key={episode.id} className="flex flex-col rounded-xl border bg-card text-card-foreground shadow-sm overflow-hidden">
                     {episode.still_path ? (
                       <img 
                         src={tmdbService.getImageUrl(episode.still_path, 'w500')} 
@@ -310,6 +314,7 @@ export function TVShowDetailsPage() {
                         {episode.name}
                       </h3>
                       <div className="flex items-center justify-between text-xs text-muted-foreground">
+                        {/* Using dd/MM/yyyy formatter strictly for episodes */}
                         {episode.air_date && <span>{formatDate(episode.air_date)}</span>}
                         {episode.runtime && <span>{episode.runtime} min</span>}
                       </div>
@@ -334,7 +339,6 @@ export function TVShowDetailsPage() {
         {similarShows.length > 0 && (
           <div className="mt-12 pt-8 border-t">
             <h2 className="text-2xl font-semibold mb-6">Similar TV Shows</h2>
-            {/* Same grid as HomePage */}
             <div className="grid grid-cols-3 md:grid-cols-6 lg:grid-cols-8 xl:grid-cols-10 gap-4">
               {similarShows.slice(0, 10).map((similar) => (
                 <MediaCard key={similar.id} item={similar} type="tv" />
