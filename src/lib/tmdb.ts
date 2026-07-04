@@ -1,5 +1,47 @@
+// src/lib/tmdb.ts
+
 const TMDB_BASE_URL = 'https://api.themoviedb.org/3';
 const TMDB_IMAGE_BASE_URL = 'https://image.tmdb.org/t/p';
+
+export interface Cast {
+  id: number;
+  name: string;
+  character: string;
+  profile_path: string | null;
+}
+
+export interface Video {
+  id: string;
+  key: string;
+  name: string;
+  site: string;
+  type: string;
+}
+
+export interface Episode {
+  id: number;
+  name: string;
+  overview: string;
+  episode_number: number;
+  season_number: number;
+  still_path: string | null;
+  air_date: string;
+  runtime: number | null;
+}
+
+export interface Season {
+  id: number;
+  name: string;
+  season_number: number;
+  episode_count: number;
+  poster_path: string | null;
+  overview: string;
+  air_date: string;
+}
+
+export interface TVSeasonDetails extends Season {
+  episodes: Episode[];
+}
 
 export interface Movie {
   id: number;
@@ -14,6 +56,10 @@ export interface Movie {
   genres?: Genre[];
   runtime?: number;
   status?: string;
+  tagline?: string;
+  credits?: { cast: Cast[] };
+  videos?: { results: Video[] };
+  similar?: { results: Movie[] };
 }
 
 export interface TVShow {
@@ -31,6 +77,11 @@ export interface TVShow {
   status?: string;
   number_of_seasons?: number;
   number_of_episodes?: number;
+  tagline?: string;
+  seasons?: Season[];
+  credits?: { cast: Cast[] };
+  videos?: { results: Video[] };
+  similar?: { results: TVShow[] };
 }
 
 export interface Genre {
@@ -43,6 +94,34 @@ export interface TrendingResponse<T> {
   results: T[];
   total_pages: number;
   total_results: number;
+}
+
+// NEW: Interfaces for Person Details
+export interface PersonCredit {
+  id: number;
+  title?: string;
+  name?: string;
+  poster_path: string | null;
+  vote_average: number;
+  release_date?: string;
+  first_air_date?: string;
+  media_type: 'movie' | 'tv';
+  character: string;
+  popularity: number;
+}
+
+export interface Person {
+  id: number;
+  name: string;
+  biography: string;
+  birthday: string | null;
+  deathday: string | null;
+  place_of_birth: string | null;
+  profile_path: string | null;
+  known_for_department: string;
+  combined_credits?: {
+    cast: PersonCredit[];
+  };
 }
 
 class TMDBService {
@@ -86,11 +165,20 @@ class TMDBService {
   }
 
   async getMovieDetails(id: number): Promise<Movie> {
-    return this.fetchFromTMDB<Movie>(`/movie/${id}`);
+    return this.fetchFromTMDB<Movie>(`/movie/${id}?append_to_response=credits,videos,similar`);
   }
 
   async getTVShowDetails(id: number): Promise<TVShow> {
-    return this.fetchFromTMDB<TVShow>(`/tv/${id}`);
+    return this.fetchFromTMDB<TVShow>(`/tv/${id}?append_to_response=credits,videos,similar`);
+  }
+
+  async getTVSeasonDetails(tvId: number, seasonNumber: number): Promise<TVSeasonDetails> {
+    return this.fetchFromTMDB<TVSeasonDetails>(`/tv/${tvId}/season/${seasonNumber}`);
+  }
+
+  // NEW: Fetch person details with combined credits (movies + tv shows)
+  async getPersonDetails(id: number): Promise<Person> {
+    return this.fetchFromTMDB<Person>(`/person/${id}?append_to_response=combined_credits`);
   }
 
   async searchMovies(query: string, page: number = 1): Promise<TrendingResponse<Movie>> {

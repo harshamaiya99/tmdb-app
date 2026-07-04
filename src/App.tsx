@@ -1,8 +1,11 @@
+// src/App.tsx
+
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
 import { LoginPage } from '@/pages/LoginPage';
 import { HomePage } from '@/pages/HomePage';
 import { MovieDetailsPage } from '@/pages/MovieDetailsPage';
 import { TVShowDetailsPage } from '@/pages/TVShowDetailsPage';
+import { PersonDetailsPage } from '@/pages/PersonDetailsPage';
 import { Toaster } from '@/components/ui/toaster';
 import { tmdbService } from '@/lib/tmdb';
 import { useEffect, useState } from 'react';
@@ -36,6 +39,7 @@ function App() {
     <BrowserRouter>
       <Routes>
         <Route path="/login" element={<LoginPage />} />
+        
         <Route
           path="/"
           element={
@@ -44,6 +48,7 @@ function App() {
             </ProtectedRoute>
           }
         />
+        
         <Route
           path="/movie/:id"
           element={
@@ -52,6 +57,7 @@ function App() {
             </ProtectedRoute>
           }
         />
+        
         <Route
           path="/tv/:id"
           element={
@@ -60,6 +66,16 @@ function App() {
             </ProtectedRoute>
           }
         />
+
+        <Route
+          path="/person/:id"
+          element={
+            <ProtectedRoute>
+              <PersonDetailsPage />
+            </ProtectedRoute>
+          }
+        />
+        
         <Route path="*" element={<Navigate to="/" replace />} />
       </Routes>
       <Toaster />
