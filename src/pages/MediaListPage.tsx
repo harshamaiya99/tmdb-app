@@ -133,15 +133,7 @@ export function MediaListPage() {
           </div>
         ) : (
           <div className="space-y-8 pb-12">
-            <div className="space-y-2">
-              <h1 className="text-3xl font-semibold">{pageTitle}</h1>
-              {personMatch && (
-                <p className="text-sm text-muted-foreground">Showing the full list of this person&apos;s {itemType === 'tv' ? 'TV shows' : 'movies'}.</p>
-              )}
-              {genreMatch && (
-                <p className="text-sm text-muted-foreground">Showing popular {itemType === 'tv' ? 'TV shows' : 'movies'} in this genre.</p>
-              )}
-            </div>
+            
             {items.length === 0 ? (
               <div className="rounded-xl border border-dashed p-8 text-center text-sm text-muted-foreground">
                 No {itemType === 'tv' ? 'TV shows' : 'movies'} found for this selection.
