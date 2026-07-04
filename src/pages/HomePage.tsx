@@ -8,6 +8,7 @@ import { MediaCard } from '@/components/MediaCard';
 import { MediaGridSkeleton } from '@/components/MediaGridSkeleton';
 import { tmdbService, type Movie, type TVShow } from '@/lib/tmdb';
 import { useToast } from '@/components/ui/use-toast';
+import { useTitle } from '@/contexts/TitleContext';
 
 export function HomePage() {
   const [movies, setMovies] = useState<Movie[]>([]);
@@ -25,6 +26,11 @@ export function HomePage() {
   const [searchResults, setSearchResults] = useState<{ movies: Movie[]; tv: TVShow[] } | null>(null);
   const [searching, setSearching] = useState(false);
   const { toast } = useToast();
+  const { setTitle } = useTitle();
+
+  useEffect(() => {
+    setTitle('TMDB Explorer');
+  }, [setTitle]);
 
   const searchTerm = searchParams.get('query')?.trim() ?? '';
   const hasActiveSearch = Boolean(searchTerm);

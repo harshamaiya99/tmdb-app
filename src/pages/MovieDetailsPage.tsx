@@ -1,13 +1,14 @@
 // src/pages/MovieDetailsPage.tsx
 import { useEffect, useState } from 'react';
 import { useParams, useNavigate, Link } from 'react-router-dom';
-import { ArrowLeft, Calendar, Clock, Star, PlayCircle } from 'lucide-react';
+import { Calendar, Clock, Star, PlayCircle } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Skeleton } from '@/components/ui/skeleton';
 import { MediaCard } from '@/components/MediaCard';
 import { tmdbService, type Movie } from '@/lib/tmdb';
 import { useToast } from '@/components/ui/use-toast';
+import { useTitle } from '@/contexts/TitleContext';
 
 export function MovieDetailsPage() {
   const { id } = useParams<{ id: string }>();
@@ -15,6 +16,7 @@ export function MovieDetailsPage() {
   const [loading, setLoading] = useState(true);
   const navigate = useNavigate();
   const { toast } = useToast();
+  const { setTitle } = useTitle();
 
   useEffect(() => {
     if (id) {
@@ -22,6 +24,10 @@ export function MovieDetailsPage() {
       window.scrollTo(0, 0);
     }
   }, [id]);
+
+  useEffect(() => {
+    setTitle('Movie Details');
+  }, [setTitle]);
 
   const fetchMovieDetails = async (movieId: number) => {
     try {
@@ -77,11 +83,6 @@ export function MovieDetailsPage() {
   return (
     <div className="min-h-screen">
       <div className="container py-6">
-        <Button variant="ghost" onClick={() => navigate('/')} className="mb-6">
-          <ArrowLeft className="mr-2 h-4 w-4" />
-          Back
-        </Button>
-
         {/* TOP SECTION: Poster + Description + Trailer */}
         <div className="grid md:grid-cols-[200px_1fr] gap-6">
           {/* Left Column: Poster and Status */}

@@ -1,21 +1,23 @@
 // src/components/Layout.tsx
 import { ReactNode, useEffect, useState, type ChangeEvent, type FormEvent } from 'react';
-import { LogOut, Search, Clapperboard } from 'lucide-react';
-import { Link, useNavigate, useSearchParams } from 'react-router-dom';
+import { LogOut, Search, Clapperboard, ArrowLeft } from 'lucide-react';
+import { Link, useNavigate, useSearchParams, useLocation } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { ThemeToggle } from '@/components/ThemeToggle';
+import { useTitle } from '@/contexts/TitleContext';
 import { tmdbService } from '@/lib/tmdb';
 
 interface LayoutProps {
   children: ReactNode;
-  title: string;
 }
 
-export function Layout({ children, title }: LayoutProps) {
+export function Layout({ children }: LayoutProps) {
   const navigate = useNavigate();
   const [searchParams, setSearchParams] = useSearchParams();
   const [searchQuery, setSearchQuery] = useState('');
+  const { title } = useTitle();
+
 
   useEffect(() => {
     setSearchQuery(searchParams.get('query') ?? '');
@@ -44,10 +46,21 @@ export function Layout({ children, title }: LayoutProps) {
     }
   };
 
+  const location = useLocation();
+  const showBackButton = location.pathname !== '/';
+
   const handleLogout = () => {
     localStorage.removeItem('tmdb_api_key');
     tmdbService.setApiKey('');
     navigate('/login');
+  };
+
+  const handleBack = () => {
+    if (window.history.length > 1) {
+      navigate(-1);
+    } else {
+      navigate('/');
+    }
   };
 
   return (
@@ -55,6 +68,11 @@ export function Layout({ children, title }: LayoutProps) {
       <header className="sticky top-0 z-50 border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
         <div className="container flex h-14 items-center justify-between gap-3">
           <div className="flex items-center gap-2">
+            {showBackButton && (
+              <Button variant="ghost" size="icon" onClick={handleBack} className="mr-2">
+                <ArrowLeft className="h-4 w-4" />
+              </Button>
+            )}
             <Link to="/" className="flex items-center gap-2">
               <Clapperboard className="h-5 w-5" />
               <span className="font-bold">{title}</span>

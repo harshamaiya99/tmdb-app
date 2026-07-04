@@ -1,7 +1,7 @@
 // src/pages/TVShowDetailsPage.tsx
 import { useEffect, useState } from 'react';
 import { useParams, useNavigate, Link } from 'react-router-dom';
-import { ArrowLeft, Calendar, Clock, Star, Tv, PlayCircle } from 'lucide-react';
+import { Calendar, Clock, Star, Tv, PlayCircle } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Skeleton } from '@/components/ui/skeleton';
@@ -9,6 +9,7 @@ import { MediaCard } from '@/components/MediaCard';
 import { tmdbService, type TVShow, type Episode } from '@/lib/tmdb';
 import { useToast } from '@/components/ui/use-toast';
 import { formatDate } from '@/lib/utils';
+import { useTitle } from '@/contexts/TitleContext';
 
 export function TVShowDetailsPage() {
   const { id } = useParams<{ id: string }>();
@@ -21,6 +22,7 @@ export function TVShowDetailsPage() {
 
   const navigate = useNavigate();
   const { toast } = useToast();
+  const { setTitle } = useTitle();
 
   useEffect(() => {
     if (id) {
@@ -28,6 +30,10 @@ export function TVShowDetailsPage() {
       window.scrollTo(0, 0);
     }
   }, [id]);
+
+  useEffect(() => {
+    setTitle('TV Show Details');
+  }, [setTitle]);
 
   useEffect(() => {
     if (tvShow?.seasons && tvShow.seasons.length > 0) {
@@ -116,15 +122,6 @@ export function TVShowDetailsPage() {
   return (
     <div className="min-h-screen">
       <div className="container py-6">
-        <Button
-          variant="ghost"
-          onClick={() => navigate('/')}
-          className="mb-6"
-        >
-          <ArrowLeft className="mr-2 h-4 w-4" />
-          Back
-        </Button>
-
         <div className="grid md:grid-cols-[200px_1fr] gap-6">
           <div className="space-y-4">
             {posterUrl ? (

@@ -8,6 +8,7 @@ import { MediaCard } from '@/components/MediaCard';
 import { tmdbService, isActingCredit, type Person } from '@/lib/tmdb';
 import { useToast } from '@/components/ui/use-toast';
 import { formatDate } from '@/lib/utils';
+import { useTitle } from '@/contexts/TitleContext';
 
 export function PersonDetailsPage() {
   const { id } = useParams<{ id: string }>();
@@ -16,6 +17,7 @@ export function PersonDetailsPage() {
   const [selectedImageIndex, setSelectedImageIndex] = useState<number | null>(null);
   const navigate = useNavigate();
   const { toast } = useToast();
+  const { setTitle } = useTitle();
 
   useEffect(() => {
     if (id) {
@@ -23,6 +25,12 @@ export function PersonDetailsPage() {
       window.scrollTo(0, 0);
     }
   }, [id]);
+
+  useEffect(() => {
+    if (person) {
+      setTitle(`${person.name}'s Profile`);
+    }
+  }, [person, setTitle]);
 
   const fetchPersonDetails = async (personId: number) => {
     try {
@@ -103,15 +111,6 @@ export function PersonDetailsPage() {
   return (
     <div className="min-h-screen">
       <div className="container py-6">
-        <Button
-          variant="ghost"
-          onClick={() => navigate(-1)}
-          className="mb-6"
-        >
-          <ArrowLeft className="mr-2 h-4 w-4" />
-          Back
-        </Button>
-
         <div className="space-y-8">
           <div className="grid md:grid-cols-[250px_1fr] lg:grid-cols-[300px_1fr] gap-8">
             {/* Left Column: Profile Picture & Personal Info */}

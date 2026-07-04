@@ -4,8 +4,31 @@ import { useParams } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { MediaCard } from '@/components/MediaCard';
 import { MediaGridSkeleton } from '@/components/MediaGridSkeleton';
-import { tmdbService, type Movie, type TVShow, type PersonCredit } from '@/lib/tmdb';
+import { tmdbService, type Movie, type TVShow, type PersonCredit, type Person } from '@/lib/tmdb';
 import { useToast } from '@/components/ui/use-toast';
+import { useTitle } from '@/contexts/TitleContext';
+
+const GENRE_NAMES: Record<string, string> = {
+  '28': 'Action',
+  '12': 'Adventure',
+  '16': 'Animation',
+  '35': 'Comedy',
+  '80': 'Crime',
+  '99': 'Documentary',
+  '18': 'Drama',
+  '10751': 'Family',
+  '14': 'Fantasy',
+  '36': 'History',
+  '27': 'Horror',
+  '10402': 'Music',
+  '9648': 'Mystery',
+  '10749': 'Romance',
+  '878': 'Science Fiction',
+  '10770': 'TV Movie',
+  '53': 'Thriller',
+  '10752': 'War',
+  '37': 'Western',
+};
 
 const CATEGORY_TITLES: Record<string, string> = {
   'trending-movies': 'Trending Movies',
@@ -23,20 +46,41 @@ export function MediaListPage() {
   const [page, setPage] = useState(1);
   const [totalPages, setTotalPages] = useState(1);
   const [loading, setLoading] = useState(true);
-  
+  const [personName, setPersonName] = useState<string | null>(null);
+  const { setTitle } = useTitle();
   const { toast } = useToast();
 
   const personMatch = category?.match(/^person-(\d+)-(movies|tv)$/);
   const genreMatch = category?.match(/^genre-(movie|tv)-(\d+)$/);
   const personType = personMatch?.[2] === 'tv' ? 'tv' : 'movie';
   const itemType = personMatch ? personType : genreMatch ? genreMatch[1] as 'movie' | 'tv' : category?.includes('tv') ? 'tv' : 'movie';
-  const pageTitle = personMatch
-    ? personType === 'tv'
-      ? 'Person TV Credits'
-      : 'Person Movie Credits'
-    : genreMatch
-      ? `Popular ${itemType === 'tv' ? 'TV Shows' : 'Movies'}`
-      : CATEGORY_TITLES[category ?? ''] ?? 'Media List';
+  
+  let pageTitle = CATEGORY_TITLES[category ?? ''] ?? 'Media List';
+  
+  if (personMatch && personName) {
+    pageTitle = personType === 'tv' ? `${personName}'s TV Shows` : `${personName}'s Movies`;
+  } else if (genreMatch && genreMatch[2]) {
+    const genreName = GENRE_NAMES[genreMatch[2]] || 'Genre';
+    pageTitle = `${genreName} ${itemType === 'tv' ? 'TV Shows' : 'Movies'}`;
+  }
+
+  useEffect(() => {
+    setTitle(pageTitle);
+  }, [pageTitle, setTitle, personName]);
+
+  useEffect(() => {
+    if (personMatch && personMatch[1]) {
+      const fetchPersonName = async () => {
+        try {
+          const person = await tmdbService.getPersonDetails(Number(personMatch[1]));
+          setPersonName(person.name);
+        } catch {
+          setPersonName('Unknown');
+        }
+      };
+      fetchPersonName();
+    }
+  }, [personMatch]);
 
   useEffect(() => {
     // Reset page to 1 if the category changes
