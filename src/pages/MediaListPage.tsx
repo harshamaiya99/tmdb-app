@@ -1,6 +1,6 @@
 // src/pages/MediaListPage.tsx
 import { useEffect, useState } from 'react';
-import { useParams } from 'react-router-dom';
+import { useParams, useLocation, useSearchParams } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { MediaCard } from '@/components/MediaCard';
 import { MediaGridSkeleton } from '@/components/MediaGridSkeleton';
@@ -42,20 +42,31 @@ const CATEGORY_TITLES: Record<string, string> = {
 
 export function MediaListPage() {
   const { category } = useParams<{ category: string }>();
+  const location = useLocation();
+  
+  // NEW: Replaced useState with useSearchParams for pagination
+  const [searchParams, setSearchParams] = useSearchParams();
+  const page = parseInt(searchParams.get('page') || '1', 10);
+
   const [items, setItems] = useState<(Movie | TVShow | PersonCredit)[]>([]);
-  const [page, setPage] = useState(1);
   const [totalPages, setTotalPages] = useState(1);
   const [loading, setLoading] = useState(true);
   const [personName, setPersonName] = useState<string | null>(null);
   const { setTitle } = useTitle();
   const { toast } = useToast();
 
-  const personMatch = category?.match(/^person-(\d+)-(movies|tv)$/);
-  const genreMatch = category?.match(/^genre-(movie|tv)-(\d+)$/);
+  let effectiveCategory = category;
+  if (!effectiveCategory) {
+    if (location.pathname === '/movie') effectiveCategory = 'trending-movies';
+    else if (location.pathname === '/tv') effectiveCategory = 'trending-tv';
+  }
+
+  const personMatch = effectiveCategory?.match(/^person-(\d+)-(movies|tv)$/);
+  const genreMatch = effectiveCategory?.match(/^genre-(movie|tv)-(\d+)$/);
   const personType = personMatch?.[2] === 'tv' ? 'tv' : 'movie';
-  const itemType = personMatch ? personType : genreMatch ? genreMatch[1] as 'movie' | 'tv' : category?.includes('tv') ? 'tv' : 'movie';
+  const itemType = personMatch ? personType : genreMatch ? genreMatch[1] as 'movie' | 'tv' : effectiveCategory?.includes('tv') ? 'tv' : 'movie';
   
-  let pageTitle = CATEGORY_TITLES[category ?? ''] ?? 'Media List';
+  let pageTitle = CATEGORY_TITLES[effectiveCategory ?? ''] ?? 'Media List';
   
   if (personMatch && personName) {
     pageTitle = personType === 'tv' ? `${personName}'s TV Shows` : `${personName}'s Movies`;
@@ -82,16 +93,15 @@ export function MediaListPage() {
     }
   }, [personMatch]);
 
-  useEffect(() => {
-    // Reset page to 1 if the category changes
-    setPage(1);
-  }, [category]);
+  // NOTE: I removed the useEffect that forcibly reset the page to 1 on category change.
+  // Because we use URL params now, clicking a fresh link to `/movie` automatically 
+  // defaults to page 1, while hitting "Back" preserves the `?page=5` parameter!
 
   useEffect(() => {
     const fetchCategoryData = async () => {
-      if (!category) return;
+      if (!effectiveCategory) return;
 
-      const currentPersonMatch = category.match(/^person-(\d+)-(movies|tv)$/);
+      const currentPersonMatch = effectiveCategory.match(/^person-(\d+)-(movies|tv)$/);
       const currentItemType = currentPersonMatch?.[2] === 'tv' ? 'tv' : 'movie';
 
       try {
@@ -105,7 +115,7 @@ export function MediaListPage() {
         } else if (genreMatch && genreMatch[2]) {
           data = await tmdbService.getGenreMediaList(itemType as 'movie' | 'tv', Number(genreMatch[2]), page);
         } else {
-          data = await tmdbService.getCategoryList(category, page);
+          data = await tmdbService.getCategoryList(effectiveCategory, page);
         }
 
         setItems(data.results);
@@ -123,7 +133,14 @@ export function MediaListPage() {
     };
 
     fetchCategoryData();
-  }, [category, page, toast]);
+  }, [effectiveCategory, page, toast, itemType]);
+
+  // NEW: Helper function to safely update the URL search params
+  const handlePageChange = (newPage: number) => {
+    const newParams = new URLSearchParams(searchParams);
+    newParams.set('page', newPage.toString());
+    setSearchParams(newParams);
+  };
 
   return (
     <main className="container py-8">
@@ -151,7 +168,7 @@ export function MediaListPage() {
               <div className="flex items-center justify-center gap-6 mt-12 pt-8 border-t">
                 <Button 
                   variant="outline" 
-                  onClick={() => setPage(p => Math.max(1, p - 1))}
+                  onClick={() => handlePageChange(Math.max(1, page - 1))}
                   disabled={page === 1}
                 >
                   Previous
@@ -161,7 +178,7 @@ export function MediaListPage() {
                 </span>
                 <Button 
                   variant="outline" 
-                  onClick={() => setPage(p => Math.min(totalPages, p + 1))}
+                  onClick={() => handlePageChange(Math.min(totalPages, page + 1))}
                   disabled={page === totalPages}
                 >
                   Next

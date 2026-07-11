@@ -6,7 +6,8 @@ import { Button } from '@/components/ui/button';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { MediaCard } from '@/components/MediaCard';
 import { MediaGridSkeleton } from '@/components/MediaGridSkeleton';
-import { tmdbService, type Movie, type TVShow } from '@/lib/tmdb';
+// NEW: Imported PersonListResult
+import { tmdbService, type Movie, type TVShow, type PersonListResult } from '@/lib/tmdb';
 import { useToast } from '@/components/ui/use-toast';
 import { useTitle } from '@/contexts/TitleContext';
 
@@ -23,7 +24,10 @@ export function HomePage() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
   const [searchParams, setSearchParams] = useSearchParams();
-  const [searchResults, setSearchResults] = useState<{ movies: Movie[]; tv: TVShow[] } | null>(null);
+  
+  // NEW: Added people array to the searchResults state
+  const [searchResults, setSearchResults] = useState<{ movies: Movie[]; tv: TVShow[]; people: PersonListResult[] } | null>(null);
+  
   const [searching, setSearching] = useState(false);
   const { toast } = useToast();
   const { setTitle } = useTitle();
@@ -51,15 +55,19 @@ export function HomePage() {
     const runSearch = async () => {
       try {
         setSearching(true);
-        const [movieResults, tvResults] = await Promise.all([
+        // NEW: Added tmdbService.searchPersons to the Promise.all array
+        const [movieResults, tvResults, peopleResults] = await Promise.all([
           tmdbService.searchMovies(searchTerm),
           tmdbService.searchTVShows(searchTerm),
+          tmdbService.searchPersons(searchTerm),
         ]);
 
         if (isActive) {
+          // NEW: Stored peopleResults in the state
           setSearchResults({
             movies: movieResults.results,
             tv: tvResults.results,
+            people: peopleResults.results,
           });
         }
       } catch {
@@ -126,14 +134,10 @@ export function HomePage() {
     }
   };
 
-  const clearSearch = () => {
-    setSearchParams({});
-    setSearchResults(null);
-    setSearching(false);
-  };
-
   const displayMovies = searchResults?.movies ?? movies;
   const displayTVShows = searchResults?.tv ?? tvShows;
+  // NEW: Extract displayPeople array
+  const displayPeople = searchResults?.people ?? [];
 
   const ContentSection = ({ title, items, type, category, hideSeeMore = false }: { title: string; items: (Movie | TVShow)[]; type: 'movie' | 'tv'; category: string; hideSeeMore?: boolean }) => {
     if (!items || items.length === 0) return null;
@@ -171,9 +175,6 @@ export function HomePage() {
             <p className="text-sm text-muted-foreground">Showing results for</p>
             <h1 className="text-2xl font-semibold">“{searchTerm}”</h1>
           </div>
-          <Button variant="outline" size="sm" onClick={clearSearch}>
-            ← Back to trending
-          </Button>
         </div>
       )}
 
@@ -184,6 +185,7 @@ export function HomePage() {
         </div>
       ) : (
         <div className="space-y-12 pb-12">
+          
           <ContentSection
             title={hasActiveSearch ? 'Movies' : 'Trending Movies'}
             items={displayMovies}
@@ -239,6 +241,46 @@ export function HomePage() {
               />
             </>
           )}
+
+          {/* NEW: People Search Results Block */}
+          {hasActiveSearch && displayPeople.length > 0 && (
+            <section className="space-y-4">
+              <h2 className="text-2xl font-bold tracking-tight mb-4">People</h2>
+              <div className="grid grid-cols-3 gap-4 md:grid-cols-6 lg:grid-cols-8 xl:grid-cols-10">
+                {displayPeople.slice(0, 10).map((person) => (
+                  <Link 
+                    key={person.id} 
+                    to={`/person/${person.id}`}
+                    className="cursor-pointer group flex flex-col space-y-2"
+                  >
+                    <div className="overflow-hidden rounded-xl bg-muted aspect-[2/3] border shadow-sm relative">
+                      {person.profile_path ? (
+                        <img 
+                          src={tmdbService.getImageUrl(person.profile_path, 'w500')} 
+                          alt={person.name}
+                          className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
+                          loading="lazy"
+                        />
+                      ) : (
+                        <div className="w-full h-full flex items-center justify-center text-muted-foreground text-[10px]">
+                          No Image
+                        </div>
+                      )}
+                    </div>
+                    <div className="px-1 text-center sm:text-left">
+                      <p className="font-semibold text-xs truncate group-hover:text-primary transition-colors">
+                        {person.name}
+                      </p>
+                      <p className="text-[10px] text-muted-foreground truncate">
+                        {person.known_for_department}
+                      </p>
+                    </div>
+                  </Link>
+                ))}
+              </div>
+            </section>
+          )}
+
         </div>
       )}
     </main>

@@ -27,6 +27,8 @@ export interface Episode {
   still_path: string | null;
   air_date: string;
   runtime: number | null;
+  vote_average?: number;
+  vote_count?: number;
 }
 
 export interface Season {
@@ -57,9 +59,11 @@ export interface Movie {
   runtime?: number;
   status?: string;
   tagline?: string;
-  credits?: { cast: Cast[] };
+  credits?: { cast: Cast[]; crew: Crew[] };
   videos?: { results: Video[] };
   similar?: { results: Movie[] };
+  external_ids?: { imdb_id: string | null };
+  reviews?: { results: Review[] };
 }
 
 export interface TVShow {
@@ -79,9 +83,19 @@ export interface TVShow {
   number_of_episodes?: number;
   tagline?: string;
   seasons?: Season[];
-  credits?: { cast: Cast[] };
+  credits?: { cast: Cast[]; crew: Crew[] };
   videos?: { results: Video[] };
   similar?: { results: TVShow[] };
+  external_ids?: { imdb_id: string | null };
+  reviews?: { results: Review[] };
+}
+
+export interface Crew {
+  id: number;
+  name: string;
+  job: string;
+  department: string;
+  profile_path: string | null;
 }
 
 export interface Genre {
@@ -125,6 +139,27 @@ export interface PersonCredit {
   first_air_date?: string;
   media_type: 'movie' | 'tv';
   character: string;
+  popularity: number;
+}
+
+export interface Review {
+  id: string;
+  author: string;
+  content: string;
+  created_at: string;
+  author_details?: {
+    name: string;
+    username: string;
+    avatar_path: string | null;
+    rating: number | null;
+  };
+}
+
+export interface PersonListResult {
+  id: number;
+  name: string;
+  profile_path: string | null;
+  known_for_department: string;
   popularity: number;
 }
 
@@ -239,6 +274,10 @@ class TMDBService {
     return data.results;
   }
 
+  async getPopularPersons(page: number = 1): Promise<TrendingResponse<PersonListResult>> {
+    return this.fetchFromTMDB<TrendingResponse<PersonListResult>>(`/person/popular?page=${page}`);
+  }
+
   // --- PAGINATED CATEGORY ENDPOINT ---
   async getCategoryList(category: string, page: number = 1): Promise<TrendingResponse<any>> {
     const endpoints: Record<string, string> = {
@@ -264,11 +303,11 @@ class TMDBService {
 
   // --- DETAILS ENDPOINTS (RESTORED append_to_response!) ---
   async getMovieDetails(id: number): Promise<Movie> {
-    return this.fetchFromTMDB<Movie>(`/movie/${id}?append_to_response=credits,videos,similar`);
+    return this.fetchFromTMDB<Movie>(`/movie/${id}?append_to_response=credits,videos,similar,external_ids,reviews`);
   }
 
   async getTVShowDetails(id: number): Promise<TVShow> {
-    return this.fetchFromTMDB<TVShow>(`/tv/${id}?append_to_response=credits,videos,similar`);
+    return this.fetchFromTMDB<TVShow>(`/tv/${id}?append_to_response=credits,videos,similar,external_ids,reviews`);
   }
 
   // RESTORED Seasons and Episodes fetcher!
@@ -307,6 +346,10 @@ class TMDBService {
 
   async searchTVShows(query: string, page: number = 1): Promise<TrendingResponse<TVShow>> {
     return this.fetchFromTMDB<TrendingResponse<TVShow>>(`/search/tv?query=${encodeURIComponent(query)}&page=${page}`);
+  }
+
+  async searchPersons(query: string, page: number = 1): Promise<TrendingResponse<PersonListResult>> {
+    return this.fetchFromTMDB<TrendingResponse<PersonListResult>>(`/search/person?query=${encodeURIComponent(query)}&page=${page}`);
   }
 
   getImageUrl(path: string | null, size: 'w500' | 'w780' | 'original' = 'w500'): string {

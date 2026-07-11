@@ -1,7 +1,7 @@
 // src/components/Layout.tsx
 import { ReactNode, useEffect, useState, type ChangeEvent, type FormEvent } from 'react';
 import { LogOut, Search, Clapperboard, ArrowLeft } from 'lucide-react';
-import { Link, useNavigate, useSearchParams, useLocation } from 'react-router-dom';
+import { Link, NavLink, useNavigate, useSearchParams, useLocation } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { ThemeToggle } from '@/components/ThemeToggle';
@@ -17,7 +17,6 @@ export function Layout({ children }: LayoutProps) {
   const [searchParams, setSearchParams] = useSearchParams();
   const [searchQuery, setSearchQuery] = useState('');
   const { title } = useTitle();
-
 
   useEffect(() => {
     setSearchQuery(searchParams.get('query') ?? '');
@@ -79,7 +78,36 @@ export function Layout({ children }: LayoutProps) {
             </Link>
           </div>
 
-          <div className="ml-auto flex flex-1 items-center justify-end gap-2">
+          <div className="ml-auto flex flex-1 items-center justify-end gap-2 md:gap-4">
+            
+            {/* NEW: Navigation Tabs */}
+            <nav className="hidden md:flex items-center gap-6 text-sm font-medium mr-2">
+              <NavLink 
+                to="/movie" 
+                className={({ isActive }) => 
+                  `transition-colors hover:text-foreground ${isActive ? 'text-foreground font-semibold' : 'text-muted-foreground'}`
+                }
+              >
+                Movies
+              </NavLink>
+              <NavLink 
+                to="/tv" 
+                className={({ isActive }) => 
+                  `transition-colors hover:text-foreground ${isActive ? 'text-foreground font-semibold' : 'text-muted-foreground'}`
+                }
+              >
+                TV Shows
+              </NavLink>
+              <NavLink 
+                to="/person" 
+                className={({ isActive }) => 
+                  `transition-colors hover:text-foreground ${isActive ? 'text-foreground font-semibold' : 'text-muted-foreground'}`
+                }
+              >
+                People
+              </NavLink>
+            </nav>
+
             <form onSubmit={handleSearch} className="w-full max-w-[16rem] sm:max-w-[20rem]">
               <div className="relative">
                 <Search className="absolute left-2 top-2.5 h-4 w-4 text-muted-foreground" />
