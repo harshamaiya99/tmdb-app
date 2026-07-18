@@ -4,30 +4,15 @@ import { useParams, useLocation, useSearchParams } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { MediaCard } from '@/components/MediaCard';
 import { MediaGridSkeleton } from '@/components/MediaGridSkeleton';
-import { tmdbService, type Movie, type TVShow, type PersonCredit, type Person } from '@/lib/tmdb';
+import { tmdbService, type Movie, type TVShow, type PersonCredit } from '@/lib/tmdb';
 import { useToast } from '@/components/ui/use-toast';
 import { useTitle } from '@/contexts/TitleContext';
 
 const GENRE_NAMES: Record<string, string> = {
-  '28': 'Action',
-  '12': 'Adventure',
-  '16': 'Animation',
-  '35': 'Comedy',
-  '80': 'Crime',
-  '99': 'Documentary',
-  '18': 'Drama',
-  '10751': 'Family',
-  '14': 'Fantasy',
-  '36': 'History',
-  '27': 'Horror',
-  '10402': 'Music',
-  '9648': 'Mystery',
-  '10749': 'Romance',
-  '878': 'Science Fiction',
-  '10770': 'TV Movie',
-  '53': 'Thriller',
-  '10752': 'War',
-  '37': 'Western',
+  '28': 'Action', '12': 'Adventure', '16': 'Animation', '35': 'Comedy', '80': 'Crime',
+  '99': 'Documentary', '18': 'Drama', '10751': 'Family', '14': 'Fantasy', '36': 'History',
+  '27': 'Horror', '10402': 'Music', '9648': 'Mystery', '10749': 'Romance', '878': 'Science Fiction',
+  '10770': 'TV Movie', '53': 'Thriller', '10752': 'War', '37': 'Western',
 };
 
 const CATEGORY_TITLES: Record<string, string> = {
@@ -44,9 +29,9 @@ export function MediaListPage() {
   const { category } = useParams<{ category: string }>();
   const location = useLocation();
   
-  // NEW: Replaced useState with useSearchParams for pagination
   const [searchParams, setSearchParams] = useSearchParams();
   const page = parseInt(searchParams.get('page') || '1', 10);
+  const entityNameParam = searchParams.get('name'); // Grabs name from URL
 
   const [items, setItems] = useState<(Movie | TVShow | PersonCredit)[]>([]);
   const [totalPages, setTotalPages] = useState(1);
@@ -63,6 +48,9 @@ export function MediaListPage() {
 
   const personMatch = effectiveCategory?.match(/^person-(\d+)-(movies|tv)$/);
   const genreMatch = effectiveCategory?.match(/^genre-(movie|tv)-(\d+)$/);
+  const companyMatch = effectiveCategory?.match(/^company-(\d+)$/); 
+  const providerMatch = effectiveCategory?.match(/^provider-(\d+)$/); 
+  
   const personType = personMatch?.[2] === 'tv' ? 'tv' : 'movie';
   const itemType = personMatch ? personType : genreMatch ? genreMatch[1] as 'movie' | 'tv' : effectiveCategory?.includes('tv') ? 'tv' : 'movie';
   
@@ -71,37 +59,44 @@ export function MediaListPage() {
   if (personMatch && personName) {
     pageTitle = personType === 'tv' ? `${personName}'s TV Shows` : `${personName}'s Movies`;
   } else if (genreMatch && genreMatch[2]) {
-    const genreName = GENRE_NAMES[genreMatch[2]] || 'Genre';
+    // FIX: Pulls genre name from URL if provided, otherwise uses the dictionary
+    const genreName = entityNameParam || GENRE_NAMES[genreMatch[2]] || 'Genre';
     pageTitle = `${genreName} ${itemType === 'tv' ? 'TV Shows' : 'Movies'}`;
+  } else if (companyMatch) {
+    pageTitle = entityNameParam ? `Movies by ${entityNameParam}` : 'Production Movies'; 
+  } else if (providerMatch) {
+    pageTitle = entityNameParam ? `Streaming on ${entityNameParam}` : 'Platform Movies'; 
   }
 
+  // Navbar Title Sync
   useEffect(() => {
     setTitle(pageTitle);
-  }, [pageTitle, setTitle, personName]);
+  }, [pageTitle, setTitle]);
 
   useEffect(() => {
-    if (personMatch && personMatch[1]) {
+    const match = effectiveCategory?.match(/^person-(\d+)-(movies|tv)$/);
+    if (match && match[1]) {
       const fetchPersonName = async () => {
         try {
-          const person = await tmdbService.getPersonDetails(Number(personMatch[1]));
+          const person = await tmdbService.getPersonDetails(Number(match[1]));
           setPersonName(person.name);
         } catch {
           setPersonName('Unknown');
         }
       };
       fetchPersonName();
+    } else {
+      setPersonName(null);
     }
-  }, [personMatch]);
-
-  // NOTE: I removed the useEffect that forcibly reset the page to 1 on category change.
-  // Because we use URL params now, clicking a fresh link to `/movie` automatically 
-  // defaults to page 1, while hitting "Back" preserves the `?page=5` parameter!
+  }, [effectiveCategory]);
 
   useEffect(() => {
     const fetchCategoryData = async () => {
       if (!effectiveCategory) return;
 
       const currentPersonMatch = effectiveCategory.match(/^person-(\d+)-(movies|tv)$/);
+      const currentCompanyMatch = effectiveCategory.match(/^company-(\d+)$/);
+      const currentProviderMatch = effectiveCategory.match(/^provider-(\d+)$/);
       const currentItemType = currentPersonMatch?.[2] === 'tv' ? 'tv' : 'movie';
 
       try {
@@ -114,6 +109,10 @@ export function MediaListPage() {
           data = await tmdbService.getPersonCredits(Number(currentPersonMatch[1]), currentItemType as 'movie' | 'tv', page);
         } else if (genreMatch && genreMatch[2]) {
           data = await tmdbService.getGenreMediaList(itemType as 'movie' | 'tv', Number(genreMatch[2]), page);
+        } else if (currentCompanyMatch && currentCompanyMatch[1]) {
+          data = await tmdbService.getMoviesByCompany(Number(currentCompanyMatch[1]), page);
+        } else if (currentProviderMatch && currentProviderMatch[1]) {
+          data = await tmdbService.getMoviesByProvider(Number(currentProviderMatch[1]), page);
         } else {
           data = await tmdbService.getCategoryList(effectiveCategory, page);
         }
@@ -133,9 +132,8 @@ export function MediaListPage() {
     };
 
     fetchCategoryData();
-  }, [effectiveCategory, page, toast, itemType]);
+  }, [effectiveCategory, page, toast]); 
 
-  // NEW: Helper function to safely update the URL search params
   const handlePageChange = (newPage: number) => {
     const newParams = new URLSearchParams(searchParams);
     newParams.set('page', newPage.toString());
@@ -144,6 +142,8 @@ export function MediaListPage() {
 
   return (
     <main className="container py-8">
+        {/* Visual <h1> removed completely! */}
+        
         {loading ? (
           <div className="space-y-8">
              <MediaGridSkeleton />

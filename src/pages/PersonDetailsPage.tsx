@@ -48,6 +48,38 @@ export function PersonDetailsPage() {
     }
   };
 
+  // FIX: Safely calculate gallery images BEFORE conditional returns
+  const galleryImages = (person?.images?.profiles || []).filter((image) => image.file_path);
+
+  const openImage = (index: number) => setSelectedImageIndex(index);
+  const closeImage = () => setSelectedImageIndex(null);
+
+  // FIX: Move the Keyboard Event Listener hook to the top level!
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (selectedImageIndex === null) return;
+      
+      if (e.key === 'ArrowRight') {
+        setSelectedImageIndex(prev => 
+          prev === null ? null : (prev === galleryImages.length - 1 ? 0 : prev + 1)
+        );
+      } else if (e.key === 'ArrowLeft') {
+        setSelectedImageIndex(prev => 
+          prev === null ? null : (prev === 0 ? galleryImages.length - 1 : prev - 1)
+        );
+      } else if (e.key === 'Escape') {
+        closeImage();
+      }
+    };
+
+    window.addEventListener('keydown', handleKeyDown);
+
+    return () => {
+      window.removeEventListener('keydown', handleKeyDown);
+    };
+  }, [selectedImageIndex, galleryImages.length]);
+
+  // NOW we can safely have our conditional loading and error returns
   if (loading) {
     return (
       <div className="min-h-screen">
@@ -90,21 +122,6 @@ export function PersonDetailsPage() {
     .filter((credit) => credit.media_type === 'tv' && credit.poster_path && isActingCredit(credit.character, credit.name || credit.title))
     .sort((a, b) => b.popularity - a.popularity)
     .slice(0, 8);
-
-  const galleryImages = (person.images?.profiles || [])
-    .filter((image) => image.file_path)
-    .slice(0, 12);
-
-  const openImage = (index: number) => setSelectedImageIndex(index);
-  const closeImage = () => setSelectedImageIndex(null);
-  const showPreviousImage = () => {
-    if (selectedImageIndex === null) return;
-    setSelectedImageIndex(selectedImageIndex === 0 ? galleryImages.length - 1 : selectedImageIndex - 1);
-  };
-  const showNextImage = () => {
-    if (selectedImageIndex === null) return;
-    setSelectedImageIndex(selectedImageIndex === galleryImages.length - 1 ? 0 : selectedImageIndex + 1);
-  };
 
   const selectedImage = selectedImageIndex === null ? null : galleryImages[selectedImageIndex] ?? null;
 
@@ -221,7 +238,7 @@ export function PersonDetailsPage() {
             </div>
           </div>
 
-          {galleryImages.length > 1 && (
+          {galleryImages.length > 0 && (
             <div className="pt-8 border-t w-full">
               <h2 className="text-2xl font-semibold mb-6">Gallery</h2>
               <div className="grid grid-cols-2 gap-4 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-10">
@@ -233,12 +250,13 @@ export function PersonDetailsPage() {
                       key={`${image.file_path}-${idx}`}
                       type="button"
                       onClick={() => openImage(idx)}
-                      className="overflow-hidden rounded-xl border bg-muted text-left"
+                      className="overflow-hidden rounded-xl border bg-muted text-left hover:ring-2 hover:ring-primary transition-all group"
                     >
                       <img
                         src={imageUrl}
                         alt={`${person.name} gallery ${idx + 1}`}
-                        className="aspect-[2/3] w-full object-cover"
+                        className="aspect-[2/3] w-full object-cover group-hover:scale-105 transition-transform duration-300"
+                        loading="lazy"
                       />
                     </button>
                   );
@@ -248,34 +266,47 @@ export function PersonDetailsPage() {
           )}
         </div>
 
+        {/* The Lightbox */}
         {selectedImage && (
           <div
-            className="fixed inset-0 z-[60] flex items-center justify-center bg-black/90 px-3 py-4 sm:px-6"
+            className="fixed inset-0 z-[60] flex items-center justify-center bg-black/95 px-3 py-4 sm:px-6 backdrop-blur-sm"
             onClick={closeImage}
           >
             <div className="relative flex w-full max-w-7xl flex-col rounded-2xl p-2" onClick={(e) => e.stopPropagation()}>
               <div className="mb-3 flex items-center justify-between">
-                <p className="text-sm text-muted-foreground">{selectedImageIndex! + 1} / {galleryImages.length}</p>
+                <p className="text-sm font-medium text-white/70">
+                  {selectedImageIndex! + 1} / {galleryImages.length}
+                </p>
                 <Button
                   variant="ghost"
                   size="icon"
                   onClick={closeImage}
-                  className="rounded-full border border-border/70 bg-background/80 text-foreground shadow-lg backdrop-blur-sm hover:bg-background/95"
+                  className="rounded-full border border-white/10 bg-black/50 text-white shadow-lg backdrop-blur-md hover:bg-white/10"
                 >
-                  <X className="h-4 w-4" />
+                  <X className="h-5 w-5" />
                 </Button>
               </div>
-              <div className="flex items-center justify-between gap-2 sm:gap-3" onClick={(e) => e.stopPropagation()}>
-                <Button variant="outline" size="icon" onClick={showPreviousImage}>
-                  <ArrowLeft className="h-4 w-4" />
+              <div className="flex items-center justify-between gap-2 sm:gap-4" onClick={(e) => e.stopPropagation()}>
+                <Button 
+                  variant="outline" 
+                  size="icon" 
+                  onClick={() => setSelectedImageIndex(prev => prev === null ? null : (prev === 0 ? galleryImages.length - 1 : prev - 1))}
+                  className="rounded-full h-10 w-10 shrink-0 border-white/20 bg-black/50 text-white hover:bg-white/10 hover:text-white"
+                >
+                  <ArrowLeft className="h-5 w-5" />
                 </Button>
                 <img
                   src={tmdbService.getImageUrl(selectedImage.file_path, 'original')}
                   alt={`${person.name} gallery ${selectedImageIndex! + 1}`}
-                  className="max-h-[90vh] w-full rounded-xl object-contain"
+                  className="max-h-[85vh] w-full rounded-xl object-contain shadow-2xl"
                 />
-                <Button variant="outline" size="icon" onClick={showNextImage}>
-                  <ArrowRight className="h-4 w-4" />
+                <Button 
+                  variant="outline" 
+                  size="icon" 
+                  onClick={() => setSelectedImageIndex(prev => prev === null ? null : (prev === galleryImages.length - 1 ? 0 : prev + 1))}
+                  className="rounded-full h-10 w-10 shrink-0 border-white/20 bg-black/50 text-white hover:bg-white/10 hover:text-white"
+                >
+                  <ArrowRight className="h-5 w-5" />
                 </Button>
               </div>
             </div>

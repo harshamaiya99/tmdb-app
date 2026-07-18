@@ -6,7 +6,7 @@ import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Skeleton } from '@/components/ui/skeleton';
 import { MediaCard } from '@/components/MediaCard';
-import { tmdbService, type Movie } from '@/lib/tmdb';
+import { tmdbService, type Movie, type Collection } from '@/lib/tmdb';
 import { useToast } from '@/components/ui/use-toast';
 import { useTitle } from '@/contexts/TitleContext';
 import { ReviewSection } from '../components/ReviewSection';
@@ -14,10 +14,13 @@ import { ReviewSection } from '../components/ReviewSection';
 export function MovieDetailsPage() {
   const { id } = useParams<{ id: string }>();
   const [movie, setMovie] = useState<Movie | null>(null);
+  
+  const [collection, setCollection] = useState<Collection | null>(null);
   const [loading, setLoading] = useState(true);
   
-  // States for View More buttons
-const [creditsVisible, setCreditsVisible] = useState(14);
+  // View More States
+  const [creditsVisible, setCreditsVisible] = useState(14);
+  // Note: collectionVisible state has been removed since we are scrolling now!
 
   const navigate = useNavigate();
   const { toast } = useToast();
@@ -39,6 +42,19 @@ const [creditsVisible, setCreditsVisible] = useState(14);
       setLoading(true);
       const data = await tmdbService.getMovieDetails(movieId);
       setMovie(data);
+
+      if (data.belongs_to_collection) {
+        try {
+          const collData = await tmdbService.getCollectionDetails(data.belongs_to_collection.id);
+          setCollection(collData);
+        } catch (error) {
+          console.error("Failed to fetch collection", error);
+          setCollection(null);
+        }
+      } else {
+        setCollection(null);
+      }
+
     } catch {
       toast({
         variant: 'destructive',
@@ -52,16 +68,14 @@ const [creditsVisible, setCreditsVisible] = useState(14);
 
   if (loading) {
     return (
-      <div className="min-h-screen">
-        <div className="container py-6 space-y-6">
-          <Skeleton className="h-8 w-24" />
-          <div className="grid md:grid-cols-[200px_1fr] gap-6">
-            <Skeleton className="aspect-[2/3]" />
-            <div className="space-y-4">
-              <Skeleton className="h-10 w-3/4" />
-              <Skeleton className="h-6 w-1/2" />
-              <Skeleton className="h-32 w-full" />
-            </div>
+      <div className="min-h-screen container py-6 space-y-6">
+        <Skeleton className="h-8 w-24" />
+        <div className="grid md:grid-cols-[200px_1fr] gap-6">
+          <Skeleton className="aspect-[2/3]" />
+          <div className="space-y-4">
+            <Skeleton className="h-10 w-3/4" />
+            <Skeleton className="h-6 w-1/2" />
+            <Skeleton className="h-32 w-full" />
           </div>
         </div>
       </div>
@@ -83,13 +97,15 @@ const [creditsVisible, setCreditsVisible] = useState(14);
   const releaseYear = movie.release_date ? new Date(movie.release_date).getFullYear() : '';
   const rating = movie.vote_average.toFixed(1);
   const similarMovies = movie.similar?.results || [];
+  
+  const trailer = movie.videos?.results.find((v) => v.type === 'Trailer' && v.site === 'YouTube');
+  const hasCollection = collection && collection.parts && collection.parts.length > 1;
 
   // Sort Crew: Director First!
   const cast = movie.credits?.cast || [];
   const rawCrew = movie.credits?.crew || [];
   const directors = rawCrew.filter((c) => c.job === 'Director');
   const otherCrew = rawCrew.filter((c) => c.job !== 'Director');
-  // Merge and remove any weird TMDB duplicates
   const crew = [...directors, ...otherCrew].filter(
     (person, index, self) => index === self.findIndex((t) => t.id === person.id)
   );
@@ -97,8 +113,11 @@ const [creditsVisible, setCreditsVisible] = useState(14);
   return (
     <div className="min-h-screen">
       <div className="container py-6">
+        
+        {/* TOP SECTION */}
         <div className="grid md:grid-cols-[200px_1fr] gap-6">
           
+          {/* Left Column: Poster & Watch Button */}
           <div className="space-y-4">
             {posterUrl ? (
               <img src={posterUrl} alt={movie.title} className="w-full rounded-lg border shadow-sm" />
@@ -115,7 +134,7 @@ const [creditsVisible, setCreditsVisible] = useState(14);
 
             {(() => {
               const urlTemplate = import.meta.env.VITE_MOVIE_EMBED_URL;
-              const streamUrl = urlTemplate.replace('{IMDB_ID}', movie.external_ids?.imdb_id || '');
+              const streamUrl = urlTemplate ? urlTemplate.replace('{IMDB_ID}', movie.external_ids?.imdb_id || '') : '#';
               
               return (
                 <Button asChild className="w-full gap-2 mt-2">
@@ -125,9 +144,36 @@ const [creditsVisible, setCreditsVisible] = useState(14);
                 </Button>
               );
             })()}
+
+           {/* NEW: Streaming Platforms Block */}
+            {movie['watch/providers']?.results?.US?.flatrate && (
+              <div className="mt-6 pt-4 border-t">
+                <h3 className="text-base font-semibold mb-3">
+                  Streaming On
+                </h3>
+                <div className="flex flex-wrap gap-3">
+                  {movie['watch/providers'].results.US.flatrate.map(provider => (
+                    <Link 
+                      key={provider.provider_id} 
+                      to={`/category/provider-${provider.provider_id}?name=${encodeURIComponent(provider.provider_name)}`}
+                      className="hover:scale-110 hover:ring-2 hover:ring-primary rounded-xl transition-all"
+                    >
+                      <img
+                        src={tmdbService.getImageUrl(provider.logo_path, 'w200')}
+                        alt={provider.provider_name}
+                        title={provider.provider_name}
+                        className="w-10 h-10 rounded-xl shadow-sm border"
+                      />
+                    </Link>
+                  ))}
+                </div>
+              </div>
+            )}
           </div>
           
-          <div className="flex flex-col xl:flex-row gap-6">
+          <div className="flex flex-col xl:flex-row gap-8 items-start">
+            
+            {/* Middle Column: Movie Details */}
             <div className="flex-1 space-y-6">
               <div>
                 <h1 className="text-3xl md:text-4xl font-bold tracking-tight">{movie.title}</h1>
@@ -184,27 +230,87 @@ const [creditsVisible, setCreditsVisible] = useState(14);
                 <div>
                   <h2 className="text-xl font-semibold mb-2">Overview</h2>
                   <p className="text-muted-foreground leading-relaxed">{movie.overview}</p>
+                  
+                {/* NEW: Production Companies Block */}
+                  {movie.production_companies && movie.production_companies.length > 0 && (
+                    <div className="mt-8 pt-6 border-t">
+                      <h3 className="text-xl font-semibold mb-4">
+                        Production
+                      </h3>
+                      <div className="flex flex-wrap items-center gap-6">
+                        {movie.production_companies.map(company => (
+                          <Link 
+                            key={company.id} 
+                            to={`/category/company-${company.id}?name=${encodeURIComponent(company.name)}`}
+                            className="flex items-center group"
+                          >
+                            {company.logo_path ? (
+                              <img
+                                src={tmdbService.getImageUrl(company.logo_path, 'w200')}
+                                alt={company.name}
+                                title={company.name}
+                                className="h-6 md:h-8 max-w-[120px] object-contain filter grayscale opacity-60 group-hover:grayscale-0 group-hover:opacity-100 group-hover:scale-105 transition-all dark:invert dark:group-hover:invert-0"
+                              />
+                            ) : (
+                              <span className="text-sm font-medium text-muted-foreground group-hover:text-primary transition-colors">
+                                {company.name}
+                              </span>
+                            )}
+                          </Link>
+                        ))}
+                      </div>
+                    </div>
+                  )}
                 </div>
-              )}
+              )}  
             </div>
 
-            {movie.videos?.results.find((v) => v.type === 'Trailer' && v.site === 'YouTube') && (
-              <div className="xl:w-[400px] shrink-0">
-                <h2 className="text-xl font-semibold mb-2 flex items-center gap-2">
-                  <PlayCircle className="w-5 h-5" /> Trailer
-                </h2>
-                <div className="aspect-video w-full rounded-lg overflow-hidden border">
-                  <iframe
-                    width="100%"
-                    height="100%"
-                    src={`https://www.youtube.com/embed/${movie.videos.results.find((v) => v.type === 'Trailer' && v.site === 'YouTube')?.key}`}
-                    title="Trailer"
-                    frameBorder="0"
-                    allowFullScreen
-                  ></iframe>
-                </div>
+            
+
+            {/* Right Column: Trailer AND Collection Stacked */}
+            {(trailer || hasCollection) && (
+              <div className="xl:w-[400px] w-full shrink-0 flex flex-col gap-8 min-w-0">
+                
+                {/* Trailer */}
+                {trailer && (
+                  <div>
+                    <h2 className="text-xl font-semibold mb-2 flex items-center gap-2">
+                      <PlayCircle className="w-5 h-5" /> Trailer
+                    </h2>
+                    <div className="aspect-video w-full rounded-lg overflow-hidden border shadow-sm">
+                      <iframe
+                        width="100%"
+                        height="100%"
+                        src={`https://www.youtube.com/embed/${trailer.key}`}
+                        title="Trailer"
+                        frameBorder="0"
+                        allowFullScreen
+                      ></iframe>
+                    </div>
+                  </div>
+                )}
+
+                {/* Collection (Horizontal Scroll without Scrollbar) */}
+                {hasCollection && (
+                  <div className="min-w-0 w-full">
+                    <h2 className="text-xl font-semibold mb-4 line-clamp-1">
+                      More from Collection
+                    </h2>
+                    <div className="flex overflow-x-auto gap-3 pb-4 snap-x [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none]">
+                      {collection.parts
+                        .sort((a, b) => new Date(a.release_date).getTime() - new Date(b.release_date).getTime())
+                        .map((part) => (
+                          <div key={part.id} className="w-[120px] shrink-0 snap-start">
+                            <MediaCard item={part as any} type="movie" />
+                          </div>
+                        ))
+                      }
+                    </div>
+                  </div>
+                )}
               </div>
             )}
+
           </div>
         </div>
 
@@ -213,7 +319,7 @@ const [creditsVisible, setCreditsVisible] = useState(14);
           <div className="mt-12 pt-8 border-t">
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 lg:gap-12">
               
-              {/* Left Column: Cast */}
+              {/* Cast */}
               {cast.length > 0 && (
                 <div className="min-w-0 flex flex-col">
                   <h2 className="text-xl font-semibold mb-4">Cast</h2>
@@ -222,11 +328,7 @@ const [creditsVisible, setCreditsVisible] = useState(14);
                       <Link key={actor.id} to={`/person/${actor.id}`} className="text-center group block">
                         <div className="overflow-hidden rounded-md border bg-muted">
                           {actor.profile_path ? (
-                            <img
-                              src={tmdbService.getImageUrl(actor.profile_path, 'w500')}
-                              alt={actor.name}
-                              className="w-full aspect-[2/3] object-cover transition-transform duration-300 group-hover:scale-105"
-                            />
+                            <img src={tmdbService.getImageUrl(actor.profile_path, 'w500')} alt={actor.name} className="w-full aspect-[2/3] object-cover transition-transform duration-300 group-hover:scale-105" />
                           ) : (
                             <div className="w-full aspect-[2/3] flex items-center justify-center">
                               <span className="text-[10px] text-muted-foreground">No image</span>
@@ -243,7 +345,7 @@ const [creditsVisible, setCreditsVisible] = useState(14);
                 </div>
               )}
 
-              {/* Right Column: Crew */}
+              {/* Crew */}
               {crew.length > 0 && (
                 <div className="min-w-0 flex flex-col">
                   <h2 className="text-xl font-semibold mb-4">Crew</h2>
@@ -252,11 +354,7 @@ const [creditsVisible, setCreditsVisible] = useState(14);
                       <Link key={person.id} to={`/person/${person.id}`} className="text-center group block">
                         <div className="overflow-hidden rounded-md border bg-muted">
                           {person.profile_path ? (
-                            <img
-                              src={tmdbService.getImageUrl(person.profile_path, 'w500')}
-                              alt={person.name}
-                              className="w-full aspect-[2/3] object-cover transition-transform duration-300 group-hover:scale-105"
-                            />
+                            <img src={tmdbService.getImageUrl(person.profile_path, 'w500')} alt={person.name} className="w-full aspect-[2/3] object-cover transition-transform duration-300 group-hover:scale-105" />
                           ) : (
                             <div className="w-full aspect-[2/3] flex items-center justify-center">
                               <span className="text-[10px] text-muted-foreground">No image</span>
@@ -286,13 +384,11 @@ const [creditsVisible, setCreditsVisible] = useState(14);
                     if (hasMore) {
                       setCreditsVisible(prev => prev + 14);
                     } else {
-                      setCreditsVisible(14); // Reset back to default
+                      setCreditsVisible(14); 
                     }
                   }}
                 >
-                  {(cast.length > creditsVisible || crew.length > creditsVisible) 
-                    ? 'View More Cast & Crew' 
-                    : 'View Less Cast & Crew'}
+                  {(cast.length > creditsVisible || crew.length > creditsVisible) ? 'View More Cast & Crew' : 'View Less Cast & Crew'}
                 </Button>
               </div>
             )}

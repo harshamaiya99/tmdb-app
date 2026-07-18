@@ -64,6 +64,14 @@ export interface Movie {
   similar?: { results: Movie[] };
   external_ids?: { imdb_id: string | null };
   reviews?: { results: Review[] };
+  belongs_to_collection?: {
+    id: number;
+    name: string;
+    poster_path: string | null;
+    backdrop_path: string | null;
+  };
+  production_companies?: ProductionCompany[]; 
+  'watch/providers'?: WatchProviders;
 }
 
 export interface TVShow {
@@ -161,6 +169,39 @@ export interface PersonListResult {
   profile_path: string | null;
   known_for_department: string;
   popularity: number;
+}
+
+export interface Collection {
+  id: number;
+  name: string;
+  overview: string;
+  poster_path: string | null;
+  backdrop_path: string | null;
+  parts: Movie[];
+}
+
+export interface ProductionCompany {
+  id: number;
+  logo_path: string | null;
+  name: string;
+  origin_country: string;
+}
+
+export interface WatchProvider {
+  provider_id: number;
+  provider_name: string;
+  logo_path: string;
+}
+
+export interface WatchProviders {
+  results: {
+    [country: string]: {
+      link?: string;
+      flatrate?: WatchProvider[]; // Streaming platforms (Netflix, Hulu, etc)
+      rent?: WatchProvider[];
+      buy?: WatchProvider[];
+    };
+  };
 }
 
 export function isActingCredit(character: string | undefined, title?: string): boolean {
@@ -278,6 +319,23 @@ class TMDBService {
     return this.fetchFromTMDB<TrendingResponse<PersonListResult>>(`/person/popular?page=${page}`);
   }
 
+  // Fetch collection (franchise/series) details
+  async getCollectionDetails(id: number): Promise<Collection> {
+    return this.fetchFromTMDB<Collection>(`/collection/${id}`);
+  }
+
+  // --- DISCOVER ENDPOINTS (NEW) ---
+  
+  // Fetch movies by production company
+  async getMoviesByCompany(companyId: number, page: number = 1): Promise<TrendingResponse<Movie>> {
+    return this.fetchFromTMDB<TrendingResponse<Movie>>(`/discover/movie?with_companies=${companyId}&page=${page}&sort_by=popularity.desc`);
+  }
+
+  // Fetch movies by streaming provider (defaulting to US region)
+  async getMoviesByProvider(providerId: number, page: number = 1): Promise<TrendingResponse<Movie>> {
+    return this.fetchFromTMDB<TrendingResponse<Movie>>(`/discover/movie?with_watch_providers=${providerId}&watch_region=US&page=${page}&sort_by=popularity.desc`);
+  }
+
   // --- PAGINATED CATEGORY ENDPOINT ---
   async getCategoryList(category: string, page: number = 1): Promise<TrendingResponse<any>> {
     const endpoints: Record<string, string> = {
@@ -301,21 +359,19 @@ class TMDBService {
     return this.fetchFromTMDB<TrendingResponse<any>>(`${endpoint}?with_genres=${genreId}&sort_by=popularity.desc&page=${page}`);
   }
 
-  // --- DETAILS ENDPOINTS (RESTORED append_to_response!) ---
+  // --- DETAILS ENDPOINTS ---
   async getMovieDetails(id: number): Promise<Movie> {
-    return this.fetchFromTMDB<Movie>(`/movie/${id}?append_to_response=credits,videos,similar,external_ids,reviews`);
+    return this.fetchFromTMDB<Movie>(`/movie/${id}?append_to_response=credits,videos,similar,external_ids,reviews,watch/providers`);
   }
 
   async getTVShowDetails(id: number): Promise<TVShow> {
     return this.fetchFromTMDB<TVShow>(`/tv/${id}?append_to_response=credits,videos,similar,external_ids,reviews`);
   }
 
-  // RESTORED Seasons and Episodes fetcher!
   async getTVSeasonDetails(tvId: number, seasonNumber: number): Promise<TVSeasonDetails> {
     return this.fetchFromTMDB<TVSeasonDetails>(`/tv/${tvId}/season/${seasonNumber}`);
   }
 
-  // RESTORED Person Details fetcher!
   async getPersonDetails(id: number): Promise<Person> {
     return this.fetchFromTMDB<Person>(`/person/${id}?append_to_response=combined_credits,images`);
   }
