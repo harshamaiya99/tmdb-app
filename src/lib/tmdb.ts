@@ -1,5 +1,3 @@
-// src/lib/tmdb.ts
-
 const TMDB_BASE_URL = 'https://api.themoviedb.org/3';
 const TMDB_IMAGE_BASE_URL = 'https://image.tmdb.org/t/p';
 
@@ -197,7 +195,7 @@ export interface WatchProviders {
   results: {
     [country: string]: {
       link?: string;
-      flatrate?: WatchProvider[]; // Streaming platforms (Netflix, Hulu, etc)
+      flatrate?: WatchProvider[];
       rent?: WatchProvider[];
       buy?: WatchProvider[];
     };
@@ -319,6 +317,17 @@ class TMDBService {
     return this.fetchFromTMDB<TrendingResponse<PersonListResult>>(`/person/popular?page=${page}`);
   }
 
+  async getTrendingStreamingMovies(): Promise<Movie[]> {
+    const data = await this.fetchFromTMDB<TrendingResponse<Movie>>('/discover/movie?watch_region=IN&with_watch_monetization_types=flatrate&sort_by=popularity.desc');
+    return data.results;
+  }
+
+  async getIMDbTopRatedMovies(): Promise<Movie[]> {
+    // Mimics IMDb Top 250 by getting highest rated movies with at least 10,000 votes
+    const data = await this.fetchFromTMDB<TrendingResponse<Movie>>('/discover/movie?sort_by=vote_average.desc&vote_count.gte=10000');
+    return data.results;
+  }
+
   // Fetch collection (franchise/series) details
   async getCollectionDetails(id: number): Promise<Collection> {
     return this.fetchFromTMDB<Collection>(`/collection/${id}`);
@@ -345,13 +354,16 @@ class TMDBService {
       'upcoming-movies': '/movie/upcoming',
       'trending-tv': '/trending/tv/day',
       'popular-tv': '/tv/popular',
-      'top-rated-tv': '/tv/top_rated'
+      'top-rated-tv': '/tv/top_rated',
+      'trending-streaming-movies': '/discover/movie?watch_region=IN&with_watch_monetization_types=flatrate&sort_by=popularity.desc',
+      'imdb-top-rated-movies': '/discover/movie?sort_by=vote_average.desc&vote_count.gte=10000'
     };
     
     const endpoint = endpoints[category];
     if (!endpoint) throw new Error('Invalid category');
     
-    return this.fetchFromTMDB<TrendingResponse<any>>(`${endpoint}?page=${page}`);
+    const separator = endpoint.includes('?') ? '&' : '?';
+    return this.fetchFromTMDB<TrendingResponse<any>>(`${endpoint}${separator}page=${page}`);
   }
 
   async getGenreMediaList(mediaType: 'movie' | 'tv', genreId: number, page: number = 1): Promise<TrendingResponse<any>> {

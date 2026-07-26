@@ -1,12 +1,9 @@
-// src/pages/HomePage.tsx
-
 import { useEffect, useState } from 'react';
 import { Link, useSearchParams } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { MediaCard } from '@/components/MediaCard';
 import { MediaGridSkeleton } from '@/components/MediaGridSkeleton';
-// NEW: Imported PersonListResult
 import { tmdbService, type Movie, type TVShow, type PersonListResult } from '@/lib/tmdb';
 import { useToast } from '@/components/ui/use-toast';
 import { useTitle } from '@/contexts/TitleContext';
@@ -18,6 +15,8 @@ export function HomePage() {
   const [nowPlayingMovies, setNowPlayingMovies] = useState<Movie[]>([]);
   const [topRatedMovies, setTopRatedMovies] = useState<Movie[]>([]);
   const [upcomingMovies, setUpcomingMovies] = useState<Movie[]>([]);
+  const [trendingStreamingMovies, setTrendingStreamingMovies] = useState<Movie[]>([]);
+  const [imdbTopMovies, setImdbTopMovies] = useState<Movie[]>([]); // NEW STATE
   const [popularTVShows, setPopularTVShows] = useState<TVShow[]>([]);
   const [topRatedTVShows, setTopRatedTVShows] = useState<TVShow[]>([]);
 
@@ -25,7 +24,6 @@ export function HomePage() {
   const [error, setError] = useState('');
   const [searchParams, setSearchParams] = useSearchParams();
   
-  // NEW: Added people array to the searchResults state
   const [searchResults, setSearchResults] = useState<{ movies: Movie[]; tv: TVShow[]; people: PersonListResult[] } | null>(null);
   
   const [searching, setSearching] = useState(false);
@@ -55,7 +53,6 @@ export function HomePage() {
     const runSearch = async () => {
       try {
         setSearching(true);
-        // NEW: Added tmdbService.searchPersons to the Promise.all array
         const [movieResults, tvResults, peopleResults] = await Promise.all([
           tmdbService.searchMovies(searchTerm),
           tmdbService.searchTVShows(searchTerm),
@@ -63,7 +60,6 @@ export function HomePage() {
         ]);
 
         if (isActive) {
-          // NEW: Stored peopleResults in the state
           setSearchResults({
             movies: movieResults.results,
             tv: tvResults.results,
@@ -104,6 +100,8 @@ export function HomePage() {
         upcomingMoviesData,
         popularTVData,
         topRatedTVData,
+        streamingMoviesData,
+        imdbTopData,
       ] = await Promise.all([
         tmdbService.getTrendingMovies(),
         tmdbService.getTrendingTVShows(),
@@ -112,6 +110,8 @@ export function HomePage() {
         tmdbService.getUpcomingMovies(),
         tmdbService.getPopularTVShows(),
         tmdbService.getTopRatedTVShows(),
+        tmdbService.getTrendingStreamingMovies(),
+        tmdbService.getIMDbTopRatedMovies(),
       ]);
 
       setMovies(moviesData);
@@ -121,6 +121,8 @@ export function HomePage() {
       setUpcomingMovies(upcomingMoviesData);
       setPopularTVShows(popularTVData);
       setTopRatedTVShows(topRatedTVData);
+      setTrendingStreamingMovies(streamingMoviesData);
+      setImdbTopMovies(imdbTopData);
     } catch (err) {
       const message = err instanceof Error ? err.message : 'Failed to fetch data';
       setError(message);
@@ -136,7 +138,6 @@ export function HomePage() {
 
   const displayMovies = searchResults?.movies ?? movies;
   const displayTVShows = searchResults?.tv ?? tvShows;
-  // NEW: Extract displayPeople array
   const displayPeople = searchResults?.people ?? [];
 
   const ContentSection = ({ title, items, type, category, hideSeeMore = false }: { title: string; items: (Movie | TVShow)[]; type: 'movie' | 'tv'; category: string; hideSeeMore?: boolean }) => {
@@ -197,6 +198,12 @@ export function HomePage() {
           {!hasActiveSearch && (
             <>
               <ContentSection
+                title="Trending on Streaming"
+                items={trendingStreamingMovies}
+                type="movie"
+                category="trending-streaming-movies"
+              />
+              <ContentSection
                 title="Now Playing in Theaters"
                 items={nowPlayingMovies}
                 type="movie"
@@ -208,6 +215,14 @@ export function HomePage() {
                 type="movie"
                 category="top-rated-movies"
               />
+              
+              <ContentSection
+                title="IMDB Top Rated Movies"
+                items={imdbTopMovies}
+                type="movie"
+                category="imdb-top-rated-movies"
+              />
+              
               <ContentSection
                 title="Upcoming Movies"
                 items={upcomingMovies}
@@ -242,7 +257,6 @@ export function HomePage() {
             </>
           )}
 
-          {/* NEW: People Search Results Block */}
           {hasActiveSearch && displayPeople.length > 0 && (
             <section className="space-y-4">
               <h2 className="text-2xl font-bold tracking-tight mb-4">People</h2>
