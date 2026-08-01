@@ -18,3 +18,14 @@ export function formatDate(dateString: string | undefined | null): string {
   
   return `${day}/${month}/${year}`;
 }
+
+export function buildEmbedUrl(template?: string, tmdbId?: number, imdbId?: string): string {
+  if (!template) return '#';
+
+  const tmdb = tmdbId !== undefined && tmdbId !== null ? tmdbId.toString() : '';
+  const imdb = imdbId ?? '';
+
+  return template
+    .replace(/\{TMDB_ID\}/g, tmdb)
+    .replace(/\{IMDB_ID\}/g, imdb);
+}

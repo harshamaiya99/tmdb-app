@@ -8,7 +8,7 @@ import { Skeleton } from '@/components/ui/skeleton';
 import { MediaCard } from '@/components/MediaCard';
 import { tmdbService, type TVShow, type Episode } from '@/lib/tmdb';
 import { useToast } from '@/components/ui/use-toast';
-import { formatDate } from '@/lib/utils';
+import { buildEmbedUrl, formatDate } from '@/lib/utils';
 import { useTitle } from '@/contexts/TitleContext';
 import { ReviewSection } from '../components/ReviewSection';
 import { EpisodesRatingOverview } from '../components/EpisodesRatingOverview';
@@ -410,8 +410,7 @@ const [creditsVisible, setCreditsVisible] = useState(14);
                   const imdbId = tvShow.external_ids?.imdb_id || '';
                   const urlTemplate = import.meta.env.VITE_TV_EMBED_URL;
                   
-                  const streamUrl = urlTemplate
-                    .replace('{IMDB_ID}', imdbId)
+                  const streamUrl = buildEmbedUrl(urlTemplate, tvShow.id, imdbId)
                     .replace('{SEASON}', selectedSeason.toString())
                     .replace('{EPISODE}', episode.episode_number.toString());
 

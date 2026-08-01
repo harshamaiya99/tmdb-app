@@ -7,6 +7,7 @@ import { Badge } from '@/components/ui/badge';
 import { Skeleton } from '@/components/ui/skeleton';
 import { MediaCard } from '@/components/MediaCard';
 import { tmdbService, type Movie, type Collection } from '@/lib/tmdb';
+import { buildEmbedUrl } from '@/lib/utils';
 import { useToast } from '@/components/ui/use-toast';
 import { useTitle } from '@/contexts/TitleContext';
 import { ReviewSection } from '../components/ReviewSection';
@@ -134,7 +135,7 @@ export function MovieDetailsPage() {
 
             {(() => {
               const urlTemplate = import.meta.env.VITE_MOVIE_EMBED_URL;
-              const streamUrl = urlTemplate ? urlTemplate.replace('{IMDB_ID}', movie.external_ids?.imdb_id || '') : '#';
+              const streamUrl = buildEmbedUrl(urlTemplate, movie.id, movie.external_ids?.imdb_id || '');
               
               return (
                 <Button asChild className="w-full gap-2 mt-2">
