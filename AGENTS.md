@@ -36,6 +36,7 @@ The app is organized around a few clear layers:
 - Route-level pages live in [src/pages](src/pages).
 - Reusable UI and feature components live in [src/components](src/components).
 - Shared state and app-wide context live in [src/contexts](src/contexts).
+- Reusable page-level hooks live in [src/hooks](src/hooks).
 - API integration and domain types live in [src/lib/tmdb.ts](src/lib/tmdb.ts).
 - Small shared helpers live in [src/lib/utils.ts](src/lib/utils.ts).
 
@@ -50,10 +51,10 @@ The app is organized around a few clear layers:
 
 - [src/App.tsx](src/App.tsx) – top-level router, protected-route logic, and global providers
 - [src/pages](src/pages) – route pages such as home, details, lists, and login
-- [src/components](src/components) – layout, media cards, review section, and shared UI wrappers
+- [src/components](src/components) – layout, media cards, review section, shared section composition, and shared UI wrappers
 - [src/components/ui](src/components/ui) – reusable base UI primitives
 - [src/contexts](src/contexts) – context providers such as title state
-- [src/hooks](src/hooks) – custom hooks
+- [src/hooks](src/hooks) – custom hooks, including page-title synchronization
 - [src/lib](src/lib) – TMDB API integration and helper utilities
 - [src/styles](src/styles) – styling assets if introduced later
 
@@ -84,6 +85,7 @@ Before making changes, an AI should first understand the existing implementation
 - Keep page components focused on rendering and data fetching; avoid burying too much logic in JSX.
 - Reuse existing components before creating new ones.
 - Use `useEffect` for side effects such as fetching data and syncing title state.
+- Prefer shared hooks such as [src/hooks/usePageTitle.ts](src/hooks/usePageTitle.ts) for repeated page-level concerns.
 
 ### Import style
 
@@ -118,6 +120,7 @@ Reusable code should live in the existing project structure:
 
 - Shared UI primitives belong in [src/components/ui](src/components/ui)
 - Shared feature components belong in [src/components](src/components)
+- Shared page-level composition such as [src/components/MediaSection.tsx](src/components/MediaSection.tsx) should be reused when the same section pattern appears in multiple pages
 - Hooks belong in [src/hooks](src/hooks)
 - Shared utilities and helper logic belong in [src/lib](src/lib)
 - API logic should stay in [src/lib/tmdb.ts](src/lib/tmdb.ts)
@@ -131,7 +134,7 @@ When a new feature seems to require a new file, confirm that the existing reposi
 - The API key is stored in local storage after successful validation.
 - TMDB integration is centralized in [src/lib/tmdb.ts](src/lib/tmdb.ts) so pages do not directly call the API.
 - Routing is handled by React Router, with protected routes preventing access until authentication succeeds.
-- The header title is shared through the title context so page-specific titles stay consistent with the current route.
+- The header title is shared through the title context, with a small hook wrapper for page-specific title updates.
 - Images come from TMDB and are resolved through the centralized image URL helper.
 - The app uses Vite environment variables such as VITE_MOVIE_EMBED_URL for optional watch-link behavior; keep any new environment usage client-safe and non-secret.
 

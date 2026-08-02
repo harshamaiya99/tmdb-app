@@ -4,11 +4,11 @@ import { useParams, useNavigate } from 'react-router-dom';
 import { ArrowLeft, ArrowRight, Calendar, MapPin, X } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Skeleton } from '@/components/ui/skeleton';
-import { MediaCard } from '@/components/MediaCard';
+import { MediaSection } from '@/components/MediaSection';
 import { tmdbService, isActingCredit, type Person } from '@/lib/tmdb';
 import { useToast } from '@/components/ui/use-toast';
 import { formatDate } from '@/lib/utils';
-import { useTitle } from '@/contexts/TitleContext';
+import { usePageTitle } from '@/hooks/usePageTitle';
 
 export function PersonDetailsPage() {
   const { id } = useParams<{ id: string }>();
@@ -17,7 +17,8 @@ export function PersonDetailsPage() {
   const [selectedImageIndex, setSelectedImageIndex] = useState<number | null>(null);
   const navigate = useNavigate();
   const { toast } = useToast();
-  const { setTitle } = useTitle();
+
+  usePageTitle(person ? `${person.name}'s Profile` : 'Person Details');
 
   useEffect(() => {
     if (id) {
@@ -25,12 +26,6 @@ export function PersonDetailsPage() {
       window.scrollTo(0, 0);
     }
   }, [id]);
-
-  useEffect(() => {
-    if (person) {
-      setTitle(`${person.name}'s Profile`);
-    }
-  }, [person, setTitle]);
 
   const fetchPersonDetails = async (personId: number) => {
     try {
@@ -195,43 +190,27 @@ export function PersonDetailsPage() {
               {(movieCredits.length > 0 || tvCredits.length > 0) && (
                 <div className="pt-8 border-t space-y-8">
                   {movieCredits.length > 0 && (
-                    <div>
-                      <div className="mb-4 flex items-center justify-between">
-                        <h2 className="text-2xl font-semibold">Movies</h2>
-                        <Button variant="ghost" size="sm" onClick={() => navigate(`/category/person-${person.id}-movies`)}>
-                          View More
-                        </Button>
-                      </div>
-                      <div className="grid grid-cols-2 gap-4 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 xl:grid-cols-8">
-                        {movieCredits.map((credit, idx) => (
-                          <MediaCard
-                            key={`${credit.id}-${idx}`}
-                            item={credit}
-                            type={credit.media_type}
-                          />
-                        ))}
-                      </div>
-                    </div>
+                    <MediaSection
+                      title="Movies"
+                      items={movieCredits}
+                      type="movie"
+                      className="space-y-4"
+                      gridClassName="grid grid-cols-2 gap-4 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 xl:grid-cols-8"
+                      category={`person-${person.id}-movies`}
+                      hideSeeMore={false}
+                    />
                   )}
 
                   {tvCredits.length > 0 && (
-                    <div>
-                      <div className="mb-4 flex items-center justify-between">
-                        <h2 className="text-2xl font-semibold">TV Shows</h2>
-                        <Button variant="ghost" size="sm" onClick={() => navigate(`/category/person-${person.id}-tv`)}>
-                          View More
-                        </Button>
-                      </div>
-                      <div className="grid grid-cols-2 gap-4 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-8">
-                        {tvCredits.map((credit, idx) => (
-                          <MediaCard
-                            key={`${credit.id}-${idx}`}
-                            item={credit}
-                            type={credit.media_type}
-                          />
-                        ))}
-                      </div>
-                    </div>
+                    <MediaSection
+                      title="TV Shows"
+                      items={tvCredits}
+                      type="tv"
+                      className="space-y-4"
+                      gridClassName="grid grid-cols-2 gap-4 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-8"
+                      category={`person-${person.id}-tv`}
+                      hideSeeMore={false}
+                    />
                   )}
                 </div>
               )}

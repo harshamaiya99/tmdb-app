@@ -66,6 +66,7 @@ New variables should be:
 4. Confirm the app loads home content.
 5. Open a movie or TV details page and verify the UI renders expected metadata.
 6. Try a search and confirm results load correctly.
+7. Verify the shared layout navigation tabs still behave correctly for movies, TV shows, and people.
 
 ### Common issue: invalid API key
 
@@ -85,6 +86,7 @@ When making changes:
 - keep TMDB requests centralized in the service layer
 - reuse existing shared components before introducing new ones
 - avoid introducing unnecessary state-management abstractions
+- prefer the shared title hook and shared media section component for repeated page-level concerns
 
 ### Before implementing a change
 
@@ -117,7 +119,7 @@ Small, focused changes are preferred over broad rewrites. If a feature touches r
 - inspect the browser console for runtime errors
 - verify the current route and whether the page is inside the protected layout
 - confirm the API key is present before making TMDB requests
-- check whether a feature should be implemented in a shared component or a page-local component
+- check whether a feature should be implemented in a shared component, shared hook, or a page-local component
 
 ## When to Update Documentation
 

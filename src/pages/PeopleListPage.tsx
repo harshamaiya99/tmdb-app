@@ -4,7 +4,7 @@ import { Button } from '@/components/ui/button';
 import { Skeleton } from '@/components/ui/skeleton';
 import { tmdbService, type PersonListResult } from '@/lib/tmdb';
 import { useToast } from '@/components/ui/use-toast';
-import { useTitle } from '@/contexts/TitleContext';
+import { usePageTitle } from '@/hooks/usePageTitle';
 
 export function PeopleListPage() {
   const [people, setPeople] = useState<PersonListResult[]>([]);
@@ -15,17 +15,14 @@ export function PeopleListPage() {
   const [searchParams, setSearchParams] = useSearchParams();
   const navigate = useNavigate();
   const { toast } = useToast();
-  const { setTitle } = useTitle();
+
+  usePageTitle('Popular People');
 
   // Read page from URL or default to 1
   useEffect(() => {
     const urlPage = parseInt(searchParams.get('page') || '1', 10);
     setPage(urlPage);
   }, [searchParams]);
-
-  useEffect(() => {
-    setTitle('Popular People');
-  }, [setTitle]);
 
   useEffect(() => {
     const fetchPeople = async () => {

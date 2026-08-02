@@ -113,6 +113,10 @@ The media browsing experience uses [src/components/MediaCard.tsx](src/components
 - rating badge
 - hover transition effects
 
+### Shared media sections
+
+A reusable section wrapper in [src/components/MediaSection.tsx](src/components/MediaSection.tsx) now handles the repeated layout for media lists with a heading, optional see-more action, and a responsive grid. This pattern is used on the home page and on person detail credit sections to keep those experiences visually consistent.
+
 ### Layout and shell
 
 The shared shell in [src/components/Layout.tsx](src/components/Layout.tsx) provides the sticky header, navigation tabs, search bar, theme switcher, and logout action. The main app chrome is intentionally restrained so the content can take the lead.

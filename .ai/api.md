@@ -8,7 +8,7 @@ This means the project is fully client-side and does not rely on a separate back
 
 ## Environment and runtime config
 
-The TMDB API key is provided by the user and stored in local storage. The app does not rely on a server-side secret or a separate auth service. The only current Vite environment variable in this flow is VITE_MOVIE_EMBED_URL, which is used to build the watch-link destination for movies and is unrelated to TMDB authentication.
+The TMDB API key is provided by the user and stored in local storage. The app does not rely on a server-side secret or a separate auth service. The current Vite environment variable used in the UI is VITE_MOVIE_EMBED_URL, which builds the watch-link destination for movie detail pages.
 
 ## Request Flow
 
@@ -152,7 +152,7 @@ The service uses strongly typed TypeScript interfaces for TMDB entities such as:
 - `Cast`
 - `Crew`
 
-This helps keep the UI code consistent and reduces runtime ambiguity.
+The current implementation also includes richer types for creator metadata, production companies, and watch providers where the TMDB responses expose them.
 
 ## Important Design Notes
 

@@ -6,7 +6,7 @@ import { MediaCard } from '@/components/MediaCard';
 import { MediaGridSkeleton } from '@/components/MediaGridSkeleton';
 import { tmdbService, type Movie, type TVShow, type PersonCredit } from '@/lib/tmdb';
 import { useToast } from '@/components/ui/use-toast';
-import { useTitle } from '@/contexts/TitleContext';
+import { usePageTitle } from '@/hooks/usePageTitle';
 
 const GENRE_NAMES: Record<string, string> = {
   '28': 'Action', '12': 'Adventure', '16': 'Animation', '35': 'Comedy', '80': 'Crime',
@@ -37,7 +37,6 @@ export function MediaListPage() {
   const [totalPages, setTotalPages] = useState(1);
   const [loading, setLoading] = useState(true);
   const [personName, setPersonName] = useState<string | null>(null);
-  const { setTitle } = useTitle();
   const { toast } = useToast();
 
   let effectiveCategory = category;
@@ -68,10 +67,7 @@ export function MediaListPage() {
     pageTitle = entityNameParam ? `Streaming on ${entityNameParam}` : 'Platform Movies'; 
   }
 
-  // Navbar Title Sync
-  useEffect(() => {
-    setTitle(pageTitle);
-  }, [pageTitle, setTitle]);
+  usePageTitle(pageTitle);
 
   useEffect(() => {
     const match = effectiveCategory?.match(/^person-(\d+)-(movies|tv)$/);

@@ -1,7 +1,7 @@
 // src/pages/TVShowDetailsPage.tsx
 import { useEffect, useState } from 'react';
 import { useParams, useNavigate, Link, useSearchParams } from 'react-router-dom';
-import { Calendar, Clock, Star, Tv, PlayCircle } from 'lucide-react';
+import { Calendar, Clock, Star, PlayCircle } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Skeleton } from '@/components/ui/skeleton';
@@ -9,7 +9,7 @@ import { MediaCard } from '@/components/MediaCard';
 import { tmdbService, type TVShow, type Episode } from '@/lib/tmdb';
 import { useToast } from '@/components/ui/use-toast';
 import { buildEmbedUrl, formatDate } from '@/lib/utils';
-import { useTitle } from '@/contexts/TitleContext';
+import { usePageTitle } from '@/hooks/usePageTitle';
 import { ReviewSection } from '../components/ReviewSection';
 import { EpisodesRatingOverview } from '../components/EpisodesRatingOverview';
 
@@ -30,7 +30,8 @@ const [creditsVisible, setCreditsVisible] = useState(14);
 
   const navigate = useNavigate();
   const { toast } = useToast();
-  const { setTitle } = useTitle();
+
+  usePageTitle('TV Show Details');
 
   useEffect(() => {
     if (id) {
@@ -38,10 +39,6 @@ const [creditsVisible, setCreditsVisible] = useState(14);
       window.scrollTo(0, 0);
     }
   }, [id]);
-
-  useEffect(() => {
-    setTitle('TV Show Details');
-  }, [setTitle]);
 
   useEffect(() => {
     if (tvShow?.seasons && tvShow.seasons.length > 0 && !searchParams.get('season')) {
@@ -128,17 +125,16 @@ const [creditsVisible, setCreditsVisible] = useState(14);
   // Sort Crew: Creators & Executive Producers First!
   const cast = tvShow.credits?.cast || [];
   const rawCrew = tvShow.credits?.crew || [];
-  
-  const creators = (tvShow.created_by || []).map(c => ({...c, job: 'Creator'}));
-  const creatorIds = new Set(creators.map(c => c.id));
-  
-  const execProducers = rawCrew.filter(c => c.job === 'Executive Producer' && !creatorIds.has(c.id));
-  const execIds = new Set(execProducers.map(c => c.id));
-  
-  const otherCrew = rawCrew.filter(c => !creatorIds.has(c.id) && !execIds.has(c.id));
-  
+  const creators = (tvShow.created_by || []).map((creator) => ({ ...creator, job: 'Creator' as const }));
+  const creatorIds = new Set(creators.map((creator) => creator.id));
+
+  const execProducers = rawCrew.filter((crewMember) => crewMember.job === 'Executive Producer' && !creatorIds.has(crewMember.id));
+  const execIds = new Set(execProducers.map((crewMember) => crewMember.id));
+
+  const otherCrew = rawCrew.filter((crewMember) => !creatorIds.has(crewMember.id) && !execIds.has(crewMember.id));
+
   const crew = [...creators, ...execProducers, ...otherCrew].filter(
-    (person, index, self) => index === self.findIndex(t => t.id === person.id)
+    (person, index, self) => index === self.findIndex((t) => t.id === person.id)
   );
 
   return (
@@ -188,7 +184,7 @@ const [creditsVisible, setCreditsVisible] = useState(14);
                           <Link to={`/person/${creator.id}`} className="text-primary hover:underline font-semibold">
                             {creator.name}
                           </Link>
-                          {index < tvShow.created_by!.length - 1 ? ', ' : ''}
+                          {index < (tvShow.created_by?.length ?? 0) - 1 ? ', ' : ''}
                         </span>
                       ))}
                     </p>

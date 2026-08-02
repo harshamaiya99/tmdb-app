@@ -10,7 +10,7 @@ A clean, minimal web app for browsing movies, TV shows, and people with data fro
 - 🔍 Search movies, TV shows, and people
 - 🧭 Deep-dive detail pages for movies, TV shows, and people
 - 🌗 Light/dark theme toggle
-- ✨ Responsive, content-first UI with reusable cards and skeleton states
+- ✨ Responsive, content-first UI with reusable cards, shared media sections, and skeleton states
 
 ## Tech Stack
 
@@ -71,12 +71,14 @@ src/
 │   ├── ui/                  # shared UI primitives
 │   ├── Layout.tsx
 │   ├── MediaCard.tsx
+│   ├── MediaSection.tsx     # reusable media-section composition
 │   ├── ReviewSection.tsx
 │   ├── ThemeToggle.tsx
 │   └── ...
 ├── contexts/
 │   └── TitleContext.tsx
 ├── hooks/
+│   ├── usePageTitle.ts      # shared page-title synchronization
 │   └── useTheme.ts
 ├── lib/
 │   ├── tmdb.ts              # centralized TMDB API integration

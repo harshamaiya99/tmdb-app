@@ -1,12 +1,11 @@
 import { useEffect, useState } from 'react';
 import { Link, useSearchParams } from 'react-router-dom';
-import { Button } from '@/components/ui/button';
 import { Alert, AlertDescription } from '@/components/ui/alert';
-import { MediaCard } from '@/components/MediaCard';
 import { MediaGridSkeleton } from '@/components/MediaGridSkeleton';
+import { MediaSection } from '@/components/MediaSection';
 import { tmdbService, type Movie, type TVShow, type PersonListResult } from '@/lib/tmdb';
 import { useToast } from '@/components/ui/use-toast';
-import { useTitle } from '@/contexts/TitleContext';
+import { usePageTitle } from '@/hooks/usePageTitle';
 
 export function HomePage() {
   const [movies, setMovies] = useState<Movie[]>([]);
@@ -16,23 +15,20 @@ export function HomePage() {
   const [topRatedMovies, setTopRatedMovies] = useState<Movie[]>([]);
   const [upcomingMovies, setUpcomingMovies] = useState<Movie[]>([]);
   const [trendingStreamingMovies, setTrendingStreamingMovies] = useState<Movie[]>([]);
-  const [imdbTopMovies, setImdbTopMovies] = useState<Movie[]>([]); // NEW STATE
+  const [imdbTopMovies, setImdbTopMovies] = useState<Movie[]>([]);
   const [popularTVShows, setPopularTVShows] = useState<TVShow[]>([]);
   const [topRatedTVShows, setTopRatedTVShows] = useState<TVShow[]>([]);
 
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
-  const [searchParams, setSearchParams] = useSearchParams();
-  
+  const [searchParams] = useSearchParams();
+
   const [searchResults, setSearchResults] = useState<{ movies: Movie[]; tv: TVShow[]; people: PersonListResult[] } | null>(null);
-  
+
   const [searching, setSearching] = useState(false);
   const { toast } = useToast();
-  const { setTitle } = useTitle();
 
-  useEffect(() => {
-    setTitle('TMDB Explorer');
-  }, [setTitle]);
+  usePageTitle('TMDB Explorer');
 
   const searchTerm = searchParams.get('query')?.trim() ?? '';
   const hasActiveSearch = Boolean(searchTerm);
@@ -140,28 +136,6 @@ export function HomePage() {
   const displayTVShows = searchResults?.tv ?? tvShows;
   const displayPeople = searchResults?.people ?? [];
 
-  const ContentSection = ({ title, items, type, category, hideSeeMore = false }: { title: string; items: (Movie | TVShow)[]; type: 'movie' | 'tv'; category: string; hideSeeMore?: boolean }) => {
-    if (!items || items.length === 0) return null;
-
-    return (
-      <section className="space-y-4">
-        <div className="mb-4 flex items-center justify-between">
-          <h2 className="text-2xl font-bold tracking-tight">{title}</h2>
-          {!hideSeeMore && (
-            <Button variant="ghost" size="sm" asChild>
-              <Link to={`/category/${category}`}>See More &rarr;</Link>
-            </Button>
-          )}
-        </div>
-        <div className="grid grid-cols-3 gap-4 md:grid-cols-6 lg:grid-cols-8 xl:grid-cols-10">
-          {items.slice(0, 10).map((item) => (
-            <MediaCard key={item.id} item={item as any} type={type} />
-          ))}
-        </div>
-      </section>
-    );
-  };
-
   return (
     <main className="container py-6">
       {error && (
@@ -186,8 +160,7 @@ export function HomePage() {
         </div>
       ) : (
         <div className="space-y-12 pb-12">
-          
-          <ContentSection
+          <MediaSection
             title={hasActiveSearch ? 'Movies' : 'Trending Movies'}
             items={displayMovies}
             type="movie"
@@ -197,33 +170,31 @@ export function HomePage() {
 
           {!hasActiveSearch && (
             <>
-              <ContentSection
+              <MediaSection
                 title="Trending on Streaming"
                 items={trendingStreamingMovies}
                 type="movie"
                 category="trending-streaming-movies"
               />
-              <ContentSection
+              <MediaSection
                 title="Now Playing in Theaters"
                 items={nowPlayingMovies}
                 type="movie"
                 category="now-playing-movies"
               />
-              <ContentSection
+              <MediaSection
                 title="Top Rated Movies"
                 items={topRatedMovies}
                 type="movie"
                 category="top-rated-movies"
               />
-              
-              <ContentSection
+              <MediaSection
                 title="IMDB Top Rated Movies"
                 items={imdbTopMovies}
                 type="movie"
                 category="imdb-top-rated-movies"
               />
-              
-              <ContentSection
+              <MediaSection
                 title="Upcoming Movies"
                 items={upcomingMovies}
                 type="movie"
@@ -232,7 +203,7 @@ export function HomePage() {
             </>
           )}
 
-          <ContentSection
+          <MediaSection
             title={hasActiveSearch ? 'TV Shows' : 'Trending TV Shows'}
             items={displayTVShows}
             type="tv"
@@ -242,13 +213,13 @@ export function HomePage() {
 
           {!hasActiveSearch && (
             <>
-              <ContentSection
+              <MediaSection
                 title="Popular TV Shows"
                 items={popularTVShows}
                 type="tv"
                 category="popular-tv"
               />
-              <ContentSection
+              <MediaSection
                 title="Top Rated TV Shows"
                 items={topRatedTVShows}
                 type="tv"
@@ -262,15 +233,15 @@ export function HomePage() {
               <h2 className="text-2xl font-bold tracking-tight mb-4">People</h2>
               <div className="grid grid-cols-3 gap-4 md:grid-cols-6 lg:grid-cols-8 xl:grid-cols-10">
                 {displayPeople.slice(0, 10).map((person) => (
-                  <Link 
-                    key={person.id} 
+                  <Link
+                    key={person.id}
                     to={`/person/${person.id}`}
                     className="cursor-pointer group flex flex-col space-y-2"
                   >
                     <div className="overflow-hidden rounded-xl bg-muted aspect-[2/3] border shadow-sm relative">
                       {person.profile_path ? (
-                        <img 
-                          src={tmdbService.getImageUrl(person.profile_path, 'w500')} 
+                        <img
+                          src={tmdbService.getImageUrl(person.profile_path, 'w500')}
                           alt={person.name}
                           className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
                           loading="lazy"
@@ -294,7 +265,6 @@ export function HomePage() {
               </div>
             </section>
           )}
-
         </div>
       )}
     </main>

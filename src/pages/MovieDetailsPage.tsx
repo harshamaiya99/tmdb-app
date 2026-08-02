@@ -9,7 +9,7 @@ import { MediaCard } from '@/components/MediaCard';
 import { tmdbService, type Movie, type Collection } from '@/lib/tmdb';
 import { buildEmbedUrl } from '@/lib/utils';
 import { useToast } from '@/components/ui/use-toast';
-import { useTitle } from '@/contexts/TitleContext';
+import { usePageTitle } from '@/hooks/usePageTitle';
 import { ReviewSection } from '../components/ReviewSection';
 
 export function MovieDetailsPage() {
@@ -25,7 +25,8 @@ export function MovieDetailsPage() {
 
   const navigate = useNavigate();
   const { toast } = useToast();
-  const { setTitle } = useTitle();
+
+  usePageTitle('Movie Details');
 
   useEffect(() => {
     if (id) {
@@ -33,10 +34,6 @@ export function MovieDetailsPage() {
       window.scrollTo(0, 0);
     }
   }, [id]);
-
-  useEffect(() => {
-    setTitle('Movie Details');
-  }, [setTitle]);
 
   const fetchMovieDetails = async (movieId: number) => {
     try {
@@ -160,7 +157,7 @@ export function MovieDetailsPage() {
                       className="hover:scale-110 hover:ring-2 hover:ring-primary rounded-xl transition-all"
                     >
                       <img
-                        src={tmdbService.getImageUrl(provider.logo_path, 'w200')}
+                        src={tmdbService.getImageUrl(provider.logo_path, 'w500')}
                         alt={provider.provider_name}
                         title={provider.provider_name}
                         className="w-10 h-10 rounded-xl shadow-sm border"
@@ -247,7 +244,7 @@ export function MovieDetailsPage() {
                           >
                             {company.logo_path ? (
                               <img
-                                src={tmdbService.getImageUrl(company.logo_path, 'w200')}
+                                src={tmdbService.getImageUrl(company.logo_path, 'w500')}
                                 alt={company.name}
                                 title={company.name}
                                 className="h-6 md:h-8 max-w-[120px] object-contain filter grayscale opacity-60 group-hover:grayscale-0 group-hover:opacity-100 group-hover:scale-105 transition-all dark:invert dark:group-hover:invert-0"

@@ -8,7 +8,7 @@ This project is a client-side React + TypeScript application for browsing TMDB m
 - The app stores that key locally and uses it for authenticated requests.
 - Routing is handled by React Router.
 - UI is composed from reusable page components and shared UI primitives.
-- All TMDB requests are centralized in one service module rather than spread across pages.
+- TMDB requests remain centralized in one service module rather than spread across pages.
 
 ## 2. Runtime Structure
 
@@ -113,9 +113,14 @@ Pages live in [src/pages](src/pages):
 ### Shared feature components
 
 - [src/components/MediaCard.tsx](src/components/MediaCard.tsx) renders a consistent card UI for movies, TV shows, and people.
+- [src/components/MediaSection.tsx](src/components/MediaSection.tsx) provides a shared layout for repeated media sections with an optional see-more link.
 - [src/components/ReviewSection.tsx](src/components/ReviewSection.tsx) renders review content for details pages.
 - [src/components/EpisodesRatingOverview.tsx](src/components/EpisodesRatingOverview.tsx) supports TV-show episode and rating presentation.
 - [src/components/MediaGridSkeleton.tsx](src/components/MediaGridSkeleton.tsx) provides loading placeholders.
+
+### Shared hooks
+
+- [src/hooks/usePageTitle.ts](src/hooks/usePageTitle.ts) keeps page title synchronization consistent without repeating `useEffect` logic in every page.
 
 ### UI primitives
 
@@ -137,7 +142,7 @@ Most page components use React `useState` and `useEffect` to manage:
 
 The app uses [src/contexts/TitleContext.tsx](src/contexts/TitleContext.tsx) to keep the page title synchronized across the layout and current route.
 
-This avoids hardcoding the header title inside each page and centralizes title updates.
+That title state is now wrapped by a small hook abstraction in [src/hooks/usePageTitle.ts](src/hooks/usePageTitle.ts), which keeps page-level code simpler and more consistent.
 
 ## 7. Data Flow
 
@@ -190,6 +195,6 @@ The repository is structured around a simple, maintainable pattern:
 - routing organizes the app into page-level views
 - one API service handles TMDB communication
 - React components render data and user interactions
-- shared UI primitives keep the experience consistent
+- shared UI primitives and a small set of shared hooks keep the experience consistent
 
 That structure is well-suited for a lightweight media browsing app and should be preserved as the project grows.

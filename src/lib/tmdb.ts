@@ -72,6 +72,12 @@ export interface Movie {
   'watch/providers'?: WatchProviders;
 }
 
+export interface Creator {
+  id: number;
+  name: string;
+  profile_path: string | null;
+}
+
 export interface TVShow {
   id: number;
   name: string;
@@ -88,6 +94,7 @@ export interface TVShow {
   number_of_seasons?: number;
   number_of_episodes?: number;
   tagline?: string;
+  created_by?: Creator[];
   seasons?: Season[];
   credits?: { cast: Cast[]; crew: Crew[] };
   videos?: { results: Video[] };
