@@ -57,6 +57,18 @@ The app is organized around a few clear layers:
 - [src/lib](src/lib) – TMDB API integration and helper utilities
 - [src/styles](src/styles) – styling assets if introduced later
 
+## Architectural Decision Framework
+
+Before making changes, an AI should first understand the existing implementation rather than jumping straight to a new solution. The default approach should be to:
+
+- understand the current implementation before editing
+- search the repository for reusable code before creating anything new
+- reuse existing components, hooks, utilities, services, and types whenever possible
+- prefer extending existing implementations over creating similar ones
+- avoid introducing duplicate business logic
+- keep the architecture simple and maintainable
+- explain architectural decisions before introducing new abstractions
+
 ## Coding Conventions
 
 ### TypeScript
@@ -91,6 +103,28 @@ The app is organized around a few clear layers:
 - Use the existing toast pattern for user-facing failures.
 - Respect the current loading skeleton experience on list and detail pages.
 
+## Code Reuse Policy
+
+The AI should always search for existing reusable code before creating new implementations. This applies to:
+
+- React components
+- Custom hooks
+- Utility functions
+- Service methods
+- Types
+- Context providers
+
+Reusable code should live in the existing project structure:
+
+- Shared UI primitives belong in [src/components/ui](src/components/ui)
+- Shared feature components belong in [src/components](src/components)
+- Hooks belong in [src/hooks](src/hooks)
+- Shared utilities and helper logic belong in [src/lib](src/lib)
+- API logic should stay in [src/lib/tmdb.ts](src/lib/tmdb.ts)
+- Shared types should live in the existing shared type definitions rather than being duplicated in page-level files
+
+When a new feature seems to require a new file, confirm that the existing repository structure does not already offer a better place for the logic.
+
 ## Important Design Decisions
 
 - The app uses a user-supplied TMDB API key rather than a server-side secret flow.
@@ -123,9 +157,42 @@ npm run build
 
 There are no dedicated automated tests in this repo at the moment, so building the app is the main verification step after meaningful changes.
 
+## Decision Checklist
+
+Before writing code, the AI should mentally evaluate the following questions:
+
+- Does similar functionality already exist?
+- Can an existing component be extended?
+- Can this become a reusable hook?
+- Can this logic be shared?
+- Does this duplicate API functionality?
+- Does this belong in the centralized TMDB service?
+- Is a new file actually necessary?
+
+This checklist is meant to encourage architectural thinking rather than immediate code generation.
+
+## Refactoring Guidance
+
+If a requested implementation would introduce duplication, the AI should:
+
+- identify the duplication
+- propose a reusable abstraction
+- preserve backwards compatibility where possible
+- refactor existing code where appropriate
+- explain why the refactor is beneficial
+
 ## Agent Guidance
 
 When working on this repo:
+
+1. Understand the request.
+2. Inspect the relevant files.
+3. Review the relevant documentation in [.ai](.ai).
+4. Identify reusable code.
+5. Explain the implementation plan.
+6. Then implement the solution.
+
+The AI should behave like a senior software engineer performing design review before implementation. That means reading the existing code, understanding the surrounding architecture, and making deliberate choices rather than jumping straight into a new abstraction or new file.
 
 - Read the relevant page and shared component before editing.
 - Follow the existing structure rather than introducing new patterns unless the change clearly requires them.

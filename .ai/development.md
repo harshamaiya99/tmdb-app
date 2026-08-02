@@ -86,6 +86,28 @@ When making changes:
 - reuse existing shared components before introducing new ones
 - avoid introducing unnecessary state-management abstractions
 
+### Before implementing a change
+
+Before writing code, take a short design-review pass:
+
+1. Understand the request.
+2. Inspect the relevant files.
+3. Review the relevant documentation in [.ai](.ai).
+4. Search for existing reusable components, hooks, utilities, types, or service methods.
+5. Explain the implementation plan briefly before editing.
+6. Implement the solution in the smallest, most maintainable way.
+
+### AI working style
+
+The AI should approach changes like a senior software engineer:
+
+- understand the existing implementation before editing
+- search for reusable code before introducing a new abstraction
+- prefer extending existing implementations over creating parallel ones
+- keep the architecture simple and maintainable
+- avoid duplicating business logic, especially around TMDB requests and shared UI behavior
+- if a change introduces duplication, refactor the shared logic rather than copying it
+
 ### Keep changes scoped
 
 Small, focused changes are preferred over broad rewrites. If a feature touches routing, data fetching, or UI structure, review the relevant guide in [.ai](.ai) first.

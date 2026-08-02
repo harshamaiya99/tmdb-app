@@ -172,6 +172,11 @@ Common patterns include:
 
 When extending the app, follow these principles:
 
+- understand the existing implementation before editing
+- search for reusable code before introducing anything new
+- prefer extending existing components, hooks, utilities, services, and types over creating parallel implementations
+- avoid duplicate business logic and duplicate API behavior
+- keep new abstractions simple and explain them when they are introduced
 - keep new data-fetching logic inside the central TMDB service when possible
 - keep page components focused on rendering and orchestration
 - reuse shared components instead of creating one-off UI blocks
