@@ -165,6 +165,7 @@ Update documentation when you change any of the following:
 - Prefer updating the relevant doc alongside the implementation instead of leaving it for later.
 - If a change affects both code and behavior, update the relevant documentation in the same change.
 - When introducing a new concept or workflow, add or update the appropriate guide rather than relying on scattered comments.
+- After any major change to the codebase, review the change set and update [AGENTS.md](AGENTS.md) plus any affected files under [.ai](.ai) so the documentation stays in sync with the implementation.
 
 ## Notes for Contributors
 
