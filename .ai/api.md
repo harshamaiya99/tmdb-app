@@ -8,7 +8,9 @@ This means the project is fully client-side and does not rely on a separate back
 
 ## Environment and runtime config
 
-The TMDB API key is provided by the user and stored in local storage. The app does not rely on a server-side secret or a separate auth service. The current Vite environment variable used in the UI is VITE_MOVIE_EMBED_URL, which builds the watch-link destination for movie detail pages.
+The default TMDB credential is provided by the user and stored in local storage. The app does not rely on a server-side secret or a separate auth service. The current Vite environment variable used in the UI is VITE_MOVIE_EMBED_URL, which builds the watch-link destination for movie detail pages.
+
+The service also supports an optional `VITE_TMDB_ACCESS_TOKEN` bearer token for TMDB v4 authentication. Vite client variables are bundled into the browser application, so this is suitable only for a personal hobby deployment; a server-side proxy is required to keep credentials private.
 
 ## Request Flow
 
@@ -16,7 +18,7 @@ A typical request follows this path:
 
 1. A page component requests data from the TMDB service.
 2. The service builds a full TMDB URL.
-3. The request is sent with the user-supplied API key appended as a query parameter.
+3. The request uses a bearer token when `VITE_TMDB_ACCESS_TOKEN` is configured; otherwise the user-supplied v3 API key is appended as a query parameter.
 4. The response is parsed as JSON and returned to the calling page.
 5. The page stores the result in React state and renders the UI.
 
@@ -35,12 +37,16 @@ Once validated, the key is:
 
 ### How authentication is used
 
-Every TMDB request is authenticated by appending the current API key to the URL as:
+When using the v3 API key, every TMDB request is authenticated by appending the current API key to the URL as:
 
 - `?api_key=...` when the endpoint has no existing query string
 - `&api_key=...` when the endpoint already contains query parameters
 
 This is handled inside the shared request helper, so pages do not need to manage auth details themselves.
+
+When using a v4 access token, the service sends `Authorization: Bearer <token>` instead, avoiding the credential in the request URL.
+
+Request methods accept an optional `AbortSignal` through `TMDBRequestOptions`. Callers can use an `AbortController` to cancel requests when a page unmounts or a newer request supersedes an older one.
 
 ### API key validation
 
@@ -96,11 +102,14 @@ The service also supports category-based browsing for:
 
 ## Error Handling
 
-The TMDB service handles failures in a simple and predictable way:
+The TMDB service exposes normalized `TMDBError` failures with a stable error code:
 
-- if no API key is set, it throws `API key not set`
-- if TMDB responds with HTTP 401, it throws `Invalid API key`
-- for other failed responses, it throws a generic `TMDB API error` with the status text
+- `AUTHENTICATION_ERROR` for missing or invalid credentials
+- `RATE_LIMIT_ERROR` for HTTP 429 responses, including `Retry-After` when available
+- `API_ERROR` for other unsuccessful TMDB responses
+- `NETWORK_ERROR` when TMDB cannot be reached
+
+Abort errors are passed through so callers can ignore expected cancellations.
 
 Pages typically convert these into user-visible toasts via the shared toast system.
 
