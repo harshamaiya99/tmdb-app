@@ -29,7 +29,7 @@ export function MediaSection({ title, items, type, category, hideSeeMore = false
           </Button>
         )}
       </div>
-      <div className={gridClassName ?? 'grid grid-cols-3 gap-4 md:grid-cols-6 lg:grid-cols-8 xl:grid-cols-10'}>
+      <div className={gridClassName ?? 'grid grid-cols-2 gap-4 sm:grid-cols-3 md:grid-cols-5 lg:grid-cols-6 xl:grid-cols-8 2xl:grid-cols-10'}>
         {visibleItems.map((item) => (
           <MediaCard key={item.id} item={item as Movie | TVShow | PersonCredit} type={type} />
         ))}

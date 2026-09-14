@@ -3,7 +3,7 @@ import { Card } from '@/components/ui/card';
 
 export function MediaGridSkeleton() {
   return (
-    <div className="grid grid-cols-3 md:grid-cols-6 lg:grid-cols-8 xl:grid-cols-10 gap-4">
+    <div className="grid grid-cols-2 gap-4 sm:grid-cols-3 md:grid-cols-5 lg:grid-cols-6 xl:grid-cols-8 2xl:grid-cols-10">
       {Array.from({ length: 12 }).map((_, i) => (
         <Card key={i} className="overflow-hidden border-0">
           <Skeleton className="aspect-[2/3] w-full" />

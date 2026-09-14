@@ -113,6 +113,8 @@ The media browsing experience uses [src/components/MediaCard.tsx](src/components
 - rating badge
 - hover transition effects
 
+Media imagery is rendered through the shared TMDB image component, which provides responsive `srcSet` candidates, intrinsic dimensions, layout-aware `sizes`, lazy loading by default, and consistent alt text.
+
 ### Shared media sections
 
 A reusable section wrapper in [src/components/MediaSection.tsx](src/components/MediaSection.tsx) now handles the repeated layout for media lists with a heading, optional see-more action, and a responsive grid. This pattern is used on the home page and on person detail credit sections to keep those experiences visually consistent.
@@ -178,6 +180,8 @@ The UI follows a few accessibility-friendly conventions:
 - icon-only controls include screen-reader text through `sr-only` labels
 - semantic structure is preserved with meaningful headings, buttons, and links
 - hover states are subtle and should not replace keyboard or assistive interaction
+- below-the-fold detail sections are rendered as they approach the viewport
+- dense media grids reserve ten-column layouts for the `2xl` breakpoint to keep cards readable on wide screens
 
 ## Extension Guidance
 

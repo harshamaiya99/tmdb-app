@@ -9,6 +9,8 @@ import { tmdbService, isActingCredit, type Person } from '@/lib/tmdb';
 import { formatDate } from '@/lib/utils';
 import { usePageTitle } from '@/hooks/usePageTitle';
 import { useCachedQuery } from '@/hooks/useCachedQuery';
+import { LazySection } from '@/components/LazySection';
+import { TMDBImage } from '@/components/TMDBImage';
 
 export function PersonDetailsPage() {
   const { id } = useParams<{ id: string }>();
@@ -97,7 +99,6 @@ export function PersonDetailsPage() {
     );
   }
 
-  const profileUrl = tmdbService.getImageUrl(person.profile_path, 'original');
   const birthDate = formatDate(person.birthday);
   const deathDate = formatDate(person.deathday);
 
@@ -121,12 +122,15 @@ export function PersonDetailsPage() {
           <div className="grid md:grid-cols-[250px_1fr] lg:grid-cols-[300px_1fr] gap-8">
             {/* Left Column: Profile Picture & Personal Info */}
             <div className="space-y-6">
-              {profileUrl ? (
-                <img
-                  src={profileUrl}
+              {person.profile_path ? (
+                <TMDBImage
+                  path={person.profile_path}
                   alt={`${person.name} profile`}
-                  width="500"
-                  height="750"
+                  width={500}
+                  height={750}
+                  sizes="(min-width: 1024px) 300px, (min-width: 768px) 250px, 80vw"
+                  loading="eager"
+                  fetchPriority="high"
                   className="w-full rounded-xl border bg-muted shadow-sm"
                 />
               ) : (
@@ -214,12 +218,11 @@ export function PersonDetailsPage() {
           </div>
 
           {galleryImages.length > 0 && (
-            <div className="pt-8 border-t w-full">
+            <LazySection>
+            <div className="w-full border-t pt-8">
               <h2 className="text-2xl font-semibold mb-6">Gallery</h2>
-              <div className="grid grid-cols-2 gap-4 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-10">
+              <div className="grid grid-cols-2 gap-4 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-8 2xl:grid-cols-10">
                 {galleryImages.map((image, idx) => {
-                  const imageUrl = tmdbService.getImageUrl(image.file_path, 'w500');
-
                   return (
                     <button
                       key={`${image.file_path}-${idx}`}
@@ -227,11 +230,12 @@ export function PersonDetailsPage() {
                       onClick={() => openImage(idx)}
                       className="overflow-hidden rounded-xl border bg-muted text-left hover:ring-2 hover:ring-primary transition-all group"
                     >
-                      <img
-                        src={imageUrl}
+                      <TMDBImage
+                        path={image.file_path}
                         alt={`${person.name} gallery ${idx + 1}`}
                         width={image.width}
                         height={image.height}
+                        sizes="(min-width: 1536px) 9vw, (min-width: 1024px) 18vw, (min-width: 640px) 30vw, 45vw"
                         className="aspect-[2/3] w-full object-cover group-hover:scale-105 transition-transform duration-300"
                         loading="lazy"
                       />
@@ -240,6 +244,7 @@ export function PersonDetailsPage() {
                 })}
               </div>
             </div>
+            </LazySection>
           )}
         </div>
 
@@ -285,11 +290,13 @@ export function PersonDetailsPage() {
                 >
                   <ArrowLeft className="h-5 w-5" />
                 </Button>
-                <img
-                  src={tmdbService.getImageUrl(selectedImage.file_path, 'original')}
+                <TMDBImage
+                  path={selectedImage.file_path}
                   alt={`${person.name} gallery ${selectedImageIndex! + 1}`}
                   width={selectedImage.width}
                   height={selectedImage.height}
+                  sizes="min(90vw, 1200px)"
+                  loading="eager"
                   className="max-h-[85vh] w-full rounded-xl object-contain shadow-2xl"
                 />
                 <Button 

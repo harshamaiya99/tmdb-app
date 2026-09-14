@@ -2,7 +2,7 @@ import { useEffect, useRef, useState } from 'react';
 import { ChevronLeft, ChevronRight } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
-import { tmdbService } from '@/lib/tmdb';
+import { TMDBImage } from '@/components/TMDBImage';
 
 interface CreditPerson {
   id: number;
@@ -85,12 +85,12 @@ export function CreditsCarousel({ people, type }: CreditsCarouselProps) {
           >
             <div className="h-[112px] overflow-hidden rounded-md border bg-muted">
               {person.profile_path ? (
-                <img
-                  src={tmdbService.getImageUrl(person.profile_path, 'w500')}
+                <TMDBImage
+                  path={person.profile_path}
                   alt={`${person.name} profile`}
-                  width="500"
-                  height="750"
-                  loading="lazy"
+                  width={500}
+                  height={750}
+                  sizes="75px"
                   className="h-full w-full object-cover transition-transform duration-300 group-hover:scale-105"
                 />
               ) : (

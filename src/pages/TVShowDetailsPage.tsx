@@ -13,6 +13,9 @@ import { usePageTitle } from '@/hooks/usePageTitle';
 import { useCachedQuery } from '@/hooks/useCachedQuery';
 import { ReviewSection } from '../components/ReviewSection';
 import { EpisodesRatingOverview } from '../components/EpisodesRatingOverview';
+import { LazySection } from '@/components/LazySection';
+import { TMDBImage } from '@/components/TMDBImage';
+import { useLazyLoad } from '@/hooks/useLazyLoad';
 
 export function TVShowDetailsPage() {
   const { id } = useParams<{ id: string }>();
@@ -20,6 +23,7 @@ export function TVShowDetailsPage() {
   const selectedSeason = parseInt(searchParams.get('season') || '0', 10);
   const [activeCredits, setActiveCredits] = useState<'cast' | 'crew'>('cast');
   const [heatmapRowSpan, setHeatmapRowSpan] = useState(1);
+  const episodesLoad = useLazyLoad();
 
   const navigate = useNavigate();
   const tvShowQuery = useCachedQuery<TVShow>(
@@ -31,7 +35,7 @@ export function TVShowDetailsPage() {
   const seasonQuery = useCachedQuery<TVSeasonDetails>(
     `tv-season:${id ?? 'none'}:${selectedSeason}`,
     (signal) => tmdbService.getTVSeasonDetails(Number(id), selectedSeason, { signal }),
-    { enabled: Boolean(id) && selectedSeason > 0, ttlMs: 15 * 60 * 1000 },
+    { enabled: Boolean(id) && selectedSeason > 0 && episodesLoad.isVisible, ttlMs: 15 * 60 * 1000 },
   );
   const episodes = seasonQuery.data?.episodes ?? [];
   const seasonCast = seasonQuery.data?.credits?.cast ?? null;
@@ -82,7 +86,6 @@ export function TVShowDetailsPage() {
     );
   }
 
-  const posterUrl = tmdbService.getImageUrl(tvShow.poster_path);
   const firstAirYear = tvShow.first_air_date ? new Date(tvShow.first_air_date).getFullYear() : '';
   const rating = tvShow.vote_average.toFixed(1);
   const episodeRuntime = tvShow.episode_run_time?.[0];
@@ -130,8 +133,8 @@ export function TVShowDetailsPage() {
       <div className="container py-6">
         <div className="grid md:grid-cols-[200px_1fr] gap-6">
           <div className="space-y-4">
-            {posterUrl ? (
-              <img src={posterUrl} alt={`${tvShow.name} poster`} width="500" height="750" className="w-full rounded-lg border" />
+            {tvShow.poster_path ? (
+              <TMDBImage path={tvShow.poster_path} alt={`${tvShow.name} poster`} width={500} height={750} sizes="(min-width: 768px) 200px, 50vw" loading="eager" fetchPriority="high" className="w-full rounded-lg border" />
             ) : (
               <div role="img" aria-label={`${tvShow.name} poster unavailable`} className="aspect-[2/3] bg-muted rounded-lg flex items-center justify-center text-center text-sm text-muted-foreground">Poster unavailable</div>
             )}
@@ -240,7 +243,7 @@ export function TVShowDetailsPage() {
 
         {/* Cast and crew */}
         {(cast.length > 0 || crew.length > 0 || seasonCreditsLoading) && (
-          <div className="mt-12 pt-8 border-t">
+          <div ref={episodesLoad.ref} className="mt-12 min-h-[500px] pt-8 border-t">
             <div className="flex items-center justify-between gap-4 mb-4">
               <h2 className="text-xl font-semibold">{activeCredits === 'cast' ? 'Cast' : 'Crew'}</h2>
               <div className="flex rounded-md border p-1" role="group" aria-label="Credits">
@@ -363,11 +366,12 @@ export function TVShowDetailsPage() {
                     >
                       <div className="relative overflow-hidden shrink-0">
                         {episode.still_path ? (
-                          <img 
-                            src={tmdbService.getImageUrl(episode.still_path, 'w500')} 
+                          <TMDBImage
+                            path={episode.still_path}
                             alt={`${tvShow.name}, episode ${episode.episode_number}: ${episode.name}`} 
-                            width="500"
-                            height="281"
+                            width={500}
+                            height={281}
+                            sizes="(min-width: 1536px) 18vw, (min-width: 1024px) 25vw, (min-width: 640px) 33vw, 100vw"
                             className="w-full aspect-video object-cover bg-muted group-hover:scale-105 transition-transform duration-300"
                           />
                         ) : (
@@ -411,18 +415,22 @@ export function TVShowDetailsPage() {
         )}
 
         {tvShow.reviews && tvShow.reviews.results.length > 0 && (
-          <ReviewSection reviews={tvShow.reviews.results} />
+          <LazySection>
+            <ReviewSection reviews={tvShow.reviews.results} />
+          </LazySection>
         )}
         
         {similarShows.length > 0 && (
-          <div className="mt-12 pt-8 border-t">
-            <h2 className="text-2xl font-semibold mb-6">Similar TV Shows</h2>
-            <div className="grid grid-cols-3 md:grid-cols-6 lg:grid-cols-8 xl:grid-cols-10 gap-4">
-              {similarShows.slice(0, 10).map((similar) => (
-                <MediaCard key={similar.id} item={similar} type="tv" />
-              ))}
+          <LazySection>
+            <div className="mt-12 border-t pt-8">
+              <h2 className="mb-6 text-2xl font-semibold">Similar TV Shows</h2>
+              <div className="grid grid-cols-2 gap-4 sm:grid-cols-3 md:grid-cols-5 lg:grid-cols-6 xl:grid-cols-8 2xl:grid-cols-10">
+                {similarShows.slice(0, 10).map((similar) => (
+                  <MediaCard key={similar.id} item={similar} type="tv" />
+                ))}
+              </div>
             </div>
-          </div>
+          </LazySection>
         )}
       </div>
     </div>

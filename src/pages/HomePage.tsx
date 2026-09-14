@@ -8,6 +8,7 @@ import { useCachedQuery } from '@/hooks/useCachedQuery';
 import { useDebouncedValue } from '@/hooks/useDebouncedValue';
 import { usePagination } from '@/hooks/usePagination';
 import { usePageTitle } from '@/hooks/usePageTitle';
+import { TMDBImage } from '@/components/TMDBImage';
 
 function SearchMessage({ message, error = false }: { message: string; error?: boolean }) {
   return (
@@ -151,12 +152,12 @@ export function HomePage() {
           <section className="space-y-4">
             <h2 className="text-2xl font-bold tracking-tight">People</h2>
             {searchPeople.error ? <SearchMessage error message={searchPeople.error.message} /> : searchPeople.data?.results.length ? (
-              <div className="grid grid-cols-3 gap-4 md:grid-cols-6 lg:grid-cols-8 xl:grid-cols-10">
+              <div className="grid grid-cols-2 gap-4 sm:grid-cols-3 md:grid-cols-5 lg:grid-cols-6 xl:grid-cols-8 2xl:grid-cols-10">
                 {searchPeople.data.results.slice(0, 20).map((person) => (
                   <Link key={person.id} to={`/person/${person.id}`} className="group flex flex-col space-y-2">
                     <div className="aspect-[2/3] overflow-hidden rounded-xl border bg-muted shadow-sm">
                       {person.profile_path ? (
-                        <img src={tmdbService.getImageUrl(person.profile_path, 'w500')} alt={`${person.name} profile`} width="500" height="750" className="h-full w-full object-cover transition-transform duration-300 group-hover:scale-105" loading="lazy" />
+                        <TMDBImage path={person.profile_path} alt={`${person.name} profile`} width={500} height={750} sizes="(min-width: 1536px) 9vw, (min-width: 1024px) 14vw, (min-width: 640px) 20vw, 30vw" className="h-full w-full object-cover transition-transform duration-300 group-hover:scale-105" />
                       ) : <div role="img" aria-label={`${person.name} profile unavailable`} className="flex h-full items-center justify-center text-[10px] text-muted-foreground">Profile unavailable</div>}
                     </div>
                     <div className="px-1">

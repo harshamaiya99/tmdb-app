@@ -512,6 +512,13 @@ class TMDBService {
     return `${TMDB_IMAGE_BASE_URL}/${size}${path}`;
   }
 
+  getImageSrcSet(path: string | null): string | undefined {
+    if (!path) return undefined;
+    return ['w185', 'w342', 'w500', 'w780', 'original']
+      .map((size) => `${TMDB_IMAGE_BASE_URL}/${size}${path} ${size === 'original' ? 1500 : Number(size.slice(1))}w`)
+      .join(', ');
+  }
+
   async validateApiKey(key: string, options?: TMDBRequestOptions): Promise<boolean> {
     try {
       const url = new URL(`${TMDB_BASE_URL}/configuration`);

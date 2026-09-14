@@ -4,7 +4,8 @@ import { Star } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import { Card } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
-import { tmdbService, type Movie, type TVShow, type PersonCredit } from '@/lib/tmdb';
+import { type Movie, type TVShow, type PersonCredit } from '@/lib/tmdb';
+import { TMDBImage } from '@/components/TMDBImage';
 
 interface MediaCardProps {
   item: Movie | TVShow | PersonCredit;
@@ -16,20 +17,19 @@ export function MediaCard({ item, type }: MediaCardProps) {
   const date = 'release_date' in item && item.release_date ? item.release_date : ('first_air_date' in item ? item.first_air_date : undefined);
   const year = date ? new Date(date).getFullYear() : null;
   const rating = item.vote_average.toFixed(1);
-  const imageUrl = tmdbService.getImageUrl(item.poster_path);
 
   return (
     <Link to={`/${type}/${item.id}`}>
       <Card className="overflow-hidden border-0 bg-card transition-all hover:shadow-lg group">
         <div className="relative aspect-[2/3] overflow-hidden">
-          {imageUrl ? (
-            <img
-              src={imageUrl}
+          {item.poster_path ? (
+            <TMDBImage
+              path={item.poster_path}
               alt={`${title} poster`}
-              width="500"
-              height="750"
+              width={500}
+              height={750}
+              sizes="(min-width: 1536px) 9vw, (min-width: 1024px) 12vw, (min-width: 640px) 20vw, 30vw"
               className="h-full w-full object-cover transition-transform duration-300 group-hover:scale-105"
-              loading="lazy"
             />
           ) : (
             <div className="flex h-full w-full items-center justify-center bg-muted px-2 text-center text-xs text-muted-foreground" role="img" aria-label={`${title} poster unavailable`}>

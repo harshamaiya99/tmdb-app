@@ -12,6 +12,8 @@ import { buildEmbedUrl } from '@/lib/utils';
 import { usePageTitle } from '@/hooks/usePageTitle';
 import { useCachedQuery } from '@/hooks/useCachedQuery';
 import { ReviewSection } from '../components/ReviewSection';
+import { TMDBImage } from '@/components/TMDBImage';
+import { LazySection } from '@/components/LazySection';
 
 export function MovieDetailsPage() {
   const { id } = useParams<{ id: string }>();
@@ -61,7 +63,6 @@ export function MovieDetailsPage() {
     );
   }
 
-  const posterUrl = tmdbService.getImageUrl(movie.poster_path);
   const releaseYear = movie.release_date ? new Date(movie.release_date).getFullYear() : '';
   const rating = movie.vote_average.toFixed(1);
   const similarMovies = movie.similar?.results || [];
@@ -95,8 +96,8 @@ export function MovieDetailsPage() {
           
           {/* Left Column: Poster & Watch Button */}
           <div className="space-y-4">
-            {posterUrl ? (
-              <img src={posterUrl} alt={`${movie.title} poster`} width="500" height="750" className="w-full rounded-lg border shadow-sm" />
+            {movie.poster_path ? (
+              <TMDBImage path={movie.poster_path} alt={`${movie.title} poster`} width={500} height={750} sizes="(min-width: 768px) 200px, 50vw" loading="eager" fetchPriority="high" className="w-full rounded-lg border shadow-sm" />
             ) : (
               <div role="img" aria-label={`${movie.title} poster unavailable`} className="aspect-[2/3] bg-muted rounded-lg flex items-center justify-center border shadow-sm text-center text-sm text-muted-foreground">Poster unavailable</div>
             )}
@@ -134,11 +135,12 @@ export function MovieDetailsPage() {
                       to={`/category/provider-${provider.provider_id}?name=${encodeURIComponent(provider.provider_name)}`}
                       className="hover:scale-110 hover:ring-2 hover:ring-primary rounded-xl transition-all"
                     >
-                      <img
-                        src={tmdbService.getImageUrl(provider.logo_path, 'w500')}
+                      <TMDBImage
+                        path={provider.logo_path}
                         alt={provider.provider_name}
-                        width="500"
-                        height="500"
+                        width={500}
+                        height={500}
+                        sizes="40px"
                         title={provider.provider_name}
                         className="w-10 h-10 rounded-xl shadow-sm border"
                       />
@@ -223,11 +225,12 @@ export function MovieDetailsPage() {
                             className="flex items-center group"
                           >
                             {company.logo_path ? (
-                              <img
-                                src={tmdbService.getImageUrl(company.logo_path, 'w500')}
+                              <TMDBImage
+                                path={company.logo_path}
                                 alt={company.name}
-                                width="120"
-                                height="40"
+                                width={120}
+                                height={40}
+                                sizes="120px"
                                 title={company.name}
                                 className="h-6 md:h-8 max-w-[120px] object-contain filter grayscale opacity-60 group-hover:grayscale-0 group-hover:opacity-100 group-hover:scale-105 transition-all dark:invert dark:group-hover:invert-0"
                               />
@@ -335,18 +338,22 @@ export function MovieDetailsPage() {
         )}
 
         {movie.reviews && movie.reviews.results.length > 0 && (
-          <ReviewSection reviews={movie.reviews.results} />
+          <LazySection>
+            <ReviewSection reviews={movie.reviews.results} />
+          </LazySection>
         )}
 
         {similarMovies.length > 0 && (
-          <div className="mt-12 pt-8 border-t">
-            <h2 className="text-2xl font-semibold mb-6">Similar Movies</h2>
-            <div className="grid grid-cols-3 md:grid-cols-6 lg:grid-cols-8 xl:grid-cols-10 gap-4">
-              {similarMovies.slice(0, 10).map((similar) => (
-                <MediaCard key={similar.id} item={similar} type="movie" />
-              ))}
+          <LazySection>
+            <div className="mt-12 border-t pt-8">
+              <h2 className="mb-6 text-2xl font-semibold">Similar Movies</h2>
+              <div className="grid grid-cols-2 gap-4 sm:grid-cols-3 md:grid-cols-5 lg:grid-cols-6 xl:grid-cols-8 2xl:grid-cols-10">
+                {similarMovies.slice(0, 10).map((similar) => (
+                  <MediaCard key={similar.id} item={similar} type="movie" />
+                ))}
+              </div>
             </div>
-          </div>
+          </LazySection>
         )}
       </div>
     </div>

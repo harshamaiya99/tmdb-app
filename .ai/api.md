@@ -119,26 +119,17 @@ TMDB images are not fetched through a separate image API. Instead, the service b
 
 This keeps image handling consistent and avoids repeating the TMDB image URL logic across components.
 
+The shared image component also builds responsive `srcSet` candidates from the available TMDB sizes so browsers can select an appropriate resource for each rendered layout.
+
 ## Caching and Performance
 
 ### Current behavior
 
-There is no dedicated caching layer in the current implementation.
+The app uses an in-memory request cache with TTLs and in-flight request deduplication for home lists, searches, paginated lists, detail pages, collections, and TV seasons.
 
-That means:
+Page queries also use abort signals and viewport-aware loading. TV season requests begin when the episodes region approaches the viewport rather than during the initial detail render.
 
-- each page load can trigger fresh fetches
-- list and detail views do not memoize results across navigation
-- pagination requests fetch fresh data from TMDB each time
-
-### What exists today
-
-The app uses React state and component re-rendering to manage data locally, but it does not implement:
-
-- in-memory caching
-- request deduplication
-- local storage persistence for fetched data
-- stale-while-revalidate behavior
+The cache is intentionally memory-only and is cleared on a full page reload.
 
 ### Practical implication
 
