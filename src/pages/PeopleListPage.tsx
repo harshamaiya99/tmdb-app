@@ -55,13 +55,15 @@ export function PeopleListPage() {
                     {person.profile_path ? (
                       <img 
                         src={tmdbService.getImageUrl(person.profile_path, 'w500')} 
-                        alt={person.name}
+                        alt={`${person.name} profile`}
+                        width="500"
+                        height="750"
                         className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
                         loading="lazy"
                       />
                     ) : (
-                      <div className="w-full h-full flex items-center justify-center text-muted-foreground text-xs">
-                        No Image
+                      <div role="img" aria-label={`${person.name} profile unavailable`} className="w-full h-full flex items-center justify-center text-muted-foreground text-xs">
+                        Profile unavailable
                       </div>
                     )}
                   </div>

@@ -156,8 +156,8 @@ export function HomePage() {
                   <Link key={person.id} to={`/person/${person.id}`} className="group flex flex-col space-y-2">
                     <div className="aspect-[2/3] overflow-hidden rounded-xl border bg-muted shadow-sm">
                       {person.profile_path ? (
-                        <img src={tmdbService.getImageUrl(person.profile_path, 'w500')} alt={person.name} className="h-full w-full object-cover transition-transform duration-300 group-hover:scale-105" loading="lazy" />
-                      ) : <div className="flex h-full items-center justify-center text-[10px] text-muted-foreground">No Image</div>}
+                        <img src={tmdbService.getImageUrl(person.profile_path, 'w500')} alt={`${person.name} profile`} width="500" height="750" className="h-full w-full object-cover transition-transform duration-300 group-hover:scale-105" loading="lazy" />
+                      ) : <div role="img" aria-label={`${person.name} profile unavailable`} className="flex h-full items-center justify-center text-[10px] text-muted-foreground">Profile unavailable</div>}
                     </div>
                     <div className="px-1">
                       <p className="truncate text-xs font-semibold group-hover:text-primary">{person.name}</p>

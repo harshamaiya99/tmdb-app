@@ -1,5 +1,5 @@
 // src/pages/PersonDetailsPage.tsx
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { ArrowLeft, ArrowRight, Calendar, MapPin, X } from 'lucide-react';
 import { Button } from '@/components/ui/button';
@@ -13,6 +13,8 @@ import { useCachedQuery } from '@/hooks/useCachedQuery';
 export function PersonDetailsPage() {
   const { id } = useParams<{ id: string }>();
   const [selectedImageIndex, setSelectedImageIndex] = useState<number | null>(null);
+  const dialogRef = useRef<HTMLDivElement>(null);
+  const galleryTriggerRef = useRef<HTMLButtonElement | null>(null);
   const navigate = useNavigate();
 
   const personQuery = useCachedQuery<Person>(
@@ -27,8 +29,19 @@ export function PersonDetailsPage() {
   // FIX: Safely calculate gallery images BEFORE conditional returns
   const galleryImages = (person?.images?.profiles || []).filter((image) => image.file_path);
 
-  const openImage = (index: number) => setSelectedImageIndex(index);
+  const openImage = (index: number) => {
+    galleryTriggerRef.current = document.activeElement instanceof HTMLButtonElement ? document.activeElement : null;
+    setSelectedImageIndex(index);
+  };
   const closeImage = () => setSelectedImageIndex(null);
+
+  useEffect(() => {
+    if (selectedImageIndex !== null) {
+      dialogRef.current?.focus();
+    } else {
+      galleryTriggerRef.current?.focus();
+    }
+  }, [selectedImageIndex]);
 
   // FIX: Move the Keyboard Event Listener hook to the top level!
   useEffect(() => {
@@ -111,12 +124,14 @@ export function PersonDetailsPage() {
               {profileUrl ? (
                 <img
                   src={profileUrl}
-                  alt={person.name}
+                  alt={`${person.name} profile`}
+                  width="500"
+                  height="750"
                   className="w-full rounded-xl border bg-muted shadow-sm"
                 />
               ) : (
                 <div className="aspect-[2/3] bg-muted rounded-xl border flex items-center justify-center">
-                  <span className="text-muted-foreground">No image</span>
+                  <span role="img" aria-label={`${person.name} profile unavailable`} className="text-muted-foreground">Profile unavailable</span>
                 </div>
               )}
 
@@ -215,6 +230,8 @@ export function PersonDetailsPage() {
                       <img
                         src={imageUrl}
                         alt={`${person.name} gallery ${idx + 1}`}
+                        width={image.width}
+                        height={image.height}
                         className="aspect-[2/3] w-full object-cover group-hover:scale-105 transition-transform duration-300"
                         loading="lazy"
                       />
@@ -231,16 +248,27 @@ export function PersonDetailsPage() {
           <div
             className="fixed inset-0 z-[60] flex items-center justify-center bg-black/95 px-3 py-4 sm:px-6 backdrop-blur-sm"
             onClick={closeImage}
+            role="presentation"
           >
-            <div className="relative flex w-full max-w-7xl flex-col rounded-2xl p-2" onClick={(e) => e.stopPropagation()}>
+            <div
+              ref={dialogRef}
+              className="relative flex w-full max-w-7xl flex-col rounded-2xl p-2 outline-none"
+              role="dialog"
+              aria-modal="true"
+              aria-labelledby="gallery-dialog-title"
+              tabIndex={-1}
+              onClick={(e) => e.stopPropagation()}
+            >
               <div className="mb-3 flex items-center justify-between">
-                <p className="text-sm font-medium text-white/70">
+                <p id="gallery-dialog-title" className="text-sm font-medium text-white/70">
                   {selectedImageIndex! + 1} / {galleryImages.length}
                 </p>
                 <Button
                   variant="ghost"
                   size="icon"
                   onClick={closeImage}
+                  aria-label="Close gallery"
+                  title="Close gallery"
                   className="rounded-full border border-white/10 bg-black/50 text-white shadow-lg backdrop-blur-md hover:bg-white/10"
                 >
                   <X className="h-5 w-5" />
@@ -251,6 +279,8 @@ export function PersonDetailsPage() {
                   variant="outline" 
                   size="icon" 
                   onClick={() => setSelectedImageIndex(prev => prev === null ? null : (prev === 0 ? galleryImages.length - 1 : prev - 1))}
+                  aria-label="Previous gallery image"
+                  title="Previous gallery image"
                   className="rounded-full h-10 w-10 shrink-0 border-white/20 bg-black/50 text-white hover:bg-white/10 hover:text-white"
                 >
                   <ArrowLeft className="h-5 w-5" />
@@ -258,12 +288,16 @@ export function PersonDetailsPage() {
                 <img
                   src={tmdbService.getImageUrl(selectedImage.file_path, 'original')}
                   alt={`${person.name} gallery ${selectedImageIndex! + 1}`}
+                  width={selectedImage.width}
+                  height={selectedImage.height}
                   className="max-h-[85vh] w-full rounded-xl object-contain shadow-2xl"
                 />
                 <Button 
                   variant="outline" 
                   size="icon" 
                   onClick={() => setSelectedImageIndex(prev => prev === null ? null : (prev === galleryImages.length - 1 ? 0 : prev + 1))}
+                  aria-label="Next gallery image"
+                  title="Next gallery image"
                   className="rounded-full h-10 w-10 shrink-0 border-white/20 bg-black/50 text-white hover:bg-white/10 hover:text-white"
                 >
                   <ArrowRight className="h-5 w-5" />

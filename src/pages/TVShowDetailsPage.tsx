@@ -131,9 +131,9 @@ export function TVShowDetailsPage() {
         <div className="grid md:grid-cols-[200px_1fr] gap-6">
           <div className="space-y-4">
             {posterUrl ? (
-              <img src={posterUrl} alt={tvShow.name} className="w-full rounded-lg border" />
+              <img src={posterUrl} alt={`${tvShow.name} poster`} width="500" height="750" className="w-full rounded-lg border" />
             ) : (
-              <div className="aspect-[2/3] bg-muted rounded-lg flex items-center justify-center">No image</div>
+              <div role="img" aria-label={`${tvShow.name} poster unavailable`} className="aspect-[2/3] bg-muted rounded-lg flex items-center justify-center text-center text-sm text-muted-foreground">Poster unavailable</div>
             )}
             
             <div className="space-y-2 text-sm text-center">
@@ -365,12 +365,14 @@ export function TVShowDetailsPage() {
                         {episode.still_path ? (
                           <img 
                             src={tmdbService.getImageUrl(episode.still_path, 'w500')} 
-                            alt={episode.name} 
+                            alt={`${tvShow.name}, episode ${episode.episode_number}: ${episode.name}`} 
+                            width="500"
+                            height="281"
                             className="w-full aspect-video object-cover bg-muted group-hover:scale-105 transition-transform duration-300"
                           />
                         ) : (
-                          <div className="w-full aspect-video bg-muted flex items-center justify-center border-b text-sm text-muted-foreground">
-                            No Image
+                          <div role="img" aria-label={`${episode.name} still unavailable`} className="w-full aspect-video bg-muted flex items-center justify-center border-b text-sm text-muted-foreground">
+                            Still unavailable
                           </div>
                         )}
                         <div className="absolute inset-0 bg-black/40 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">

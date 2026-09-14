@@ -25,19 +25,21 @@ export function MediaCard({ item, type }: MediaCardProps) {
           {imageUrl ? (
             <img
               src={imageUrl}
-              alt={title}
-              className="object-cover w-full h-full transition-transform duration-300 group-hover:scale-105"
+              alt={`${title} poster`}
+              width="500"
+              height="750"
+              className="h-full w-full object-cover transition-transform duration-300 group-hover:scale-105"
               loading="lazy"
             />
           ) : (
-            <div className="w-full h-full bg-muted flex items-center justify-center text-muted-foreground">
-              No image
+            <div className="flex h-full w-full items-center justify-center bg-muted px-2 text-center text-xs text-muted-foreground" role="img" aria-label={`${title} poster unavailable`}>
+              Poster unavailable
             </div>
           )}
           <div className="absolute top-2 right-2">
             <Badge variant="secondary" className="gap-1">
               <Star className="w-3 h-3 fill-current" />
-              {rating}
+              <span aria-label={`Rating ${rating} out of 10`}>{rating}</span>
             </Badge>
           </div>
         </div>

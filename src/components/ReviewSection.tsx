@@ -112,11 +112,13 @@ export function ReviewSection({ reviews }: ReviewSectionProps) {
               const isDimmed = ratingFilter !== null && !isActive;
 
               return (
-                <div 
+                <button
+                  type="button"
                   key={star} 
                   onClick={() => toggleFilter(star)}
-                  // py-0.5 keeps it super compact vertically.
-                  // px-2 and -mx-2 give the background horizontal breathing room without shifting the text.
+                  disabled={!isSelectable}
+                  aria-label={`${count} reviews rated ${star} out of 10`}
+                  aria-pressed={isActive}
                   className={`flex items-center gap-2 text-[11px] px-2 py-0.5 -mx-2 rounded-md transition-all duration-200
                     ${isSelectable ? 'cursor-pointer hover:bg-muted/80' : 'cursor-default opacity-40'}
                     ${isActive ? 'bg-muted ring-1 ring-border shadow-sm' : ''}
@@ -135,7 +137,7 @@ export function ReviewSection({ reviews }: ReviewSectionProps) {
                   <div className="w-4 text-right text-muted-foreground font-medium shrink-0">
                     {count}
                   </div>
-                </div>
+                </button>
               );
             })}
           </div>
@@ -184,12 +186,15 @@ export function ReviewSection({ reviews }: ReviewSectionProps) {
               </div>
               
               <div className="flex-1 mt-3 min-h-0 overflow-y-auto pr-2 custom-scrollbar">
-                <p className={`text-sm text-muted-foreground whitespace-pre-wrap ${!isExpanded ? 'line-clamp-4' : ''}`}>
+                <p id={`review-content-${review.id}`} className={`text-sm text-muted-foreground whitespace-pre-wrap ${!isExpanded ? 'line-clamp-4' : ''}`}>
                   {review.content}
                 </p>
                 {isLong && (
-                  <button 
+                  <button
+                    type="button"
                     onClick={() => toggleExpand(review.id)} 
+                    aria-expanded={isExpanded}
+                    aria-controls={`review-content-${review.id}`}
                     className="text-primary hover:text-primary/80 font-medium text-xs mt-2 transition-colors"
                   >
                     {isExpanded ? 'Read less' : 'Read more...'}

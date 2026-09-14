@@ -84,10 +84,12 @@ export function EpisodesRatingOverview({ tvId, seasons, rowSpan, onExpand, onCol
                 ) : episodes ? (
                   <div className="flex gap-1">
                     {episodes.map((ep) => (
-                      <div
+                      <button
+                        type="button"
                         key={ep.id}
+                        aria-label={`Season ${season.season_number}, episode ${ep.episode_number}: ${ep.name}. Rating ${ep.vote_average?.toFixed(1) || 'not rated'}`}
                         title={`S${season.season_number}E${ep.episode_number}: ${ep.name}\nRating: ${ep.vote_average?.toFixed(1) || 'N/A'}`}
-                        className={`w-3.5 h-3.5 rounded-[2px] cursor-help hover:ring-2 hover:ring-ring hover:scale-125 transition-all ${getRatingColor(ep.vote_average)}`}
+                        className={`h-3.5 w-3.5 rounded-[2px] transition-all hover:scale-125 hover:ring-2 hover:ring-ring focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring ${getRatingColor(ep.vote_average)}`}
                       />
                     ))}
                   </div>

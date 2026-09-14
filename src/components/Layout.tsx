@@ -68,7 +68,14 @@ export function Layout({ children }: LayoutProps) {
         <div className="container flex h-14 items-center justify-between gap-3">
           <div className="flex items-center gap-2">
             {showBackButton && (
-              <Button variant="ghost" size="icon" onClick={handleBack} className="mr-2">
+              <Button
+                variant="ghost"
+                size="icon"
+                onClick={handleBack}
+                className="mr-2"
+                aria-label="Go back"
+                title="Go back"
+              >
                 <ArrowLeft className="h-4 w-4" />
               </Button>
             )}
@@ -113,6 +120,7 @@ export function Layout({ children }: LayoutProps) {
                 <Search className="absolute left-2 top-2.5 h-4 w-4 text-muted-foreground" />
                 <Input
                   type="search"
+                  aria-label="Search movies and shows"
                   placeholder="Search movies & shows"
                   value={searchQuery}
                   onChange={handleSearchInputChange}
@@ -123,7 +131,13 @@ export function Layout({ children }: LayoutProps) {
 
             <nav className="flex items-center space-x-1">
               <ThemeToggle />
-              <Button variant="ghost" size="icon" onClick={handleLogout}>
+              <Button
+                variant="ghost"
+                size="icon"
+                onClick={handleLogout}
+                aria-label="Log out"
+                title="Log out"
+              >
                 <LogOut className="h-[1.2rem] w-[1.2rem]" />
               </Button>
             </nav>

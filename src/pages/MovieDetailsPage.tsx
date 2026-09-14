@@ -96,9 +96,9 @@ export function MovieDetailsPage() {
           {/* Left Column: Poster & Watch Button */}
           <div className="space-y-4">
             {posterUrl ? (
-              <img src={posterUrl} alt={movie.title} className="w-full rounded-lg border shadow-sm" />
+              <img src={posterUrl} alt={`${movie.title} poster`} width="500" height="750" className="w-full rounded-lg border shadow-sm" />
             ) : (
-              <div className="aspect-[2/3] bg-muted rounded-lg flex items-center justify-center border shadow-sm">No image</div>
+              <div role="img" aria-label={`${movie.title} poster unavailable`} className="aspect-[2/3] bg-muted rounded-lg flex items-center justify-center border shadow-sm text-center text-sm text-muted-foreground">Poster unavailable</div>
             )}
             
             {movie.status && (
@@ -137,6 +137,8 @@ export function MovieDetailsPage() {
                       <img
                         src={tmdbService.getImageUrl(provider.logo_path, 'w500')}
                         alt={provider.provider_name}
+                        width="500"
+                        height="500"
                         title={provider.provider_name}
                         className="w-10 h-10 rounded-xl shadow-sm border"
                       />
@@ -224,6 +226,8 @@ export function MovieDetailsPage() {
                               <img
                                 src={tmdbService.getImageUrl(company.logo_path, 'w500')}
                                 alt={company.name}
+                                width="120"
+                                height="40"
                                 title={company.name}
                                 className="h-6 md:h-8 max-w-[120px] object-contain filter grayscale opacity-60 group-hover:grayscale-0 group-hover:opacity-100 group-hover:scale-105 transition-all dark:invert dark:group-hover:invert-0"
                               />
