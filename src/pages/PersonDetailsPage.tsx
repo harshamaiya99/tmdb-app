@@ -6,42 +6,23 @@ import { Button } from '@/components/ui/button';
 import { Skeleton } from '@/components/ui/skeleton';
 import { MediaSection } from '@/components/MediaSection';
 import { tmdbService, isActingCredit, type Person } from '@/lib/tmdb';
-import { useToast } from '@/components/ui/use-toast';
 import { formatDate } from '@/lib/utils';
 import { usePageTitle } from '@/hooks/usePageTitle';
+import { useCachedQuery } from '@/hooks/useCachedQuery';
 
 export function PersonDetailsPage() {
   const { id } = useParams<{ id: string }>();
-  const [person, setPerson] = useState<Person | null>(null);
-  const [loading, setLoading] = useState(true);
   const [selectedImageIndex, setSelectedImageIndex] = useState<number | null>(null);
   const navigate = useNavigate();
-  const { toast } = useToast();
+
+  const personQuery = useCachedQuery<Person>(
+    `person:${id ?? 'none'}`,
+    (signal) => tmdbService.getPersonDetails(Number(id), { signal }),
+    { enabled: Boolean(id), ttlMs: 30 * 60 * 1000 },
+  );
+  const person = personQuery.data ?? null;
 
   usePageTitle(person ? `${person.name}'s Profile` : 'Person Details');
-
-  useEffect(() => {
-    if (id) {
-      fetchPersonDetails(parseInt(id));
-      window.scrollTo(0, 0);
-    }
-  }, [id]);
-
-  const fetchPersonDetails = async (personId: number) => {
-    try {
-      setLoading(true);
-      const data = await tmdbService.getPersonDetails(personId);
-      setPerson(data);
-    } catch {
-      toast({
-        variant: 'destructive',
-        title: 'Error',
-        description: 'Failed to load person details',
-      });
-    } finally {
-      setLoading(false);
-    }
-  };
 
   // FIX: Safely calculate gallery images BEFORE conditional returns
   const galleryImages = (person?.images?.profiles || []).filter((image) => image.file_path);
@@ -75,7 +56,7 @@ export function PersonDetailsPage() {
   }, [selectedImageIndex, galleryImages.length]);
 
   // NOW we can safely have our conditional loading and error returns
-  if (loading) {
+  if (personQuery.loading) {
     return (
       <div className="min-h-screen">
         <div className="container py-6 space-y-6">
@@ -92,11 +73,11 @@ export function PersonDetailsPage() {
     );
   }
 
-  if (!person) {
+  if (personQuery.error || !person) {
     return (
       <div className="min-h-screen flex items-center justify-center">
         <div className="text-center">
-          <h2 className="text-2xl font-semibold mb-4">Person not found</h2>
+          <h2 className="text-2xl font-semibold mb-4">{personQuery.error?.message ?? 'Person not found'}</h2>
           <Button onClick={() => navigate('/')}>Go Home</Button>
         </div>
       </div>

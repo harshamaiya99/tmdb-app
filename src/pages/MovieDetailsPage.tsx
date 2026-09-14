@@ -1,5 +1,5 @@
 // src/pages/MovieDetailsPage.tsx
-import { useEffect, useState } from 'react';
+import { useState } from 'react';
 import { useParams, useNavigate, Link } from 'react-router-dom';
 import { Calendar, Clock, Star, PlayCircle } from 'lucide-react';
 import { Button } from '@/components/ui/button';
@@ -9,58 +9,30 @@ import { MediaCard } from '@/components/MediaCard';
 import { CreditsCarousel } from '@/components/CreditsCarousel';
 import { tmdbService, type Movie, type Collection } from '@/lib/tmdb';
 import { buildEmbedUrl } from '@/lib/utils';
-import { useToast } from '@/components/ui/use-toast';
 import { usePageTitle } from '@/hooks/usePageTitle';
+import { useCachedQuery } from '@/hooks/useCachedQuery';
 import { ReviewSection } from '../components/ReviewSection';
 
 export function MovieDetailsPage() {
   const { id } = useParams<{ id: string }>();
-  const [movie, setMovie] = useState<Movie | null>(null);
-  
-  const [collection, setCollection] = useState<Collection | null>(null);
-  const [loading, setLoading] = useState(true);
   const [activeCredits, setActiveCredits] = useState<'cast' | 'crew'>('cast');
   
   const navigate = useNavigate();
-  const { toast } = useToast();
-
   usePageTitle('Movie Details');
 
-  useEffect(() => {
-    if (id) {
-      fetchMovieDetails(parseInt(id));
-      window.scrollTo(0, 0);
-    }
-  }, [id]);
-
-  const fetchMovieDetails = async (movieId: number) => {
-    try {
-      setLoading(true);
-      const data = await tmdbService.getMovieDetails(movieId);
-      setMovie(data);
-
-      if (data.belongs_to_collection) {
-        try {
-          const collData = await tmdbService.getCollectionDetails(data.belongs_to_collection.id);
-          setCollection(collData);
-        } catch (error) {
-          console.error("Failed to fetch collection", error);
-          setCollection(null);
-        }
-      } else {
-        setCollection(null);
-      }
-
-    } catch {
-      toast({
-        variant: 'destructive',
-        title: 'Error',
-        description: 'Failed to load movie details',
-      });
-    } finally {
-      setLoading(false);
-    }
-  };
+  const movieQuery = useCachedQuery<Movie>(
+    `movie:${id ?? 'none'}`,
+    (signal) => tmdbService.getMovieDetails(Number(id), { signal }),
+    { enabled: Boolean(id), ttlMs: 15 * 60 * 1000 },
+  );
+  const collectionQuery = useCachedQuery<Collection>(
+    `collection:${movieQuery.data?.belongs_to_collection?.id ?? 'none'}`,
+    (signal) => tmdbService.getCollectionDetails(movieQuery.data?.belongs_to_collection?.id ?? 0, { signal }),
+    { enabled: Boolean(movieQuery.data?.belongs_to_collection), ttlMs: 30 * 60 * 1000 },
+  );
+  const movie = movieQuery.data ?? null;
+  const collection = collectionQuery.data ?? null;
+  const loading = movieQuery.loading;
 
   if (loading) {
     return (
@@ -78,11 +50,11 @@ export function MovieDetailsPage() {
     );
   }
 
-  if (!movie) {
+  if (movieQuery.error || !movie) {
     return (
       <div className="min-h-screen flex items-center justify-center">
         <div className="text-center">
-          <h2 className="text-2xl font-semibold mb-4">Movie not found</h2>
+          <h2 className="text-2xl font-semibold mb-4">{movieQuery.error?.message ?? 'Movie not found'}</h2>
           <Button onClick={() => navigate('/')}>Go Home</Button>
         </div>
       </div>

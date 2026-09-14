@@ -1,5 +1,5 @@
 // src/pages/TVShowDetailsPage.tsx
-import { useEffect, useRef, useState } from 'react';
+import { useEffect, useState } from 'react';
 import { useParams, useNavigate, Link, useSearchParams } from 'react-router-dom';
 import { Calendar, Clock, Star, PlayCircle } from 'lucide-react';
 import { Button } from '@/components/ui/button';
@@ -7,42 +7,38 @@ import { Badge } from '@/components/ui/badge';
 import { Skeleton } from '@/components/ui/skeleton';
 import { MediaCard } from '@/components/MediaCard';
 import { CreditsCarousel } from '@/components/CreditsCarousel';
-import { tmdbService, type TVShow, type TVSeasonDetails, type Episode, type Cast, type Crew } from '@/lib/tmdb';
-import { useToast } from '@/components/ui/use-toast';
+import { tmdbService, type TVShow, type TVSeasonDetails } from '@/lib/tmdb';
 import { buildEmbedUrl, formatDate } from '@/lib/utils';
 import { usePageTitle } from '@/hooks/usePageTitle';
+import { useCachedQuery } from '@/hooks/useCachedQuery';
 import { ReviewSection } from '../components/ReviewSection';
 import { EpisodesRatingOverview } from '../components/EpisodesRatingOverview';
 
 export function TVShowDetailsPage() {
   const { id } = useParams<{ id: string }>();
-  const [tvShow, setTVShow] = useState<TVShow | null>(null);
-  const [loading, setLoading] = useState(true);
-  
   const [searchParams, setSearchParams] = useSearchParams();
   const selectedSeason = parseInt(searchParams.get('season') || '0', 10);
-  
-  const [episodes, setEpisodes] = useState<Episode[]>([]);
-  const [loadingEpisodes, setLoadingEpisodes] = useState(false);
-  const [seasonCast, setSeasonCast] = useState<Cast[] | null>(null);
-  const [seasonCrew, setSeasonCrew] = useState<Crew[] | null>(null);
   const [activeCredits, setActiveCredits] = useState<'cast' | 'crew'>('cast');
-  const seasonDetailsCache = useRef(new Map<number, TVSeasonDetails>());
-  const seasonRequestId = useRef(0);
-  
   const [heatmapRowSpan, setHeatmapRowSpan] = useState(1);
 
   const navigate = useNavigate();
-  const { toast } = useToast();
+  const tvShowQuery = useCachedQuery<TVShow>(
+    `tv:${id ?? 'none'}`,
+    (signal) => tmdbService.getTVShowDetails(Number(id), { signal }),
+    { enabled: Boolean(id), ttlMs: 15 * 60 * 1000 },
+  );
+  const tvShow = tvShowQuery.data ?? null;
+  const seasonQuery = useCachedQuery<TVSeasonDetails>(
+    `tv-season:${id ?? 'none'}:${selectedSeason}`,
+    (signal) => tmdbService.getTVSeasonDetails(Number(id), selectedSeason, { signal }),
+    { enabled: Boolean(id) && selectedSeason > 0, ttlMs: 15 * 60 * 1000 },
+  );
+  const episodes = seasonQuery.data?.episodes ?? [];
+  const seasonCast = seasonQuery.data?.credits?.cast ?? null;
+  const seasonCrew = seasonQuery.data?.credits?.crew ?? null;
+  const loadingEpisodes = seasonQuery.loading;
 
   usePageTitle('TV Show Details');
-
-  useEffect(() => {
-    if (id) {
-      fetchTVShowDetails(parseInt(id));
-      window.scrollTo(0, 0);
-    }
-  }, [id]);
 
   useEffect(() => {
     if (tvShow?.seasons && tvShow.seasons.length > 0 && !searchParams.get('season')) {
@@ -54,71 +50,10 @@ export function TVShowDetailsPage() {
   }, [tvShow, searchParams, setSearchParams]);
 
   useEffect(() => {
-    if (tvShow && selectedSeason > 0) {
-      fetchEpisodes(tvShow.id, selectedSeason);
-    }
-  }, [tvShow, selectedSeason]);
-
-  const fetchTVShowDetails = async (showId: number) => {
-    try {
-      setLoading(true);
-      seasonDetailsCache.current.clear();
-      seasonRequestId.current += 1;
-      const data = await tmdbService.getTVShowDetails(showId);
-      setTVShow(data);
-    } catch {
-      toast({
-        variant: 'destructive',
-        title: 'Error',
-        description: 'Failed to load TV show details',
-      });
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  const fetchEpisodes = async (showId: number, seasonNum: number) => {
-    const requestId = ++seasonRequestId.current;
-    const applySeasonDetails = (data: TVSeasonDetails) => {
-      if (requestId !== seasonRequestId.current) return;
-      setEpisodes(data.episodes);
-      setSeasonCast(data.credits?.cast || []);
-      setSeasonCrew(data.credits?.crew || []);
-    };
-
     setActiveCredits('cast');
-    setSeasonCast(null);
-    setSeasonCrew(null);
+  }, [selectedSeason]);
 
-    const cachedSeason = seasonDetailsCache.current.get(seasonNum);
-    if (cachedSeason) {
-      applySeasonDetails(cachedSeason);
-      setLoadingEpisodes(false);
-      return;
-    }
-
-    try {
-      setLoadingEpisodes(true);
-      const data = await tmdbService.getTVSeasonDetails(showId, seasonNum);
-      seasonDetailsCache.current.set(seasonNum, data);
-      applySeasonDetails(data);
-    } catch {
-      if (requestId !== seasonRequestId.current) return;
-      setSeasonCast([]);
-      setSeasonCrew([]);
-      toast({
-        variant: 'destructive',
-        title: 'Error',
-        description: 'Failed to load episodes for this season',
-      });
-    } finally {
-      if (requestId === seasonRequestId.current) {
-        setLoadingEpisodes(false);
-      }
-    }
-  };
-
-  if (loading) {
+  if (tvShowQuery.loading) {
     return (
       <div className="min-h-screen">
         <div className="container py-6 space-y-6">
@@ -136,11 +71,11 @@ export function TVShowDetailsPage() {
     );
   }
 
-  if (!tvShow) {
+  if (tvShowQuery.error || !tvShow) {
     return (
       <div className="min-h-screen flex items-center justify-center">
         <div className="text-center">
-          <h2 className="text-2xl font-semibold mb-4">TV show not found</h2>
+          <h2 className="text-2xl font-semibold mb-4">{tvShowQuery.error?.message ?? 'TV show not found'}</h2>
           <Button onClick={() => navigate('/')}>Go Home</Button>
         </div>
       </div>

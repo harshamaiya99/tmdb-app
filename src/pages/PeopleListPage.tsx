@@ -1,58 +1,32 @@
-import { useEffect, useState } from 'react';
-import { useNavigate, useSearchParams } from 'react-router-dom';
+import { Link } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { Skeleton } from '@/components/ui/skeleton';
-import { tmdbService, type PersonListResult } from '@/lib/tmdb';
-import { useToast } from '@/components/ui/use-toast';
+import { tmdbService } from '@/lib/tmdb';
+import { Alert, AlertDescription } from '@/components/ui/alert';
+import { useCachedQuery } from '@/hooks/useCachedQuery';
+import { usePagination } from '@/hooks/usePagination';
 import { usePageTitle } from '@/hooks/usePageTitle';
 
 export function PeopleListPage() {
-  const [people, setPeople] = useState<PersonListResult[]>([]);
-  const [page, setPage] = useState(1);
-  const [totalPages, setTotalPages] = useState(1);
-  const [loading, setLoading] = useState(true);
-  
-  const [searchParams, setSearchParams] = useSearchParams();
-  const navigate = useNavigate();
-  const { toast } = useToast();
+  const { page, setPage } = usePagination();
 
   usePageTitle('Popular People');
 
-  // Read page from URL or default to 1
-  useEffect(() => {
-    const urlPage = parseInt(searchParams.get('page') || '1', 10);
-    setPage(urlPage);
-  }, [searchParams]);
-
-  useEffect(() => {
-    const fetchPeople = async () => {
-      setLoading(true);
-      try {
-        const data = await tmdbService.getPopularPersons(page);
-        setPeople(data.results);
-        setTotalPages(Math.min(data.total_pages, 500)); // TMDB limits pagination
-        window.scrollTo({ top: 0, behavior: 'smooth' });
-      } catch {
-        toast({
-          variant: 'destructive',
-          title: 'Error',
-          description: 'Failed to load popular people.',
-        });
-      } finally {
-        setLoading(false);
-      }
-    };
-
-    fetchPeople();
-  }, [page, toast]);
+  const peopleQuery = useCachedQuery(
+    `people:${page}`,
+    (signal) => tmdbService.getPopularPersons(page, { signal }),
+  );
+  const people = peopleQuery.data?.results ?? [];
+  const totalPages = Math.min(peopleQuery.data?.total_pages ?? 1, 500);
 
   const handlePageChange = (newPage: number) => {
-    setSearchParams({ page: newPage.toString() });
+    setPage(newPage);
+    window.scrollTo({ top: 0, behavior: 'smooth' });
   };
 
   return (
     <main className="container py-8">
-      {loading ? (
+      {peopleQuery.loading ? (
         <div className="grid grid-cols-2 sm:grid-cols-4 md:grid-cols-6 lg:grid-cols-8 xl:grid-cols-10 gap-4">
           {Array.from({ length: 20 }).map((_, i) => (
             <div key={i} className="space-y-2">
@@ -64,6 +38,11 @@ export function PeopleListPage() {
         </div>
       ) : (
         <div className="space-y-8 pb-12">
+          {peopleQuery.error && (
+            <Alert variant="destructive">
+              <AlertDescription>{peopleQuery.error.message}</AlertDescription>
+            </Alert>
+          )}
           {people.length === 0 ? (
             <div className="rounded-xl border border-dashed p-8 text-center text-sm text-muted-foreground">
               No people found.
@@ -71,11 +50,7 @@ export function PeopleListPage() {
           ) : (
             <div className="grid grid-cols-2 sm:grid-cols-4 md:grid-cols-6 lg:grid-cols-8 xl:grid-cols-10 gap-4">
               {people.map((person) => (
-                <div 
-                  key={person.id} 
-                  onClick={() => navigate(`/person/${person.id}`)}
-                  className="cursor-pointer group flex flex-col space-y-2"
-                >
+                <Link key={person.id} to={`/person/${person.id}`} className="group flex flex-col space-y-2">
                   <div className="overflow-hidden rounded-xl bg-muted aspect-[2/3] border shadow-sm relative">
                     {person.profile_path ? (
                       <img 
@@ -98,7 +73,7 @@ export function PeopleListPage() {
                       {person.known_for_department}
                     </p>
                   </div>
-                </div>
+                </Link>
               ))}
             </div>
           )}
