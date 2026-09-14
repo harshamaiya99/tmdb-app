@@ -8,6 +8,14 @@ export interface Cast {
   profile_path: string | null;
 }
 
+export interface AggregateCast extends Omit<Cast, 'character'> {
+  roles: {
+    character: string;
+    episode_count: number;
+  }[];
+  total_episode_count: number;
+}
+
 export interface Video {
   id: string;
   key: string;
@@ -41,6 +49,7 @@ export interface Season {
 
 export interface TVSeasonDetails extends Season {
   episodes: Episode[];
+  credits?: { cast: Cast[]; crew: Crew[] };
 }
 
 export interface Movie {
@@ -101,6 +110,7 @@ export interface TVShow {
   similar?: { results: TVShow[] };
   external_ids?: { imdb_id: string | null };
   reviews?: { results: Review[] };
+  aggregate_credits?: { cast: AggregateCast[]; crew: Crew[] };
 }
 
 export interface Crew {
@@ -384,11 +394,11 @@ class TMDBService {
   }
 
   async getTVShowDetails(id: number): Promise<TVShow> {
-    return this.fetchFromTMDB<TVShow>(`/tv/${id}?append_to_response=credits,videos,similar,external_ids,reviews`);
+    return this.fetchFromTMDB<TVShow>(`/tv/${id}?append_to_response=credits,aggregate_credits,videos,similar,external_ids,reviews`);
   }
 
   async getTVSeasonDetails(tvId: number, seasonNumber: number): Promise<TVSeasonDetails> {
-    return this.fetchFromTMDB<TVSeasonDetails>(`/tv/${tvId}/season/${seasonNumber}`);
+    return this.fetchFromTMDB<TVSeasonDetails>(`/tv/${tvId}/season/${seasonNumber}?append_to_response=credits`);
   }
 
   async getPersonDetails(id: number): Promise<Person> {

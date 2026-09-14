@@ -6,6 +6,7 @@ import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Skeleton } from '@/components/ui/skeleton';
 import { MediaCard } from '@/components/MediaCard';
+import { CreditsCarousel } from '@/components/CreditsCarousel';
 import { tmdbService, type Movie, type Collection } from '@/lib/tmdb';
 import { buildEmbedUrl } from '@/lib/utils';
 import { useToast } from '@/components/ui/use-toast';
@@ -18,11 +19,8 @@ export function MovieDetailsPage() {
   
   const [collection, setCollection] = useState<Collection | null>(null);
   const [loading, setLoading] = useState(true);
+  const [activeCredits, setActiveCredits] = useState<'cast' | 'crew'>('cast');
   
-  // View More States
-  const [creditsVisible, setCreditsVisible] = useState(14);
-  // Note: collectionVisible state has been removed since we are scrolling now!
-
   const navigate = useNavigate();
   const { toast } = useToast();
 
@@ -104,9 +102,17 @@ export function MovieDetailsPage() {
   const rawCrew = movie.credits?.crew || [];
   const directors = rawCrew.filter((c) => c.job === 'Director');
   const otherCrew = rawCrew.filter((c) => c.job !== 'Director');
-  const crew = [...directors, ...otherCrew].filter(
-    (person, index, self) => index === self.findIndex((t) => t.id === person.id)
-  );
+  const crew = [...directors, ...otherCrew].reduce<typeof rawCrew>((unique, person) => {
+    const existing = unique.find((member) => member.id === person.id);
+    if (existing) {
+      const jobs = new Set(existing.job.split(', '));
+      jobs.add(person.job);
+      existing.job = Array.from(jobs).join(', ');
+    } else {
+      unique.push({ ...person });
+    }
+    return unique;
+  }, []);
 
   return (
     <div className="min-h-screen">
@@ -312,84 +318,43 @@ export function MovieDetailsPage() {
           </div>
         </div>
 
-        {/* 50:50 SPLIT SECTION: Cast & Crew */}
+        {/* Cast and crew */}
         {(cast.length > 0 || crew.length > 0) && (
           <div className="mt-12 pt-8 border-t">
-            <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 lg:gap-12">
-              
-              {/* Cast */}
-              {cast.length > 0 && (
-                <div className="min-w-0 flex flex-col">
-                  <h2 className="text-xl font-semibold mb-4">Cast</h2>
-                  <div className="grid grid-cols-[repeat(auto-fill,minmax(75px,1fr))] gap-3">
-                    {cast.slice(0, creditsVisible).map((actor) => (
-                      <Link key={actor.id} to={`/person/${actor.id}`} className="text-center group block">
-                        <div className="overflow-hidden rounded-md border bg-muted">
-                          {actor.profile_path ? (
-                            <img src={tmdbService.getImageUrl(actor.profile_path, 'w500')} alt={actor.name} className="w-full aspect-[2/3] object-cover transition-transform duration-300 group-hover:scale-105" />
-                          ) : (
-                            <div className="w-full aspect-[2/3] flex items-center justify-center">
-                              <span className="text-[10px] text-muted-foreground">No image</span>
-                            </div>
-                          )}
-                        </div>
-                        <div className="mt-1">
-                          <p className="text-xs font-medium line-clamp-1 group-hover:text-primary transition-colors">{actor.name}</p>
-                          <p className="text-[10px] text-muted-foreground line-clamp-1">{actor.character}</p>
-                        </div>
-                      </Link>
-                    ))}
-                  </div>
-                </div>
+            <div className="flex items-center justify-between gap-4 mb-4">
+              <h2 className="text-xl font-semibold">{activeCredits === 'cast' ? 'Cast' : 'Crew'}</h2>
+              <div className="flex rounded-md border p-1" role="group" aria-label="Credits">
+                <Button
+                  type="button"
+                  variant={activeCredits === 'cast' ? 'secondary' : 'ghost'}
+                  size="sm"
+                  disabled={cast.length === 0}
+                  onClick={() => setActiveCredits('cast')}
+                >
+                  Cast
+                </Button>
+                <Button
+                  type="button"
+                  variant={activeCredits === 'crew' ? 'secondary' : 'ghost'}
+                  size="sm"
+                  disabled={crew.length === 0}
+                  onClick={() => setActiveCredits('crew')}
+                >
+                  Crew
+                </Button>
+              </div>
+            </div>
+
+            <div>
+              {activeCredits === 'cast' && cast.length > 0 && (
+                <CreditsCarousel people={cast} type="cast" />
               )}
 
-              {/* Crew */}
-              {crew.length > 0 && (
-                <div className="min-w-0 flex flex-col">
-                  <h2 className="text-xl font-semibold mb-4">Crew</h2>
-                  <div className="grid grid-cols-[repeat(auto-fill,minmax(75px,1fr))] gap-3">
-                    {crew.slice(0, creditsVisible).map((person) => (
-                      <Link key={person.id} to={`/person/${person.id}`} className="text-center group block">
-                        <div className="overflow-hidden rounded-md border bg-muted">
-                          {person.profile_path ? (
-                            <img src={tmdbService.getImageUrl(person.profile_path, 'w500')} alt={person.name} className="w-full aspect-[2/3] object-cover transition-transform duration-300 group-hover:scale-105" />
-                          ) : (
-                            <div className="w-full aspect-[2/3] flex items-center justify-center">
-                              <span className="text-[10px] text-muted-foreground">No image</span>
-                            </div>
-                          )}
-                        </div>
-                        <div className="mt-1">
-                          <p className="text-xs font-medium line-clamp-1 group-hover:text-primary transition-colors">{person.name}</p>
-                          <p className="text-[10px] text-muted-foreground line-clamp-1">{person.job}</p>
-                        </div>
-                      </Link>
-                    ))}
-                  </div>
-                </div>
+              {activeCredits === 'crew' && crew.length > 0 && (
+                <CreditsCarousel people={crew} type="crew" />
               )}
             </div>
 
-            {/* Unified View More / View Less Button */}
-            {(cast.length > 14 || crew.length > 14) && (
-              <div className="flex justify-center mt-8">
-                <Button 
-                  variant="outline" 
-                  size="sm"
-                  className="w-full max-w-sm"
-                  onClick={() => {
-                    const hasMore = cast.length > creditsVisible || crew.length > creditsVisible;
-                    if (hasMore) {
-                      setCreditsVisible(prev => prev + 14);
-                    } else {
-                      setCreditsVisible(14); 
-                    }
-                  }}
-                >
-                  {(cast.length > creditsVisible || crew.length > creditsVisible) ? 'View More Cast & Crew' : 'View Less Cast & Crew'}
-                </Button>
-              </div>
-            )}
           </div>
         )}
 

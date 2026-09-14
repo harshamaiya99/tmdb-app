@@ -112,10 +112,7 @@ Pages live in [src/pages](src/pages):
 
 ### Shared feature components
 
-- [src/components/MediaCard.tsx](src/components/MediaCard.tsx) renders a consistent card UI for movies, TV shows, and people.
-- [src/components/MediaSection.tsx](src/components/MediaSection.tsx) provides a shared layout for repeated media sections with an optional see-more link.
-- [src/components/ReviewSection.tsx](src/components/ReviewSection.tsx) renders review content for details pages.
-- [src/components/EpisodesRatingOverview.tsx](src/components/EpisodesRatingOverview.tsx) supports TV-show episode and rating presentation.
+- [src/components/CreditsCarousel.tsx](src/components/CreditsCarousel.tsx) renders reusable horizontally scrollable cast and crew credits.
 - [src/components/MediaGridSkeleton.tsx](src/components/MediaGridSkeleton.tsx) provides loading placeholders.
 
 ### Shared hooks

@@ -73,8 +73,8 @@ These fetch lists for the landing experience:
 These fetch richer entity data:
 
 - movie details with credits, videos, similar titles, reviews, and watch providers
-- TV show details with credits, videos, similar titles, reviews, and related metadata
-- TV season details
+- TV show details with aggregate series-wide cast credits, crew, videos, similar titles, reviews, and related metadata
+- TV season details with episodes and season-specific cast and crew credits
 - person details with credits and images
 
 ### Search
@@ -150,6 +150,7 @@ The service uses strongly typed TypeScript interfaces for TMDB entities such as:
 - `Season`
 - `Review`
 - `Cast`
+- `AggregateCast` for cast roles across the full TV series
 - `Crew`
 
 The current implementation also includes richer types for creator metadata, production companies, and watch providers where the TMDB responses expose them.

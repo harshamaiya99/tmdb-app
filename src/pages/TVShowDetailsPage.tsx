@@ -1,12 +1,13 @@
 // src/pages/TVShowDetailsPage.tsx
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { useParams, useNavigate, Link, useSearchParams } from 'react-router-dom';
 import { Calendar, Clock, Star, PlayCircle } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Skeleton } from '@/components/ui/skeleton';
 import { MediaCard } from '@/components/MediaCard';
-import { tmdbService, type TVShow, type Episode } from '@/lib/tmdb';
+import { CreditsCarousel } from '@/components/CreditsCarousel';
+import { tmdbService, type TVShow, type TVSeasonDetails, type Episode, type Cast, type Crew } from '@/lib/tmdb';
 import { useToast } from '@/components/ui/use-toast';
 import { buildEmbedUrl, formatDate } from '@/lib/utils';
 import { usePageTitle } from '@/hooks/usePageTitle';
@@ -23,9 +24,12 @@ export function TVShowDetailsPage() {
   
   const [episodes, setEpisodes] = useState<Episode[]>([]);
   const [loadingEpisodes, setLoadingEpisodes] = useState(false);
+  const [seasonCast, setSeasonCast] = useState<Cast[] | null>(null);
+  const [seasonCrew, setSeasonCrew] = useState<Crew[] | null>(null);
+  const [activeCredits, setActiveCredits] = useState<'cast' | 'crew'>('cast');
+  const seasonDetailsCache = useRef(new Map<number, TVSeasonDetails>());
+  const seasonRequestId = useRef(0);
   
-  // States for View More buttons
-const [creditsVisible, setCreditsVisible] = useState(14); 
   const [heatmapRowSpan, setHeatmapRowSpan] = useState(1);
 
   const navigate = useNavigate();
@@ -58,6 +62,8 @@ const [creditsVisible, setCreditsVisible] = useState(14);
   const fetchTVShowDetails = async (showId: number) => {
     try {
       setLoading(true);
+      seasonDetailsCache.current.clear();
+      seasonRequestId.current += 1;
       const data = await tmdbService.getTVShowDetails(showId);
       setTVShow(data);
     } catch {
@@ -72,18 +78,43 @@ const [creditsVisible, setCreditsVisible] = useState(14);
   };
 
   const fetchEpisodes = async (showId: number, seasonNum: number) => {
+    const requestId = ++seasonRequestId.current;
+    const applySeasonDetails = (data: TVSeasonDetails) => {
+      if (requestId !== seasonRequestId.current) return;
+      setEpisodes(data.episodes);
+      setSeasonCast(data.credits?.cast || []);
+      setSeasonCrew(data.credits?.crew || []);
+    };
+
+    setActiveCredits('cast');
+    setSeasonCast(null);
+    setSeasonCrew(null);
+
+    const cachedSeason = seasonDetailsCache.current.get(seasonNum);
+    if (cachedSeason) {
+      applySeasonDetails(cachedSeason);
+      setLoadingEpisodes(false);
+      return;
+    }
+
     try {
       setLoadingEpisodes(true);
       const data = await tmdbService.getTVSeasonDetails(showId, seasonNum);
-      setEpisodes(data.episodes);
+      seasonDetailsCache.current.set(seasonNum, data);
+      applySeasonDetails(data);
     } catch {
+      if (requestId !== seasonRequestId.current) return;
+      setSeasonCast([]);
+      setSeasonCrew([]);
       toast({
         variant: 'destructive',
         title: 'Error',
         description: 'Failed to load episodes for this season',
       });
     } finally {
-      setLoadingEpisodes(false);
+      if (requestId === seasonRequestId.current) {
+        setLoadingEpisodes(false);
+      }
     }
   };
 
@@ -123,8 +154,17 @@ const [creditsVisible, setCreditsVisible] = useState(14);
   const similarShows = tvShow.similar?.results || [];
 
   // Sort Crew: Creators & Executive Producers First!
-  const cast = tvShow.credits?.cast || [];
-  const rawCrew = tvShow.credits?.crew || [];
+  const aggregateCast = tvShow.aggregate_credits?.cast.map((person) => ({
+    id: person.id,
+    name: person.name,
+    profile_path: person.profile_path,
+    character: person.roles.map((role) => role.character).join(', '),
+  })) || tvShow.credits?.cast || [];
+  const seasonCreditsLoading = selectedSeason > 0 && (seasonCast === null || seasonCrew === null);
+  const cast = selectedSeason > 0 ? seasonCast || [] : aggregateCast;
+  const rawCrew = selectedSeason > 0 && seasonCrew !== null
+    ? seasonCrew
+    : tvShow.credits?.crew || [];
   const creators = (tvShow.created_by || []).map((creator) => ({ ...creator, job: 'Creator' as const }));
   const creatorIds = new Set(creators.map((creator) => creator.id));
 
@@ -133,9 +173,22 @@ const [creditsVisible, setCreditsVisible] = useState(14);
 
   const otherCrew = rawCrew.filter((crewMember) => !creatorIds.has(crewMember.id) && !execIds.has(crewMember.id));
 
-  const crew = [...creators, ...execProducers, ...otherCrew].filter(
-    (person, index, self) => index === self.findIndex((t) => t.id === person.id)
-  );
+  const crew = [...creators, ...execProducers, ...otherCrew].reduce<Array<{ id: number; name: string; job: string; profile_path: string | null }>>((unique, person) => {
+    const existing = unique.find((member) => member.id === person.id);
+    if (existing) {
+      const jobs = new Set(existing.job.split(', '));
+      jobs.add(person.job);
+      existing.job = Array.from(jobs).join(', ');
+    } else {
+      unique.push({
+        id: person.id,
+        name: person.name,
+        job: person.job,
+        profile_path: person.profile_path,
+      });
+    }
+    return unique;
+  }, []);
 
   return (
     <div className="min-h-screen">
@@ -250,94 +303,49 @@ const [creditsVisible, setCreditsVisible] = useState(14);
           </div>
         </div>
 
-        {/* 50:50 SPLIT SECTION: Cast & Crew */}
-        {(cast.length > 0 || crew.length > 0) && (
+        {/* Cast and crew */}
+        {(cast.length > 0 || crew.length > 0 || seasonCreditsLoading) && (
           <div className="mt-12 pt-8 border-t">
-            <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 lg:gap-12">
-              
-              {/* Left Column: Cast */}
-              {cast.length > 0 && (
-                <div className="min-w-0 flex flex-col">
-                  <h2 className="text-xl font-semibold mb-4">Cast</h2>
-                  <div className="grid grid-cols-[repeat(auto-fill,minmax(75px,1fr))] gap-3">
-                    {cast.slice(0, creditsVisible).map((actor) => (
-                      <Link key={actor.id} to={`/person/${actor.id}`} className="text-center group block">
-                        <div className="overflow-hidden rounded-md border bg-muted">
-                          {actor.profile_path ? (
-                            <img
-                              src={tmdbService.getImageUrl(actor.profile_path, 'w500')}
-                              alt={actor.name}
-                              className="w-full aspect-[2/3] object-cover transition-transform duration-300 group-hover:scale-105"
-                            />
-                          ) : (
-                            <div className="w-full aspect-[2/3] flex items-center justify-center">
-                              <span className="text-[10px] text-muted-foreground">No image</span>
-                            </div>
-                          )}
-                        </div>
-                        <div className="mt-1">
-                          <p className="text-xs font-medium line-clamp-1 group-hover:text-primary transition-colors">{actor.name}</p>
-                          <p className="text-[10px] text-muted-foreground line-clamp-1">{actor.character}</p>
-                        </div>
-                      </Link>
-                    ))}
-                  </div>
-                </div>
-              )}
+            <div className="flex items-center justify-between gap-4 mb-4">
+              <h2 className="text-xl font-semibold">{activeCredits === 'cast' ? 'Cast' : 'Crew'}</h2>
+              <div className="flex rounded-md border p-1" role="group" aria-label="Credits">
+                <Button
+                  type="button"
+                  variant={activeCredits === 'cast' ? 'secondary' : 'ghost'}
+                  size="sm"
+                  disabled={cast.length === 0}
+                  onClick={() => setActiveCredits('cast')}
+                >
+                  Cast
+                </Button>
+                <Button
+                  type="button"
+                  variant={activeCredits === 'crew' ? 'secondary' : 'ghost'}
+                  size="sm"
+                  disabled={crew.length === 0}
+                  onClick={() => setActiveCredits('crew')}
+                >
+                  Crew
+                </Button>
+              </div>
+            </div>
 
-              {/* Right Column: Crew */}
-              {crew.length > 0 && (
-                <div className="min-w-0 flex flex-col">
-                  <h2 className="text-xl font-semibold mb-4">Crew</h2>
-                  <div className="grid grid-cols-[repeat(auto-fill,minmax(75px,1fr))] gap-3">
-                    {crew.slice(0, creditsVisible).map((person) => (
-                      <Link key={person.id} to={`/person/${person.id}`} className="text-center group block">
-                        <div className="overflow-hidden rounded-md border bg-muted">
-                          {person.profile_path ? (
-                            <img
-                              src={tmdbService.getImageUrl(person.profile_path, 'w500')}
-                              alt={person.name}
-                              className="w-full aspect-[2/3] object-cover transition-transform duration-300 group-hover:scale-105"
-                            />
-                          ) : (
-                            <div className="w-full aspect-[2/3] flex items-center justify-center">
-                              <span className="text-[10px] text-muted-foreground">No image</span>
-                            </div>
-                          )}
-                        </div>
-                        <div className="mt-1">
-                          <p className="text-xs font-medium line-clamp-1 group-hover:text-primary transition-colors">{person.name}</p>
-                          <p className="text-[10px] text-muted-foreground line-clamp-1">{person.job}</p>
-                        </div>
-                      </Link>
-                    ))}
-                  </div>
+            <div>
+              {seasonCreditsLoading ? (
+                <div className="flex gap-3 overflow-hidden pb-4">
+                  {[...Array(8)].map((_, index) => (
+                    <Skeleton key={index} className="h-[150px] w-[75px] shrink-0 rounded-md" />
+                  ))}
                 </div>
+              ) : activeCredits === 'cast' && cast.length > 0 ? (
+                <CreditsCarousel people={cast} type="cast" />
+              ) : null}
+
+              {!seasonCreditsLoading && activeCredits === 'crew' && crew.length > 0 && (
+                <CreditsCarousel people={crew} type="crew" />
               )}
             </div>
 
-            {/* Unified View More / View Less Button */}
-            {(cast.length > 14 || crew.length > 14) && (
-              <div className="flex justify-center mt-8">
-                <Button 
-                  variant="outline" 
-                  size="sm"
-                  className="w-full max-w-sm"
-                  onClick={() => {
-                    const hasMore = cast.length > creditsVisible || crew.length > creditsVisible;
-                    if (hasMore) {
-                      setCreditsVisible(prev => prev + 14);
-                    } else {
-                      setCreditsVisible(14); // Reset back to default
-                    }
-                  }}
-                >
-                  {(cast.length > creditsVisible || crew.length > creditsVisible) 
-                    ? 'View More Cast & Crew' 
-                    : 'View Less Cast & Crew'}
-                </Button>
-              </div>
-            )}
           </div>
         )}
         
