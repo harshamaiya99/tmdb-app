@@ -15,7 +15,6 @@ import { ReviewSection } from '../components/ReviewSection';
 import { EpisodesRatingOverview } from '../components/EpisodesRatingOverview';
 import { LazySection } from '@/components/LazySection';
 import { TMDBImage } from '@/components/TMDBImage';
-import { useLazyLoad } from '@/hooks/useLazyLoad';
 
 export function TVShowDetailsPage() {
   const { id } = useParams<{ id: string }>();
@@ -23,7 +22,6 @@ export function TVShowDetailsPage() {
   const selectedSeason = parseInt(searchParams.get('season') || '0', 10);
   const [activeCredits, setActiveCredits] = useState<'cast' | 'crew'>('cast');
   const [heatmapRowSpan, setHeatmapRowSpan] = useState(1);
-  const episodesLoad = useLazyLoad();
 
   const navigate = useNavigate();
   const tvShowQuery = useCachedQuery<TVShow>(
@@ -35,7 +33,7 @@ export function TVShowDetailsPage() {
   const seasonQuery = useCachedQuery<TVSeasonDetails>(
     `tv-season:${id ?? 'none'}:${selectedSeason}`,
     (signal) => tmdbService.getTVSeasonDetails(Number(id), selectedSeason, { signal }),
-    { enabled: Boolean(id) && selectedSeason > 0 && episodesLoad.isVisible, ttlMs: 15 * 60 * 1000 },
+    { enabled: Boolean(id) && selectedSeason > 0, ttlMs: 15 * 60 * 1000 },
   );
   const episodes = seasonQuery.data?.episodes ?? [];
   const seasonCast = seasonQuery.data?.credits?.cast ?? null;
@@ -243,7 +241,7 @@ export function TVShowDetailsPage() {
 
         {/* Cast and crew */}
         {(cast.length > 0 || crew.length > 0 || seasonCreditsLoading) && (
-          <div ref={episodesLoad.ref} className="mt-12 min-h-[500px] pt-8 border-t">
+          <div className="mt-12 pt-8 border-t">
             <div className="flex items-center justify-between gap-4 mb-4">
               <h2 className="text-xl font-semibold">{activeCredits === 'cast' ? 'Cast' : 'Crew'}</h2>
               <div className="flex rounded-md border p-1" role="group" aria-label="Credits">

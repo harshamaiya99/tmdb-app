@@ -8,7 +8,7 @@ import { Skeleton } from '@/components/ui/skeleton';
 import { MediaCard } from '@/components/MediaCard';
 import { CreditsCarousel } from '@/components/CreditsCarousel';
 import { tmdbService, type Movie, type Collection } from '@/lib/tmdb';
-import { buildEmbedUrl } from '@/lib/utils';
+import { buildEmbedUrl, formatDate } from '@/lib/utils';
 import { usePageTitle } from '@/hooks/usePageTitle';
 import { useCachedQuery } from '@/hooks/useCachedQuery';
 import { ReviewSection } from '../components/ReviewSection';
@@ -63,7 +63,7 @@ export function MovieDetailsPage() {
     );
   }
 
-  const releaseYear = movie.release_date ? new Date(movie.release_date).getFullYear() : '';
+  const releaseDate = formatDate(movie.release_date);
   const rating = movie.vote_average.toFixed(1);
   const similarMovies = movie.similar?.results || [];
   
@@ -176,10 +176,10 @@ export function MovieDetailsPage() {
                 )}
 
                 <div className="flex flex-wrap items-center gap-4 mt-3 text-sm text-muted-foreground">
-                  {releaseYear && (
+                  {releaseDate && (
                     <div className="flex items-center gap-1">
                       <Calendar className="h-4 w-4" />
-                      <span>{releaseYear}</span>
+                      <span>{releaseDate}</span>
                     </div>
                   )}
                   {movie.runtime && (

@@ -12,11 +12,25 @@ interface LayoutProps {
   children: ReactNode;
 }
 
+const SEARCH_ORIGIN_STORAGE_KEY = 'tmdb_search_origin';
+
 export function Layout({ children }: LayoutProps) {
   const navigate = useNavigate();
-  const [searchParams, setSearchParams] = useSearchParams();
+  const [searchParams] = useSearchParams();
   const [searchQuery, setSearchQuery] = useState('');
   const { title } = useTitle();
+  const location = useLocation();
+
+  const getSearchOrigin = () => {
+    const storedOrigin = sessionStorage.getItem(SEARCH_ORIGIN_STORAGE_KEY);
+    return storedOrigin || '/';
+  };
+
+  const restoreSearchOrigin = () => {
+    const origin = getSearchOrigin();
+    sessionStorage.removeItem(SEARCH_ORIGIN_STORAGE_KEY);
+    navigate(origin);
+  };
 
   useEffect(() => {
     setSearchQuery(searchParams.get('query') ?? '');
@@ -27,11 +41,16 @@ export function Layout({ children }: LayoutProps) {
     const trimmedQuery = searchQuery.trim();
 
     if (!trimmedQuery) {
-      setSearchParams({});
-      navigate('/');
+      restoreSearchOrigin();
       return;
     }
 
+    if (!searchParams.get('query')) {
+      sessionStorage.setItem(
+        SEARCH_ORIGIN_STORAGE_KEY,
+        `${location.pathname}${location.search}` || '/',
+      );
+    }
     navigate({ pathname: '/', search: `?query=${encodeURIComponent(trimmedQuery)}` });
   };
 
@@ -40,12 +59,10 @@ export function Layout({ children }: LayoutProps) {
     setSearchQuery(nextValue);
 
     if (!nextValue.trim()) {
-      setSearchParams({});
-      navigate('/');
+      restoreSearchOrigin();
     }
   };
 
-  const location = useLocation();
   const showBackButton = location.pathname !== '/';
 
   const handleLogout = () => {

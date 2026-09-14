@@ -6,7 +6,6 @@ import { MediaSection } from '@/components/MediaSection';
 import { tmdbService } from '@/lib/tmdb';
 import { useCachedQuery } from '@/hooks/useCachedQuery';
 import { useDebouncedValue } from '@/hooks/useDebouncedValue';
-import { usePagination } from '@/hooks/usePagination';
 import { usePageTitle } from '@/hooks/usePageTitle';
 import { TMDBImage } from '@/components/TMDBImage';
 
@@ -20,7 +19,6 @@ function SearchMessage({ message, error = false }: { message: string; error?: bo
 
 export function HomePage() {
   const [searchParams] = useSearchParams();
-  const { page: searchPage, setPage: setSearchPage } = usePagination();
   const searchTerm = searchParams.get('query')?.trim() ?? '';
   const debouncedSearchTerm = useDebouncedValue(searchTerm, 350);
   const hasActiveSearch = Boolean(searchTerm);
@@ -78,18 +76,18 @@ export function HomePage() {
   );
 
   const searchMovies = useCachedQuery(
-    `search:movies:${debouncedSearchTerm}:${searchPage}`,
-    (signal) => tmdbService.searchMovies(debouncedSearchTerm, searchPage, { signal }),
+    `search:movies:${debouncedSearchTerm}:1`,
+    (signal) => tmdbService.searchMovies(debouncedSearchTerm, 1, { signal }),
     { enabled: searchReady },
   );
   const searchTV = useCachedQuery(
-    `search:tv:${debouncedSearchTerm}:${searchPage}`,
-    (signal) => tmdbService.searchTVShows(debouncedSearchTerm, searchPage, { signal }),
+    `search:tv:${debouncedSearchTerm}:1`,
+    (signal) => tmdbService.searchTVShows(debouncedSearchTerm, 1, { signal }),
     { enabled: searchReady },
   );
   const searchPeople = useCachedQuery(
-    `search:people:${debouncedSearchTerm}:${searchPage}`,
-    (signal) => tmdbService.searchPersons(debouncedSearchTerm, searchPage, { signal }),
+    `search:people:${debouncedSearchTerm}:1`,
+    (signal) => tmdbService.searchPersons(debouncedSearchTerm, 1, { signal }),
     { enabled: searchReady },
   );
 
@@ -138,14 +136,14 @@ export function HomePage() {
           <section className="space-y-4">
             <h2 className="text-2xl font-bold tracking-tight">Movies</h2>
             {searchMovies.error ? <SearchMessage error message={searchMovies.error.message} /> : searchMovies.data?.results.length ? (
-              <MediaSection title="" items={searchMovies.data.results} type="movie" hideSeeMore limit={20} className="space-y-0" />
+              <MediaSection title="" items={searchMovies.data.results} type="movie" hideSeeMore limit={10} className="space-y-0" />
             ) : <SearchMessage message="No movies found." />}
           </section>
 
           <section className="space-y-4">
             <h2 className="text-2xl font-bold tracking-tight">TV Shows</h2>
             {searchTV.error ? <SearchMessage error message={searchTV.error.message} /> : searchTV.data?.results.length ? (
-              <MediaSection title="" items={searchTV.data.results} type="tv" hideSeeMore limit={20} className="space-y-0" />
+              <MediaSection title="" items={searchTV.data.results} type="tv" hideSeeMore limit={10} className="space-y-0" />
             ) : <SearchMessage message="No TV shows found." />}
           </section>
 
@@ -153,7 +151,7 @@ export function HomePage() {
             <h2 className="text-2xl font-bold tracking-tight">People</h2>
             {searchPeople.error ? <SearchMessage error message={searchPeople.error.message} /> : searchPeople.data?.results.length ? (
               <div className="grid grid-cols-2 gap-4 sm:grid-cols-3 md:grid-cols-5 lg:grid-cols-6 xl:grid-cols-8 2xl:grid-cols-10">
-                {searchPeople.data.results.slice(0, 20).map((person) => (
+                {searchPeople.data.results.slice(0, 10).map((person) => (
                   <Link key={person.id} to={`/person/${person.id}`} className="group flex flex-col space-y-2">
                     <div className="aspect-[2/3] overflow-hidden rounded-xl border bg-muted shadow-sm">
                       {person.profile_path ? (
@@ -170,27 +168,6 @@ export function HomePage() {
             ) : <SearchMessage message="No people found." />}
           </section>
 
-          {Math.max(searchMovies.data?.total_pages ?? 1, searchTV.data?.total_pages ?? 1, searchPeople.data?.total_pages ?? 1) > 1 && (
-            <div className="flex items-center justify-center gap-6 border-t pt-8">
-              <button
-                type="button"
-                className="rounded-md border px-4 py-2 text-sm disabled:pointer-events-none disabled:opacity-50"
-                onClick={() => setSearchPage(searchPage - 1)}
-                disabled={searchPage === 1}
-              >
-                Previous
-              </button>
-              <span className="text-sm font-medium text-muted-foreground">Page {searchPage}</span>
-              <button
-                type="button"
-                className="rounded-md border px-4 py-2 text-sm disabled:pointer-events-none disabled:opacity-50"
-                onClick={() => setSearchPage(searchPage + 1)}
-                disabled={searchPage >= Math.max(searchMovies.data?.total_pages ?? 1, searchTV.data?.total_pages ?? 1, searchPeople.data?.total_pages ?? 1)}
-              >
-                Next
-              </button>
-            </div>
-          )}
         </div>
       ) : (
         <div className="space-y-12 pb-12">
