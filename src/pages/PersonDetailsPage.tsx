@@ -11,10 +11,12 @@ import { usePageTitle } from '@/hooks/usePageTitle';
 import { useCachedQuery } from '@/hooks/useCachedQuery';
 import { LazySection } from '@/components/LazySection';
 import { TMDBImage } from '@/components/TMDBImage';
+import { searchWikimediaImages, type WikimediaImage } from '@/lib/wikimedia';
 
 export function PersonDetailsPage() {
   const { id } = useParams<{ id: string }>();
   const [selectedImageIndex, setSelectedImageIndex] = useState<number | null>(null);
+  const [selectedWikimediaIndex, setSelectedWikimediaIndex] = useState<number | null>(null);
   const dialogRef = useRef<HTMLDivElement>(null);
   const galleryTriggerRef = useRef<HTMLButtonElement | null>(null);
   const navigate = useNavigate();
@@ -25,6 +27,11 @@ export function PersonDetailsPage() {
     { enabled: Boolean(id), ttlMs: 30 * 60 * 1000 },
   );
   const person = personQuery.data ?? null;
+  const wikimediaQuery = useCachedQuery<WikimediaImage[]>(
+    `wikimedia-person:${id ?? 'none'}`,
+    (signal) => searchWikimediaImages(person?.name ?? '', signal),
+    { enabled: Boolean(person?.name), ttlMs: 30 * 60 * 1000 },
+  );
 
   usePageTitle(person ? `${person.name}'s Profile` : 'Person Details');
 
@@ -33,30 +40,47 @@ export function PersonDetailsPage() {
 
   const openImage = (index: number) => {
     galleryTriggerRef.current = document.activeElement instanceof HTMLButtonElement ? document.activeElement : null;
+    setSelectedWikimediaIndex(null);
     setSelectedImageIndex(index);
   };
-  const closeImage = () => setSelectedImageIndex(null);
+  const openWikimediaImage = (index: number) => {
+    galleryTriggerRef.current = document.activeElement instanceof HTMLButtonElement ? document.activeElement : null;
+    setSelectedImageIndex(null);
+    setSelectedWikimediaIndex(index);
+  };
+  const closeImage = () => {
+    setSelectedImageIndex(null);
+    setSelectedWikimediaIndex(null);
+  };
 
   useEffect(() => {
-    if (selectedImageIndex !== null) {
+    if (selectedImageIndex !== null || selectedWikimediaIndex !== null) {
       dialogRef.current?.focus();
     } else {
       galleryTriggerRef.current?.focus();
     }
-  }, [selectedImageIndex]);
+  }, [selectedImageIndex, selectedWikimediaIndex]);
 
   // FIX: Move the Keyboard Event Listener hook to the top level!
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
-      if (selectedImageIndex === null) return;
-      
-      if (e.key === 'ArrowRight') {
+      if (selectedImageIndex === null && selectedWikimediaIndex === null) return;
+
+      if (e.key === 'ArrowRight' && selectedImageIndex !== null) {
         setSelectedImageIndex(prev => 
           prev === null ? null : (prev === galleryImages.length - 1 ? 0 : prev + 1)
         );
-      } else if (e.key === 'ArrowLeft') {
+      } else if (e.key === 'ArrowLeft' && selectedImageIndex !== null) {
         setSelectedImageIndex(prev => 
           prev === null ? null : (prev === 0 ? galleryImages.length - 1 : prev - 1)
+        );
+      } else if (e.key === 'ArrowRight' && selectedWikimediaIndex !== null) {
+        setSelectedWikimediaIndex(prev =>
+          prev === null ? null : (prev === wikimediaQuery.data!.length - 1 ? 0 : prev + 1)
+        );
+      } else if (e.key === 'ArrowLeft' && selectedWikimediaIndex !== null) {
+        setSelectedWikimediaIndex(prev =>
+          prev === null ? null : (prev === 0 ? wikimediaQuery.data!.length - 1 : prev - 1)
         );
       } else if (e.key === 'Escape') {
         closeImage();
@@ -68,7 +92,7 @@ export function PersonDetailsPage() {
     return () => {
       window.removeEventListener('keydown', handleKeyDown);
     };
-  }, [selectedImageIndex, galleryImages.length]);
+  }, [selectedImageIndex, selectedWikimediaIndex, galleryImages.length, wikimediaQuery.data]);
 
   // NOW we can safely have our conditional loading and error returns
   if (personQuery.loading) {
@@ -114,6 +138,9 @@ export function PersonDetailsPage() {
     .slice(0, 8);
 
   const selectedImage = selectedImageIndex === null ? null : galleryImages[selectedImageIndex] ?? null;
+  const selectedWikimediaImage = selectedWikimediaIndex === null
+    ? null
+    : wikimediaQuery.data?.[selectedWikimediaIndex] ?? null;
 
   return (
     <div className="min-h-screen">
@@ -246,10 +273,43 @@ export function PersonDetailsPage() {
             </div>
             </LazySection>
           )}
+
+          {wikimediaQuery.data && wikimediaQuery.data.length > 0 && (
+            <LazySection>
+              <section className="w-full border-t pt-8" aria-labelledby="wikimedia-gallery-heading">
+                <div className="mb-6 flex flex-wrap items-center gap-3">
+                  <h2 id="wikimedia-gallery-heading" className="text-2xl font-semibold">Wikimedia Commons</h2>
+                  <span className="rounded-full border px-2.5 py-1 text-xs text-muted-foreground">External source</span>
+                </div>
+                <p className="mb-5 text-sm text-muted-foreground">
+                  Additional images from Wikimedia Commons. Select an image to view its source and licensing details.
+                </p>
+                <div className="grid grid-cols-2 gap-4 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-8 2xl:grid-cols-10">
+                  {wikimediaQuery.data.map((image, idx) => (
+                    <button
+                      key={image.pageUrl}
+                      type="button"
+                      onClick={() => openWikimediaImage(idx)}
+                      className="group overflow-hidden rounded-xl border bg-muted shadow-sm transition hover:ring-2 hover:ring-primary"
+                    >
+                      <img
+                        src={image.thumbnailUrl}
+                        alt={image.description || `${person.name} from Wikimedia Commons`}
+                        width={image.width}
+                        height={image.height}
+                        loading="lazy"
+                        className="aspect-[2/3] w-full object-cover transition-transform duration-300 group-hover:scale-105"
+                      />
+                    </button>
+                  ))}
+                </div>
+              </section>
+            </LazySection>
+          )}
         </div>
 
         {/* The Lightbox */}
-        {selectedImage && (
+        {(selectedImage || selectedWikimediaImage) && (
           <div
             className="fixed inset-0 z-[60] flex items-center justify-center bg-black/95 px-3 py-4 sm:px-6 backdrop-blur-sm"
             onClick={closeImage}
@@ -266,7 +326,9 @@ export function PersonDetailsPage() {
             >
               <div className="mb-3 flex items-center justify-between">
                 <p id="gallery-dialog-title" className="text-sm font-medium text-white/70">
-                  {selectedImageIndex! + 1} / {galleryImages.length}
+                  {selectedWikimediaImage
+                    ? `Wikimedia Commons: ${selectedWikimediaIndex! + 1} / ${wikimediaQuery.data?.length ?? 0}`
+                    : `TMDB: ${selectedImageIndex! + 1} / ${galleryImages.length}`}
                 </p>
                 <Button
                   variant="ghost"
@@ -283,26 +345,56 @@ export function PersonDetailsPage() {
                 <Button 
                   variant="outline" 
                   size="icon" 
-                  onClick={() => setSelectedImageIndex(prev => prev === null ? null : (prev === 0 ? galleryImages.length - 1 : prev - 1))}
+                  onClick={() => {
+                    if (selectedWikimediaIndex !== null) {
+                      setSelectedWikimediaIndex((prev) => prev === null || !wikimediaQuery.data
+                        ? null
+                        : (prev === 0 ? wikimediaQuery.data.length - 1 : prev - 1));
+                    } else {
+                      setSelectedImageIndex((prev) => prev === null
+                        ? null
+                        : (prev === 0 ? galleryImages.length - 1 : prev - 1));
+                    }
+                  }}
                   aria-label="Previous gallery image"
                   title="Previous gallery image"
                   className="rounded-full h-10 w-10 shrink-0 border-white/20 bg-black/50 text-white hover:bg-white/10 hover:text-white"
                 >
                   <ArrowLeft className="h-5 w-5" />
                 </Button>
-                <TMDBImage
-                  path={selectedImage.file_path}
-                  alt={`${person.name} gallery ${selectedImageIndex! + 1}`}
-                  width={selectedImage.width}
-                  height={selectedImage.height}
-                  sizes="min(90vw, 1200px)"
-                  loading="eager"
-                  className="max-h-[85vh] w-full rounded-xl object-contain shadow-2xl"
-                />
+                {selectedWikimediaImage ? (
+                  <img
+                    src={selectedWikimediaImage.originalUrl}
+                    alt={selectedWikimediaImage.description || `${person.name} from Wikimedia Commons`}
+                    width={selectedWikimediaImage.width}
+                    height={selectedWikimediaImage.height}
+                    className="max-h-[85vh] w-full rounded-xl object-contain shadow-2xl"
+                  />
+                ) : selectedImage ? (
+                  <TMDBImage
+                    path={selectedImage.file_path}
+                    alt={`${person.name} gallery ${selectedImageIndex! + 1}`}
+                    width={selectedImage.width}
+                    height={selectedImage.height}
+                    sizes="min(90vw, 1200px)"
+                    loading="eager"
+                    className="max-h-[85vh] w-full rounded-xl object-contain shadow-2xl"
+                  />
+                ) : null}
                 <Button 
                   variant="outline" 
                   size="icon" 
-                  onClick={() => setSelectedImageIndex(prev => prev === null ? null : (prev === galleryImages.length - 1 ? 0 : prev + 1))}
+                  onClick={() => {
+                    if (selectedWikimediaIndex !== null) {
+                      setSelectedWikimediaIndex((prev) => prev === null || !wikimediaQuery.data
+                        ? null
+                        : (prev === wikimediaQuery.data.length - 1 ? 0 : prev + 1));
+                    } else {
+                      setSelectedImageIndex((prev) => prev === null
+                        ? null
+                        : (prev === galleryImages.length - 1 ? 0 : prev + 1));
+                    }
+                  }}
                   aria-label="Next gallery image"
                   title="Next gallery image"
                   className="rounded-full h-10 w-10 shrink-0 border-white/20 bg-black/50 text-white hover:bg-white/10 hover:text-white"
@@ -310,6 +402,19 @@ export function PersonDetailsPage() {
                   <ArrowRight className="h-5 w-5" />
                 </Button>
               </div>
+              {selectedWikimediaImage && (
+                <div className="mt-3 flex flex-wrap items-center justify-center gap-2 text-xs text-white/70">
+                  <span>{[selectedWikimediaImage.license, selectedWikimediaImage.artist].filter(Boolean).join(' · ') || 'Wikimedia Commons image'}</span>
+                  <a
+                    href={selectedWikimediaImage.pageUrl}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="text-white underline underline-offset-2 hover:text-white/80"
+                  >
+                    View source
+                  </a>
+                </div>
+              )}
             </div>
           </div>
         )}
