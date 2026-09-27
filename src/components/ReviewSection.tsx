@@ -1,18 +1,38 @@
-import { useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { flushSync } from 'react-dom';
 import { Star, ChevronDown, FilterX } from 'lucide-react';
 import { Button } from './ui/button';
-import { Review } from '../lib/tmdb';
+import { Review, tmdbService } from '../lib/tmdb';
 
 interface ReviewSectionProps {
   reviews: Review[];
+  mediaId: number;
+  mediaType: 'movie' | 'tv';
+  totalPages: number;
 }
 
-export function ReviewSection({ reviews }: ReviewSectionProps) {
+export function ReviewSection({ reviews: initialReviews, mediaId, mediaType, totalPages }: ReviewSectionProps) {
+  const [reviews, setReviews] = useState(initialReviews);
   const [visibleCount, setVisibleCount] = useState(5); 
   const [expandedReviewId, setExpandedReviewId] = useState<string | null>(null);
   // Track the currently active rating filter (1-10)
   const [ratingFilter, setRatingFilter] = useState<number | null>(null);
+  const [currentPage, setCurrentPage] = useState(1);
+  const [loadingMore, setLoadingMore] = useState(false);
+  const [loadError, setLoadError] = useState<string | null>(null);
+  const requestController = useRef<AbortController | null>(null);
+
+  useEffect(() => {
+    requestController.current?.abort();
+    setReviews(initialReviews);
+    setVisibleCount(5);
+    setExpandedReviewId(null);
+    setRatingFilter(null);
+    setCurrentPage(1);
+    setLoadError(null);
+  }, [initialReviews, mediaId, mediaType]);
+
+  useEffect(() => () => requestController.current?.abort(), []);
 
   if (!reviews || reviews.length === 0) return null;
 
@@ -65,6 +85,43 @@ export function ReviewSection({ reviews }: ReviewSectionProps) {
       setRatingFilter((prev) => (prev === star ? null : star));
       setVisibleCount(5);
       setExpandedReviewId(null);
+    }
+  };
+
+  const loadMoreReviews = async () => {
+    if (loadingMore) return;
+
+    if (visibleCount < filteredReviews.length) {
+      setVisibleCount((prev) => prev + 6);
+      return;
+    }
+
+    if (currentPage >= totalPages) return;
+
+    const nextPage = currentPage + 1;
+    const controller = new AbortController();
+    requestController.current?.abort();
+    requestController.current = controller;
+    setLoadingMore(true);
+    setLoadError(null);
+
+    try {
+      const response = mediaType === 'movie'
+        ? await tmdbService.getMovieReviews(mediaId, nextPage, { signal: controller.signal })
+        : await tmdbService.getTVShowReviews(mediaId, nextPage, { signal: controller.signal });
+
+      setReviews((previous) => {
+        const existingIds = new Set(previous.map((review) => review.id));
+        return [...previous, ...response.results.filter((review) => !existingIds.has(review.id))];
+      });
+      setCurrentPage(response.page);
+      setVisibleCount((prev) => prev + 6);
+    } catch (error) {
+      if (!(error instanceof DOMException && error.name === 'AbortError')) {
+        setLoadError(error instanceof Error ? error.message : 'Unable to load more reviews.');
+      }
+    } finally {
+      if (!controller.signal.aborted) setLoadingMore(false);
     }
   };
 
@@ -213,20 +270,29 @@ export function ReviewSection({ reviews }: ReviewSectionProps) {
       </div>
 
       {/* View More Button */}
-      {visibleCount < filteredReviews.length && (
+      {(visibleCount < filteredReviews.length || currentPage < totalPages) && (
         <div className="flex justify-center mt-8">
           <Button 
             variant="outline" 
             onClick={() => {
               if (document.startViewTransition) {
-                document.startViewTransition(() => flushSync(() => setVisibleCount((prev) => prev + 6)));
+                document.startViewTransition(() => flushSync(() => { void loadMoreReviews(); }));
               } else {
-                setVisibleCount((prev) => prev + 6);
+                void loadMoreReviews();
               }
             }}
             className="rounded-full px-6"
+            disabled={loadingMore}
           >
-            View More <ChevronDown className="ml-2 w-4 h-4" />
+            {loadingMore ? 'Loading...' : 'View More'} <ChevronDown className="ml-2 w-4 h-4" />
+          </Button>
+        </div>
+      )}
+      {loadError && (
+        <div className="flex flex-col items-center gap-2 mt-4 text-sm text-destructive">
+          <p>{loadError}</p>
+          <Button variant="ghost" size="sm" onClick={() => void loadMoreReviews()} disabled={loadingMore}>
+            Try again
           </Button>
         </div>
       )}

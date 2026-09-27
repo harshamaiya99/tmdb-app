@@ -77,6 +77,68 @@
   scrollbar-color: hsl(var(--muted-foreground) / 0.3) transparent;
 }
 
+@media (min-width: 768px) {
+  .episode-grid {
+    display: flex;
+    flex-direction: column;
+    gap: 1.5rem;
+  }
+
+  .episode-card-expanded {
+    position: relative;
+    z-index: 20;
+    width: 100%;
+    height: 100%;
+    flex-direction: row;
+    box-shadow: 0 14px 28px hsl(var(--foreground) / 0.16);
+  }
+
+  .episode-row {
+    transition: grid-template-columns 300ms ease-out;
+  }
+
+  .episode-card-expanded .episode-card-media {
+    width: 40%;
+    height: 100%;
+  }
+
+  .episode-card-expanded .episode-card-image,
+  .episode-card-expanded .episode-card-media > [role='img'] {
+    height: 100%;
+    aspect-ratio: auto;
+  }
+
+  .episode-card-expanded .episode-card-content {
+    width: 60%;
+    overflow-y: auto;
+  }
+
+  .episode-card-expanded .episode-card-label,
+  .episode-card-expanded .episode-card-rating {
+    display: flex;
+  }
+
+  .episode-card-expanded .episode-card-overview {
+    display: block;
+    -webkit-line-clamp: unset;
+    line-clamp: unset;
+    overflow: visible;
+  }
+
+  .episode-card-expand-left {
+    right: 0;
+  }
+
+  .episode-card-expand-left {
+    right: 0;
+  }
+
+  .episode-card-expand-right {
+    left: 0;
+  }
+
+}
+
 @layer base {
   * {
     @apply border-border;

@@ -339,7 +339,12 @@ export function MovieDetailsPage() {
 
         {movie.reviews && movie.reviews.results.length > 0 && (
           <LazySection>
-            <ReviewSection reviews={movie.reviews.results} />
+            <ReviewSection
+              reviews={movie.reviews.results}
+              mediaId={movie.id}
+              mediaType="movie"
+              totalPages={movie.reviews.total_pages}
+            />
           </LazySection>
         )}
 

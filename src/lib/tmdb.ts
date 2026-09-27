@@ -70,7 +70,7 @@ export interface Movie {
   videos?: { results: Video[] };
   similar?: { results: Movie[] };
   external_ids?: { imdb_id: string | null };
-  reviews?: { results: Review[] };
+  reviews?: ReviewResponse;
   belongs_to_collection?: {
     id: number;
     name: string;
@@ -109,7 +109,7 @@ export interface TVShow {
   videos?: { results: Video[] };
   similar?: { results: TVShow[] };
   external_ids?: { imdb_id: string | null };
-  reviews?: { results: Review[] };
+  reviews?: ReviewResponse;
   aggregate_credits?: { cast: AggregateCast[]; crew: Crew[] };
 }
 
@@ -176,6 +176,13 @@ export interface Review {
     avatar_path: string | null;
     rating: number | null;
   };
+}
+
+export interface ReviewResponse {
+  page: number;
+  results: Review[];
+  total_pages: number;
+  total_results: number;
 }
 
 export interface PersonListResult {
@@ -463,8 +470,16 @@ class TMDBService {
     return this.fetchFromTMDB<Movie>(`/movie/${id}?append_to_response=credits,videos,similar,external_ids,reviews,watch/providers`, options);
   }
 
+  async getMovieReviews(id: number, page: number = 1, options?: TMDBRequestOptions): Promise<ReviewResponse> {
+    return this.fetchFromTMDB<ReviewResponse>(`/movie/${id}/reviews?page=${page}`, options);
+  }
+
   async getTVShowDetails(id: number, options?: TMDBRequestOptions): Promise<TVShow> {
     return this.fetchFromTMDB<TVShow>(`/tv/${id}?append_to_response=credits,aggregate_credits,videos,similar,external_ids,reviews`, options);
+  }
+
+  async getTVShowReviews(id: number, page: number = 1, options?: TMDBRequestOptions): Promise<ReviewResponse> {
+    return this.fetchFromTMDB<ReviewResponse>(`/tv/${id}/reviews?page=${page}`, options);
   }
 
   async getTVSeasonDetails(tvId: number, seasonNumber: number, options?: TMDBRequestOptions): Promise<TVSeasonDetails> {

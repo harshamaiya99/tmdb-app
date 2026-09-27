@@ -1,5 +1,5 @@
 // src/pages/TVShowDetailsPage.tsx
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { useParams, useNavigate, Link, useSearchParams } from 'react-router-dom';
 import { Calendar, Clock, Star, PlayCircle } from 'lucide-react';
 import { Button } from '@/components/ui/button';
@@ -7,7 +7,7 @@ import { Badge } from '@/components/ui/badge';
 import { Skeleton } from '@/components/ui/skeleton';
 import { MediaCard } from '@/components/MediaCard';
 import { CreditsCarousel } from '@/components/CreditsCarousel';
-import { tmdbService, type TVShow, type TVSeasonDetails } from '@/lib/tmdb';
+import { tmdbService, type Episode, type TVShow, type TVSeasonDetails } from '@/lib/tmdb';
 import { buildEmbedUrl, formatDate } from '@/lib/utils';
 import { usePageTitle } from '@/hooks/usePageTitle';
 import { useCachedQuery } from '@/hooks/useCachedQuery';
@@ -16,12 +16,108 @@ import { EpisodesRatingOverview } from '../components/EpisodesRatingOverview';
 import { LazySection } from '@/components/LazySection';
 import { TMDBImage } from '@/components/TMDBImage';
 
+interface EpisodeCardProps {
+  episode: Episode;
+  tvShowName: string;
+  selectedSeason: number;
+  streamUrl: string;
+}
+
+function EpisodeCard({ episode, tvShowName, selectedSeason, streamUrl }: EpisodeCardProps) {
+  const expandEpisodeCard = (card: HTMLAnchorElement) => {
+    const row = card.parentElement?.parentElement;
+    if (!row || !row.classList.contains('episode-row')) return;
+
+    const rowHeight = row.getBoundingClientRect().height;
+    row.style.height = `${rowHeight}px`;
+    row.style.gridTemplateColumns = '';
+    const columnCount = getComputedStyle(row).gridTemplateColumns.split(' ').length;
+    const cardSlot = card.parentElement;
+    const cardIndex = cardSlot ? Array.from(row.children).indexOf(cardSlot) : -1;
+    const columnIndex = cardIndex >= 0 ? cardIndex % columnCount : 0;
+    row.style.gridTemplateColumns = Array.from(
+      { length: columnCount },
+      (_, index) => index === columnIndex ? '1.6fr' : '0.85fr',
+    ).join(' ');
+    card.classList.add('episode-card-expanded');
+  };
+
+  const collapseEpisodeCard = (card: HTMLAnchorElement) => {
+    card.classList.remove('episode-card-expanded');
+    const row = card.parentElement?.parentElement;
+    if (row?.classList.contains('episode-row')) {
+      row.style.gridTemplateColumns = '';
+      row.style.height = '';
+    }
+  };
+
+  return (
+    <div className="relative min-w-0 min-h-64">
+      <a
+        href={streamUrl}
+        target="_blank"
+        rel="noopener noreferrer"
+        onMouseEnter={(event) => expandEpisodeCard(event.currentTarget)}
+        onFocus={(event) => expandEpisodeCard(event.currentTarget)}
+        onMouseLeave={(event) => collapseEpisodeCard(event.currentTarget)}
+        onBlur={(event) => collapseEpisodeCard(event.currentTarget)}
+        onClick={(event) => collapseEpisodeCard(event.currentTarget)}
+        className="relative flex flex-col rounded-xl border bg-card text-card-foreground shadow-sm overflow-hidden group hover:ring-2 hover:ring-primary transition-[width,height,box-shadow] duration-300 ease-out cursor-pointer h-full"
+      >
+        <div className="episode-card-media relative overflow-hidden shrink-0 transition-[width,height] duration-300 ease-out">
+          {episode.still_path ? (
+            <TMDBImage
+              path={episode.still_path}
+              alt={`${tvShowName}, episode ${episode.episode_number}: ${episode.name}`}
+              width={500}
+              height={281}
+              sizes="(min-width: 1536px) 18vw, (min-width: 1024px) 25vw, (min-width: 640px) 33vw, 100vw"
+              className="episode-card-image w-full aspect-video object-cover bg-muted group-hover:scale-105 transition-[transform,height] duration-300 ease-out"
+            />
+          ) : (
+            <div role="img" aria-label={`${episode.name} still unavailable`} className="w-full aspect-video bg-muted flex items-center justify-center border-b text-sm text-muted-foreground">
+              Still unavailable
+            </div>
+          )}
+          <div className="absolute inset-0 bg-black/40 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
+            <PlayCircle className="w-12 h-12 text-white shadow-sm" />
+          </div>
+        </div>
+
+        <div className="episode-card-content p-4 flex-1 flex flex-col z-10 bg-card min-h-0 transition-[width] duration-300 ease-out">
+          <p className="episode-card-label hidden text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">
+            Season {selectedSeason}, Episode {episode.episode_number}
+          </p>
+          <h3 className="font-semibold text-base line-clamp-2 group-hover:text-primary transition-colors">
+            <span className="text-muted-foreground mr-1">{episode.episode_number}.</span>
+            {episode.name}
+          </h3>
+          <div className="flex items-center justify-between text-xs text-muted-foreground shrink-0 mt-2 mb-1.5">
+            <div className="flex items-center gap-3">
+              {episode.air_date && <span>{formatDate(episode.air_date)}</span>}
+              {episode.runtime && <span>{episode.runtime} min</span>}
+            </div>
+            <span className="episode-card-rating hidden items-center gap-1 font-medium text-amber-500" aria-label={`Episode rating ${episode.vote_average ? episode.vote_average.toFixed(1) : 'not rated'} out of 10`}>
+              <Star className="h-3 w-3 fill-current" />
+              {episode.vote_average ? episode.vote_average.toFixed(1) : 'N/A'}
+            </span>
+          </div>
+          <p className="episode-card-overview text-xs text-muted-foreground line-clamp-3 leading-relaxed shrink-0">
+            {episode.overview || 'No overview available for this episode.'}
+          </p>
+        </div>
+      </a>
+    </div>
+  );
+}
+
 export function TVShowDetailsPage() {
   const { id } = useParams<{ id: string }>();
   const [searchParams, setSearchParams] = useSearchParams();
   const selectedSeason = parseInt(searchParams.get('season') || '0', 10);
   const [activeCredits, setActiveCredits] = useState<'cast' | 'crew'>('cast');
   const [heatmapRowSpan, setHeatmapRowSpan] = useState(1);
+  const episodeGridRef = useRef<HTMLDivElement>(null);
 
   const navigate = useNavigate();
   const tvShowQuery = useCachedQuery<TVShow>(
@@ -54,6 +150,20 @@ export function TVShowDetailsPage() {
   useEffect(() => {
     setActiveCredits('cast');
   }, [selectedSeason]);
+
+  useEffect(() => {
+    const clearExpandedEpisodeCards = () => {
+      document.querySelectorAll('.episode-card-expanded').forEach((card) => {
+        card.classList.remove('episode-card-expanded');
+      });
+      document.querySelectorAll('.episode-grid').forEach((grid) => {
+        (grid as HTMLElement).style.gridTemplateColumns = '';
+      });
+    };
+
+    window.addEventListener('pagehide', clearExpandedEpisodeCards);
+    return () => window.removeEventListener('pagehide', clearExpandedEpisodeCards);
+  }, []);
 
   if (tvShowQuery.loading) {
     return (
@@ -318,12 +428,34 @@ export function TVShowDetailsPage() {
               </div>
             </div>
 
-            {/* Dense Grid: Heatmap spans columns/rows, Episodes flow around it! */}
-            <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-6 grid-flow-row-dense">
-              
+            <div className="grid grid-cols-1 gap-6 md:grid-cols-5">
+              {/* The first episode row shares the space with the ratings card. */}
+              <div className="episode-row grid grid-cols-1 gap-6 md:col-span-3 md:grid-cols-3">
+                {loadingEpisodes ? (
+                  [...Array(3)].map((_, i) => (
+                    <Skeleton key={i} className="h-64 w-full rounded-xl" />
+                  ))
+                ) : episodes.slice(0, 3).map((episode) => {
+                  const imdbId = tvShow.external_ids?.imdb_id || '';
+                  const streamUrl = buildEmbedUrl(import.meta.env.VITE_TV_EMBED_URL, tvShow.id, imdbId)
+                    .replace('{SEASON}', selectedSeason.toString())
+                    .replace('{EPISODE}', episode.episode_number.toString());
+
+                  return (
+                    <EpisodeCard
+                      key={episode.id}
+                      episode={episode}
+                      tvShowName={tvShow.name}
+                      selectedSeason={selectedSeason}
+                      streamUrl={streamUrl}
+                    />
+                  );
+                })}
+              </div>
+
               {/* The Heatmap Card */}
               <div 
-                className="col-span-1 sm:col-span-2 md:col-start-2 lg:col-start-3 xl:col-start-4"
+                className="w-full md:col-span-2 md:col-start-4 md:row-start-1"
                 style={{ gridRowEnd: `span ${heatmapRowSpan}` }}
               >
                 <div className="h-full w-full rounded-xl border bg-card text-card-foreground shadow-sm p-4 lg:p-5 flex flex-col">
@@ -340,81 +472,53 @@ export function TVShowDetailsPage() {
                 </div>
               </div>
 
-              {/* The Episodes Array */}
-              {loadingEpisodes ? (
-                [...Array(10)].map((_, i) => (
-                  <Skeleton key={i} className="h-64 w-full rounded-xl col-span-1" />
-                ))
-              ) : (
-                episodes.map((episode) => {
-                  const imdbId = tvShow.external_ids?.imdb_id || '';
-                  const urlTemplate = import.meta.env.VITE_TV_EMBED_URL;
-                  
-                  const streamUrl = buildEmbedUrl(urlTemplate, tvShow.id, imdbId)
-                    .replace('{SEASON}', selectedSeason.toString())
-                    .replace('{EPISODE}', episode.episode_number.toString());
+              {/* Remaining episode rows use the full page width. */}
+              <div ref={episodeGridRef} className="episode-grid col-span-full grid gap-6">
+                {loadingEpisodes ? (
+                  [...Array(7)].map((_, i) => (
+                    <Skeleton key={i} className="h-64 w-full rounded-xl" />
+                  ))
+                ) : (
+                  Array.from({ length: Math.ceil(Math.max(0, episodes.length - 3) / 5) }, (_, rowIndex) => (
+                    <div key={rowIndex} className="episode-row grid grid-cols-1 gap-6 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5">
+                      {episodes.slice(rowIndex * 5 + 3, rowIndex * 5 + 8).map((episode) => {
+                      const imdbId = tvShow.external_ids?.imdb_id || '';
+                      const streamUrl = buildEmbedUrl(import.meta.env.VITE_TV_EMBED_URL, tvShow.id, imdbId)
+                        .replace('{SEASON}', selectedSeason.toString())
+                        .replace('{EPISODE}', episode.episode_number.toString());
 
-                  return (
-                    <a 
-                      key={episode.id} 
-                      href={streamUrl}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className="col-span-1 flex flex-col rounded-xl border bg-card text-card-foreground shadow-sm overflow-hidden group hover:ring-2 hover:ring-primary transition-all cursor-pointer h-full"
-                    >
-                      <div className="relative overflow-hidden shrink-0">
-                        {episode.still_path ? (
-                          <TMDBImage
-                            path={episode.still_path}
-                            alt={`${tvShow.name}, episode ${episode.episode_number}: ${episode.name}`} 
-                            width={500}
-                            height={281}
-                            sizes="(min-width: 1536px) 18vw, (min-width: 1024px) 25vw, (min-width: 640px) 33vw, 100vw"
-                            className="w-full aspect-video object-cover bg-muted group-hover:scale-105 transition-transform duration-300"
-                          />
-                        ) : (
-                          <div role="img" aria-label={`${episode.name} still unavailable`} className="w-full aspect-video bg-muted flex items-center justify-center border-b text-sm text-muted-foreground">
-                            Still unavailable
-                          </div>
-                        )}
-                        <div className="absolute inset-0 bg-black/40 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
-                          <PlayCircle className="w-12 h-12 text-white shadow-sm" />
-                        </div>
-                      </div>
-                      
-                      <div className="p-4 flex-1 flex flex-col z-10 bg-card">
-                        <h3 className="font-semibold text-base line-clamp-2 group-hover:text-primary transition-colors">
-                          <span className="text-muted-foreground mr-1">{episode.episode_number}.</span> 
-                          {episode.name}
-                        </h3>
-                        <div className="flex items-center justify-between text-xs text-muted-foreground shrink-0 mt-2 mb-1.5">
-                          {episode.air_date && <span>{formatDate(episode.air_date)}</span>}
-                          {episode.runtime && <span>{episode.runtime} min</span>}
-                        </div>
-                        
-                        {/* TEXT CLIPPING FIX: explicit leading-relaxed and hidden overflow */}
-                        <p className="text-xs text-muted-foreground line-clamp-3 leading-relaxed overflow-hidden shrink-0">
-                          {episode.overview || "No overview available for this episode."}
-                        </p>
-                      </div>
-                    </a>
-                  );
-                })
-              )}
+                      return (
+                        <EpisodeCard
+                          key={episode.id}
+                          episode={episode}
+                          tvShowName={tvShow.name}
+                          selectedSeason={selectedSeason}
+                          streamUrl={streamUrl}
+                        />
+                      );
+                      })}
+                    </div>
+                  ))
+                )}
               
               {!loadingEpisodes && episodes.length === 0 && (
                 <div className="col-span-full pt-8">
                   <p className="text-muted-foreground text-center">No episodes found for this season.</p>
                 </div>
               )}
-              
+              </div>
             </div>
           </div>
         )}
 
         {tvShow.reviews && tvShow.reviews.results.length > 0 && (
           <LazySection>
-            <ReviewSection reviews={tvShow.reviews.results} />
+            <ReviewSection
+              reviews={tvShow.reviews.results}
+              mediaId={tvShow.id}
+              mediaType="tv"
+              totalPages={tvShow.reviews.total_pages}
+            />
           </LazySection>
         )}
         
