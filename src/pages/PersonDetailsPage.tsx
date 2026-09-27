@@ -165,8 +165,8 @@ export function PersonDetailsPage() {
   const allMovieCredits = getActingCredits('movie');
   const allTvCredits = getActingCredits('tv');
   const creditLimit = creditsFullWidth ? 10 : 8;
-  const movieCredits = allMovieCredits.slice(0, creditLimit);
-  const tvCredits = allTvCredits.slice(0, creditLimit);
+  const movieCredits = allMovieCredits;
+  const tvCredits = allTvCredits;
   const creditsSection = (movieCredits.length > 0 || tvCredits.length > 0) && (
     <div className="border-t pt-8 space-y-8">
       {movieCredits.length > 0 && (
@@ -175,7 +175,10 @@ export function PersonDetailsPage() {
           items={movieCredits}
           type="movie"
           className="space-y-4"
-          gridClassName={`grid grid-cols-2 gap-4 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 xl:grid-cols-8 ${creditsFullWidth ? '2xl:grid-cols-10' : ''}`}
+          horizontalScroll
+          horizontalColumns={creditsFullWidth ? 10 : 8}
+          limit={movieCredits.length}
+          actionLabel="See All"
           category={`person-${person.id}-movies`}
           hideSeeMore={allMovieCredits.length <= creditLimit}
         />
@@ -187,7 +190,10 @@ export function PersonDetailsPage() {
           items={tvCredits}
           type="tv"
           className="space-y-4"
-          gridClassName={`grid grid-cols-2 gap-4 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-8 ${creditsFullWidth ? '2xl:grid-cols-10' : ''}`}
+          horizontalScroll
+          horizontalColumns={creditsFullWidth ? 10 : 8}
+          limit={tvCredits.length}
+          actionLabel="See All"
           category={`person-${person.id}-tv`}
           hideSeeMore={allTvCredits.length <= creditLimit}
         />
@@ -256,7 +262,7 @@ export function PersonDetailsPage() {
             </div>
 
             {/* Right Column: Biography & Known For Grid */}
-            <div className="space-y-8">
+            <div className="min-w-0 space-y-8">
               <div>
                 <h1 className="text-3xl md:text-5xl font-bold tracking-tight mb-6">
                   {person.name}

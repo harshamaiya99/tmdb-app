@@ -22,7 +22,7 @@ export function MediaCard({ item, type }: MediaCardProps) {
   return (
     <Link to={isPerson ? `/person/${item.id}` : `/${type}/${item.id}`} className="block h-full">
       <Card className="group flex h-full flex-col overflow-hidden border-0 bg-card transition-all hover:shadow-lg">
-        <div className="relative aspect-[2/3] shrink-0 overflow-hidden rounded-lg">
+        <div data-media-card-poster className="relative aspect-[2/3] shrink-0 overflow-hidden rounded-lg">
           {imagePath ? (
             <TMDBImage
               path={imagePath}
