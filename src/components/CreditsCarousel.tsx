@@ -59,7 +59,7 @@ export function CreditsCarousel({ people, type }: CreditsCarouselProps) {
 
   return (
     <div className="relative">
-      <div className="relative min-w-0 after:pointer-events-none after:absolute after:inset-y-0 after:right-0 after:w-8 after:bg-gradient-to-l after:from-background after:to-transparent">
+      <div className={`relative min-w-0 ${canScrollLeft ? 'before:pointer-events-none before:absolute before:inset-y-0 before:left-0 before:z-[1] before:w-8 before:bg-gradient-to-r before:from-background before:to-transparent' : ''} ${canScrollRight ? 'after:pointer-events-none after:absolute after:inset-y-0 after:right-0 after:z-[1] after:w-8 after:bg-gradient-to-l after:from-background after:to-transparent' : ''}`}>
       <div
         ref={scrollContainerRef}
         className="flex gap-3 overflow-x-auto pb-4 pr-8 snap-x snap-mandatory focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none]"
