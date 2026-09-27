@@ -171,21 +171,21 @@ export function HomePage() {
         </div>
       ) : (
         <div className="space-y-12 pb-12">
-          <MediaSection title="Trending Movies" items={trendingMovies.data ?? []} type="movie" category="trending-movies" />
+          <MediaSection title="Trending Movies" items={trendingMovies.data ?? []} type="movie" category="trending-movies" horizontalScroll limit={20} />
           {secondaryStage >= 1 && (
             <>
-              <MediaSection title="Trending on Streaming" items={streamingMovies.data ?? []} type="movie" category="trending-streaming-movies" />
-              <MediaSection title="Now Playing in Theaters" items={nowPlayingMovies.data ?? []} type="movie" category="now-playing-movies" />
-              <MediaSection title="Popular TV Shows" items={popularTV.data ?? []} type="tv" category="popular-tv" />
+              <MediaSection title="Trending on Streaming" items={streamingMovies.data ?? []} type="movie" category="trending-streaming-movies" horizontalScroll limit={20} />
+              <MediaSection title="Now Playing in Theaters" items={nowPlayingMovies.data ?? []} type="movie" category="now-playing-movies" horizontalScroll limit={20} />
+              <MediaSection title="Popular TV Shows" items={popularTV.data ?? []} type="tv" category="popular-tv" horizontalScroll limit={20} />
             </>
           )}
-          <MediaSection title="Trending TV Shows" items={trendingTV.data ?? []} type="tv" category="trending-tv" />
+          <MediaSection title="Trending TV Shows" items={trendingTV.data ?? []} type="tv" category="trending-tv" horizontalScroll limit={20} />
           {secondaryStage >= 2 && (
             <>
-              <MediaSection title="Top Rated Movies" items={topRatedMovies.data ?? []} type="movie" category="top-rated-movies" />
-              <MediaSection title="IMDB Top Rated Movies" items={imdbTopMovies.data ?? []} type="movie" category="imdb-top-rated-movies" />
-              <MediaSection title="Upcoming Movies" items={upcomingMovies.data ?? []} type="movie" category="upcoming-movies" />
-              <MediaSection title="Top Rated TV Shows" items={topRatedTV.data ?? []} type="tv" category="top-rated-tv" />
+              <MediaSection title="Top Rated Movies" items={topRatedMovies.data ?? []} type="movie" category="top-rated-movies" horizontalScroll limit={20} />
+              <MediaSection title="IMDB Top Rated Movies" items={imdbTopMovies.data ?? []} type="movie" category="imdb-top-rated-movies" horizontalScroll limit={20} />
+              <MediaSection title="Upcoming Movies" items={upcomingMovies.data ?? []} type="movie" category="upcoming-movies" horizontalScroll limit={20} />
+              <MediaSection title="Top Rated TV Shows" items={topRatedTV.data ?? []} type="tv" category="top-rated-tv" horizontalScroll limit={20} />
             </>
           )}
         </div>
