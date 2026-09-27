@@ -81,7 +81,7 @@ export function CreditsCarousel({ people, type }: CreditsCarouselProps) {
           <Link
             key={person.id}
             to={`/person/${person.id}`}
-            className="group block h-[174px] w-[75px] shrink-0 snap-start overflow-hidden text-center"
+            className="group block h-[190px] w-[75px] shrink-0 snap-start overflow-hidden text-center"
           >
             <div className="h-[112px] overflow-hidden rounded-md border bg-muted">
               {person.profile_path ? (
@@ -99,8 +99,8 @@ export function CreditsCarousel({ people, type }: CreditsCarouselProps) {
                 </div>
               )}
             </div>
-            <div className="mt-1 h-[57px] overflow-hidden">
-              <p className="line-clamp-1 text-xs font-medium transition-colors group-hover:text-primary">{person.name}</p>
+            <div className="mt-1 h-[73px] overflow-hidden">
+              <p title={person.name} className="line-clamp-2 break-words text-xs font-medium leading-tight transition-colors group-hover:text-primary">{person.name}</p>
               <p className="line-clamp-3 break-words text-[10px] leading-tight text-muted-foreground">{person.role || 'Role unavailable'}</p>
             </div>
           </Link>
