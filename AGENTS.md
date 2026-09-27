@@ -72,6 +72,12 @@ Before making changes, an AI should first understand the existing implementation
 
 ## Coding Conventions
 
+### Date formatting
+
+- Use the shared `formatDate` helper in [src/lib/utils.ts](src/lib/utils.ts) for all user-facing dates.
+- The canonical format is `dd MMM yyyy` (for example, `27 Sep 2026`).
+- Do not introduce ad hoc `toLocaleDateString` formatting in page or component files when a shared formatter already exists.
+
 ### TypeScript
 
 - Keep the code strictly typed.
@@ -98,6 +104,15 @@ Before making changes, an AI should first understand the existing implementation
 - Use Tailwind utility classes for layout and styling.
 - Prefer the existing shadcn/ui-inspired primitives in [src/components/ui](src/components/ui) rather than building ad-hoc components.
 - Keep the UI visually consistent with the current dark/light theme support.
+- When changing [src/components/MediaCard.tsx](src/components/MediaCard.tsx), preserve its uniform layout for people cards too, including the matching loading skeleton in [src/pages/PeopleListPage.tsx](src/pages/PeopleListPage.tsx).
+- Review cards are compact, card-click expandable, and should not show extra “Read more” text unless explicitly required by the design.
+
+### Review content rendering
+
+- Review bodies are rendered as markdown using `react-markdown` with `remark-gfm`.
+- Bare URLs and normal markdown links should remain clickable and open in a new tab.
+- The card itself can toggle expansion for long reviews to reduce visual clutter.
+- Keep the review date aligned with the rating badge in the card header.
 
 ### Data loading and error handling
 

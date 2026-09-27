@@ -165,6 +165,29 @@ export interface PersonCredit {
   popularity: number;
 }
 
+export function mergePersonCredits(credits: PersonCredit[]): PersonCredit[] {
+  const groupedCredits = new Map<string, { credit: PersonCredit; characters: Map<string, string> }>();
+
+  credits.forEach((credit) => {
+    const key = `${credit.media_type}:${credit.id}`;
+    let group = groupedCredits.get(key);
+    if (!group) {
+      group = { credit, characters: new Map() };
+      groupedCredits.set(key, group);
+    }
+
+    const character = credit.character.trim();
+    if (character) {
+      group.characters.set(character.toLowerCase(), character);
+    }
+  });
+
+  return [...groupedCredits.values()].map(({ credit, characters }) => ({
+    ...credit,
+    character: [...characters.values()].join(', '),
+  }));
+}
+
 export interface Review {
   id: string;
   author: string;
@@ -494,12 +517,11 @@ class TMDBService {
     const endpoint = mediaType === 'movie' ? `/person/${personId}/movie_credits` : `/person/${personId}/tv_credits`;
     const data = await this.fetchFromTMDB<PersonCreditsResponse>(`${endpoint}?page=${page}`, options);
 
-    const results = (data.cast || [])
-      .filter((item) => isActingCredit(item.character, item.name || item.title))
-      .map((item) => ({
-        ...item,
-        media_type: mediaType,
-      })) as PersonCredit[];
+    const results = mergePersonCredits(
+      (data.cast || [])
+        .filter((item) => isActingCredit(item.character, item.name || item.title))
+        .map((item) => ({ ...item, media_type: mediaType })),
+    );
 
     return {
       page: data.page ?? page,

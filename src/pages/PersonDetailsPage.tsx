@@ -5,7 +5,7 @@ import { ArrowLeft, ArrowRight, Calendar, MapPin, X } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Skeleton } from '@/components/ui/skeleton';
 import { MediaSection } from '@/components/MediaSection';
-import { tmdbService, isActingCredit, type Person } from '@/lib/tmdb';
+import { tmdbService, isActingCredit, mergePersonCredits, type Person } from '@/lib/tmdb';
 import { formatDate } from '@/lib/utils';
 import { usePageTitle } from '@/hooks/usePageTitle';
 import { useCachedQuery } from '@/hooks/useCachedQuery';
@@ -126,16 +126,16 @@ export function PersonDetailsPage() {
   const birthDate = formatDate(person.birthday);
   const deathDate = formatDate(person.deathday);
 
-  const credits = person.combined_credits?.cast || [];
-  const movieCredits = credits
-    .filter((credit) => credit.media_type === 'movie' && credit.poster_path && isActingCredit(credit.character, credit.name || credit.title))
-    .sort((a, b) => b.popularity - a.popularity)
-    .slice(0, 8);
+  const credits = mergePersonCredits(person.combined_credits?.cast || []);
+  const getActingCredits = (mediaType: 'movie' | 'tv') => {
+    return credits
+      .filter((credit) => credit.media_type === mediaType && credit.poster_path && isActingCredit(credit.character, credit.name || credit.title))
+      .sort((a, b) => b.popularity - a.popularity)
+      .slice(0, 8);
+  };
 
-  const tvCredits = credits
-    .filter((credit) => credit.media_type === 'tv' && credit.poster_path && isActingCredit(credit.character, credit.name || credit.title))
-    .sort((a, b) => b.popularity - a.popularity)
-    .slice(0, 8);
+  const movieCredits = getActingCredits('movie');
+  const tvCredits = getActingCredits('tv');
 
   const selectedImage = selectedImageIndex === null ? null : galleryImages[selectedImageIndex] ?? null;
   const selectedWikimediaImage = selectedWikimediaIndex === null

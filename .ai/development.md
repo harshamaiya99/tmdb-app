@@ -99,6 +99,14 @@ Before writing code, take a short design-review pass:
 5. Explain the implementation plan briefly before editing.
 6. Implement the solution in the smallest, most maintainable way.
 
+### Current project conventions worth preserving
+
+- Review text is markdown-rendered and should preserve links, bullet lists, emphasis, and headings.
+- Bare URLs in review content should be converted to clickable links before rendering.
+- Long review cards expand when the card itself is clicked; do not add separate “Read more” text unless the UX expressly requires it.
+- Use the shared `formatDate` helper for all dates, with the `dd MMM yyyy` pattern.
+- Keep review timestamps next to the rating badge in the card header rather than under the author name.
+
 ### AI working style
 
 The AI should approach changes like a senior software engineer:

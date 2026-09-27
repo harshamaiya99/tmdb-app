@@ -108,16 +108,33 @@ Cards are implemented in [src/components/ui/card.tsx](src/components/ui/card.tsx
 
 The media browsing experience uses [src/components/MediaCard.tsx](src/components/MediaCard.tsx), which provides a consistent card pattern for movies, TV shows, and people. It combines:
 
-- poster image or fallback placeholder
-- title and year metadata
-- rating badge
+- poster or profile image, with a fallback placeholder
+- a title clamped to two lines and a consistent metadata area
+- year and rating for movies and shows, or department for people
 - hover transition effects
+
+Keep people cards aligned with movie and show cards. Whenever the `MediaCard` layout or styling changes, preserve the same image aspect ratio, rounded image corners, title height, metadata spacing, and hover behavior for people cards as well. Keep the people loading skeleton in sync with the card layout.
 
 Media imagery is rendered through the shared TMDB image component, which provides responsive `srcSet` candidates, intrinsic dimensions, layout-aware `sizes`, lazy loading by default, and consistent alt text.
 
 ### Shared media sections
 
 A reusable section wrapper in [src/components/MediaSection.tsx](src/components/MediaSection.tsx) now handles the repeated layout for media lists with a heading, optional see-more action, and a responsive grid. This pattern is used on the home page and on person detail credit sections to keep those experiences visually consistent.
+
+### Review cards
+
+Review cards live in [src/components/ReviewSection.tsx](src/components/ReviewSection.tsx) and use a compact, content-first layout.
+
+Current conventions:
+
+- review text is rendered as markdown, not plain text
+- `remark-gfm` is enabled so tables, emphasis, lists, and links render naturally
+- bare URLs are converted into clickable markdown links before rendering
+- long reviews expand when the card itself is clicked, instead of showing a separate “Read more” control
+- the review date sits beside the rating badge in the header, not beneath the author name
+- the canonical date format is `dd MMM yyyy` via the shared `formatDate` helper
+
+This keeps the review section compact while still preserving rich formatting from TMDB review entries.
 
 ### Layout and shell
 
@@ -161,6 +178,15 @@ The app supports:
 - a light theme by default
 - a dark theme toggle in the header
 - automatic adaptation of backgrounds, text, borders, and muted surfaces
+
+## Date-format convention
+
+All user-facing dates should follow the shared helper in [src/lib/utils.ts](src/lib/utils.ts):
+
+- format: `dd MMM yyyy`
+- example: `27 Sep 2026`
+
+This avoids inconsistent locale formatting across cards, lists, and sections. When a date is displayed in the UI, prefer the shared helper over inline `toLocaleDateString` calls.
 
 ## Visual Patterns in Practice
 

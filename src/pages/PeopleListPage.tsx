@@ -1,12 +1,11 @@
-import { Link } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { Skeleton } from '@/components/ui/skeleton';
+import { MediaCard } from '@/components/MediaCard';
 import { tmdbService } from '@/lib/tmdb';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { useCachedQuery } from '@/hooks/useCachedQuery';
 import { usePagination } from '@/hooks/usePagination';
 import { usePageTitle } from '@/hooks/usePageTitle';
-import { TMDBImage } from '@/components/TMDBImage';
 
 export function PeopleListPage() {
   const { page, setPage } = usePagination();
@@ -30,10 +29,15 @@ export function PeopleListPage() {
       {peopleQuery.loading ? (
         <div className="grid grid-cols-2 gap-4 sm:grid-cols-4 md:grid-cols-6 lg:grid-cols-8 xl:grid-cols-8 2xl:grid-cols-10">
           {Array.from({ length: 20 }).map((_, i) => (
-            <div key={i} className="space-y-2">
-              <Skeleton className="aspect-[2/3] w-full rounded-xl" />
-              <Skeleton className="h-4 w-3/4" />
-              <Skeleton className="h-3 w-1/2" />
+            <div key={i} className="flex flex-col overflow-hidden rounded-lg bg-card">
+              <Skeleton className="aspect-[2/3] w-full rounded-lg" />
+              <div className="flex flex-1 flex-col gap-1 p-2.5">
+                <div className="flex h-[30px] flex-col justify-between py-0.5">
+                  <Skeleton className="h-3 w-full" />
+                  <Skeleton className="h-3 w-3/4" />
+                </div>
+                <Skeleton className="h-2.5 w-1/2" />
+              </div>
             </div>
           ))}
         </div>
@@ -51,33 +55,7 @@ export function PeopleListPage() {
           ) : (
             <div className="grid grid-cols-2 gap-4 sm:grid-cols-4 md:grid-cols-6 lg:grid-cols-8 xl:grid-cols-8 2xl:grid-cols-10">
               {people.map((person) => (
-                <Link key={person.id} to={`/person/${person.id}`} className="group flex flex-col space-y-2">
-                  <div className="overflow-hidden rounded-xl bg-muted aspect-[2/3] border shadow-sm relative">
-                    {person.profile_path ? (
-                      <TMDBImage
-                        path={person.profile_path}
-                        alt={`${person.name} profile`}
-                        width={500}
-                        height={750}
-                        sizes="(min-width: 1536px) 9vw, (min-width: 1024px) 12vw, (min-width: 640px) 18vw, 45vw"
-                        className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
-                        loading="lazy"
-                      />
-                    ) : (
-                      <div role="img" aria-label={`${person.name} profile unavailable`} className="w-full h-full flex items-center justify-center text-muted-foreground text-xs">
-                        Profile unavailable
-                      </div>
-                    )}
-                  </div>
-                  <div className="px-1">
-                    <h3 className="font-semibold text-sm truncate group-hover:text-primary transition-colors">
-                      {person.name}
-                    </h3>
-                    <p className="text-xs text-muted-foreground truncate">
-                      {person.known_for_department}
-                    </p>
-                  </div>
-                </Link>
+                <MediaCard key={person.id} item={person} type="person" />
               ))}
             </div>
           )}
