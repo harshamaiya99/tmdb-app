@@ -5,6 +5,7 @@ import remarkGfm from 'remark-gfm';
 import { Star, ChevronDown, FilterX } from 'lucide-react';
 import { Button } from './ui/button';
 import { Review, tmdbService } from '../lib/tmdb';
+import { formatDate } from '../lib/utils';
 
 interface ReviewSectionProps {
   reviews: Review[];
@@ -236,7 +237,16 @@ export function ReviewSection({ reviews: initialReviews, mediaId, mediaType, tot
             <div 
               key={review.id}
               style={{ viewTransitionName: `review-card-${review.id}` }} 
-              className={`p-5 rounded-xl border bg-card text-card-foreground shadow-sm flex flex-col ${spanClasses}`}
+              onClick={() => isLong && toggleExpand(review.id)}
+              className={`p-5 rounded-xl border bg-card text-card-foreground shadow-sm flex flex-col cursor-pointer transition-colors hover:border-muted-foreground/30 ${spanClasses} ${isLong ? 'select-none' : ''}`}
+              role={isLong ? 'button' : undefined}
+              tabIndex={isLong ? 0 : undefined}
+              onKeyDown={(event) => {
+                if (isLong && (event.key === 'Enter' || event.key === ' ')) {
+                  event.preventDefault();
+                  toggleExpand(review.id);
+                }
+              }}
             >
               <div className="flex items-center justify-between pb-3 border-b border-border/50 shrink-0">
                 <div className="flex items-center gap-3">
@@ -245,12 +255,17 @@ export function ReviewSection({ reviews: initialReviews, mediaId, mediaType, tot
                   </div>
                   <span className="font-semibold text-sm line-clamp-1">{review.author}</span>
                 </div>
-                {review.author_details?.rating && (
-                  <div className={`flex items-center gap-1 text-xs px-2.5 py-1 rounded-md font-bold shrink-0 ${getRatingColor(review.author_details.rating)}`}>
-                    <Star className="w-3.5 h-3.5 fill-current" />
-                    <span>{review.author_details.rating}</span>
-                  </div>
-                )}
+                <div className="flex items-center gap-2 shrink-0">
+                  <span className="text-[10px] text-muted-foreground/70">
+                    {formatDate(review.created_at)}
+                  </span>
+                  {review.author_details?.rating && (
+                    <div className={`flex items-center gap-1 text-xs px-2.5 py-1 rounded-md font-bold shrink-0 ${getRatingColor(review.author_details.rating)}`}>
+                      <Star className="w-3.5 h-3.5 fill-current" />
+                      <span>{review.author_details.rating}</span>
+                    </div>
+                  )}
+                </div>
               </div>
               
               <div className="flex-1 mt-3 min-h-0 overflow-y-auto pr-2 custom-scrollbar">
@@ -298,24 +313,8 @@ export function ReviewSection({ reviews: initialReviews, mediaId, mediaType, tot
                     {formatReviewContent(review.content)}
                   </ReactMarkdown>
                 </div>
-                {isLong && (
-                  <button
-                    type="button"
-                    onClick={() => toggleExpand(review.id)} 
-                    aria-expanded={isExpanded}
-                    aria-controls={`review-content-${review.id}`}
-                    className="text-primary hover:text-primary/80 font-medium text-xs mt-2 transition-colors"
-                  >
-                    {isExpanded ? 'Read less' : 'Read more...'}
-                  </button>
-                )}
               </div>
 
-              <div className="text-xs text-muted-foreground/60 pt-3 font-medium shrink-0">
-                {new Date(review.created_at).toLocaleDateString(undefined, { 
-                  year: 'numeric', month: 'short', day: 'numeric' 
-                })}
-              </div>
             </div>
           );
         })}

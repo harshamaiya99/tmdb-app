@@ -12,11 +12,11 @@ export function formatDate(dateString: string | undefined | null): string {
   const date = new Date(dateString);
   if (isNaN(date.getTime())) return '';
 
-  return date.toLocaleDateString('en-GB', {
-    month: 'short',
-    day: 'numeric',
-    year: 'numeric',
-  });
+  const day = String(date.getDate()).padStart(2, '0');
+  const month = date.toLocaleDateString('en-US', { month: 'short' });
+  const year = date.getFullYear();
+
+  return `${day} ${month} ${year}`;
 }
 
 export function buildEmbedUrl(template?: string, tmdbId?: number, imdbId?: string): string {
