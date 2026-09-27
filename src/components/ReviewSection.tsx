@@ -224,15 +224,14 @@ export function ReviewSection({ reviews: initialReviews, mediaId, mediaType, tot
           const isExpanded = expandedReviewId === review.id;
           
           const isLong = review.content.length > 200; 
-          const needsTwoRows = review.content.length > 400; 
+          const needsTwoRows = review.content.length > 400;
 
           let spanClasses = 'col-span-1 row-span-1';
           if (isExpanded) {
-            spanClasses = needsTwoRows 
-              ? 'md:col-span-2 md:row-span-2' 
-              : 'md:col-span-2 md:row-span-1'; 
+            spanClasses = needsTwoRows
+              ? 'md:col-span-2 md:row-span-2'
+              : 'md:col-span-2 md:row-span-1';
           }
-
           return (
             <div 
               key={review.id}
@@ -269,7 +268,7 @@ export function ReviewSection({ reviews: initialReviews, mediaId, mediaType, tot
               </div>
               
               <div className="flex-1 mt-3 min-h-0 overflow-y-auto pr-2 custom-scrollbar">
-                <div id={`review-content-${review.id}`} className={`markdown-body text-sm text-muted-foreground ${!isExpanded ? 'line-clamp-4' : ''}`}>
+                <div id={`review-content-${review.id}`} className={`markdown-body text-sm text-muted-foreground ${!isExpanded ? 'line-clamp-6' : ''}`}>
                   <ReactMarkdown
                     remarkPlugins={[remarkGfm]}
                     components={{
