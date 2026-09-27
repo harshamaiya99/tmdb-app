@@ -1,5 +1,5 @@
 // src/pages/PersonDetailsPage.tsx
-import { useEffect, useRef, useState } from 'react';
+import { useEffect, useLayoutEffect, useRef, useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { ArrowLeft, ArrowRight, Calendar, MapPin, X } from 'lucide-react';
 import { Button } from '@/components/ui/button';
@@ -17,7 +17,10 @@ export function PersonDetailsPage() {
   const { id } = useParams<{ id: string }>();
   const [selectedImageIndex, setSelectedImageIndex] = useState<number | null>(null);
   const [selectedWikimediaIndex, setSelectedWikimediaIndex] = useState<number | null>(null);
+  const [creditsFullWidth, setCreditsFullWidth] = useState(false);
   const dialogRef = useRef<HTMLDivElement>(null);
+  const personalInfoRef = useRef<HTMLDivElement>(null);
+  const biographyRef = useRef<HTMLDivElement>(null);
   const galleryTriggerRef = useRef<HTMLButtonElement | null>(null);
   const navigate = useNavigate();
 
@@ -27,6 +30,32 @@ export function PersonDetailsPage() {
     { enabled: Boolean(id), ttlMs: 30 * 60 * 1000 },
   );
   const person = personQuery.data ?? null;
+
+  useLayoutEffect(() => {
+    const personalInfo = personalInfoRef.current;
+    const biography = biographyRef.current;
+    if (!personalInfo || !biography) {
+      setCreditsFullWidth(false);
+      return;
+    }
+
+    const updateCreditsPlacement = () => {
+      const biographyIsAsTallAsPersonalInfo = biography.getBoundingClientRect().height >= personalInfo.getBoundingClientRect().height;
+      setCreditsFullWidth((current) => current === biographyIsAsTallAsPersonalInfo ? current : biographyIsAsTallAsPersonalInfo);
+    };
+
+    updateCreditsPlacement();
+    const observer = new ResizeObserver(updateCreditsPlacement);
+    observer.observe(personalInfo);
+    observer.observe(biography);
+    window.addEventListener('resize', updateCreditsPlacement);
+
+    return () => {
+      observer.disconnect();
+      window.removeEventListener('resize', updateCreditsPlacement);
+    };
+  }, [person?.id, person?.biography]);
+
   const wikimediaQuery = useCachedQuery<WikimediaImage[]>(
     `wikimedia-person:${id ?? 'none'}`,
     (signal) => searchWikimediaImages(person?.name ?? '', signal),
@@ -130,12 +159,41 @@ export function PersonDetailsPage() {
   const getActingCredits = (mediaType: 'movie' | 'tv') => {
     return credits
       .filter((credit) => credit.media_type === mediaType && credit.poster_path && isActingCredit(credit.character, credit.name || credit.title))
-      .sort((a, b) => b.popularity - a.popularity)
-      .slice(0, 8);
+      .sort((a, b) => b.popularity - a.popularity);
   };
 
-  const movieCredits = getActingCredits('movie');
-  const tvCredits = getActingCredits('tv');
+  const allMovieCredits = getActingCredits('movie');
+  const allTvCredits = getActingCredits('tv');
+  const creditLimit = creditsFullWidth ? 10 : 8;
+  const movieCredits = allMovieCredits.slice(0, creditLimit);
+  const tvCredits = allTvCredits.slice(0, creditLimit);
+  const creditsSection = (movieCredits.length > 0 || tvCredits.length > 0) && (
+    <div className="border-t pt-8 space-y-8">
+      {movieCredits.length > 0 && (
+        <MediaSection
+          title="Movies"
+          items={movieCredits}
+          type="movie"
+          className="space-y-4"
+          gridClassName={`grid grid-cols-2 gap-4 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 xl:grid-cols-8 ${creditsFullWidth ? '2xl:grid-cols-10' : ''}`}
+          category={`person-${person.id}-movies`}
+          hideSeeMore={allMovieCredits.length <= creditLimit}
+        />
+      )}
+
+      {tvCredits.length > 0 && (
+        <MediaSection
+          title="TV Shows"
+          items={tvCredits}
+          type="tv"
+          className="space-y-4"
+          gridClassName={`grid grid-cols-2 gap-4 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-8 ${creditsFullWidth ? '2xl:grid-cols-10' : ''}`}
+          category={`person-${person.id}-tv`}
+          hideSeeMore={allTvCredits.length <= creditLimit}
+        />
+      )}
+    </div>
+  );
 
   const selectedImage = selectedImageIndex === null ? null : galleryImages[selectedImageIndex] ?? null;
   const selectedWikimediaImage = selectedWikimediaIndex === null
@@ -166,7 +224,7 @@ export function PersonDetailsPage() {
                 </div>
               )}
 
-              <div className="space-y-4 text-sm bg-card p-4 rounded-xl border shadow-sm">
+              <div ref={personalInfoRef} className="space-y-4 text-sm bg-card p-4 rounded-xl border shadow-sm">
                 <h3 className="font-semibold text-lg border-b pb-2">Personal Info</h3>
 
                 <div>
@@ -205,7 +263,7 @@ export function PersonDetailsPage() {
                 </h1>
 
                 {person.biography && (
-                  <div>
+                  <div ref={biographyRef}>
                     <h2 className="text-xl font-semibold mb-3">Biography</h2>
                     <div className="text-muted-foreground leading-relaxed whitespace-pre-line text-sm md:text-base">
                       {person.biography}
@@ -213,36 +271,11 @@ export function PersonDetailsPage() {
                   </div>
                 )}
               </div>
-
-              {(movieCredits.length > 0 || tvCredits.length > 0) && (
-                <div className="pt-8 border-t space-y-8">
-                  {movieCredits.length > 0 && (
-                    <MediaSection
-                      title="Movies"
-                      items={movieCredits}
-                      type="movie"
-                      className="space-y-4"
-                      gridClassName="grid grid-cols-2 gap-4 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 xl:grid-cols-8"
-                      category={`person-${person.id}-movies`}
-                      hideSeeMore={false}
-                    />
-                  )}
-
-                  {tvCredits.length > 0 && (
-                    <MediaSection
-                      title="TV Shows"
-                      items={tvCredits}
-                      type="tv"
-                      className="space-y-4"
-                      gridClassName="grid grid-cols-2 gap-4 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-8"
-                      category={`person-${person.id}-tv`}
-                      hideSeeMore={false}
-                    />
-                  )}
-                </div>
-              )}
+              {!creditsFullWidth && creditsSection}
             </div>
           </div>
+
+          {creditsFullWidth && creditsSection}
 
           {galleryImages.length > 0 && (
             <LazySection>
