@@ -457,19 +457,21 @@ class TMDBService {
   // --- DISCOVER ENDPOINTS (NEW) ---
   
   // Fetch movies by production company
-  async getMoviesByCompany(companyId: number, page: number = 1, options?: TMDBRequestOptions, language?: string): Promise<TrendingResponse<Movie>> {
+  async getMoviesByCompany(companyId: number, page: number = 1, options?: TMDBRequestOptions, language?: string, sortBy: string = 'popularity.desc'): Promise<TrendingResponse<Movie>> {
     const languageFilter = language ? `&with_original_language=${encodeURIComponent(language)}` : '';
-    return this.fetchFromTMDB<TrendingResponse<Movie>>(`/discover/movie?with_companies=${companyId}&page=${page}&sort_by=popularity.desc${languageFilter}`, options);
+    const path = `/discover/movie?with_companies=${companyId}${languageFilter}&page=${page}`;
+    return this.fetchFromTMDB<TrendingResponse<Movie>>(`${applySortParam(path, sortBy)}`, options);
   }
 
   // Fetch movies by streaming provider (defaulting to US region)
-  async getMoviesByProvider(providerId: number, page: number = 1, options?: TMDBRequestOptions, language?: string): Promise<TrendingResponse<Movie>> {
+  async getMoviesByProvider(providerId: number, page: number = 1, options?: TMDBRequestOptions, language?: string, sortBy: string = 'popularity.desc'): Promise<TrendingResponse<Movie>> {
     const languageFilter = language ? `&with_original_language=${encodeURIComponent(language)}` : '';
-    return this.fetchFromTMDB<TrendingResponse<Movie>>(`/discover/movie?with_watch_providers=${providerId}&watch_region=US&page=${page}&sort_by=popularity.desc${languageFilter}`, options);
+    const path = `/discover/movie?with_watch_providers=${providerId}&watch_region=US${languageFilter}&page=${page}`;
+    return this.fetchFromTMDB<TrendingResponse<Movie>>(`${applySortParam(path, sortBy)}`, options);
   }
 
   // --- PAGINATED CATEGORY ENDPOINT ---
-  async getCategoryList(category: string, page: number = 1, options?: TMDBRequestOptions, language?: string): Promise<TrendingResponse<Movie | TVShow>> {
+  async getCategoryList(category: string, page: number = 1, options?: TMDBRequestOptions, language?: string, sortBy: string = 'popularity.desc'): Promise<TrendingResponse<Movie | TVShow>> {
     const endpoints: Record<string, string> = {
       'trending-movies': '/discover/movie?sort_by=popularity.desc',
       'now-playing-movies': '/discover/movie?sort_by=popularity.desc&primary_release_date.gte=2020-01-01',
@@ -486,14 +488,15 @@ class TMDBService {
     if (!endpoint) throw new Error('Invalid category');
 
     const filters = language ? `&with_original_language=${encodeURIComponent(language)}` : '';
-    const separator = endpoint.includes('?') ? '&' : '?';
-    return this.fetchFromTMDB<TrendingResponse<Movie | TVShow>>(`${endpoint}${filters}${separator}page=${page}`, options);
+    const path = `${endpoint}${filters}`;
+    return this.fetchFromTMDB<TrendingResponse<Movie | TVShow>>(`${applySortParam(path, sortBy)}&page=${page}`, options);
   }
 
-  async getGenreMediaList(mediaType: 'movie' | 'tv', genreId: number, page: number = 1, options?: TMDBRequestOptions, language?: string): Promise<TrendingResponse<Movie | TVShow>> {
+  async getGenreMediaList(mediaType: 'movie' | 'tv', genreId: number, page: number = 1, options?: TMDBRequestOptions, language?: string, sortBy: string = 'popularity.desc'): Promise<TrendingResponse<Movie | TVShow>> {
     const endpoint = mediaType === 'movie' ? '/discover/movie' : '/discover/tv';
     const languageFilter = language ? `&with_original_language=${encodeURIComponent(language)}` : '';
-    return this.fetchFromTMDB<TrendingResponse<Movie | TVShow>>(`${endpoint}?with_genres=${genreId}&sort_by=popularity.desc${languageFilter}&page=${page}`, options);
+    const path = `${endpoint}?with_genres=${genreId}${languageFilter}`;
+    return this.fetchFromTMDB<TrendingResponse<Movie | TVShow>>(`${applySortParam(path, sortBy)}&page=${page}`, options);
   }
 
   // --- DETAILS ENDPOINTS ---
@@ -577,6 +580,20 @@ class TMDBService {
       return false;
     }
   }
+}
+
+function applySortParam(endpoint: string, sortBy: string = 'popularity.desc'): string {
+  const normalizedSort = sortBy || 'popularity.desc';
+  const encodedSort = encodeURIComponent(normalizedSort);
+  const movieReleaseDateLimit = endpoint.startsWith('/discover/movie?') && normalizedSort === 'primary_release_date.desc'
+    ? `&primary_release_date.lte=${new Date().toISOString().slice(0, 10)}`
+    : '';
+
+  if (endpoint.includes('sort_by=')) {
+    return `${endpoint.replace(/sort_by=[^&]+/, `sort_by=${encodedSort}`)}${movieReleaseDateLimit}`;
+  }
+
+  return `${endpoint}${endpoint.includes('?') ? '&' : '?'}sort_by=${encodedSort}${movieReleaseDateLimit}`;
 }
 
 export const tmdbService = new TMDBService();

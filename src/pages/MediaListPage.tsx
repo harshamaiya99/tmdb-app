@@ -88,6 +88,23 @@ const LANGUAGE_OPTIONS = [
   { value: 'zh', label: 'Mandarin' },
 ];
 
+const SORT_OPTIONS_BY_TYPE = {
+  movie: [
+    { value: 'popularity.desc', label: 'Popularity' },
+    { value: 'vote_average.desc', label: 'Rating' },
+    { value: 'primary_release_date.desc', label: 'Newest' },
+    { value: 'primary_release_date.asc', label: 'Oldest' },
+    { value: 'original_title.asc', label: 'Title A–Z' },
+  ],
+  tv: [
+    { value: 'popularity.desc', label: 'Popularity' },
+    { value: 'vote_average.desc', label: 'Rating' },
+    { value: 'first_air_date.desc', label: 'Newest' },
+    { value: 'first_air_date.asc', label: 'Oldest' },
+    { value: 'name.asc', label: 'Title A–Z' },
+  ],
+} as const;
+
 export function MediaListPage() {
   const { category } = useParams<{ category: string }>();
   const location = useLocation();
@@ -96,6 +113,7 @@ export function MediaListPage() {
   const { page, setPage } = usePagination();
   const entityNameParam = searchParams.get('name');
   const selectedLanguage = searchParams.get('language') ?? 'all';
+  const selectedSort = searchParams.get('sort') ?? 'popularity.desc';
 
   let effectiveCategory = category;
   if (!effectiveCategory) {
@@ -111,6 +129,7 @@ export function MediaListPage() {
   
   const personType = personMatch?.[2] === 'tv' ? 'tv' : 'movie';
   const itemType = personMatch ? personType : genreMatch ? genreMatch[1] as 'movie' | 'tv' : effectiveCategory?.includes('tv') ? 'tv' : 'movie';
+  const availableSortOptions = itemType === 'tv' ? SORT_OPTIONS_BY_TYPE.tv : SORT_OPTIONS_BY_TYPE.movie;
   
   const personNameQuery = useCachedQuery(
     `person-name:${personMatch?.[1] ?? 'none'}`,
@@ -119,7 +138,7 @@ export function MediaListPage() {
   );
 
   const listQuery = useCachedQuery<TrendingResponse<Movie | TVShow | PersonCredit>>(
-    `list:${effectiveCategory ?? 'none'}:${page}:${selectedLanguage}:${selectedGenre}`,
+    `list:${effectiveCategory ?? 'none'}:${page}:${selectedLanguage}:${selectedGenre}:${selectedSort}`,
     async (signal) => {
       const currentPersonMatch = effectiveCategory?.match(/^person-(\d+)-(movies|tv)$/);
       const currentCompanyMatch = effectiveCategory?.match(/^company-(\d+)$/);
@@ -127,20 +146,21 @@ export function MediaListPage() {
       const currentItemType = currentPersonMatch?.[2] === 'tv' ? 'tv' : 'movie';
       const languageFilter = selectedLanguage === 'all' ? undefined : selectedLanguage;
       const genreFilter = selectedGenre === 'all' ? undefined : Number(selectedGenre);
+      const sortFilter = selectedSort || 'popularity.desc';
 
       if (currentPersonMatch && currentPersonMatch[1]) {
         return tmdbService.getPersonCredits(Number(currentPersonMatch[1]), currentItemType, page, { signal });
       }
       if (genreFilter !== undefined) {
-        return tmdbService.getGenreMediaList(itemType, genreFilter, page, { signal }, languageFilter);
+        return tmdbService.getGenreMediaList(itemType, genreFilter, page, { signal }, languageFilter, sortFilter);
       }
       if (currentCompanyMatch?.[1]) {
-        return tmdbService.getMoviesByCompany(Number(currentCompanyMatch[1]), page, { signal }, languageFilter);
+        return tmdbService.getMoviesByCompany(Number(currentCompanyMatch[1]), page, { signal }, languageFilter, sortFilter);
       }
       if (currentProviderMatch?.[1]) {
-        return tmdbService.getMoviesByProvider(Number(currentProviderMatch[1]), page, { signal }, languageFilter);
+        return tmdbService.getMoviesByProvider(Number(currentProviderMatch[1]), page, { signal }, languageFilter, sortFilter);
       }
-      return tmdbService.getCategoryList(effectiveCategory ?? '', page, { signal }, languageFilter);
+      return tmdbService.getCategoryList(effectiveCategory ?? '', page, { signal }, languageFilter, sortFilter);
     },
     { enabled: Boolean(effectiveCategory) },
   );
@@ -191,6 +211,17 @@ export function MediaListPage() {
     setSearchParams(nextParams, { replace: true });
   };
 
+  const updateSortFilter = (sort: string) => {
+    const nextParams = new URLSearchParams(searchParams);
+    if (sort === 'popularity.desc') {
+      nextParams.delete('sort');
+    } else {
+      nextParams.set('sort', sort);
+    }
+    setPage(1);
+    setSearchParams(nextParams, { replace: true });
+  };
+
   return (
     <main className="container py-4">
         <div className="mb-4 flex flex-wrap items-center justify-end gap-3">
@@ -213,6 +244,17 @@ export function MediaListPage() {
           >
             {GENRE_OPTIONS.map((genre) => (
               <option key={genre.value} value={genre.value}>{genre.label}</option>
+            ))}
+          </select>
+
+          <select
+            id="media-sort-filter"
+            value={selectedSort}
+            onChange={(event) => updateSortFilter(event.target.value)}
+            className="h-9 rounded-md border border-input bg-background px-3 py-1 text-sm focus:outline-none focus:ring-2 focus:ring-ring [scrollbar-width:none] [&::-webkit-scrollbar]:hidden"
+          >
+            {availableSortOptions.map((option) => (
+              <option key={option.value} value={option.value}>{option.label}</option>
             ))}
           </select>
         </div>
