@@ -14,6 +14,8 @@ const GENRE_NAMES: Record<string, string> = {
   '99': 'Documentary', '18': 'Drama', '10751': 'Family', '14': 'Fantasy', '36': 'History',
   '27': 'Horror', '10402': 'Music', '9648': 'Mystery', '10749': 'Romance', '878': 'Science Fiction',
   '10770': 'TV Movie', '53': 'Thriller', '10752': 'War', '37': 'Western',
+  '10759': 'Action & Adventure', '10762': 'Kids', '10763': 'News', '10764': 'Reality',
+  '10765': 'Sci-Fi & Fantasy', '10766': 'Soap', '10767': 'Talk', '10768': 'War & Politics',
 };
 
 const CATEGORY_TITLES: Record<string, string> = {
@@ -26,30 +28,49 @@ const CATEGORY_TITLES: Record<string, string> = {
   'top-rated-tv': 'Top Rated TV Shows'
 };
 
-const GENRE_OPTIONS = [
-  { value: 'all', label: 'All Genres' },
-  { value: '28', label: 'Action' },
-  { value: '12', label: 'Adventure' },
-  { value: '16', label: 'Animation' },
-  { value: '35', label: 'Comedy' },
-  { value: '80', label: 'Crime' },
-  { value: '99', label: 'Documentary' },
-  { value: '18', label: 'Drama' },
-  { value: '10751', label: 'Family' },
-  { value: '14', label: 'Fantasy' },
-  { value: '36', label: 'History' },
-  { value: '27', label: 'Horror' },
-  { value: '10402', label: 'Music' },
-  { value: '9648', label: 'Mystery' },
-  { value: '10749', label: 'Romance' },
-  { value: '878', label: 'Science Fiction' },
-  { value: '53', label: 'Thriller' },
-  { value: '10770', label: 'TV Movie' },
-  { value: '10752', label: 'War' },
-  { value: '37', label: 'Western' },
-  { value: '10763', label: 'News' },
-  { value: '10764', label: 'Reality' },
-];
+const GENRE_OPTIONS_BY_TYPE = {
+  movie: [
+    { value: 'all', label: 'All Genres' },
+    { value: '28', label: 'Action' },
+    { value: '12', label: 'Adventure' },
+    { value: '16', label: 'Animation' },
+    { value: '35', label: 'Comedy' },
+    { value: '80', label: 'Crime' },
+    { value: '99', label: 'Documentary' },
+    { value: '18', label: 'Drama' },
+    { value: '10751', label: 'Family' },
+    { value: '14', label: 'Fantasy' },
+    { value: '36', label: 'History' },
+    { value: '27', label: 'Horror' },
+    { value: '10402', label: 'Music' },
+    { value: '9648', label: 'Mystery' },
+    { value: '10749', label: 'Romance' },
+    { value: '878', label: 'Science Fiction' },
+    { value: '53', label: 'Thriller' },
+    { value: '10770', label: 'TV Movie' },
+    { value: '10752', label: 'War' },
+    { value: '37', label: 'Western' },
+  ],
+  tv: [
+    { value: 'all', label: 'All Genres' },
+    { value: '10759', label: 'Action & Adventure' },
+    { value: '16', label: 'Animation' },
+    { value: '35', label: 'Comedy' },
+    { value: '80', label: 'Crime' },
+    { value: '99', label: 'Documentary' },
+    { value: '18', label: 'Drama' },
+    { value: '10751', label: 'Family' },
+    { value: '10762', label: 'Kids' },
+    { value: '9648', label: 'Mystery' },
+    { value: '10763', label: 'News' },
+    { value: '10764', label: 'Reality' },
+    { value: '10765', label: 'Sci-Fi & Fantasy' },
+    { value: '10766', label: 'Soap' },
+    { value: '10767', label: 'Talk' },
+    { value: '10768', label: 'War & Politics' },
+    { value: '37', label: 'Western' },
+  ],
+} as const;
 
 const LANGUAGE_OPTIONS = [
   { value: 'all', label: 'All Languages' },
@@ -129,6 +150,7 @@ export function MediaListPage() {
   
   const personType = personMatch?.[2] === 'tv' ? 'tv' : 'movie';
   const itemType = personMatch ? personType : genreMatch ? genreMatch[1] as 'movie' | 'tv' : effectiveCategory?.includes('tv') ? 'tv' : 'movie';
+  const genreOptions = itemType === 'tv' ? GENRE_OPTIONS_BY_TYPE.tv : GENRE_OPTIONS_BY_TYPE.movie;
   const availableSortOptions = itemType === 'tv' ? SORT_OPTIONS_BY_TYPE.tv : SORT_OPTIONS_BY_TYPE.movie;
   
   const personNameQuery = useCachedQuery(
@@ -242,7 +264,7 @@ export function MediaListPage() {
             onChange={(event) => updateGenreFilter(event.target.value)}
             className="h-9 rounded-md border border-input bg-background px-3 py-1 text-sm focus:outline-none focus:ring-2 focus:ring-ring [scrollbar-width:none] [&::-webkit-scrollbar]:hidden"
           >
-            {GENRE_OPTIONS.map((genre) => (
+            {genreOptions.map((genre) => (
               <option key={genre.value} value={genre.value}>{genre.label}</option>
             ))}
           </select>
