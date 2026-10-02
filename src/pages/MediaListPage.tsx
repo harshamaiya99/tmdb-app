@@ -49,7 +49,7 @@ const GENRE_OPTIONS = [
   { value: '37', label: 'Western' },
   { value: '10763', label: 'News' },
   { value: '10764', label: 'Reality' },
-].sort((a, b) => a.label.localeCompare(b.label));
+];
 
 const LANGUAGE_OPTIONS = [
   { value: 'all', label: 'All Languages' },
@@ -86,7 +86,7 @@ const LANGUAGE_OPTIONS = [
   { value: 'th', label: 'Thai' },
   { value: 'tr', label: 'Turkish' },
   { value: 'zh', label: 'Mandarin' },
-].sort((a, b) => a.label.localeCompare(b.label));
+];
 
 export function MediaListPage() {
   const { category } = useParams<{ category: string }>();
