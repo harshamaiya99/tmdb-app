@@ -65,7 +65,7 @@ export function MovieDetailsPage() {
 
   const releaseDate = formatDate(movie.release_date);
   const rating = movie.vote_average.toFixed(1);
-  const similarMovies = movie.similar?.results || [];
+  const similarMovies = (movie.recommendations?.results?.length ? movie.recommendations.results : movie.similar?.results) || [];
   
   const trailer = movie.videos?.results.find((v) => v.type === 'Trailer' && v.site === 'YouTube');
   const hasCollection = collection && collection.parts && collection.parts.length > 1;

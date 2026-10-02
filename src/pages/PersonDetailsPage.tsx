@@ -1,5 +1,7 @@
 // src/pages/PersonDetailsPage.tsx
 import { useEffect, useLayoutEffect, useRef, useState } from 'react';
+import ReactMarkdown from 'react-markdown';
+import remarkGfm from 'remark-gfm';
 import { useParams, useNavigate } from 'react-router-dom';
 import { ArrowLeft, ArrowRight, Calendar, MapPin, X } from 'lucide-react';
 import { Button } from '@/components/ui/button';
@@ -271,8 +273,14 @@ export function PersonDetailsPage() {
                 {person.biography && (
                   <div ref={biographyRef}>
                     <h2 className="text-xl font-semibold mb-3">Biography</h2>
-                    <div className="text-muted-foreground leading-relaxed whitespace-pre-line text-sm md:text-base">
-                      {person.biography}
+                    <div className="text-muted-foreground leading-relaxed text-sm md:text-base [&_p]:mb-4 [&_p:last-child]:mb-0 [&_a]:text-primary [&_a:hover]:underline [&_strong]:text-foreground [&_em]:text-foreground">
+                      <ReactMarkdown remarkPlugins={[remarkGfm]} components={{
+                        a: ({ node, ...props }) => (
+                          <a {...props} target="_blank" rel="noreferrer" />
+                        ),
+                      }}>
+                        {person.biography}
+                      </ReactMarkdown>
                     </div>
                   </div>
                 )}

@@ -197,7 +197,7 @@ export function TVShowDetailsPage() {
   const firstAirYear = tvShow.first_air_date ? new Date(tvShow.first_air_date).getFullYear() : '';
   const rating = tvShow.vote_average.toFixed(1);
   const episodeRuntime = tvShow.episode_run_time?.[0];
-  const similarShows = tvShow.similar?.results || [];
+  const similarShows = (tvShow.recommendations?.results?.length ? tvShow.recommendations.results : tvShow.similar?.results) || [];
 
   // Sort Crew: Creators & Executive Producers First!
   const aggregateCast = tvShow.aggregate_credits?.cast.map((person) => ({
