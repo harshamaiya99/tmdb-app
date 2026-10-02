@@ -26,13 +26,76 @@ const CATEGORY_TITLES: Record<string, string> = {
   'top-rated-tv': 'Top Rated TV Shows'
 };
 
+const GENRE_OPTIONS = [
+  { value: 'all', label: 'All Genres' },
+  { value: '28', label: 'Action' },
+  { value: '12', label: 'Adventure' },
+  { value: '16', label: 'Animation' },
+  { value: '35', label: 'Comedy' },
+  { value: '80', label: 'Crime' },
+  { value: '99', label: 'Documentary' },
+  { value: '18', label: 'Drama' },
+  { value: '10751', label: 'Family' },
+  { value: '14', label: 'Fantasy' },
+  { value: '36', label: 'History' },
+  { value: '27', label: 'Horror' },
+  { value: '10402', label: 'Music' },
+  { value: '9648', label: 'Mystery' },
+  { value: '10749', label: 'Romance' },
+  { value: '878', label: 'Science Fiction' },
+  { value: '53', label: 'Thriller' },
+  { value: '10770', label: 'TV Movie' },
+  { value: '10752', label: 'War' },
+  { value: '37', label: 'Western' },
+  { value: '10763', label: 'News' },
+  { value: '10764', label: 'Reality' },
+].sort((a, b) => a.label.localeCompare(b.label));
+
+const LANGUAGE_OPTIONS = [
+  { value: 'all', label: 'All Languages' },
+  { value: 'ar', label: 'Arabic' },
+  { value: 'bn', label: 'Bengali' },
+  { value: 'cs', label: 'Czech' },
+  { value: 'da', label: 'Danish' },
+  { value: 'de', label: 'German' },
+  { value: 'el', label: 'Greek' },
+  { value: 'en', label: 'English' },
+  { value: 'es', label: 'Spanish' },
+  { value: 'fi', label: 'Finnish' },
+  { value: 'fr', label: 'French' },
+  { value: 'gu', label: 'Gujarati' },
+  { value: 'he', label: 'Hebrew' },
+  { value: 'hi', label: 'Hindi' },
+  { value: 'hu', label: 'Hungarian' },
+  { value: 'id', label: 'Indonesian' },
+  { value: 'it', label: 'Italian' },
+  { value: 'ja', label: 'Japanese' },
+  { value: 'kn', label: 'Kannada' },
+  { value: 'ko', label: 'Korean' },
+  { value: 'ml', label: 'Malayalam' },
+  { value: 'mr', label: 'Marathi' },
+  { value: 'nl', label: 'Dutch' },
+  { value: 'no', label: 'Norwegian' },
+  { value: 'pa', label: 'Punjabi' },
+  { value: 'pl', label: 'Polish' },
+  { value: 'pt', label: 'Portuguese' },
+  { value: 'ru', label: 'Russian' },
+  { value: 'sv', label: 'Swedish' },
+  { value: 'ta', label: 'Tamil' },
+  { value: 'te', label: 'Telugu' },
+  { value: 'th', label: 'Thai' },
+  { value: 'tr', label: 'Turkish' },
+  { value: 'zh', label: 'Mandarin' },
+].sort((a, b) => a.label.localeCompare(b.label));
+
 export function MediaListPage() {
   const { category } = useParams<{ category: string }>();
   const location = useLocation();
   
-  const [searchParams] = useSearchParams();
+  const [searchParams, setSearchParams] = useSearchParams();
   const { page, setPage } = usePagination();
-  const entityNameParam = searchParams.get('name'); // Grabs name from URL
+  const entityNameParam = searchParams.get('name');
+  const selectedLanguage = searchParams.get('language') ?? 'all';
 
   let effectiveCategory = category;
   if (!effectiveCategory) {
@@ -44,6 +107,7 @@ export function MediaListPage() {
   const genreMatch = effectiveCategory?.match(/^genre-(movie|tv)-(\d+)$/);
   const companyMatch = effectiveCategory?.match(/^company-(\d+)$/); 
   const providerMatch = effectiveCategory?.match(/^provider-(\d+)$/); 
+  const selectedGenre = searchParams.get('genre') ?? (genreMatch ? genreMatch[2] : 'all');
   
   const personType = personMatch?.[2] === 'tv' ? 'tv' : 'movie';
   const itemType = personMatch ? personType : genreMatch ? genreMatch[1] as 'movie' | 'tv' : effectiveCategory?.includes('tv') ? 'tv' : 'movie';
@@ -55,26 +119,28 @@ export function MediaListPage() {
   );
 
   const listQuery = useCachedQuery<TrendingResponse<Movie | TVShow | PersonCredit>>(
-    `list:${effectiveCategory ?? 'none'}:${page}`,
+    `list:${effectiveCategory ?? 'none'}:${page}:${selectedLanguage}:${selectedGenre}`,
     async (signal) => {
       const currentPersonMatch = effectiveCategory?.match(/^person-(\d+)-(movies|tv)$/);
       const currentCompanyMatch = effectiveCategory?.match(/^company-(\d+)$/);
       const currentProviderMatch = effectiveCategory?.match(/^provider-(\d+)$/);
       const currentItemType = currentPersonMatch?.[2] === 'tv' ? 'tv' : 'movie';
+      const languageFilter = selectedLanguage === 'all' ? undefined : selectedLanguage;
+      const genreFilter = selectedGenre === 'all' ? undefined : Number(selectedGenre);
 
       if (currentPersonMatch && currentPersonMatch[1]) {
         return tmdbService.getPersonCredits(Number(currentPersonMatch[1]), currentItemType, page, { signal });
       }
-      if (genreMatch?.[2]) {
-        return tmdbService.getGenreMediaList(itemType, Number(genreMatch[2]), page, { signal });
+      if (genreFilter !== undefined) {
+        return tmdbService.getGenreMediaList(itemType, genreFilter, page, { signal }, languageFilter);
       }
       if (currentCompanyMatch?.[1]) {
-        return tmdbService.getMoviesByCompany(Number(currentCompanyMatch[1]), page, { signal });
+        return tmdbService.getMoviesByCompany(Number(currentCompanyMatch[1]), page, { signal }, languageFilter);
       }
       if (currentProviderMatch?.[1]) {
-        return tmdbService.getMoviesByProvider(Number(currentProviderMatch[1]), page, { signal });
+        return tmdbService.getMoviesByProvider(Number(currentProviderMatch[1]), page, { signal }, languageFilter);
       }
-      return tmdbService.getCategoryList(effectiveCategory ?? '', page, { signal });
+      return tmdbService.getCategoryList(effectiveCategory ?? '', page, { signal }, languageFilter);
     },
     { enabled: Boolean(effectiveCategory) },
   );
@@ -103,9 +169,53 @@ export function MediaListPage() {
     window.scrollTo({ top: 0, behavior: 'smooth' });
   };
 
+  const updateLanguageFilter = (language: string) => {
+    const nextParams = new URLSearchParams(searchParams);
+    if (language === 'all') {
+      nextParams.delete('language');
+    } else {
+      nextParams.set('language', language);
+    }
+    setPage(1);
+    setSearchParams(nextParams, { replace: true });
+  };
+
+  const updateGenreFilter = (genre: string) => {
+    const nextParams = new URLSearchParams(searchParams);
+    if (genre === 'all') {
+      nextParams.delete('genre');
+    } else {
+      nextParams.set('genre', genre);
+    }
+    setPage(1);
+    setSearchParams(nextParams, { replace: true });
+  };
+
   return (
-    <main className="container py-8">
-        {/* Visual <h1> removed completely! */}
+    <main className="container py-4">
+        <div className="mb-4 flex flex-wrap items-center justify-end gap-3">
+          <select
+            id="media-language-filter"
+            value={selectedLanguage}
+            onChange={(event) => updateLanguageFilter(event.target.value)}
+            className="h-9 rounded-md border border-input bg-background px-3 py-1 text-sm focus:outline-none focus:ring-2 focus:ring-ring [scrollbar-width:none] [&::-webkit-scrollbar]:hidden"
+          >
+            {LANGUAGE_OPTIONS.map((language) => (
+              <option key={language.value} value={language.value}>{language.label}</option>
+            ))}
+          </select>
+
+          <select
+            id="media-genre-filter"
+            value={selectedGenre}
+            onChange={(event) => updateGenreFilter(event.target.value)}
+            className="h-9 rounded-md border border-input bg-background px-3 py-1 text-sm focus:outline-none focus:ring-2 focus:ring-ring [scrollbar-width:none] [&::-webkit-scrollbar]:hidden"
+          >
+            {GENRE_OPTIONS.map((genre) => (
+              <option key={genre.value} value={genre.value}>{genre.label}</option>
+            ))}
+          </select>
+        </div>
         
         {loading ? (
           <div className="space-y-8">

@@ -58,6 +58,7 @@ export interface Movie {
   poster_path: string | null;
   backdrop_path: string | null;
   overview: string;
+  original_language?: string;
   release_date: string;
   vote_average: number;
   vote_count: number;
@@ -94,6 +95,7 @@ export interface TVShow {
   poster_path: string | null;
   backdrop_path: string | null;
   overview: string;
+  original_language?: string;
   first_air_date: string;
   vote_average: number;
   vote_count: number;
@@ -455,39 +457,43 @@ class TMDBService {
   // --- DISCOVER ENDPOINTS (NEW) ---
   
   // Fetch movies by production company
-  async getMoviesByCompany(companyId: number, page: number = 1, options?: TMDBRequestOptions): Promise<TrendingResponse<Movie>> {
-    return this.fetchFromTMDB<TrendingResponse<Movie>>(`/discover/movie?with_companies=${companyId}&page=${page}&sort_by=popularity.desc`, options);
+  async getMoviesByCompany(companyId: number, page: number = 1, options?: TMDBRequestOptions, language?: string): Promise<TrendingResponse<Movie>> {
+    const languageFilter = language ? `&with_original_language=${encodeURIComponent(language)}` : '';
+    return this.fetchFromTMDB<TrendingResponse<Movie>>(`/discover/movie?with_companies=${companyId}&page=${page}&sort_by=popularity.desc${languageFilter}`, options);
   }
 
   // Fetch movies by streaming provider (defaulting to US region)
-  async getMoviesByProvider(providerId: number, page: number = 1, options?: TMDBRequestOptions): Promise<TrendingResponse<Movie>> {
-    return this.fetchFromTMDB<TrendingResponse<Movie>>(`/discover/movie?with_watch_providers=${providerId}&watch_region=US&page=${page}&sort_by=popularity.desc`, options);
+  async getMoviesByProvider(providerId: number, page: number = 1, options?: TMDBRequestOptions, language?: string): Promise<TrendingResponse<Movie>> {
+    const languageFilter = language ? `&with_original_language=${encodeURIComponent(language)}` : '';
+    return this.fetchFromTMDB<TrendingResponse<Movie>>(`/discover/movie?with_watch_providers=${providerId}&watch_region=US&page=${page}&sort_by=popularity.desc${languageFilter}`, options);
   }
 
   // --- PAGINATED CATEGORY ENDPOINT ---
-  async getCategoryList(category: string, page: number = 1, options?: TMDBRequestOptions): Promise<TrendingResponse<Movie | TVShow>> {
+  async getCategoryList(category: string, page: number = 1, options?: TMDBRequestOptions, language?: string): Promise<TrendingResponse<Movie | TVShow>> {
     const endpoints: Record<string, string> = {
-      'trending-movies': '/trending/movie/day',
-      'now-playing-movies': '/movie/now_playing',
-      'top-rated-movies': '/movie/top_rated',
-      'upcoming-movies': '/movie/upcoming',
-      'trending-tv': '/trending/tv/day',
-      'popular-tv': '/tv/popular',
-      'top-rated-tv': '/tv/top_rated',
+      'trending-movies': '/discover/movie?sort_by=popularity.desc',
+      'now-playing-movies': '/discover/movie?sort_by=popularity.desc&primary_release_date.gte=2020-01-01',
+      'top-rated-movies': '/discover/movie?sort_by=vote_average.desc&vote_count.gte=2000',
+      'upcoming-movies': '/discover/movie?sort_by=popularity.desc&release_date.gte=2025-01-01',
+      'trending-tv': '/discover/tv?sort_by=popularity.desc',
+      'popular-tv': '/discover/tv?sort_by=popularity.desc',
+      'top-rated-tv': '/discover/tv?sort_by=vote_average.desc&vote_count.gte=2000',
       'trending-streaming-movies': '/discover/movie?watch_region=IN&with_watch_monetization_types=flatrate&sort_by=popularity.desc',
       'imdb-top-rated-movies': '/discover/movie?sort_by=vote_average.desc&vote_count.gte=10000'
     };
     
     const endpoint = endpoints[category];
     if (!endpoint) throw new Error('Invalid category');
-    
+
+    const filters = language ? `&with_original_language=${encodeURIComponent(language)}` : '';
     const separator = endpoint.includes('?') ? '&' : '?';
-    return this.fetchFromTMDB<TrendingResponse<Movie | TVShow>>(`${endpoint}${separator}page=${page}`, options);
+    return this.fetchFromTMDB<TrendingResponse<Movie | TVShow>>(`${endpoint}${filters}${separator}page=${page}`, options);
   }
 
-  async getGenreMediaList(mediaType: 'movie' | 'tv', genreId: number, page: number = 1, options?: TMDBRequestOptions): Promise<TrendingResponse<Movie | TVShow>> {
+  async getGenreMediaList(mediaType: 'movie' | 'tv', genreId: number, page: number = 1, options?: TMDBRequestOptions, language?: string): Promise<TrendingResponse<Movie | TVShow>> {
     const endpoint = mediaType === 'movie' ? '/discover/movie' : '/discover/tv';
-    return this.fetchFromTMDB<TrendingResponse<Movie | TVShow>>(`${endpoint}?with_genres=${genreId}&sort_by=popularity.desc&page=${page}`, options);
+    const languageFilter = language ? `&with_original_language=${encodeURIComponent(language)}` : '';
+    return this.fetchFromTMDB<TrendingResponse<Movie | TVShow>>(`${endpoint}?with_genres=${genreId}&sort_by=popularity.desc${languageFilter}&page=${page}`, options);
   }
 
   // --- DETAILS ENDPOINTS ---
