@@ -3,12 +3,12 @@ import { ChevronLeft, ChevronRight } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { MediaCard } from '@/components/MediaCard';
-import { type Movie, type TVShow, type PersonCredit } from '@/lib/tmdb';
+import { type Movie, type TVShow, type PersonCredit, type PersonListResult } from '@/lib/tmdb';
 
 interface MediaSectionProps {
   title: string;
-  items: (Movie | TVShow | PersonCredit)[];
-  type: 'movie' | 'tv';
+  items: (Movie | TVShow | PersonCredit | PersonListResult)[];
+  type: 'movie' | 'tv' | 'person';
   category?: string;
   hideSeeMore?: boolean;
   actionLabel?: string;
@@ -72,13 +72,17 @@ export function MediaSection({ title, items, type, category, hideSeeMore = false
     }
   };
 
-  const cards = visibleItems.map((item) => horizontalScroll ? (
-    <div key={item.id} className="h-full snap-start">
-      <MediaCard item={item as Movie | TVShow | PersonCredit} type={type} />
-    </div>
-  ) : (
-    <MediaCard key={item.id} item={item as Movie | TVShow | PersonCredit} type={type} />
-  ));
+  const cards = visibleItems.map((item) => {
+    const card = type === 'person' ? (
+      <MediaCard key={item.id} item={item as PersonListResult} type="person" />
+    ) : (
+      <MediaCard key={item.id} item={item as Movie | TVShow | PersonCredit} type={type} />
+    );
+
+    return horizontalScroll ? (
+      <div key={`scroll-${item.id}`} className="h-full snap-start">{card}</div>
+    ) : card;
+  });
 
   return (
     <section className={`min-w-0 ${className ?? 'space-y-4'}`}>
@@ -97,7 +101,7 @@ export function MediaSection({ title, items, type, category, hideSeeMore = false
             className={`grid min-w-0 grid-flow-col auto-cols-[calc((100%_-_1rem)/2)] gap-4 overflow-x-auto pb-4 pr-8 snap-x snap-mandatory sm:auto-cols-[calc((100%_-_2rem)/3)] md:auto-cols-[calc((100%_-_3rem)/4)] lg:auto-cols-[calc((100%_-_5rem)/6)] xl:auto-cols-[calc((100%_-_7rem)/8)] ${horizontalColumns === 10 ? '2xl:auto-cols-[calc((100%_-_9rem)/10)]' : '2xl:auto-cols-[calc((100%_-_7rem)/8)]'} [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2`}
             tabIndex={0}
             role="region"
-            aria-label={`${title} credits`}
+            aria-label={`${title || (type === 'person' ? 'People' : type === 'movie' ? 'Movies' : 'TV shows')} results`}
             onScroll={updateScrollState}
             onKeyDown={(event) => {
               if (event.key === 'ArrowLeft' || event.key === 'ArrowRight') {

@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { Link, useSearchParams } from 'react-router-dom';
+import { useSearchParams } from 'react-router-dom';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { MediaGridSkeleton } from '@/components/MediaGridSkeleton';
 import { MediaSection } from '@/components/MediaSection';
@@ -7,7 +7,6 @@ import { tmdbService } from '@/lib/tmdb';
 import { useCachedQuery } from '@/hooks/useCachedQuery';
 import { useDebouncedValue } from '@/hooks/useDebouncedValue';
 import { usePageTitle } from '@/hooks/usePageTitle';
-import { TMDBImage } from '@/components/TMDBImage';
 
 function SearchMessage({ message, error = false }: { message: string; error?: boolean }) {
   return (
@@ -136,35 +135,21 @@ export function HomePage() {
           <section className="space-y-4">
             <h2 className="text-2xl font-bold tracking-tight">Movies</h2>
             {searchMovies.error ? <SearchMessage error message={searchMovies.error.message} /> : searchMovies.data?.results.length ? (
-              <MediaSection title="" items={searchMovies.data.results} type="movie" hideSeeMore limit={10} className="space-y-0" />
+              <MediaSection title="" items={searchMovies.data.results} type="movie" hideSeeMore horizontalScroll limit={20} className="space-y-0" />
             ) : <SearchMessage message="No movies found." />}
           </section>
 
           <section className="space-y-4">
             <h2 className="text-2xl font-bold tracking-tight">TV Shows</h2>
             {searchTV.error ? <SearchMessage error message={searchTV.error.message} /> : searchTV.data?.results.length ? (
-              <MediaSection title="" items={searchTV.data.results} type="tv" hideSeeMore limit={10} className="space-y-0" />
+              <MediaSection title="" items={searchTV.data.results} type="tv" hideSeeMore horizontalScroll limit={20} className="space-y-0" />
             ) : <SearchMessage message="No TV shows found." />}
           </section>
 
           <section className="space-y-4">
             <h2 className="text-2xl font-bold tracking-tight">People</h2>
             {searchPeople.error ? <SearchMessage error message={searchPeople.error.message} /> : searchPeople.data?.results.length ? (
-              <div className="grid grid-cols-2 gap-4 sm:grid-cols-3 md:grid-cols-5 lg:grid-cols-6 xl:grid-cols-8 2xl:grid-cols-10">
-                {searchPeople.data.results.slice(0, 10).map((person) => (
-                  <Link key={person.id} to={`/person/${person.id}`} className="group flex flex-col space-y-2">
-                    <div className="aspect-[2/3] overflow-hidden rounded-xl border bg-muted shadow-sm">
-                      {person.profile_path ? (
-                        <TMDBImage path={person.profile_path} alt={`${person.name} profile`} width={500} height={750} sizes="(min-width: 1536px) 9vw, (min-width: 1024px) 14vw, (min-width: 640px) 20vw, 30vw" className="h-full w-full object-cover transition-transform duration-300 group-hover:scale-105" />
-                      ) : <div role="img" aria-label={`${person.name} profile unavailable`} className="flex h-full items-center justify-center text-[10px] text-muted-foreground">Profile unavailable</div>}
-                    </div>
-                    <div className="px-1">
-                      <p className="truncate text-xs font-semibold group-hover:text-primary">{person.name}</p>
-                      <p className="truncate text-[10px] text-muted-foreground">{person.known_for_department}</p>
-                    </div>
-                  </Link>
-                ))}
-              </div>
+              <MediaSection title="" items={searchPeople.data.results} type="person" hideSeeMore horizontalScroll limit={20} className="space-y-0" />
             ) : <SearchMessage message="No people found." />}
           </section>
 

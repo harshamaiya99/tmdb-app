@@ -119,7 +119,7 @@ Media imagery is rendered through the shared TMDB image component, which provide
 
 ### Shared media sections
 
-A reusable section wrapper in [src/components/MediaSection.tsx](src/components/MediaSection.tsx) now handles the repeated layout for media lists with a heading, optional see-more action, and a responsive grid. This pattern is used on the home page and on person detail credit sections to keep those experiences visually consistent.
+A reusable section wrapper in [src/components/MediaSection.tsx](src/components/MediaSection.tsx) handles the repeated layout for movie, TV, and person lists with a heading, optional see-more action, and responsive grid or horizontal carousel. This pattern is used on the home page, search results, and person detail credit sections to keep those experiences visually consistent.
 
 ### Review cards
 
