@@ -148,6 +148,14 @@ export interface Person {
   place_of_birth: string | null;
   profile_path: string | null;
   known_for_department: string;
+  external_ids?: {
+    imdb_id?: string | null;
+    facebook_id?: string | null;
+    instagram_id?: string | null;
+    twitter_id?: string | null;
+    youtube_id?: string | null;
+    tiktok_id?: string | null;
+  };
   combined_credits?: {
     cast: PersonCredit[];
   };
@@ -570,7 +578,7 @@ class TMDBService {
   }
 
   async getPersonDetails(id: number, options?: TMDBRequestOptions): Promise<Person> {
-    return this.fetchFromTMDB<Person>(`/person/${id}?append_to_response=combined_credits,images`, options);
+    return this.fetchFromTMDB<Person>(`/person/${id}?append_to_response=combined_credits,images,external_ids`, options);
   }
 
   async getPersonCredits(personId: number, mediaType: 'movie' | 'tv', page: number = 1, options?: TMDBRequestOptions): Promise<TrendingResponse<PersonCredit>> {

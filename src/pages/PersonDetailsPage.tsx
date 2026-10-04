@@ -156,6 +156,50 @@ export function PersonDetailsPage() {
 
   const birthDate = formatDate(person.birthday);
   const deathDate = formatDate(person.deathday);
+  const birthAge = (() => {
+    if (!person.birthday) return null;
+
+    const birth = new Date(person.birthday);
+    if (Number.isNaN(birth.getTime())) return null;
+
+    const today = new Date();
+    let age = today.getFullYear() - birth.getFullYear();
+    const hasHadBirthdayThisYear =
+      today.getMonth() > birth.getMonth() ||
+      (today.getMonth() === birth.getMonth() && today.getDate() >= birth.getDate());
+
+    if (!hasHadBirthdayThisYear) {
+      age -= 1;
+    }
+
+    return age > 0 ? age : null;
+  })();
+  const socialLinks = [
+    person.external_ids?.imdb_id && {
+      label: 'IMDb',
+      href: `https://www.imdb.com/name/${person.external_ids.imdb_id}`,
+    },
+    person.external_ids?.instagram_id && {
+      label: 'Instagram',
+      href: `https://www.instagram.com/${person.external_ids.instagram_id.replace(/^@/, '')}`,
+    },
+    person.external_ids?.twitter_id && {
+      label: 'X',
+      href: `https://x.com/${person.external_ids.twitter_id.replace(/^@/, '')}`,
+    },
+    person.external_ids?.facebook_id && {
+      label: 'Facebook',
+      href: `https://www.facebook.com/${person.external_ids.facebook_id}`,
+    },
+    person.external_ids?.youtube_id && {
+      label: 'YouTube',
+      href: `https://www.youtube.com/channel/${person.external_ids.youtube_id}`,
+    },
+    person.external_ids?.tiktok_id && {
+      label: 'TikTok',
+      href: `https://www.tiktok.com/@${person.external_ids.tiktok_id.replace(/^@/, '')}`,
+    },
+  ].filter((link): link is { label: string; href: string } => Boolean(link));
 
   const credits = mergePersonCredits(person.combined_credits?.cast || []);
   const getActingCredits = (mediaType: 'movie' | 'tv') => {
@@ -243,7 +287,10 @@ export function PersonDetailsPage() {
                 {birthDate && (
                   <div>
                     <p className="font-medium flex items-center gap-1"><Calendar className="w-4 h-4" /> Born</p>
-                    <p className="text-muted-foreground">{birthDate}</p>
+                    <p className="text-muted-foreground">
+                      {birthDate}
+                      {birthAge !== null && <span> ({birthAge})</span>}
+                    </p>
                   </div>
                 )}
 
@@ -258,6 +305,25 @@ export function PersonDetailsPage() {
                   <div>
                     <p className="font-medium flex items-center gap-1"><MapPin className="w-4 h-4" /> Place of Birth</p>
                     <p className="text-muted-foreground">{person.place_of_birth}</p>
+                  </div>
+                )}
+
+                {socialLinks.length > 0 && (
+                  <div>
+                    <p className="font-medium">Social</p>
+                    <div className="mt-2 flex flex-wrap gap-2">
+                      {socialLinks.map((link) => (
+                        <a
+                          key={link.label}
+                          href={link.href}
+                          target="_blank"
+                          rel="noreferrer"
+                          className="inline-flex items-center rounded-full border border-border bg-muted/50 px-2.5 py-1 text-xs font-medium text-foreground transition hover:bg-muted"
+                        >
+                          {link.label}
+                        </a>
+                      ))}
+                    </div>
                   </div>
                 )}
               </div>
