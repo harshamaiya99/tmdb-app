@@ -91,6 +91,8 @@ The app supports:
 - TV show search
 - person search
 
+If a compact alphanumeric search term returns no matches, the service retries a limited number of likely two-word splits around the middle of the term (for example, `iceage` as `ice age`). Existing results are returned without fallback requests.
+
 ### Filtered lists
 
 The service also supports category-based browsing for:

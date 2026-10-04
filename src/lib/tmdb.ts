@@ -298,6 +298,26 @@ export interface TrendingResponse<T> {
   total_results: number;
 }
 
+const MAX_SEARCH_SPACING_CANDIDATES = 8;
+
+function getSearchSpacingCandidates(query: string): string[] {
+  if (!/^[a-z\d]{5,24}$/i.test(query)) return [];
+
+  const middle = Math.floor(query.length / 2);
+  const splitPoints: number[] = [];
+
+  for (let offset = 0; splitPoints.length < MAX_SEARCH_SPACING_CANDIDATES; offset += 1) {
+    const points = offset === 0 ? [middle] : [middle - offset, middle + offset];
+    for (const point of points) {
+      if (point >= 2 && point <= query.length - 2) splitPoints.push(point);
+      if (splitPoints.length === MAX_SEARCH_SPACING_CANDIDATES) break;
+    }
+    if (middle - offset < 2 && middle + offset > query.length - 2) break;
+  }
+
+  return splitPoints.map((point) => `${query.slice(0, point)} ${query.slice(point)}`);
+}
+
 interface PersonCreditsResponse {
   page?: number;
   cast: Omit<PersonCredit, 'media_type'>[];
@@ -396,6 +416,29 @@ class TMDBService {
     }
 
     return await response.json() as T;
+  }
+
+  private async searchWithSpacingFallback<T>(
+    endpoint: string,
+    query: string,
+    page: number,
+    options?: TMDBRequestOptions,
+  ): Promise<TrendingResponse<T>> {
+    const search = (term: string) =>
+      this.fetchFromTMDB<TrendingResponse<T>>(
+        `${endpoint}?query=${encodeURIComponent(term)}&page=${page}`,
+        options,
+      );
+
+    const results = await search(query);
+    if (results.results.length > 0) return results;
+
+    for (const candidate of getSearchSpacingCandidates(query)) {
+      const candidateResults = await search(candidate);
+      if (candidateResults.results.length > 0) return candidateResults;
+    }
+
+    return results;
   }
 
   // --- HOME PAGE ENDPOINTS ---
@@ -544,15 +587,15 @@ class TMDBService {
 
   // --- SEARCH ---
   async searchMovies(query: string, page: number = 1, options?: TMDBRequestOptions): Promise<TrendingResponse<Movie>> {
-    return this.fetchFromTMDB<TrendingResponse<Movie>>(`/search/movie?query=${encodeURIComponent(query)}&page=${page}`, options);
+    return this.searchWithSpacingFallback<Movie>('/search/movie', query, page, options);
   }
 
   async searchTVShows(query: string, page: number = 1, options?: TMDBRequestOptions): Promise<TrendingResponse<TVShow>> {
-    return this.fetchFromTMDB<TrendingResponse<TVShow>>(`/search/tv?query=${encodeURIComponent(query)}&page=${page}`, options);
+    return this.searchWithSpacingFallback<TVShow>('/search/tv', query, page, options);
   }
 
   async searchPersons(query: string, page: number = 1, options?: TMDBRequestOptions): Promise<TrendingResponse<PersonListResult>> {
-    return this.fetchFromTMDB<TrendingResponse<PersonListResult>>(`/search/person?query=${encodeURIComponent(query)}&page=${page}`, options);
+    return this.searchWithSpacingFallback<PersonListResult>('/search/person', query, page, options);
   }
 
   getImageUrl(path: string | null, size: 'w500' | 'w780' | 'original' = 'w500'): string {
