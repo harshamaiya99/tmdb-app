@@ -3,7 +3,7 @@ import { useEffect, useLayoutEffect, useRef, useState } from 'react';
 import ReactMarkdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
 import { useParams, useNavigate } from 'react-router-dom';
-import { ArrowLeft, ArrowRight, Calendar, MapPin, X } from 'lucide-react';
+import { ArrowLeft, ArrowRight, Calendar, Facebook, Film, Instagram, MapPin, Music2, Twitter, X, Youtube } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Skeleton } from '@/components/ui/skeleton';
 import { MediaSection } from '@/components/MediaSection';
@@ -178,28 +178,34 @@ export function PersonDetailsPage() {
     person.external_ids?.imdb_id && {
       label: 'IMDb',
       href: `https://www.imdb.com/name/${person.external_ids.imdb_id}`,
+      icon: Film,
     },
     person.external_ids?.instagram_id && {
       label: 'Instagram',
       href: `https://www.instagram.com/${person.external_ids.instagram_id.replace(/^@/, '')}`,
+      icon: Instagram,
     },
     person.external_ids?.twitter_id && {
       label: 'X',
       href: `https://x.com/${person.external_ids.twitter_id.replace(/^@/, '')}`,
+      icon: Twitter,
     },
     person.external_ids?.facebook_id && {
       label: 'Facebook',
       href: `https://www.facebook.com/${person.external_ids.facebook_id}`,
+      icon: Facebook,
     },
     person.external_ids?.youtube_id && {
       label: 'YouTube',
       href: `https://www.youtube.com/channel/${person.external_ids.youtube_id}`,
+      icon: Youtube,
     },
     person.external_ids?.tiktok_id && {
       label: 'TikTok',
       href: `https://www.tiktok.com/@${person.external_ids.tiktok_id.replace(/^@/, '')}`,
+      icon: Music2,
     },
-  ].filter((link): link is { label: string; href: string } => Boolean(link));
+  ].filter((link): link is { label: string; href: string; icon: typeof Film } => Boolean(link));
 
   const credits = mergePersonCredits(person.combined_credits?.cast || []);
   const getActingCredits = (mediaType: 'movie' | 'tv') => {
@@ -312,15 +318,17 @@ export function PersonDetailsPage() {
                   <div>
                     <p className="font-medium">Social</p>
                     <div className="mt-2 flex flex-wrap gap-2">
-                      {socialLinks.map((link) => (
+                      {socialLinks.map(({ label, href, icon: Icon }) => (
                         <a
-                          key={link.label}
-                          href={link.href}
+                          key={label}
+                          href={href}
                           target="_blank"
                           rel="noreferrer"
-                          className="inline-flex items-center rounded-full border border-border bg-muted/50 px-2.5 py-1 text-xs font-medium text-foreground transition hover:bg-muted"
+                          aria-label={label}
+                          title={label}
+                          className="inline-flex h-10 w-10 items-center justify-center rounded-full border border-border bg-muted/50 text-foreground transition hover:bg-muted"
                         >
-                          {link.label}
+                          <Icon className="h-4 w-4" />
                         </a>
                       ))}
                     </div>
