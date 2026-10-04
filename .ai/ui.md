@@ -139,7 +139,7 @@ This keeps the review section compact while still preserving rich formatting fro
 
 ### Layout and shell
 
-The shared shell in [src/components/Layout.tsx](src/components/Layout.tsx) provides the sticky header, navigation tabs, search bar, theme switcher, and logout action. The main app chrome is intentionally restrained so the content can take the lead.
+The shared shell in [src/components/Layout.tsx](src/components/Layout.tsx) provides the sticky header, navigation tabs, search bar, theme switcher, and logout action. Search suggestions appear as the user types and link directly to movie, TV show, or person details; submitting the form opens the full results page. The main app chrome is intentionally restrained so the content can take the lead.
 
 ## Spacing and Typography Conventions
 

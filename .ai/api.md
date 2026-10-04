@@ -90,8 +90,9 @@ The app supports:
 - movie search
 - TV show search
 - person search
+- combined movie, TV show, and person search for header autocomplete suggestions
 
-If a compact alphanumeric search term returns no matches, the service retries a limited number of likely two-word splits around the middle of the term (for example, `iceage` as `ice age`). Existing results are returned without fallback requests.
+Full movie, TV show, and person searches retry a limited number of likely two-word splits when a compact alphanumeric query returns no matches (for example, `iceage` as `ice age`). Header autocomplete uses a single combined-search request for faster suggestions.
 
 ### Filtered lists
 

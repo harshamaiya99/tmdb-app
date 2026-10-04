@@ -298,6 +298,11 @@ export interface TrendingResponse<T> {
   total_results: number;
 }
 
+export type MultiSearchResult =
+  | (Movie & { media_type: 'movie' })
+  | (TVShow & { media_type: 'tv' })
+  | (PersonListResult & { media_type: 'person' });
+
 const MAX_SEARCH_SPACING_CANDIDATES = 8;
 
 function getSearchSpacingCandidates(query: string): string[] {
@@ -423,6 +428,7 @@ class TMDBService {
     query: string,
     page: number,
     options?: TMDBRequestOptions,
+    fallbackLimit = MAX_SEARCH_SPACING_CANDIDATES,
   ): Promise<TrendingResponse<T>> {
     const search = (term: string) =>
       this.fetchFromTMDB<TrendingResponse<T>>(
@@ -433,7 +439,7 @@ class TMDBService {
     const results = await search(query);
     if (results.results.length > 0) return results;
 
-    for (const candidate of getSearchSpacingCandidates(query)) {
+    for (const candidate of getSearchSpacingCandidates(query).slice(0, fallbackLimit)) {
       const candidateResults = await search(candidate);
       if (candidateResults.results.length > 0) return candidateResults;
     }
@@ -596,6 +602,13 @@ class TMDBService {
 
   async searchPersons(query: string, page: number = 1, options?: TMDBRequestOptions): Promise<TrendingResponse<PersonListResult>> {
     return this.searchWithSpacingFallback<PersonListResult>('/search/person', query, page, options);
+  }
+
+  async searchMulti(query: string, page: number = 1, options?: TMDBRequestOptions): Promise<TrendingResponse<MultiSearchResult>> {
+    return this.fetchFromTMDB<TrendingResponse<MultiSearchResult>>(
+      `/search/multi?query=${encodeURIComponent(query)}&page=${page}`,
+      options,
+    );
   }
 
   getImageUrl(path: string | null, size: 'w500' | 'w780' | 'original' = 'w500'): string {
