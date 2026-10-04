@@ -136,7 +136,7 @@ export function ReviewSection({ reviews: initialReviews, mediaId, mediaType, tot
   };
 
   const formatReviewContent = (content: string) =>
-    content.replace(
+    content.replace(/<em>([\s\S]*?)<\/em>/gi, '*$1*').replace(
       /(^|[\s(])((?:https?:\/\/|www\.)?[a-z0-9-]+(?:\.[a-z0-9-]+)+(?:\/[^\s<>'")]+)?)(?=$|[\s).,;!?])/gi,
       (_match, prefix, url) => {
         const normalizedUrl = /^https?:\/\//i.test(url) ? url : `https://${url}`;

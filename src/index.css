@@ -86,6 +86,30 @@
   scrollbar-color: hsl(var(--muted-foreground) / 0.3) transparent;
 }
 
+.season-ratings-scrollbar {
+  scrollbar-width: thin;
+  scrollbar-color: hsl(var(--muted-foreground) / 0.3) transparent;
+}
+
+.season-ratings-scrollbar::-webkit-scrollbar {
+  display: block;
+  width: 6px;
+  height: 6px;
+}
+
+.season-ratings-scrollbar::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.season-ratings-scrollbar::-webkit-scrollbar-thumb {
+  background-color: hsl(var(--muted-foreground) / 0.3);
+  border-radius: 20px;
+}
+
+.season-ratings-scrollbar::-webkit-scrollbar-thumb:hover {
+  background-color: hsl(var(--muted-foreground) / 0.5);
+}
+
 .markdown-body {
   line-height: 1.6;
 }

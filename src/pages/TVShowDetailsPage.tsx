@@ -116,7 +116,6 @@ export function TVShowDetailsPage() {
   const [searchParams, setSearchParams] = useSearchParams();
   const selectedSeason = parseInt(searchParams.get('season') || '0', 10);
   const [activeCredits, setActiveCredits] = useState<'cast' | 'crew'>('cast');
-  const [heatmapRowSpan, setHeatmapRowSpan] = useState(1);
   const episodeGridRef = useRef<HTMLDivElement>(null);
 
   const navigate = useNavigate();
@@ -455,18 +454,13 @@ export function TVShowDetailsPage() {
 
               {/* The Heatmap Card */}
               <div 
-                className="w-full md:col-span-2 md:col-start-4 md:row-start-1"
-                style={{ gridRowEnd: `span ${heatmapRowSpan}` }}
+                className="w-full h-80 min-h-0 md:col-span-2 md:col-start-4 md:row-start-1"
               >
                 <div className="h-full w-full rounded-xl border bg-card text-card-foreground shadow-sm p-4 lg:p-5 flex flex-col">
-                  {/* The scrollable component fills the whole box */}
-                  <div className="flex-1 min-h-0">
+                  <div className="flex-1 min-w-0 min-h-0">
                     <EpisodesRatingOverview 
                       tvId={tvShow.id} 
                       seasons={tvShow.seasons} 
-                      rowSpan={heatmapRowSpan} // PASSES HEIGHT DATA TO COMPONENT
-                      onExpand={() => setHeatmapRowSpan(prev => prev + 1)}
-                      onCollapse={() => setHeatmapRowSpan(1)}
                     />
                   </div>
                 </div>

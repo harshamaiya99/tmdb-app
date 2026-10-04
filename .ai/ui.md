@@ -129,6 +129,7 @@ Current conventions:
 
 - review text is rendered as markdown, not plain text
 - `remark-gfm` is enabled so tables, emphasis, lists, and links render naturally
+- TMDB `<em>...</em>` tags are converted to markdown emphasis; arbitrary raw HTML is not enabled
 - bare URLs are converted into clickable markdown links before rendering
 - long reviews expand when the card itself is clicked, instead of showing a separate “Read more” control
 - the review date sits beside the rating badge in the header, not beneath the author name
