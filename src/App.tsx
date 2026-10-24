@@ -1,6 +1,6 @@
 // src/App.tsx
 import { Layout } from '@/components/Layout';
-import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
+import { HashRouter, Routes, Route, Navigate } from 'react-router-dom';
 import { LoginPage } from '@/pages/LoginPage';
 import { HomePage } from '@/pages/HomePage';
 import { MovieDetailsPage } from '@/pages/MovieDetailsPage';
@@ -40,7 +40,7 @@ function ProtectedRoute({ children }: { children: React.ReactNode }) {
 function App() {
   return (
     <TitleProvider>
-      <BrowserRouter>
+      <HashRouter>
         <Routes>
           <Route path="/" element={<ProtectedRoute><Layout><HomePage /></Layout></ProtectedRoute>} />
           <Route path="/login" element={<LoginPage />} />
@@ -55,7 +55,7 @@ function App() {
           <Route path="*" element={<Navigate to="/" replace />} />
         </Routes>
         <Toaster />
-      </BrowserRouter>
+      </HashRouter>
     </TitleProvider>
   );
 }

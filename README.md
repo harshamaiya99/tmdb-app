@@ -62,6 +62,12 @@ npm run build
 
 There are no dedicated automated tests in the repository at the moment, so the build is the main verification step after changes.
 
+## Deploy to GitHub Pages
+
+The repository includes a GitHub Actions workflow that builds and deploys the app to GitHub Pages when changes are pushed to `main`. In the repository settings, set **Pages → Build and deployment → Source** to **GitHub Actions**.
+
+The project is configured for the repository site at `https://harshamaiya99.github.io/tmdb-app/`. Client-side routes use hash URLs (for example, `/#/movie/123`) so that direct visits and browser refreshes work with GitHub Pages static hosting.
+
 ## Project Structure
 
 ```text

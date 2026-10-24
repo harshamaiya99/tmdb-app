@@ -38,7 +38,7 @@ The app uses Vite environment variables for optional client-side integrations. O
 
 ## 3. Routing Model
 
-Routing is defined in [src/App.tsx](src/App.tsx) with React Router.
+Routing is defined in [src/App.tsx](src/App.tsx) with React Router's `HashRouter`. Hash-based URLs keep client-side routes working on static hosting such as GitHub Pages, including direct visits and refreshes.
 
 ### Main routes
 

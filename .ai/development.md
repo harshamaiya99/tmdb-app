@@ -42,6 +42,12 @@ npm run build
 
 There are no dedicated automated tests in the repository right now, so the build is the main regression check.
 
+## GitHub Pages Deployment
+
+The `.github/workflows/deploy.yml` workflow builds the app and deploys the `dist` directory to GitHub Pages after pushes to `main` (or a manual workflow dispatch). Set the repository's Pages source to **GitHub Actions** under **Settings → Pages**.
+
+Vite is configured with the `/tmdb-app/` base path for this repository's project site. The app uses hash-based routing, so route URLs look like `/#/movie/123`; this avoids GitHub Pages returning 404 for client-side routes on direct visits or refreshes.
+
 ## Environment Variables
 
 The app uses Vite-style environment variables for optional client-side behavior.
