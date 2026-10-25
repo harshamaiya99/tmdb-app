@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from 'react';
+import { useEffect, useLayoutEffect, useRef, useState } from 'react';
 import { flushSync } from 'react-dom';
 import ReactMarkdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
@@ -24,6 +24,16 @@ export function ReviewSection({ reviews: initialReviews, mediaId, mediaType, tot
   const [loadingMore, setLoadingMore] = useState(false);
   const [loadError, setLoadError] = useState<string | null>(null);
   const requestController = useRef<AbortController | null>(null);
+  const mobileReviewAnchor = useRef<{ element: HTMLDivElement; top: number } | null>(null);
+
+  useLayoutEffect(() => {
+    const anchor = mobileReviewAnchor.current;
+    if (!anchor) return;
+
+    mobileReviewAnchor.current = null;
+    const topDifference = anchor.element.getBoundingClientRect().top - anchor.top;
+    if (topDifference !== 0) window.scrollBy(0, topDifference);
+  }, [expandedReviewId]);
 
   useEffect(() => {
     requestController.current?.abort();
@@ -60,9 +70,13 @@ export function ReviewSection({ reviews: initialReviews, mediaId, mediaType, tot
     ? reviews.filter((r) => r.author_details?.rating && Math.round(r.author_details.rating) === ratingFilter)
     : reviews;
 
-  const toggleExpand = (id: string) => {
+  const toggleExpand = (id: string, card: HTMLDivElement) => {
     const isDesktop = typeof window.matchMedia === 'function'
       && window.matchMedia('(min-width: 768px)').matches;
+
+    if (!isDesktop) {
+      mobileReviewAnchor.current = { element: card, top: card.getBoundingClientRect().top };
+    }
 
     if (isDesktop && document.startViewTransition) {
       document.startViewTransition(() => {
@@ -239,7 +253,7 @@ export function ReviewSection({ reviews: initialReviews, mediaId, mediaType, tot
             <div 
               key={review.id}
               style={{ viewTransitionName: `review-card-${review.id}` }} 
-              onClick={() => isLong && toggleExpand(review.id)}
+              onClick={(event) => isLong && toggleExpand(review.id, event.currentTarget)}
               className={`p-5 rounded-xl border bg-card text-card-foreground shadow-sm flex flex-col cursor-pointer transition-colors hover:border-muted-foreground/30 ${spanClasses} ${isLong ? 'select-none' : ''}`}
               role={isLong ? 'button' : undefined}
               tabIndex={isLong ? 0 : undefined}
@@ -248,7 +262,7 @@ export function ReviewSection({ reviews: initialReviews, mediaId, mediaType, tot
               onKeyDown={(event) => {
                 if (isLong && (event.key === 'Enter' || event.key === ' ')) {
                   event.preventDefault();
-                  toggleExpand(review.id);
+                  toggleExpand(review.id, event.currentTarget);
                 }
               }}
             >

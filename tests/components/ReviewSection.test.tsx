@@ -1,5 +1,5 @@
 import { fireEvent, render, screen } from '@testing-library/react';
-import { describe, expect, it } from 'vitest';
+import { describe, expect, it, vi } from 'vitest';
 import { ReviewSection } from '@/components/ReviewSection';
 import type { Review } from '@/lib/tmdb';
 
@@ -48,6 +48,20 @@ describe('ReviewSection', () => {
 
     expect(card).toHaveAttribute('aria-expanded', 'false');
     expect(markdown).toHaveClass('line-clamp-6');
+  });
+
+  it('keeps the review card top edge in place when it expands', () => {
+    renderReviewSection();
+    const card = screen.getByRole('button', { name: /A Reviewer/ });
+    const scrollBy = vi.spyOn(window, 'scrollBy').mockImplementation(() => {});
+    vi.spyOn(card, 'getBoundingClientRect').mockImplementation(
+      () => new DOMRect(0, card.getAttribute('aria-expanded') === 'true' ? 140 : 200, 0, 0),
+    );
+
+    fireEvent.click(card);
+
+    expect(scrollBy).toHaveBeenCalledWith(0, -60);
+    scrollBy.mockRestore();
   });
 
   it('does not toggle the review card when a review link is clicked', () => {
