@@ -104,6 +104,7 @@ Before making changes, an AI should first understand the existing implementation
 - Use Tailwind utility classes for layout and styling.
 - Prefer the existing shadcn/ui-inspired primitives in [src/components/ui](src/components/ui) rather than building ad-hoc components.
 - Keep the UI visually consistent with the current dark/light theme support.
+- Design every UI change and new feature for smartphone screens as well as larger screens. Use responsive layouts and breakpoints intentionally, keep controls comfortable to tap, and avoid narrow-screen overflow or cramped content.
 - When changing [src/components/MediaCard.tsx](src/components/MediaCard.tsx), preserve its uniform layout for people cards too, including the matching loading skeleton in [src/pages/PeopleListPage.tsx](src/pages/PeopleListPage.tsx).
 - Review cards are compact, card-click expandable, and should not show extra “Read more” text unless explicitly required by the design.
 
@@ -218,6 +219,7 @@ The AI should behave like a senior software engineer performing design review be
 - Preserve authentication and routing behavior.
 - Do not hardcode or expose API keys.
 - Prefer small, composable updates over large rewrites.
+- For every UI change or new feature, consider the smartphone experience from the start and verify narrow-screen behavior (including layout, navigation, touch targets, and horizontal overflow) alongside desktop behavior.
 - If the change touches structure, data fetching, or UI patterns, consult the relevant document in [.ai](.ai) first.
 - Verify the project still builds after meaningful changes.
 
