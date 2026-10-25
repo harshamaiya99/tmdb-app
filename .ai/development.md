@@ -57,6 +57,8 @@ The `.github/workflows/deploy.yml` workflow builds the app and deploys the `dist
 
 Vite is configured with the `/tmdb-app/` base path for this repository's project site. The app uses hash-based routing, so route URLs look like `/#/movie/123`; this avoids GitHub Pages returning 404 for client-side routes on direct visits or refreshes.
 
+The app includes a web app manifest and registers its service worker in production, allowing supported browsers to offer installation when served over HTTPS. The worker caches the app shell and same-origin assets for launch; TMDB API content still requires an internet connection.
+
 ## Environment Variables
 
 The app uses Vite-style environment variables for optional client-side behavior.

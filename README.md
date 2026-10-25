@@ -12,6 +12,7 @@ A clean, minimal web app for browsing movies, TV shows, and people with data fro
 - 🔍 Search movies, TV shows, and people
 - 🧭 Deep-dive detail pages for movies, TV shows, and people
 - 🌗 Light/dark theme toggle
+- 📲 Installable as a web app from supported browsers
 - ✨ Responsive, content-first UI with reusable cards, shared media sections, and skeleton states
 
 ## Tech Stack
@@ -72,6 +73,8 @@ There are no dedicated automated tests in the repository at the moment, so the b
 The repository includes a GitHub Actions workflow that builds and deploys the app to GitHub Pages when changes are pushed to `main`. In the repository settings, set **Pages → Build and deployment → Source** to **GitHub Actions**.
 
 The project is configured for the repository site at `https://harshamaiya99.github.io/tmdb-app/`. Client-side routes use hash URLs (for example, `/#/movie/123`) so that direct visits and browser refreshes work with GitHub Pages static hosting.
+
+The site can be installed as an app from supported browsers when served over HTTPS. The service worker caches the app shell and same-origin assets; TMDB content still requires an internet connection.
 
 ## Project Structure
 
