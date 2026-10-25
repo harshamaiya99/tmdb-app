@@ -2,6 +2,8 @@
 
 A clean, minimal web app for browsing movies, TV shows, and people with data from The Movie Database (TMDB). Built with React, TypeScript, Vite, Tailwind CSS, and shadcn/ui-style components.
 
+**Live site:** [TMDB Browser](https://harshamaiya99.github.io/tmdb-app/)
+
 ## Features
 
 - 🔐 User-entered TMDB API key authentication
