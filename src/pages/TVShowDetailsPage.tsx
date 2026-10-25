@@ -799,7 +799,7 @@ export function TVShowDetailsPage() {
                         Videos
                         <span className="text-sm font-normal text-muted-foreground">{episodeDetails.videos.results.length}</span>
                       </h3>
-                      <div className="grid gap-4 sm:grid-cols-2">
+                      <div className="flex gap-3 overflow-x-auto pb-2">
                         {episodeDetails.videos.results.map((video) => {
                           const videoUrl = video.site === 'YouTube'
                             ? `https://www.youtube.com/watch?v=${encodeURIComponent(video.key)}`
@@ -846,12 +846,12 @@ export function TVShowDetailsPage() {
                               href={videoUrl}
                               target="_blank"
                               rel="noopener noreferrer"
-                              className="group overflow-hidden rounded-xl border bg-card text-card-foreground shadow-sm transition-all hover:-translate-y-0.5 hover:border-primary/50 hover:shadow-md focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+                              className="group w-48 shrink-0 overflow-hidden rounded-xl border bg-card text-card-foreground shadow-sm transition-all hover:-translate-y-0.5 hover:border-primary/50 hover:shadow-md focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring sm:w-56"
                             >
                               {videoCard}
                             </a>
                           ) : (
-                            <div key={video.id} className="group overflow-hidden rounded-xl border bg-card text-card-foreground shadow-sm">
+                            <div key={video.id} className="group w-48 shrink-0 overflow-hidden rounded-xl border bg-card text-card-foreground shadow-sm sm:w-56">
                               {videoCard}
                             </div>
                           );
