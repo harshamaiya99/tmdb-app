@@ -61,7 +61,10 @@ export function ReviewSection({ reviews: initialReviews, mediaId, mediaType, tot
     : reviews;
 
   const toggleExpand = (id: string) => {
-    if (document.startViewTransition) {
+    const isDesktop = typeof window.matchMedia === 'function'
+      && window.matchMedia('(min-width: 768px)').matches;
+
+    if (isDesktop && document.startViewTransition) {
       document.startViewTransition(() => {
         flushSync(() => {
           setExpandedReviewId((prev) => (prev === id ? null : id));
