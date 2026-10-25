@@ -123,7 +123,7 @@ A reusable section wrapper in [src/components/MediaSection.tsx](src/components/M
 
 TV show details distinguish the series overview from the selected season overview and individual episode overviews. The selected season summary is shown with its episode list.
 
-Episode cards open an in-app details dialog with a compact still, rating and vote count, air date, runtime, production code, overview, crew, guest stars, videos, and episode images when TMDB provides them. Playback is a separate action in that dialog and uses the configured TV embed URL template.
+Episode cards open an in-app details dialog with a compact still, rating and vote count, air date, runtime, production code, overview, crew and guest stars in separate two-column sections, videos, and episode images when TMDB provides them. The watch action stays visible in a pinned dialog footer and uses the configured TV embed URL template.
 
 ### Review cards
 

@@ -592,7 +592,7 @@ export function TVShowDetailsPage() {
             role="dialog"
             aria-modal="true"
             aria-labelledby="episode-dialog-title"
-            className="relative max-h-[90vh] w-full max-w-3xl overflow-y-auto rounded-2xl border bg-card text-card-foreground shadow-2xl"
+            className="relative flex max-h-[90vh] w-full max-w-3xl flex-col overflow-hidden rounded-2xl border bg-card text-card-foreground shadow-2xl"
             onKeyDown={(event) => {
               if (event.key !== 'Tab') return;
 
@@ -676,7 +676,7 @@ export function TVShowDetailsPage() {
               </Button>
             </div>
 
-            <div className="space-y-6 p-4 sm:p-6">
+            <div className="min-h-0 flex-1 space-y-6 overflow-y-auto p-4 sm:p-6">
               <div>
                 <h3 className="mb-2 text-sm font-semibold uppercase tracking-wide text-muted-foreground">Overview</h3>
                 <p className="text-sm leading-relaxed sm:text-base">
@@ -695,56 +695,63 @@ export function TVShowDetailsPage() {
 
               {episodeDetails && (
                 <>
-                  <div className="grid gap-6 border-t pt-5 sm:grid-cols-2">
-                    <section aria-labelledby="episode-crew-title">
-                      <h3 id="episode-crew-title" className="mb-3 flex items-center gap-2 font-semibold">
-                        <Users className="h-4 w-4 text-muted-foreground" />
-                        Crew
-                        <span className="text-sm font-normal text-muted-foreground">{episodeDetails.crew.length}</span>
-                      </h3>
-                      {episodeDetails.crew.length ? (
-                        <div className="space-y-2">
-                          {episodeDetails.crew.map((member) => (
-                            <div key={`${member.id}:${member.job}`} className="flex justify-between gap-3 text-sm">
-                              <span className="font-medium">{member.name}</span>
-                              <span className="text-right text-muted-foreground">{member.job}</span>
+                  <section aria-labelledby="episode-crew-title" className="border-t pt-5">
+                    <h3 id="episode-crew-title" className="mb-3 flex items-center gap-2 font-semibold">
+                      <Users className="h-4 w-4 text-muted-foreground" />
+                      Crew
+                      <span className="text-sm font-normal text-muted-foreground">{episodeDetails.crew.length}</span>
+                    </h3>
+                    {episodeDetails.crew.length ? (
+                      <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
+                        {episodeDetails.crew.map((member) => (
+                          <div key={`${member.id}:${member.job}`} className="flex min-w-0 items-center gap-3 rounded-lg border p-2">
+                            <div className="h-12 w-12 shrink-0 overflow-hidden rounded-md bg-muted">
+                              {member.profile_path ? (
+                                <TMDBImage path={member.profile_path} alt="" width={96} height={144} sizes="48px" className="h-full w-full object-cover" />
+                              ) : (
+                                <div className="flex h-full items-center justify-center text-xs text-muted-foreground">N/A</div>
+                              )}
                             </div>
-                          ))}
-                        </div>
-                      ) : (
-                        <p className="text-sm text-muted-foreground">No crew details available.</p>
-                      )}
-                    </section>
+                            <div className="min-w-0">
+                              <p className="truncate text-sm font-medium">{member.name}</p>
+                              <p className="truncate text-xs text-muted-foreground">{member.job}</p>
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+                    ) : (
+                      <p className="text-sm text-muted-foreground">No crew details available.</p>
+                    )}
+                  </section>
 
-                    <section aria-labelledby="episode-guests-title">
-                      <h3 id="episode-guests-title" className="mb-3 flex items-center gap-2 font-semibold">
-                        <Users className="h-4 w-4 text-muted-foreground" />
-                        Guest stars
-                        <span className="text-sm font-normal text-muted-foreground">{episodeDetails.guest_stars.length}</span>
-                      </h3>
-                      {episodeDetails.guest_stars.length ? (
-                        <div className="grid gap-3">
-                          {episodeDetails.guest_stars.map((guest) => (
-                            <div key={guest.id} className="flex min-w-0 items-center gap-3">
-                              <div className="h-12 w-12 shrink-0 overflow-hidden rounded-md bg-muted">
-                                {guest.profile_path ? (
-                                  <TMDBImage path={guest.profile_path} alt="" width={96} height={144} sizes="48px" className="h-full w-full object-cover" />
-                                ) : (
-                                  <div className="flex h-full items-center justify-center text-xs text-muted-foreground">N/A</div>
-                                )}
-                              </div>
-                              <div className="min-w-0">
-                                <p className="truncate text-sm font-medium">{guest.name}</p>
-                                <p className="truncate text-xs text-muted-foreground">{guest.character}</p>
-                              </div>
+                  <section aria-labelledby="episode-guests-title" className="border-t pt-5">
+                    <h3 id="episode-guests-title" className="mb-3 flex items-center gap-2 font-semibold">
+                      <Users className="h-4 w-4 text-muted-foreground" />
+                      Guest stars
+                      <span className="text-sm font-normal text-muted-foreground">{episodeDetails.guest_stars.length}</span>
+                    </h3>
+                    {episodeDetails.guest_stars.length ? (
+                      <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
+                        {episodeDetails.guest_stars.map((guest) => (
+                          <div key={guest.id} className="flex min-w-0 items-center gap-3 rounded-lg border p-2">
+                            <div className="h-12 w-12 shrink-0 overflow-hidden rounded-md bg-muted">
+                              {guest.profile_path ? (
+                                <TMDBImage path={guest.profile_path} alt="" width={96} height={144} sizes="48px" className="h-full w-full object-cover" />
+                              ) : (
+                                <div className="flex h-full items-center justify-center text-xs text-muted-foreground">N/A</div>
+                              )}
                             </div>
-                          ))}
-                        </div>
-                      ) : (
-                        <p className="text-sm text-muted-foreground">No guest-star credits available.</p>
-                      )}
-                    </section>
-                  </div>
+                            <div className="min-w-0">
+                              <p className="truncate text-sm font-medium">{guest.name}</p>
+                              <p className="truncate text-xs text-muted-foreground">{guest.character}</p>
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+                    ) : (
+                      <p className="text-sm text-muted-foreground">No guest-star credits available.</p>
+                    )}
+                  </section>
 
                   {episodeDetails.images?.stills && episodeDetails.images.stills.length > 0 && (
                     <section aria-labelledby="episode-images-title" className="border-t pt-5">
@@ -821,31 +828,31 @@ export function TVShowDetailsPage() {
                 </>
               )}
 
-              <div className="flex flex-col gap-3 border-t pt-5 sm:flex-row sm:items-center">
-                <Button
-                  asChild={selectedEpisode.streamUrl !== '#'}
-                  size="lg"
-                  className="gap-2"
-                  disabled={selectedEpisode.streamUrl === '#'}
-                >
-                  {selectedEpisode.streamUrl !== '#' ? (
-                    <a href={selectedEpisode.streamUrl} target="_blank" rel="noopener noreferrer">
-                      <PlayCircle className="h-5 w-5" />
-                      Watch episode
-                    </a>
-                  ) : (
-                    <>
-                      <PlayCircle className="h-5 w-5" />
-                      Watch episode
-                    </>
-                  )}
-                </Button>
-                {selectedEpisode.streamUrl === '#' && (
-                  <p className="text-sm text-muted-foreground">
-                    Add a TV URL template in embed settings to enable playback.
-                  </p>
+            </div>
+            <div className="flex shrink-0 flex-col gap-3 border-t bg-card/95 p-4 backdrop-blur sm:flex-row sm:items-center sm:px-6">
+              <Button
+                asChild={selectedEpisode.streamUrl !== '#'}
+                size="lg"
+                className="gap-2"
+                disabled={selectedEpisode.streamUrl === '#'}
+              >
+                {selectedEpisode.streamUrl !== '#' ? (
+                  <a href={selectedEpisode.streamUrl} target="_blank" rel="noopener noreferrer">
+                    <PlayCircle className="h-5 w-5" />
+                    Watch episode
+                  </a>
+                ) : (
+                  <>
+                    <PlayCircle className="h-5 w-5" />
+                    Watch episode
+                  </>
                 )}
-              </div>
+              </Button>
+              {selectedEpisode.streamUrl === '#' && (
+                <p className="text-sm text-muted-foreground">
+                  Add a TV URL template in embed settings to enable playback.
+                </p>
+              )}
             </div>
           </section>
         </div>
