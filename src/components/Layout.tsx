@@ -11,6 +11,7 @@ import { TMDBImage } from '@/components/TMDBImage';
 import { useCachedQuery } from '@/hooks/useCachedQuery';
 import { useDebouncedValue } from '@/hooks/useDebouncedValue';
 import { useEmbedSettings } from '@/contexts/EmbedSettingsContext';
+import { useToast } from '@/components/ui/use-toast';
 
 interface LayoutProps {
   children: ReactNode;
@@ -98,6 +99,7 @@ export function Layout({ children }: LayoutProps) {
   const [searchQuery, setSearchQuery] = useState('');
   const [suggestionsOpen, setSuggestionsOpen] = useState(false);
   const { title } = useTitle();
+  const { toast } = useToast();
   const { movieUrlTemplate, tvUrlTemplate, saveSettings, resetSettings } = useEmbedSettings();
   const location = useLocation();
   const [settingsOpen, setSettingsOpen] = useState(false);
@@ -194,6 +196,10 @@ export function Layout({ children }: LayoutProps) {
         tvUrlTemplate: tvTemplateInput,
       });
       setSettingsOpen(false);
+      toast({
+        title: 'Settings saved',
+        description: 'Your embed URL settings have been saved in this browser.',
+      });
     } catch {
       setSettingsError('Could not save settings in this browser. Check that site storage is available and try again.');
     }
@@ -206,6 +212,10 @@ export function Layout({ children }: LayoutProps) {
       setMovieTemplateInput(import.meta.env.VITE_MOVIE_EMBED_URL ?? '');
       setTvTemplateInput(import.meta.env.VITE_TV_EMBED_URL ?? '');
       setSettingsOpen(false);
+      toast({
+        title: 'Settings reset',
+        description: 'Embed URL settings are now using the build-time defaults.',
+      });
     } catch {
       setSettingsError('Could not clear saved settings in this browser. Check that site storage is available and try again.');
     }
