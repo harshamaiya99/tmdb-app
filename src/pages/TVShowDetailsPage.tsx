@@ -1,7 +1,7 @@
 // src/pages/TVShowDetailsPage.tsx
 import { useEffect, useRef, useState } from 'react';
 import { useParams, useNavigate, Link, useSearchParams } from 'react-router-dom';
-import { Calendar, Clock, Star, PlayCircle } from 'lucide-react';
+import { Calendar, Clock, Star, PlayCircle, X } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Skeleton } from '@/components/ui/skeleton';
@@ -22,10 +22,11 @@ interface EpisodeCardProps {
   tvShowName: string;
   selectedSeason: number;
   streamUrl: string;
+  onSelectEpisode: (episode: Episode, streamUrl: string) => void;
 }
 
-function EpisodeCard({ episode, tvShowName, selectedSeason, streamUrl }: EpisodeCardProps) {
-  const expandEpisodeCard = (card: HTMLAnchorElement) => {
+function EpisodeCard({ episode, tvShowName, selectedSeason, streamUrl, onSelectEpisode }: EpisodeCardProps) {
+  const expandEpisodeCard = (card: HTMLButtonElement) => {
     const row = card.parentElement?.parentElement;
     if (!row || !row.classList.contains('episode-row')) return;
 
@@ -43,7 +44,7 @@ function EpisodeCard({ episode, tvShowName, selectedSeason, streamUrl }: Episode
     card.classList.add('episode-card-expanded');
   };
 
-  const collapseEpisodeCard = (card: HTMLAnchorElement) => {
+  const collapseEpisodeCard = (card: HTMLButtonElement) => {
     card.classList.remove('episode-card-expanded');
     const row = card.parentElement?.parentElement;
     if (row?.classList.contains('episode-row')) {
@@ -54,16 +55,17 @@ function EpisodeCard({ episode, tvShowName, selectedSeason, streamUrl }: Episode
 
   return (
     <div className="relative min-w-0 min-h-64">
-      <a
-        href={streamUrl}
-        target="_blank"
-        rel="noopener noreferrer"
+      <button
+        type="button"
         onMouseEnter={(event) => expandEpisodeCard(event.currentTarget)}
         onFocus={(event) => expandEpisodeCard(event.currentTarget)}
         onMouseLeave={(event) => collapseEpisodeCard(event.currentTarget)}
         onBlur={(event) => collapseEpisodeCard(event.currentTarget)}
-        onClick={(event) => collapseEpisodeCard(event.currentTarget)}
-        className="relative flex flex-col rounded-xl border bg-card text-card-foreground shadow-sm overflow-hidden group hover:ring-2 hover:ring-primary transition-[width,height,box-shadow] duration-300 ease-out cursor-pointer h-full"
+        onClick={(event) => {
+          collapseEpisodeCard(event.currentTarget);
+          onSelectEpisode(episode, streamUrl);
+        }}
+        className="relative flex h-full w-full cursor-pointer appearance-none flex-col overflow-hidden rounded-xl border bg-card text-left text-card-foreground shadow-sm transition-[width,height,box-shadow] duration-300 ease-out group hover:ring-2 hover:ring-primary"
       >
         <div className="episode-card-media relative overflow-hidden shrink-0 transition-[width,height] duration-300 ease-out">
           {episode.still_path ? (
@@ -107,7 +109,7 @@ function EpisodeCard({ episode, tvShowName, selectedSeason, streamUrl }: Episode
             {episode.overview || 'No overview available for this episode.'}
           </p>
         </div>
-      </a>
+      </button>
     </div>
   );
 }
@@ -118,7 +120,9 @@ export function TVShowDetailsPage() {
   const [searchParams, setSearchParams] = useSearchParams();
   const selectedSeason = parseInt(searchParams.get('season') || '0', 10);
   const [activeCredits, setActiveCredits] = useState<'cast' | 'crew'>('cast');
+  const [selectedEpisode, setSelectedEpisode] = useState<{ episode: Episode; streamUrl: string } | null>(null);
   const episodeGridRef = useRef<HTMLDivElement>(null);
+  const episodeDialogCloseRef = useRef<HTMLButtonElement>(null);
 
   const navigate = useNavigate();
   const tvShowQuery = useCachedQuery<TVShow>(
@@ -151,6 +155,26 @@ export function TVShowDetailsPage() {
   useEffect(() => {
     setActiveCredits('cast');
   }, [selectedSeason]);
+
+  useEffect(() => {
+    if (!selectedEpisode) return;
+
+    const previousActiveElement = document.activeElement;
+    const previousBodyOverflow = document.body.style.overflow;
+    document.body.style.overflow = 'hidden';
+    episodeDialogCloseRef.current?.focus();
+
+    const handleKeyDown = (event: KeyboardEvent) => {
+      if (event.key === 'Escape') setSelectedEpisode(null);
+    };
+
+    window.addEventListener('keydown', handleKeyDown);
+    return () => {
+      window.removeEventListener('keydown', handleKeyDown);
+      document.body.style.overflow = previousBodyOverflow;
+      if (previousActiveElement instanceof HTMLElement) previousActiveElement.focus();
+    };
+  }, [selectedEpisode]);
 
   useEffect(() => {
     const clearExpandedEpisodeCards = () => {
@@ -459,6 +483,7 @@ export function TVShowDetailsPage() {
                         tvShowName={tvShow.name}
                         selectedSeason={selectedSeason}
                         streamUrl={streamUrl}
+                        onSelectEpisode={(selected, url) => setSelectedEpisode({ episode: selected, streamUrl: url })}
                       />
                     );
                   })}
@@ -501,6 +526,7 @@ export function TVShowDetailsPage() {
                           tvShowName={tvShow.name}
                           selectedSeason={selectedSeason}
                           streamUrl={streamUrl}
+                          onSelectEpisode={(selected, url) => setSelectedEpisode({ episode: selected, streamUrl: url })}
                         />
                       );
                       })}
@@ -542,6 +568,128 @@ export function TVShowDetailsPage() {
           </LazySection>
         )}
       </div>
+      {selectedEpisode && (
+        <div
+          className="fixed inset-0 z-[100] flex items-center justify-center bg-black/70 p-4 backdrop-blur-sm"
+          onMouseDown={(event) => {
+            if (event.target === event.currentTarget) setSelectedEpisode(null);
+          }}
+        >
+          <section
+            role="dialog"
+            aria-modal="true"
+            aria-labelledby="episode-dialog-title"
+            className="relative max-h-[90vh] w-full max-w-3xl overflow-y-auto rounded-2xl border bg-card text-card-foreground shadow-2xl"
+            onKeyDown={(event) => {
+              if (event.key !== 'Tab') return;
+
+              const focusableElements = event.currentTarget.querySelectorAll<HTMLElement>(
+                'a[href], button:not([disabled]), [tabindex]:not([tabindex="-1"])',
+              );
+              const firstElement = focusableElements[0];
+              const lastElement = focusableElements[focusableElements.length - 1];
+
+              if (event.shiftKey && document.activeElement === firstElement) {
+                event.preventDefault();
+                lastElement?.focus();
+              } else if (!event.shiftKey && document.activeElement === lastElement) {
+                event.preventDefault();
+                firstElement?.focus();
+              }
+            }}
+          >
+            <div className="relative aspect-video overflow-hidden bg-muted">
+              {selectedEpisode.episode.still_path ? (
+                <TMDBImage
+                  path={selectedEpisode.episode.still_path}
+                  alt={`${selectedEpisode.episode.name} episode still`}
+                  width={1280}
+                  height={720}
+                  sizes="(min-width: 768px) 768px, 100vw"
+                  loading="eager"
+                  className="h-full w-full object-cover"
+                />
+              ) : (
+                <div className="flex h-full items-center justify-center text-sm text-muted-foreground">
+                  Episode still unavailable
+                </div>
+              )}
+              <Button
+                ref={episodeDialogCloseRef}
+                type="button"
+                variant="secondary"
+                size="icon"
+                aria-label="Close episode details"
+                onClick={() => setSelectedEpisode(null)}
+                className="absolute right-3 top-3 rounded-full bg-background/90 shadow-md backdrop-blur hover:bg-background"
+              >
+                <X className="h-4 w-4" />
+              </Button>
+            </div>
+
+            <div className="space-y-5 p-5 sm:p-7">
+              <div className="space-y-2">
+                <p className="text-sm font-medium text-muted-foreground">
+                  {tvShow.name} · Season {selectedEpisode.episode.season_number}, Episode {selectedEpisode.episode.episode_number}
+                </p>
+                <h2 id="episode-dialog-title" className="text-2xl font-bold tracking-tight sm:text-3xl">
+                  {selectedEpisode.episode.name}
+                </h2>
+                <div className="flex flex-wrap items-center gap-x-4 gap-y-2 text-sm text-muted-foreground">
+                  {selectedEpisode.episode.vote_average !== undefined && (
+                    <span className="inline-flex items-center gap-1 font-medium text-amber-500">
+                      <Star className="h-4 w-4 fill-current" />
+                      {selectedEpisode.episode.vote_average > 0
+                        ? selectedEpisode.episode.vote_average.toFixed(1)
+                        : 'Not rated'}
+                    </span>
+                  )}
+                  {selectedEpisode.episode.air_date && (
+                    <span className="inline-flex items-center gap-1">
+                      <Calendar className="h-4 w-4" />
+                      {formatDate(selectedEpisode.episode.air_date)}
+                    </span>
+                  )}
+                  {selectedEpisode.episode.runtime && (
+                    <span className="inline-flex items-center gap-1">
+                      <Clock className="h-4 w-4" />
+                      {selectedEpisode.episode.runtime} min
+                    </span>
+                  )}
+                </div>
+              </div>
+
+              <div className="border-t pt-4">
+                <h3 className="mb-2 text-sm font-semibold uppercase tracking-wide text-muted-foreground">Episode overview</h3>
+                <p className="leading-relaxed">
+                  {selectedEpisode.episode.overview || 'No overview available for this episode.'}
+                </p>
+              </div>
+
+              <div className="flex flex-col gap-3 border-t pt-4 sm:flex-row sm:items-center">
+                {selectedEpisode.streamUrl !== '#' ? (
+                  <Button asChild size="lg" className="gap-2">
+                    <a href={selectedEpisode.streamUrl} target="_blank" rel="noopener noreferrer">
+                      <PlayCircle className="h-5 w-5" />
+                      Watch episode
+                    </a>
+                  </Button>
+                ) : (
+                  <Button type="button" size="lg" disabled className="gap-2">
+                    <PlayCircle className="h-5 w-5" />
+                    Watch episode
+                  </Button>
+                )}
+                {selectedEpisode.streamUrl === '#' && (
+                  <p className="text-sm text-muted-foreground">
+                    Add a TV URL template in embed settings to enable playback.
+                  </p>
+                )}
+              </div>
+            </div>
+          </section>
+        </div>
+      )}
     </div>
   );
 }

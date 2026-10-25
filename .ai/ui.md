@@ -123,6 +123,8 @@ A reusable section wrapper in [src/components/MediaSection.tsx](src/components/M
 
 TV show details distinguish the series overview from the selected season overview and individual episode overviews. The selected season summary is shown with its episode list.
 
+Episode cards open an in-app details dialog with the episode still, rating, air date, runtime, and overview. Playback is a separate action in that dialog and uses the configured TV embed URL template.
+
 ### Review cards
 
 Review cards live in [src/components/ReviewSection.tsx](src/components/ReviewSection.tsx) and use a compact, content-first layout.
