@@ -74,33 +74,75 @@ The project is configured for the repository site at `https://harshamaiya99.gith
 ## Project Structure
 
 ```text
-src/
-├── App.tsx
-├── components/
-│   ├── ui/                  # shared UI primitives
-│   ├── Layout.tsx
-│   ├── MediaCard.tsx
-│   ├── MediaSection.tsx     # reusable media-section composition
-│   ├── ReviewSection.tsx
-│   ├── ThemeToggle.tsx
-│   └── ...
-├── contexts/
-│   └── TitleContext.tsx
-├── hooks/
-│   ├── usePageTitle.ts      # shared page-title synchronization
-│   └── useTheme.ts
-├── lib/
-│   ├── tmdb.ts              # centralized TMDB API integration
-│   └── utils.ts
-├── pages/
-│   ├── HomePage.tsx
-│   ├── LoginPage.tsx
-│   ├── MovieDetailsPage.tsx
-│   ├── TVShowDetailsPage.tsx
-│   ├── PersonDetailsPage.tsx
-│   ├── MediaListPage.tsx
-│   └── PeopleListPage.tsx
-└── index.css
+.
+├── .ai/
+│   ├── api.md                          # TMDB integration, authentication, and API behavior
+│   ├── architecture.md                # Application structure, routing, and data flow
+│   ├── development.md                 # Local development and GitHub Pages workflow
+│   └── ui.md                           # UI conventions, design tokens, and component patterns
+├── .github/
+│   └── workflows/
+│       └── deploy.yml                 # Builds and deploys the site to GitHub Pages
+├── src/
+│   ├── App.tsx                        # Routes, providers, and protected-page access
+│   ├── main.tsx                       # React application entry point
+│   ├── index.css                      # Global styles, Tailwind layers, and theme variables
+│   ├── vite-env.d.ts                  # TypeScript declarations for Vite environment variables
+│   ├── components/
+│   │   ├── CreditsCarousel.tsx        # Cast and crew carousel
+│   │   ├── EpisodesRatingOverview.tsx # Episode rating visualization
+│   │   ├── Layout.tsx                 # App header, navigation, search, and embed settings
+│   │   ├── LazySection.tsx            # Defers section rendering until near the viewport
+│   │   ├── MediaCard.tsx              # Reusable movie, TV, and person card
+│   │   ├── MediaGridSkeleton.tsx      # Loading placeholders for media grids
+│   │   ├── MediaSection.tsx           # Shared heading and grid/carousel composition
+│   │   ├── ReviewSection.tsx          # Review cards with Markdown rendering
+│   │   ├── ThemeToggle.tsx            # Light/dark theme control
+│   │   ├── TMDBImage.tsx              # Responsive TMDB image rendering and fallback
+│   │   └── ui/
+│   │       ├── alert.tsx              # Alert primitive
+│   │       ├── badge.tsx              # Badge primitive
+│   │       ├── button.tsx             # Button primitive and variants
+│   │       ├── card.tsx               # Card layout primitives
+│   │       ├── input.tsx              # Styled input primitive
+│   │       ├── skeleton.tsx           # Loading skeleton primitive
+│   │       ├── toast.tsx              # Toast primitives
+│   │       ├── toaster.tsx            # Renders queued toast notifications
+│   │       └── use-toast.ts           # Toast state and notification helper
+│   ├── contexts/
+│   │   ├── EmbedSettingsContext.tsx   # Browser-local embed URL overrides and env defaults
+│   │   └── TitleContext.tsx           # Shares the current page title with the layout
+│   ├── hooks/
+│   │   ├── useCachedQuery.ts          # Fetches and tracks cached async queries
+│   │   ├── useDebouncedValue.ts       # Debounces values such as search text
+│   │   ├── useLazyLoad.ts             # Starts work when a target nears the viewport
+│   │   ├── usePageTitle.ts            # Synchronizes page title with title context
+│   │   ├── usePagination.ts           # Shared pagination state and behavior
+│   │   └── useTheme.ts                # Reads and updates the selected theme
+│   ├── lib/
+│   │   ├── requestCache.ts            # In-memory request cache and deduplication
+│   │   ├── tmdb.ts                    # TMDB API client, requests, and domain types
+│   │   ├── utils.ts                   # Shared styling, date, and embed URL helpers
+│   │   └── wikimedia.ts               # Wikimedia image lookup helpers
+│   └── pages/
+│       ├── HomePage.tsx               # Home browsing and search results
+│       ├── LoginPage.tsx              # TMDB API key entry and validation
+│       ├── MediaListPage.tsx          # Filtered and paginated movie/TV lists
+│       ├── MovieDetailsPage.tsx       # Movie details, credits, reviews, and watch link
+│       ├── PeopleListPage.tsx         # Paginated people listing
+│       ├── PersonDetailsPage.tsx      # Person biography and filmography
+│       └── TVShowDetailsPage.tsx      # TV details, seasons, episodes, and watch links
+├── .gitignore                         # Excludes dependencies, builds, local env, and editor files
+├── .env                                # Local-only Vite settings; ignored by Git and should not be committed
+├── AGENTS.md                          # Repository guidance for contributors and coding agents
+├── index.html                         # Vite HTML document and React mount element
+├── package.json                       # Project scripts and dependency manifest
+├── package-lock.json                  # Locked npm dependency versions
+├── postcss.config.js                  # PostCSS plugin configuration
+├── tailwind.config.js                 # Tailwind theme and content configuration
+├── tsconfig.json                      # TypeScript settings for the application
+├── tsconfig.node.json                 # TypeScript settings for Vite configuration
+└── vite.config.ts                     # Vite plugins, source alias, and GitHub Pages base path
 ```
 
 ## Documentation
