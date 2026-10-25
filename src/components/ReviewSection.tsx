@@ -93,6 +93,25 @@ export function ReviewSection({ reviews: initialReviews, mediaId, mediaType, tot
     }
   };
 
+  const toggleShortReview = (id: string) => {
+    if (expandedReviewId) {
+      const expandedCard = document.getElementById(`review-card-${expandedReviewId}`);
+      const isDesktop = typeof window.matchMedia === 'function'
+        && window.matchMedia('(min-width: 768px)').matches;
+
+      if (expandedCard instanceof HTMLDivElement && !isDesktop) {
+        mobileReviewAnchor.current = {
+          element: expandedCard,
+          top: expandedCard.getBoundingClientRect().top,
+        };
+      }
+
+      setExpandedReviewId(null);
+    }
+
+    setSelectedReviewId((previous) => (previous === id ? null : id));
+  };
+
   const toggleFilter = (star: number) => {
     // Prevent filtering if there are no reviews for that star rating
     if (distribution[star] === 0) return;
@@ -260,12 +279,13 @@ export function ReviewSection({ reviews: initialReviews, mediaId, mediaType, tot
           return (
             <div 
               key={review.id}
+              id={`review-card-${review.id}`}
               style={{ viewTransitionName: `review-card-${review.id}` }} 
               onClick={(event) => {
                 if (isLong) {
                   toggleExpand(review.id, event.currentTarget);
                 } else {
-                  setSelectedReviewId((previous) => (previous === review.id ? null : review.id));
+                  toggleShortReview(review.id);
                 }
               }}
               className={`p-5 rounded-xl border ${isHighlighted ? 'border-primary/40 bg-primary/5' : 'bg-card'} text-card-foreground shadow-sm flex flex-col cursor-pointer transition-colors hover:border-muted-foreground/30 ${spanClasses} ${isLong ? 'select-none' : ''}`}
@@ -280,7 +300,7 @@ export function ReviewSection({ reviews: initialReviews, mediaId, mediaType, tot
                   if (isLong) {
                     toggleExpand(review.id, event.currentTarget);
                   } else {
-                    setSelectedReviewId((previous) => (previous === review.id ? null : review.id));
+                    toggleShortReview(review.id);
                   }
                 }
               }}

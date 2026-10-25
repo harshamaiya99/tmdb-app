@@ -101,4 +101,27 @@ describe('ReviewSection', () => {
     expect(card).toHaveClass('bg-card');
     expect(card).not.toHaveClass('bg-primary/5', 'border-primary/40');
   });
+
+  it('collapses an expanded review when selecting a short review', () => {
+    const shortReview: Review = {
+      ...longReview,
+      id: 'review-2',
+      author: 'Short Reviewer',
+      content: 'A short review.',
+    };
+    renderReviewSection([longReview, shortReview]);
+
+    const longCard = screen.getByRole('button', { name: /A Reviewer/ });
+    const shortCard = screen.getByRole('button', { name: /Short Reviewer/ });
+
+    fireEvent.click(longCard);
+    expect(longCard).toHaveAttribute('aria-expanded', 'true');
+
+    fireEvent.click(shortCard);
+
+    expect(longCard).toHaveAttribute('aria-expanded', 'false');
+    expect(longCard).not.toHaveClass('bg-primary/5', 'border-primary/40');
+    expect(shortCard).toHaveAttribute('aria-pressed', 'true');
+    expect(shortCard).toHaveClass('bg-primary/5', 'border-primary/40');
+  });
 });
