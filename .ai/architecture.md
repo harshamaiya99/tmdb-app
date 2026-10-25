@@ -34,7 +34,7 @@ This means the app is fully client-driven and does not rely on a backend server.
 
 ### Environment and runtime config
 
-The app uses Vite environment variables for optional client-side integrations. One example is VITE_MOVIE_EMBED_URL, which powers the watch-link behavior on the movie details page. New environment variables should remain client-safe and should not be used for secrets.
+The app uses Vite environment variables for optional client-side integrations. `VITE_MOVIE_EMBED_URL` and `VITE_TV_EMBED_URL` provide default watch-link templates. Authenticated users can override these defaults with settings stored in the current browser. New environment variables should remain client-safe and should not be used for secrets.
 
 ## 3. Routing Model
 
@@ -140,6 +140,8 @@ Most page components use React `useState` and `useEffect` to manage:
 The app uses [src/contexts/TitleContext.tsx](src/contexts/TitleContext.tsx) to keep the page title synchronized across the layout and current route.
 
 That title state is now wrapped by a small hook abstraction in [src/hooks/usePageTitle.ts](src/hooks/usePageTitle.ts), which keeps page-level code simpler and more consistent.
+
+The embed URL templates are shared through [src/contexts/EmbedSettingsContext.tsx](src/contexts/EmbedSettingsContext.tsx). Browser-local values override the optional Vite build-time defaults and are editable from the authenticated app header.
 
 ## 7. Data Flow
 

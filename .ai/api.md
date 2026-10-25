@@ -8,7 +8,7 @@ This means the project is fully client-side and does not rely on a separate back
 
 ## Environment and runtime config
 
-The default TMDB credential is provided by the user and stored in local storage. The app does not rely on a server-side secret or a separate auth service. The current Vite environment variable used in the UI is VITE_MOVIE_EMBED_URL, which builds the watch-link destination for movie detail pages.
+The default TMDB credential is provided by the user and stored in local storage. The app does not rely on a server-side secret or a separate auth service. Optional `VITE_MOVIE_EMBED_URL` and `VITE_TV_EMBED_URL` variables provide build-time defaults for movie and TV watch-link templates. Browser-local settings can override those defaults and are stored separately in local storage.
 
 The service also supports an optional `VITE_TMDB_ACCESS_TOKEN` bearer token for TMDB v4 authentication. Vite client variables are bundled into the browser application, so this is suitable only for a personal hobby deployment; a server-side proxy is required to keep credentials private.
 
@@ -163,6 +163,7 @@ The current implementation also includes richer types for creator metadata, prod
 - The API layer is intentionally centralized to avoid spreading fetch logic across pages.
 - Authentication is simple and user-driven rather than server-backed.
 - The app depends on the browser environment and local storage for persistence.
+- Embed URL templates use browser-local overrides first, then Vite build-time defaults.
 - The current design favors simplicity over advanced caching or offline support.
 
 ## Summary

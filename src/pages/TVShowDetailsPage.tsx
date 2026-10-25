@@ -15,6 +15,7 @@ import { ReviewSection } from '../components/ReviewSection';
 import { EpisodesRatingOverview } from '../components/EpisodesRatingOverview';
 import { LazySection } from '@/components/LazySection';
 import { TMDBImage } from '@/components/TMDBImage';
+import { useEmbedSettings } from '@/contexts/EmbedSettingsContext';
 
 interface EpisodeCardProps {
   episode: Episode;
@@ -112,6 +113,7 @@ function EpisodeCard({ episode, tvShowName, selectedSeason, streamUrl }: Episode
 }
 
 export function TVShowDetailsPage() {
+  const { tvUrlTemplate } = useEmbedSettings();
   const { id } = useParams<{ id: string }>();
   const [searchParams, setSearchParams] = useSearchParams();
   const selectedSeason = parseInt(searchParams.get('season') || '0', 10);
@@ -436,7 +438,7 @@ export function TVShowDetailsPage() {
                   ))
                 ) : episodes.slice(0, 3).map((episode) => {
                   const imdbId = tvShow.external_ids?.imdb_id || '';
-                  const streamUrl = buildEmbedUrl(import.meta.env.VITE_TV_EMBED_URL, tvShow.id, imdbId)
+                  const streamUrl = buildEmbedUrl(tvUrlTemplate, tvShow.id, imdbId)
                     .replace('{SEASON}', selectedSeason.toString())
                     .replace('{EPISODE}', episode.episode_number.toString());
 
@@ -477,7 +479,7 @@ export function TVShowDetailsPage() {
                     <div key={rowIndex} className="episode-row grid grid-cols-1 gap-6 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5">
                       {episodes.slice(rowIndex * 5 + 3, rowIndex * 5 + 8).map((episode) => {
                       const imdbId = tvShow.external_ids?.imdb_id || '';
-                      const streamUrl = buildEmbedUrl(import.meta.env.VITE_TV_EMBED_URL, tvShow.id, imdbId)
+                      const streamUrl = buildEmbedUrl(tvUrlTemplate, tvShow.id, imdbId)
                         .replace('{SEASON}', selectedSeason.toString())
                         .replace('{EPISODE}', episode.episode_number.toString());
 

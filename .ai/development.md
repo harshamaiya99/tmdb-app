@@ -52,15 +52,18 @@ Vite is configured with the `/tmdb-app/` base path for this repository's project
 
 The app uses Vite-style environment variables for optional client-side behavior.
 
-### Current known variable
+### Current known variables
 
-- `VITE_MOVIE_EMBED_URL` — used to build the watch-link destination on movie detail pages
+- `VITE_MOVIE_EMBED_URL` — default watch-link template for movie detail pages
+- `VITE_TV_EMBED_URL` — default watch-link template for TV episodes
 
 New variables should be:
 
 - client-safe
 - non-secret
 - documented when introduced
+
+Movie and TV embed URL templates can be overridden in the authenticated app's **Embed link settings**. These overrides are stored in the current browser; clearing an override falls back to its build-time environment value.
 
 ## Working with the TMDB Flow
 

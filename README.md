@@ -46,13 +46,16 @@ A clean, minimal web app for browsing movies, TV shows, and people with data fro
 
 4. Enter your TMDB API key to start browsing
 
-### Optional environment variable
+### Optional embed URL templates
 
-The app can use a Vite environment variable for watch-link behavior:
+For local development, the app reads optional Vite environment variables as the default movie and TV watch-link templates:
 
 ```bash
 VITE_MOVIE_EMBED_URL=https://example.com/embed/{TMDB_ID}/{IMDB_ID}
+VITE_TV_EMBED_URL=https://example.com/tv/{TMDB_ID}/{SEASON}/{EPISODE}
 ```
+
+On the deployed app, use **Embed link settings** in the header to save templates in that browser. A saved browser value overrides the build-time default; leaving a field blank or choosing **Reset to defaults** uses the build-time value when present. Browser settings are not shared across browsers or devices.
 
 ## Build and Verification
 

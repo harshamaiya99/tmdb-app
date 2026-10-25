@@ -1,6 +1,6 @@
 // src/components/Layout.tsx
 import { ReactNode, useEffect, useState, type ChangeEvent, type FormEvent, type KeyboardEvent } from 'react';
-import { LogOut, Search, Clapperboard, ArrowLeft } from 'lucide-react';
+import { LogOut, Search, Clapperboard, ArrowLeft, Settings2, X } from 'lucide-react';
 import { Link, NavLink, useNavigate, useSearchParams, useLocation } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -10,12 +10,24 @@ import { tmdbService } from '@/lib/tmdb';
 import { TMDBImage } from '@/components/TMDBImage';
 import { useCachedQuery } from '@/hooks/useCachedQuery';
 import { useDebouncedValue } from '@/hooks/useDebouncedValue';
+import { useEmbedSettings } from '@/contexts/EmbedSettingsContext';
 
 interface LayoutProps {
   children: ReactNode;
 }
 
 const SEARCH_ORIGIN_STORAGE_KEY = 'tmdb_search_origin';
+
+function isValidEmbedUrlTemplate(template: string) {
+  if (!template.trim()) return true;
+
+  try {
+    const url = new URL(template.trim().replace(/\{(TMDB_ID|IMDB_ID|SEASON|EPISODE)\}/g, '1'));
+    return url.protocol === 'http:' || url.protocol === 'https:';
+  } catch {
+    return false;
+  }
+}
 
 function SearchSuggestions({ query, onSelect }: { query: string; onSelect: () => void }) {
   const suggestions = useCachedQuery(
@@ -86,7 +98,12 @@ export function Layout({ children }: LayoutProps) {
   const [searchQuery, setSearchQuery] = useState('');
   const [suggestionsOpen, setSuggestionsOpen] = useState(false);
   const { title } = useTitle();
+  const { movieUrlTemplate, tvUrlTemplate, saveSettings, resetSettings } = useEmbedSettings();
   const location = useLocation();
+  const [settingsOpen, setSettingsOpen] = useState(false);
+  const [movieTemplateInput, setMovieTemplateInput] = useState(movieUrlTemplate);
+  const [tvTemplateInput, setTvTemplateInput] = useState(tvUrlTemplate);
+  const [settingsError, setSettingsError] = useState('');
   const debouncedSearchQuery = useDebouncedValue(searchQuery.trim(), 120);
   const normalizedSearchQuery = searchQuery.trim();
   const showSuggestions = suggestionsOpen
@@ -153,6 +170,45 @@ export function Layout({ children }: LayoutProps) {
     localStorage.removeItem('tmdb_api_key');
     tmdbService.setApiKey('');
     navigate('/login');
+  };
+
+  const openEmbedSettings = () => {
+    setMovieTemplateInput(movieUrlTemplate);
+    setTvTemplateInput(tvUrlTemplate);
+    setSettingsError('');
+    setSettingsOpen(true);
+  };
+
+  const handleEmbedSettingsSubmit = (event: FormEvent<HTMLFormElement>) => {
+    event.preventDefault();
+    setSettingsError('');
+
+    if (!isValidEmbedUrlTemplate(movieTemplateInput) || !isValidEmbedUrlTemplate(tvTemplateInput)) {
+      setSettingsError('Enter a valid http or https URL template, or leave the field blank.');
+      return;
+    }
+
+    try {
+      saveSettings({
+        movieUrlTemplate: movieTemplateInput,
+        tvUrlTemplate: tvTemplateInput,
+      });
+      setSettingsOpen(false);
+    } catch {
+      setSettingsError('Could not save settings in this browser. Check that site storage is available and try again.');
+    }
+  };
+
+  const handleResetEmbedSettings = () => {
+    setSettingsError('');
+    try {
+      resetSettings();
+      setMovieTemplateInput(import.meta.env.VITE_MOVIE_EMBED_URL ?? '');
+      setTvTemplateInput(import.meta.env.VITE_TV_EMBED_URL ?? '');
+      setSettingsOpen(false);
+    } catch {
+      setSettingsError('Could not clear saved settings in this browser. Check that site storage is available and try again.');
+    }
   };
 
   const handleBack = () => {
@@ -271,6 +327,15 @@ export function Layout({ children }: LayoutProps) {
             </form>
 
             <nav className="flex items-center space-x-1">
+              <Button
+                variant="ghost"
+                size="icon"
+                onClick={openEmbedSettings}
+                aria-label="Embed link settings"
+                title="Embed link settings"
+              >
+                <Settings2 className="h-[1.2rem] w-[1.2rem]" />
+              </Button>
               <ThemeToggle />
               <Button
                 variant="ghost"
@@ -286,6 +351,78 @@ export function Layout({ children }: LayoutProps) {
         </div>
       </header>
       <main className="container py-6">{children}</main>
+      {settingsOpen && (
+        <div
+          className="fixed inset-0 z-[100] flex items-center justify-center bg-black/60 p-4"
+          onMouseDown={(event) => {
+            if (event.target === event.currentTarget) setSettingsOpen(false);
+          }}
+        >
+          <section
+            role="dialog"
+            aria-modal="true"
+            aria-labelledby="embed-settings-title"
+            aria-describedby="embed-settings-description"
+            className="w-full max-w-xl rounded-lg border bg-background p-6 shadow-lg"
+          >
+            <div className="mb-5 flex items-start justify-between gap-4">
+              <div>
+                <h2 id="embed-settings-title" className="text-lg font-semibold">Embed link settings</h2>
+                <p id="embed-settings-description" className="mt-1 text-sm text-muted-foreground">
+                  These templates are saved only in this browser. Leave a field blank to use its build-time default.
+                </p>
+              </div>
+              <Button
+                type="button"
+                variant="ghost"
+                size="icon"
+                onClick={() => setSettingsOpen(false)}
+                aria-label="Close embed settings"
+              >
+                <X className="h-4 w-4" />
+              </Button>
+            </div>
+
+            <form onSubmit={handleEmbedSettingsSubmit} className="space-y-4">
+              <div className="space-y-2">
+                <label htmlFor="movie-embed-template" className="text-sm font-medium">Movie URL template</label>
+                <Input
+                  id="movie-embed-template"
+                  value={movieTemplateInput}
+                  onChange={(event) => setMovieTemplateInput(event.target.value)}
+                  placeholder="https://example.com/movie/{TMDB_ID}/{IMDB_ID}"
+                  autoComplete="url"
+                />
+              </div>
+              <div className="space-y-2">
+                <label htmlFor="tv-embed-template" className="text-sm font-medium">TV URL template</label>
+                <Input
+                  id="tv-embed-template"
+                  value={tvTemplateInput}
+                  onChange={(event) => setTvTemplateInput(event.target.value)}
+                  placeholder="https://example.com/tv/{TMDB_ID}/{SEASON}/{EPISODE}"
+                  autoComplete="url"
+                />
+              </div>
+              <p className="text-xs text-muted-foreground">
+                Available placeholders: {'{TMDB_ID}'}, {'{IMDB_ID}'}, {'{SEASON}'}, and {'{EPISODE}'}.
+              </p>
+              {settingsError && (
+                <p role="alert" className="text-sm text-destructive">{settingsError}</p>
+              )}
+              <div className="flex flex-wrap justify-end gap-2 pt-2">
+                <Button type="button" variant="outline" onClick={handleResetEmbedSettings}>
+                  Reset to defaults
+                </Button>
+                <Button type="button" variant="ghost" onClick={() => setSettingsOpen(false)}>
+                  Cancel
+                </Button>
+                <Button type="submit">Save settings</Button>
+              </div>
+            </form>
+          </section>
+        </div>
+      )}
     </div>
   );
 }

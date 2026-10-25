@@ -12,6 +12,7 @@ import { Toaster } from '@/components/ui/toaster';
 import { TitleProvider } from '@/contexts/TitleContext';
 import { tmdbService } from '@/lib/tmdb';
 import { useEffect, useState } from 'react';
+import { EmbedSettingsProvider } from '@/contexts/EmbedSettingsContext';
 
 function ProtectedRoute({ children }: { children: React.ReactNode }) {
   const [isAuthenticated, setIsAuthenticated] = useState<boolean | null>(null);
@@ -41,20 +42,22 @@ function App() {
   return (
     <TitleProvider>
       <HashRouter>
-        <Routes>
-          <Route path="/" element={<ProtectedRoute><Layout><HomePage /></Layout></ProtectedRoute>} />
-          <Route path="/login" element={<LoginPage />} />
-          <Route path="/movie/:id" element={<ProtectedRoute><Layout><MovieDetailsPage /></Layout></ProtectedRoute>} />
-          <Route path="/tv/:id" element={<ProtectedRoute><Layout><TVShowDetailsPage /></Layout></ProtectedRoute>} />
-          <Route path="/person/:id" element={<ProtectedRoute><Layout><PersonDetailsPage /></Layout></ProtectedRoute>} />
-          <Route path="/category/:category" element={<ProtectedRoute><Layout><MediaListPage /></Layout></ProtectedRoute>} />
-          {/* NEW: Map the tab routes to the MediaListPage */}
-      <Route path="/movie" element={<ProtectedRoute><Layout><MediaListPage /></Layout></ProtectedRoute>} />
-      <Route path="/tv" element={<ProtectedRoute><Layout><MediaListPage /></Layout></ProtectedRoute>} />
-      <Route path="/person" element={<ProtectedRoute><Layout><PeopleListPage /></Layout></ProtectedRoute>} />
-          <Route path="*" element={<Navigate to="/" replace />} />
-        </Routes>
-        <Toaster />
+        <EmbedSettingsProvider>
+          <Routes>
+            <Route path="/" element={<ProtectedRoute><Layout><HomePage /></Layout></ProtectedRoute>} />
+            <Route path="/login" element={<LoginPage />} />
+            <Route path="/movie/:id" element={<ProtectedRoute><Layout><MovieDetailsPage /></Layout></ProtectedRoute>} />
+            <Route path="/tv/:id" element={<ProtectedRoute><Layout><TVShowDetailsPage /></Layout></ProtectedRoute>} />
+            <Route path="/person/:id" element={<ProtectedRoute><Layout><PersonDetailsPage /></Layout></ProtectedRoute>} />
+            <Route path="/category/:category" element={<ProtectedRoute><Layout><MediaListPage /></Layout></ProtectedRoute>} />
+            {/* NEW: Map the tab routes to the MediaListPage */}
+            <Route path="/movie" element={<ProtectedRoute><Layout><MediaListPage /></Layout></ProtectedRoute>} />
+            <Route path="/tv" element={<ProtectedRoute><Layout><MediaListPage /></Layout></ProtectedRoute>} />
+            <Route path="/person" element={<ProtectedRoute><Layout><PeopleListPage /></Layout></ProtectedRoute>} />
+            <Route path="*" element={<Navigate to="/" replace />} />
+          </Routes>
+          <Toaster />
+        </EmbedSettingsProvider>
       </HashRouter>
     </TitleProvider>
   );

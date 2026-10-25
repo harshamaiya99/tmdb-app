@@ -14,10 +14,12 @@ import { useCachedQuery } from '@/hooks/useCachedQuery';
 import { ReviewSection } from '../components/ReviewSection';
 import { TMDBImage } from '@/components/TMDBImage';
 import { LazySection } from '@/components/LazySection';
+import { useEmbedSettings } from '@/contexts/EmbedSettingsContext';
 
 export function MovieDetailsPage() {
   const { id } = useParams<{ id: string }>();
   const [activeCredits, setActiveCredits] = useState<'cast' | 'crew'>('cast');
+  const { movieUrlTemplate } = useEmbedSettings();
   
   const navigate = useNavigate();
   usePageTitle('Movie Details');
@@ -110,8 +112,7 @@ export function MovieDetailsPage() {
             )}
 
             {(() => {
-              const urlTemplate = import.meta.env.VITE_MOVIE_EMBED_URL;
-              const streamUrl = buildEmbedUrl(urlTemplate, movie.id, movie.external_ids?.imdb_id || '');
+              const streamUrl = buildEmbedUrl(movieUrlTemplate, movie.id, movie.external_ids?.imdb_id || '');
               
               return (
                 <Button asChild className="w-full gap-2 mt-2">
