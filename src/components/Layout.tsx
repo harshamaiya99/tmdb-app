@@ -389,13 +389,13 @@ export function Layout({ children }: LayoutProps) {
             aria-modal="true"
             aria-labelledby="embed-settings-title"
             aria-describedby="embed-settings-description"
-            className="w-full max-w-xl rounded-lg border bg-background p-6 shadow-lg"
+            className="max-h-[calc(100vh-2rem)] w-full max-w-lg overflow-y-auto rounded-lg border bg-background p-5 shadow-lg sm:p-6"
           >
             <div className="mb-5 flex items-start justify-between gap-4">
               <div>
                 <h2 id="embed-settings-title" className="text-lg font-semibold">Embed link settings</h2>
-                <p id="embed-settings-description" className="mt-1 text-sm text-muted-foreground">
-                  These templates are saved only in this browser. Leave a field blank to use its build-time default.
+                <p id="embed-settings-description" className="mt-1 text-sm leading-relaxed text-muted-foreground">
+                  Customize movie and TV watch links for this browser.
                 </p>
               </div>
               <Button
@@ -409,7 +409,7 @@ export function Layout({ children }: LayoutProps) {
               </Button>
             </div>
 
-            <form onSubmit={handleEmbedSettingsSubmit} className="space-y-4">
+            <form onSubmit={handleEmbedSettingsSubmit} className="space-y-5">
               <div className="space-y-2">
                 <label htmlFor="movie-embed-template" className="text-sm font-medium">Movie URL template</label>
                 <Input
@@ -430,20 +430,27 @@ export function Layout({ children }: LayoutProps) {
                   autoComplete="url"
                 />
               </div>
-              <p className="text-xs text-muted-foreground">
-                Available placeholders: {'{TMDB_ID}'}, {'{IMDB_ID}'}, {'{SEASON}'}, and {'{EPISODE}'}.
-              </p>
+              <div className="rounded-md bg-muted/50 px-3 py-2.5 text-xs leading-relaxed text-muted-foreground">
+                Leave a field blank to use its default. Placeholders: {'{TMDB_ID}'}, {'{IMDB_ID}'}, {'{SEASON}'}, {'{EPISODE}'}.
+              </div>
               {settingsError && (
                 <p role="alert" className="text-sm text-destructive">{settingsError}</p>
               )}
-              <div className="flex flex-wrap justify-end gap-2 pt-2">
-                <Button type="button" variant="outline" onClick={handleResetEmbedSettings}>
-                  Reset to defaults
+              <div className="flex flex-col gap-3 border-t pt-4 sm:flex-row sm:items-center sm:justify-between">
+                <Button
+                  type="button"
+                  variant="ghost"
+                  onClick={handleResetEmbedSettings}
+                  className="self-start px-2 text-muted-foreground"
+                >
+                  Reset defaults
                 </Button>
-                <Button type="button" variant="ghost" onClick={() => setSettingsOpen(false)}>
-                  Cancel
-                </Button>
-                <Button type="submit">Save settings</Button>
+                <div className="grid grid-cols-2 gap-2 sm:flex sm:justify-end">
+                  <Button type="button" variant="outline" onClick={() => setSettingsOpen(false)}>
+                    Cancel
+                  </Button>
+                  <Button type="submit">Save settings</Button>
+                </div>
               </div>
             </form>
           </section>
