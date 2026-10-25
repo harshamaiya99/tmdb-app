@@ -18,6 +18,7 @@ export function ReviewSection({ reviews: initialReviews, mediaId, mediaType, tot
   const [reviews, setReviews] = useState(initialReviews);
   const [visibleCount, setVisibleCount] = useState(5); 
   const [expandedReviewId, setExpandedReviewId] = useState<string | null>(null);
+  const [selectedReviewId, setSelectedReviewId] = useState<string | null>(null);
   // Track the currently active rating filter (1-10)
   const [ratingFilter, setRatingFilter] = useState<number | null>(null);
   const [currentPage, setCurrentPage] = useState(1);
@@ -40,6 +41,7 @@ export function ReviewSection({ reviews: initialReviews, mediaId, mediaType, tot
     setReviews(initialReviews);
     setVisibleCount(5);
     setExpandedReviewId(null);
+    setSelectedReviewId(null);
     setRatingFilter(null);
     setCurrentPage(1);
     setLoadError(null);
@@ -74,6 +76,8 @@ export function ReviewSection({ reviews: initialReviews, mediaId, mediaType, tot
     const isDesktop = typeof window.matchMedia === 'function'
       && window.matchMedia('(min-width: 768px)').matches;
 
+    setSelectedReviewId(null);
+
     if (!isDesktop) {
       mobileReviewAnchor.current = { element: card, top: card.getBoundingClientRect().top };
     }
@@ -99,12 +103,14 @@ export function ReviewSection({ reviews: initialReviews, mediaId, mediaType, tot
           setRatingFilter((prev) => (prev === star ? null : star));
           setVisibleCount(5); // Reset visible count when filter changes
           setExpandedReviewId(null); // Close any expanded review
+          setSelectedReviewId(null);
         });
       });
     } else {
       setRatingFilter((prev) => (prev === star ? null : star));
       setVisibleCount(5);
       setExpandedReviewId(null);
+      setSelectedReviewId(null);
     }
   };
 
@@ -241,6 +247,8 @@ export function ReviewSection({ reviews: initialReviews, mediaId, mediaType, tot
           const isExpanded = expandedReviewId === review.id;
           
           const isLong = review.content.length > 200; 
+          const isSelected = selectedReviewId === review.id;
+          const isHighlighted = isExpanded || isSelected;
           const needsTwoRows = review.content.length > 400;
 
           let spanClasses = 'col-span-1 row-span-1';
@@ -253,16 +261,27 @@ export function ReviewSection({ reviews: initialReviews, mediaId, mediaType, tot
             <div 
               key={review.id}
               style={{ viewTransitionName: `review-card-${review.id}` }} 
-              onClick={(event) => isLong && toggleExpand(review.id, event.currentTarget)}
-              className={`p-5 rounded-xl border ${isExpanded ? 'border-primary/40 bg-primary/5' : 'bg-card active:border-primary/40 active:bg-primary/5'} text-card-foreground shadow-sm flex flex-col cursor-pointer transition-colors hover:border-muted-foreground/30 ${spanClasses} ${isLong ? 'select-none' : ''}`}
-              role={isLong ? 'button' : undefined}
-              tabIndex={isLong ? 0 : undefined}
+              onClick={(event) => {
+                if (isLong) {
+                  toggleExpand(review.id, event.currentTarget);
+                } else {
+                  setSelectedReviewId((previous) => (previous === review.id ? null : review.id));
+                }
+              }}
+              className={`p-5 rounded-xl border ${isHighlighted ? 'border-primary/40 bg-primary/5' : 'bg-card'} text-card-foreground shadow-sm flex flex-col cursor-pointer transition-colors hover:border-muted-foreground/30 ${spanClasses} ${isLong ? 'select-none' : ''}`}
+              role="button"
+              tabIndex={0}
               aria-expanded={isLong ? isExpanded : undefined}
+              aria-pressed={!isLong ? isSelected : undefined}
               aria-controls={isLong ? `review-content-${review.id}` : undefined}
               onKeyDown={(event) => {
-                if (isLong && (event.key === 'Enter' || event.key === ' ')) {
+                if (event.key === 'Enter' || event.key === ' ') {
                   event.preventDefault();
-                  toggleExpand(review.id, event.currentTarget);
+                  if (isLong) {
+                    toggleExpand(review.id, event.currentTarget);
+                  } else {
+                    setSelectedReviewId((previous) => (previous === review.id ? null : review.id));
+                  }
                 }
               }}
             >

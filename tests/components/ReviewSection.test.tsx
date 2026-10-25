@@ -77,7 +77,7 @@ describe('ReviewSection', () => {
     expect(card).toHaveAttribute('aria-expanded', 'false');
   });
 
-  it('shows pressed-state color feedback for reviews too short to expand', () => {
+  it('toggles persistent color feedback for reviews too short to expand', () => {
     const shortReview: Review = {
       ...longReview,
       id: 'review-2',
@@ -87,7 +87,18 @@ describe('ReviewSection', () => {
 
     const card = screen.getByText('A short review.').closest('.rounded-xl');
 
-    expect(card).toHaveClass('active:bg-primary/5', 'active:border-primary/40');
+    expect(card).toHaveAttribute('aria-pressed', 'false');
     expect(card).toHaveClass('bg-card');
+
+    fireEvent.click(card!);
+
+    expect(card).toHaveAttribute('aria-pressed', 'true');
+    expect(card).toHaveClass('bg-primary/5', 'border-primary/40');
+
+    fireEvent.click(card!);
+
+    expect(card).toHaveAttribute('aria-pressed', 'false');
+    expect(card).toHaveClass('bg-card');
+    expect(card).not.toHaveClass('bg-primary/5', 'border-primary/40');
   });
 });
