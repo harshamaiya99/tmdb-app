@@ -20,54 +20,19 @@ import { useEmbedSettings } from '@/contexts/EmbedSettingsContext';
 interface EpisodeCardProps {
   episode: Episode;
   tvShowName: string;
-  selectedSeason: number;
   streamUrl: string;
   onSelectEpisode: (episode: Episode, streamUrl: string) => void;
 }
 
-function EpisodeCard({ episode, tvShowName, selectedSeason, streamUrl, onSelectEpisode }: EpisodeCardProps) {
-  const expandEpisodeCard = (card: HTMLButtonElement) => {
-    const row = card.parentElement?.parentElement;
-    if (!row || !row.classList.contains('episode-row')) return;
-
-    const rowHeight = row.getBoundingClientRect().height;
-    row.style.height = `${rowHeight}px`;
-    row.style.gridTemplateColumns = '';
-    const columnCount = getComputedStyle(row).gridTemplateColumns.split(' ').length;
-    const cardSlot = card.parentElement;
-    const cardIndex = cardSlot ? Array.from(row.children).indexOf(cardSlot) : -1;
-    const columnIndex = cardIndex >= 0 ? cardIndex % columnCount : 0;
-    row.style.gridTemplateColumns = Array.from(
-      { length: columnCount },
-      (_, index) => index === columnIndex ? '1.6fr' : '0.85fr',
-    ).join(' ');
-    card.classList.add('episode-card-expanded');
-  };
-
-  const collapseEpisodeCard = (card: HTMLButtonElement) => {
-    card.classList.remove('episode-card-expanded');
-    const row = card.parentElement?.parentElement;
-    if (row?.classList.contains('episode-row')) {
-      row.style.gridTemplateColumns = '';
-      row.style.height = '';
-    }
-  };
-
+function EpisodeCard({ episode, tvShowName, streamUrl, onSelectEpisode }: EpisodeCardProps) {
   return (
     <div className="relative min-w-0 min-h-64">
       <button
         type="button"
-        onMouseEnter={(event) => expandEpisodeCard(event.currentTarget)}
-        onFocus={(event) => expandEpisodeCard(event.currentTarget)}
-        onMouseLeave={(event) => collapseEpisodeCard(event.currentTarget)}
-        onBlur={(event) => collapseEpisodeCard(event.currentTarget)}
-        onClick={(event) => {
-          collapseEpisodeCard(event.currentTarget);
-          onSelectEpisode(episode, streamUrl);
-        }}
-        className="relative flex h-full w-full cursor-pointer appearance-none flex-col overflow-hidden rounded-xl border bg-card text-left text-card-foreground shadow-sm transition-[width,height,box-shadow] duration-300 ease-out group hover:ring-2 hover:ring-primary"
+        onClick={() => onSelectEpisode(episode, streamUrl)}
+        className="group relative flex h-full w-full cursor-pointer appearance-none flex-col overflow-hidden rounded-xl border bg-card text-left text-card-foreground shadow-sm transition-[border-color,box-shadow] duration-200 hover:border-primary/50 hover:shadow-md focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
       >
-        <div className="episode-card-media relative overflow-hidden shrink-0 transition-[width,height] duration-300 ease-out">
+        <div className="relative shrink-0 overflow-hidden">
           {episode.still_path ? (
             <TMDBImage
               path={episode.still_path}
@@ -75,22 +40,16 @@ function EpisodeCard({ episode, tvShowName, selectedSeason, streamUrl, onSelectE
               width={500}
               height={281}
               sizes="(min-width: 1536px) 18vw, (min-width: 1024px) 25vw, (min-width: 640px) 33vw, 100vw"
-              className="episode-card-image w-full aspect-video object-cover bg-muted group-hover:scale-105 transition-[transform,height] duration-300 ease-out"
+              className="aspect-video w-full bg-muted object-cover"
             />
           ) : (
             <div role="img" aria-label={`${episode.name} still unavailable`} className="w-full aspect-video bg-muted flex items-center justify-center border-b text-sm text-muted-foreground">
               Still unavailable
             </div>
           )}
-          <div className="absolute inset-0 bg-black/40 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
-            <PlayCircle className="w-12 h-12 text-white shadow-sm" />
-          </div>
         </div>
 
-        <div className="episode-card-content p-4 flex-1 flex flex-col z-10 bg-card min-h-0 transition-[width] duration-300 ease-out">
-          <p className="episode-card-label hidden text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">
-            Season {selectedSeason}, Episode {episode.episode_number}
-          </p>
+        <div className="z-10 flex min-h-0 flex-1 flex-col bg-card p-4">
           <h3 className="font-semibold text-base line-clamp-2 group-hover:text-primary transition-colors">
             <span className="text-muted-foreground mr-1">{episode.episode_number}.</span>
             {episode.name}
@@ -100,12 +59,8 @@ function EpisodeCard({ episode, tvShowName, selectedSeason, streamUrl, onSelectE
               {episode.air_date && <span>{formatDate(episode.air_date)}</span>}
               {episode.runtime && <span>{episode.runtime} min</span>}
             </div>
-            <span className="episode-card-rating hidden items-center gap-1 font-medium text-amber-500" aria-label={`Episode rating ${episode.vote_average ? episode.vote_average.toFixed(1) : 'not rated'} out of 10`}>
-              <Star className="h-3 w-3 fill-current" />
-              {episode.vote_average ? episode.vote_average.toFixed(1) : 'N/A'}
-            </span>
           </div>
-          <p className="episode-card-overview text-xs text-muted-foreground line-clamp-3 leading-relaxed shrink-0">
+          <p className="shrink-0 line-clamp-3 text-xs leading-relaxed text-muted-foreground">
             {episode.overview || 'No overview available for this episode.'}
           </p>
         </div>
@@ -188,20 +143,6 @@ export function TVShowDetailsPage() {
       if (previousActiveElement instanceof HTMLElement) previousActiveElement.focus();
     };
   }, [selectedEpisode]);
-
-  useEffect(() => {
-    const clearExpandedEpisodeCards = () => {
-      document.querySelectorAll('.episode-card-expanded').forEach((card) => {
-        card.classList.remove('episode-card-expanded');
-      });
-      document.querySelectorAll('.episode-grid').forEach((grid) => {
-        (grid as HTMLElement).style.gridTemplateColumns = '';
-      });
-    };
-
-    window.addEventListener('pagehide', clearExpandedEpisodeCards);
-    return () => window.removeEventListener('pagehide', clearExpandedEpisodeCards);
-  }, []);
 
   if (tvShowQuery.loading) {
     return (
@@ -494,7 +435,6 @@ export function TVShowDetailsPage() {
                         key={episode.id}
                         episode={episode}
                         tvShowName={tvShow.name}
-                        selectedSeason={selectedSeason}
                         streamUrl={streamUrl}
                         onSelectEpisode={(selected, url) => setSelectedEpisode({ episode: selected, streamUrl: url })}
                       />
@@ -537,7 +477,6 @@ export function TVShowDetailsPage() {
                           key={episode.id}
                           episode={episode}
                           tvShowName={tvShow.name}
-                          selectedSeason={selectedSeason}
                           streamUrl={streamUrl}
                           onSelectEpisode={(selected, url) => setSelectedEpisode({ episode: selected, streamUrl: url })}
                         />
