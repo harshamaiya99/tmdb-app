@@ -174,7 +174,14 @@ npm run dev
 npm run build
 ```
 
-There are no dedicated automated tests in this repo at the moment, so building the app is the main verification step after meaningful changes.
+### Run automated tests
+
+```bash
+npm test
+npm run test:watch
+```
+
+Unit and component tests live outside `src/` under `tests/`, using Vitest and React Testing Library. Keep test-only dependencies in `devDependencies`, mock external TMDB requests, and do not import test utilities into application code. The CI deployment workflow runs tests before building.
 
 ## Decision Checklist
 

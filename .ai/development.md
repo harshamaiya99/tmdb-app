@@ -40,7 +40,16 @@ Before finishing meaningful work, verify the project still builds:
 npm run build
 ```
 
-There are no dedicated automated tests in the repository right now, so the build is the main regression check.
+### Run automated tests
+
+Unit and component tests live outside `src/` under `tests/` and run with Vitest in a jsdom environment.
+
+```bash
+npm test
+npm run test:watch
+```
+
+React Testing Library is used for component behavior, while pure utilities and shared logic are tested directly. Tests mock TMDB requests and do not require a real API key. Test tooling is installed as development dependencies and is not imported by the application bundle. The deployment workflow runs the test suite before building the app.
 
 ## GitHub Pages Deployment
 
@@ -76,6 +85,7 @@ Movie and TV embed URL templates can be overridden in the authenticated app's **
 5. Open a movie or TV details page and verify the UI renders expected metadata.
 6. Try a search and confirm results load correctly.
 7. Verify the shared layout navigation tabs still behave correctly for movies, TV shows, and people.
+8. Check the same key flows at a narrow smartphone width (around 320–390px): confirm the header, search, navigation, filters, cards, and dialogs remain usable and there is no unintended horizontal page overflow. Intentional carousels may scroll horizontally.
 
 ### Common issue: invalid API key
 
