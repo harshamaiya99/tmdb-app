@@ -383,7 +383,7 @@ export function TVShowDetailsPage() {
             <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-6 mb-6">
               
               {/* Left Header: Episodes + Dropdown */}
-              <div className="col-span-1 sm:col-span-2 md:col-span-1 lg:col-span-2 xl:col-span-3 flex flex-row items-center gap-4">
+              <div className="col-span-1 flex flex-col items-stretch gap-3 sm:col-span-2 sm:flex-row sm:items-center md:col-span-1 lg:col-span-2 xl:col-span-3">
                 <h2 className="text-2xl font-semibold leading-none">Episodes</h2>
                 <select
                   value={selectedSeason || ''}
@@ -392,7 +392,7 @@ export function TVShowDetailsPage() {
                     newParams.set('season', e.target.value);
                     setSearchParams(newParams);
                   }}
-                  className="flex h-9 w-full sm:w-[250px] items-center justify-between rounded-md border border-input bg-background px-3 py-1 text-sm ring-offset-background placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2"
+                  className="flex h-10 w-full min-w-0 items-center justify-between rounded-md border border-input bg-background px-3 py-1 text-sm ring-offset-background placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 sm:w-[250px]"
                 >
                   {tvShow.seasons.map((season) => (
                     <option key={season.id} value={season.season_number}>
@@ -444,9 +444,8 @@ export function TVShowDetailsPage() {
               </div>
 
               {/* The Heatmap Card */}
-              <div 
-                className="w-full min-h-80 md:col-span-2 md:col-start-4 md:row-start-1"
-              >
+              <div className="w-full min-h-64 md:min-h-80 md:col-span-2 md:col-start-4 md:row-start-1">
+                <h3 className="mb-3 text-xl font-semibold md:hidden">Season Ratings</h3>
                 <div className="h-full w-full rounded-xl border bg-card text-card-foreground shadow-sm p-4 lg:p-5 flex flex-col">
                   <div className="flex-1 min-w-0 min-h-0">
                     <EpisodesRatingOverview 
@@ -550,15 +549,15 @@ export function TVShowDetailsPage() {
               }
             }}
           >
-            <div className="flex gap-4 border-b p-4 pr-14 sm:gap-6 sm:p-6 sm:pr-16">
-              <div className="h-fit w-28 shrink-0 overflow-hidden rounded-lg border bg-muted sm:w-52">
+            <div className="flex flex-col gap-3 border-b p-4 pr-14 sm:flex-row sm:gap-6 sm:p-6 sm:pr-16">
+              <div className="h-fit w-32 shrink-0 overflow-hidden rounded-lg border bg-muted sm:w-52">
                 {selectedEpisode.episode.still_path ? (
                   <TMDBImage
                     path={selectedEpisode.episode.still_path}
                     alt={`${selectedEpisode.episode.name} episode still`}
                     width={416}
                     height={234}
-                    sizes="(min-width: 640px) 208px, 112px"
+                    sizes="(min-width: 640px) 208px, 128px"
                     loading="eager"
                     className="aspect-video w-full object-cover"
                   />

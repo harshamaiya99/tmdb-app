@@ -19,6 +19,12 @@ interface LayoutProps {
 
 const SEARCH_ORIGIN_STORAGE_KEY = 'tmdb_search_origin';
 
+const mainNavigation = [
+  { to: '/movie', label: 'Movies' },
+  { to: '/tv', label: 'TV Shows' },
+  { to: '/person', label: 'People' },
+] as const;
+
 function isValidEmbedUrlTemplate(template: string) {
   if (!template.trim()) return true;
 
@@ -232,64 +238,54 @@ export function Layout({ children }: LayoutProps) {
   return (
     <div className="min-h-screen bg-background">
       <header className="sticky top-0 z-50 border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
-        <div className="container flex h-14 items-center justify-between gap-3">
-          <div className="flex items-center gap-2">
+        <div className="container flex min-h-14 flex-wrap items-center justify-between gap-x-3 gap-y-2 py-2 md:h-14 md:flex-nowrap md:py-0">
+          <div className="flex min-w-0 items-center gap-2">
             {showBackButton && (
               <Button
                 variant="ghost"
                 size="icon"
                 onClick={handleBack}
-                className="mr-2"
+                className="mr-1 h-10 w-10 shrink-0 md:mr-2"
                 aria-label="Go back"
                 title="Go back"
               >
                 <ArrowLeft className="h-4 w-4" />
               </Button>
             )}
-            <Link to="/" className="flex items-center gap-2">
-              <Clapperboard className="h-5 w-5" />
-              <span className="font-bold">{title}</span>
+            <Link to="/" className="flex min-w-0 items-center gap-2">
+              <Clapperboard className="h-5 w-5 shrink-0" />
+              <span
+                className={`min-w-0 truncate font-bold ${
+                  showBackButton ? 'max-w-[calc(100vw-16rem)]' : 'max-w-[calc(100vw-13.5rem)]'
+                } md:max-w-none`}
+              >
+                {title}
+              </span>
             </Link>
           </div>
 
-          <div className="ml-auto flex flex-1 items-center justify-end gap-2 md:gap-4">
-            
-            {/* NEW: Navigation Tabs */}
-            <nav className="hidden md:flex items-center gap-6 text-sm font-medium mr-2">
-              <NavLink 
-                to="/movie" 
-                className={({ isActive }) => 
-                  `transition-colors hover:text-foreground ${isActive ? 'text-foreground font-semibold' : 'text-muted-foreground'}`
+          <nav className="hidden items-center gap-6 text-sm font-medium md:mr-2 md:flex">
+            {mainNavigation.map(({ to, label }) => (
+              <NavLink
+                key={to}
+                to={to}
+                className={({ isActive }) =>
+                  `transition-colors hover:text-foreground ${isActive ? 'font-semibold text-foreground' : 'text-muted-foreground'}`
                 }
               >
-                Movies
+                {label}
               </NavLink>
-              <NavLink 
-                to="/tv" 
-                className={({ isActive }) => 
-                  `transition-colors hover:text-foreground ${isActive ? 'text-foreground font-semibold' : 'text-muted-foreground'}`
-                }
-              >
-                TV Shows
-              </NavLink>
-              <NavLink 
-                to="/person" 
-                className={({ isActive }) => 
-                  `transition-colors hover:text-foreground ${isActive ? 'text-foreground font-semibold' : 'text-muted-foreground'}`
-                }
-              >
-                People
-              </NavLink>
-            </nav>
+            ))}
+          </nav>
 
-            <form
+          <form
               onSubmit={handleSearch}
               onBlur={(event) => {
                 if (!event.currentTarget.contains(event.relatedTarget as Node | null)) {
                   setSuggestionsOpen(false);
                 }
               }}
-              className="w-full max-w-[16rem] sm:max-w-[20rem]"
+              className="order-1 w-full md:order-none md:ml-auto md:max-w-[20rem]"
             >
               <div className="relative">
                 <Search className="absolute left-2 top-2.5 h-4 w-4 text-muted-foreground" />
@@ -305,7 +301,7 @@ export function Layout({ children }: LayoutProps) {
                   onChange={handleSearchInputChange}
                   onFocus={() => setSuggestionsOpen(true)}
                   onKeyDown={handleSearchKeyDown}
-                  className="pl-8 pr-10"
+                  className="h-10 pl-8 pr-10"
                 />
                 <Button
                   type="submit"
@@ -313,7 +309,7 @@ export function Layout({ children }: LayoutProps) {
                   size="icon"
                   aria-label="Search"
                   title="Search"
-                  className="absolute right-0 top-0 h-9 w-9"
+                  className="absolute right-0 top-0 h-10 w-10"
                 >
                   <Search className="h-4 w-4" />
                 </Button>
@@ -334,15 +330,17 @@ export function Layout({ children }: LayoutProps) {
                   </div>
                 ))}
               </div>
-            </form>
+          </form>
 
-            <nav className="flex items-center space-x-1">
+          <div className="ml-auto flex shrink-0 items-center space-x-1">
+            <div className="flex items-center space-x-1">
               <Button
                 variant="ghost"
                 size="icon"
                 onClick={openEmbedSettings}
                 aria-label="Embed link settings"
                 title="Embed link settings"
+                className="h-10 w-10"
               >
                 <Settings2 className="h-[1.2rem] w-[1.2rem]" />
               </Button>
@@ -353,11 +351,27 @@ export function Layout({ children }: LayoutProps) {
                 onClick={handleLogout}
                 aria-label="Log out"
                 title="Log out"
+                className="h-10 w-10"
               >
                 <LogOut className="h-[1.2rem] w-[1.2rem]" />
               </Button>
-            </nav>
+            </div>
           </div>
+          <nav aria-label="Main navigation" className="order-2 flex w-full items-center gap-2 pb-2 md:hidden">
+            {mainNavigation.map(({ to, label }) => (
+              <NavLink
+                key={to}
+                to={to}
+                className={({ isActive }) =>
+                  `flex min-h-10 flex-1 items-center justify-center rounded-md px-3 text-sm font-medium transition-colors hover:bg-accent ${
+                    isActive ? 'bg-accent text-foreground' : 'text-muted-foreground'
+                  }`
+                }
+              >
+                {label}
+              </NavLink>
+            ))}
+          </nav>
         </div>
       </header>
       <main className="container py-6">{children}</main>

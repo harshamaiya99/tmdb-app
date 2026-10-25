@@ -145,6 +145,10 @@ This keeps the review section compact while still preserving rich formatting fro
 
 The shared shell in [src/components/Layout.tsx](src/components/Layout.tsx) provides the sticky header, navigation tabs, search bar, theme switcher, embed-link settings, and logout action. Embed-link settings are saved in the current browser and override build-time defaults. Search suggestions appear as the user types and link directly to movie, TV show, or person details; submitting the form opens the full results page. The main app chrome is intentionally restrained so the content can take the lead.
 
+On narrow screens, the header keeps the brand and utility actions on its top row, places search on a full-width row, and exposes the primary navigation below it. Header utility controls and mobile navigation links should remain comfortable touch targets. The shared container uses 1rem horizontal padding on small screens and returns to 2rem from the `sm` breakpoint upward.
+
+TV episode controls stack on narrow screens. Season ratings remain horizontally scrollable within their panel, with a visible heading on mobile, and the episode details dialog stacks its image above the text until there is enough width for a side-by-side layout.
+
 ## Spacing and Typography Conventions
 
 ### Spacing
