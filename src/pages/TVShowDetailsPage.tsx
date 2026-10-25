@@ -430,38 +430,39 @@ export function TVShowDetailsPage() {
               </div>
             </div>
 
-            {selectedSeasonDetails?.overview?.trim() && (
-              <div className="mb-6">
-                <h3 className="text-lg font-semibold mb-2">
-                  {selectedSeasonDetails.name || `Season ${selectedSeason}`} Overview
-                </h3>
-                <p className="text-muted-foreground leading-relaxed">{selectedSeasonDetails.overview}</p>
-              </div>
-            )}
-
             <div className="grid grid-cols-1 gap-6 md:grid-cols-5">
-              {/* The first episode row shares the space with the ratings card. */}
-              <div className="episode-row grid grid-cols-1 gap-6 md:col-span-3 md:grid-cols-3">
-                {loadingEpisodes ? (
-                  [...Array(3)].map((_, i) => (
-                    <Skeleton key={i} className="h-64 w-full rounded-xl" />
-                  ))
-                ) : episodes.slice(0, 3).map((episode) => {
-                  const imdbId = tvShow.external_ids?.imdb_id || '';
-                  const streamUrl = buildEmbedUrl(tvUrlTemplate, tvShow.id, imdbId)
-                    .replace('{SEASON}', selectedSeason.toString())
-                    .replace('{EPISODE}', episode.episode_number.toString());
+              <div className="md:col-span-3">
+                {selectedSeasonDetails?.overview?.trim() && (
+                  <div className="mb-6">
+                    <h3 className="text-lg font-semibold mb-2">
+                      {selectedSeasonDetails.name || `Season ${selectedSeason}`} Overview
+                    </h3>
+                    <p className="text-muted-foreground leading-relaxed">{selectedSeasonDetails.overview}</p>
+                  </div>
+                )}
 
-                  return (
-                    <EpisodeCard
-                      key={episode.id}
-                      episode={episode}
-                      tvShowName={tvShow.name}
-                      selectedSeason={selectedSeason}
-                      streamUrl={streamUrl}
-                    />
-                  );
-                })}
+                <div className="episode-row grid grid-cols-1 gap-6 md:grid-cols-3">
+                  {loadingEpisodes ? (
+                    [...Array(3)].map((_, i) => (
+                      <Skeleton key={i} className="h-64 w-full rounded-xl" />
+                    ))
+                  ) : episodes.slice(0, 3).map((episode) => {
+                    const imdbId = tvShow.external_ids?.imdb_id || '';
+                    const streamUrl = buildEmbedUrl(tvUrlTemplate, tvShow.id, imdbId)
+                      .replace('{SEASON}', selectedSeason.toString())
+                      .replace('{EPISODE}', episode.episode_number.toString());
+
+                    return (
+                      <EpisodeCard
+                        key={episode.id}
+                        episode={episode}
+                        tvShowName={tvShow.name}
+                        selectedSeason={selectedSeason}
+                        streamUrl={streamUrl}
+                      />
+                    );
+                  })}
+                </div>
               </div>
 
               {/* The Heatmap Card */}
