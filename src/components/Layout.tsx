@@ -264,28 +264,29 @@ export function Layout({ children }: LayoutProps) {
             </Link>
           </div>
 
-          <nav className="hidden items-center gap-6 text-sm font-medium md:mr-2 md:flex">
-            {mainNavigation.map(({ to, label }) => (
-              <NavLink
-                key={to}
-                to={to}
-                className={({ isActive }) =>
-                  `transition-colors hover:text-foreground ${isActive ? 'font-semibold text-foreground' : 'text-muted-foreground'}`
-                }
-              >
-                {label}
-              </NavLink>
-            ))}
-          </nav>
+          <div className="order-1 flex w-full flex-col gap-3 md:order-none md:ml-auto md:w-auto md:flex-row md:items-center md:gap-4">
+            <nav className="hidden items-center gap-4 text-sm font-medium md:flex lg:gap-6">
+              {mainNavigation.map(({ to, label }) => (
+                <NavLink
+                  key={to}
+                  to={to}
+                  className={({ isActive }) =>
+                    `transition-colors hover:text-foreground ${isActive ? 'font-semibold text-foreground' : 'text-muted-foreground'}`
+                  }
+                >
+                  {label}
+                </NavLink>
+              ))}
+            </nav>
 
-          <form
+            <form
               onSubmit={handleSearch}
               onBlur={(event) => {
                 if (!event.currentTarget.contains(event.relatedTarget as Node | null)) {
                   setSuggestionsOpen(false);
                 }
               }}
-              className="order-1 w-full md:order-none md:ml-auto md:max-w-[20rem]"
+              className="w-full md:w-52 lg:w-80"
             >
               <div className="relative">
                 <Search className="absolute left-2 top-2.5 h-4 w-4 text-muted-foreground" />
@@ -330,9 +331,10 @@ export function Layout({ children }: LayoutProps) {
                   </div>
                 ))}
               </div>
-          </form>
+            </form>
+          </div>
 
-          <div className="ml-auto flex shrink-0 items-center space-x-1">
+          <div className="ml-auto flex shrink-0 items-center space-x-1 md:ml-0">
             <div className="flex items-center space-x-1">
               <Button
                 variant="ghost"
