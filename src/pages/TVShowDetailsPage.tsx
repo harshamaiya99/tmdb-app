@@ -634,13 +634,13 @@ export function TVShowDetailsPage() {
 
               {episodeDetails && (
                 <>
-                  <section aria-labelledby="episode-crew-title" className="border-t pt-5">
-                    <h3 id="episode-crew-title" className="mb-3 flex items-center gap-2 font-semibold">
-                      <Users className="h-4 w-4 text-muted-foreground" />
-                      Crew
-                      <span className="text-sm font-normal text-muted-foreground">{episodeDetails.crew.length}</span>
-                    </h3>
-                    {episodeDetails.crew.length ? (
+                  {episodeDetails.crew.length > 0 && (
+                    <section aria-labelledby="episode-crew-title" className="border-t pt-5">
+                      <h3 id="episode-crew-title" className="mb-3 flex items-center gap-2 font-semibold">
+                        <Users className="h-4 w-4 text-muted-foreground" />
+                        Crew
+                        <span className="text-sm font-normal text-muted-foreground">{episodeDetails.crew.length}</span>
+                      </h3>
                       <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-3">
                         {episodeDetails.crew.map((member) => (
                           <Link
@@ -662,18 +662,16 @@ export function TVShowDetailsPage() {
                           </Link>
                         ))}
                       </div>
-                    ) : (
-                      <p className="text-sm text-muted-foreground">No crew details available.</p>
-                    )}
-                  </section>
+                    </section>
+                  )}
 
-                  <section aria-labelledby="episode-guests-title" className="border-t pt-5">
-                    <h3 id="episode-guests-title" className="mb-3 flex items-center gap-2 font-semibold">
-                      <Users className="h-4 w-4 text-muted-foreground" />
-                      Guest stars
-                      <span className="text-sm font-normal text-muted-foreground">{episodeDetails.guest_stars.length}</span>
-                    </h3>
-                    {episodeDetails.guest_stars.length ? (
+                  {episodeDetails.guest_stars.length > 0 && (
+                    <section aria-labelledby="episode-guests-title" className="border-t pt-5">
+                      <h3 id="episode-guests-title" className="mb-3 flex items-center gap-2 font-semibold">
+                        <Users className="h-4 w-4 text-muted-foreground" />
+                        Guest stars
+                        <span className="text-sm font-normal text-muted-foreground">{episodeDetails.guest_stars.length}</span>
+                      </h3>
                       <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-3">
                         {episodeDetails.guest_stars.map((guest) => (
                           <Link
@@ -695,10 +693,8 @@ export function TVShowDetailsPage() {
                           </Link>
                         ))}
                       </div>
-                    ) : (
-                      <p className="text-sm text-muted-foreground">No guest-star credits available.</p>
-                    )}
-                  </section>
+                    </section>
+                  )}
 
                   {episodeDetails.images?.stills && episodeDetails.images.stills.length > 0 && (
                     <section aria-labelledby="episode-images-title" className="border-t pt-5">
