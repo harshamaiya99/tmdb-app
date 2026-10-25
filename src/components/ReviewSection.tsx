@@ -162,7 +162,7 @@ export function ReviewSection({ reviews: initialReviews, mediaId, mediaType, tot
         )}
       </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 grid-flow-row-dense auto-rows-[240px]">
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 grid-flow-row-dense auto-rows-[minmax(240px,auto)] md:auto-rows-[240px]">
         
         {/* Rating Chart */}
         <div className="p-5 rounded-xl border bg-card text-card-foreground shadow-sm flex items-center gap-4 col-span-1 row-span-1">
@@ -240,6 +240,8 @@ export function ReviewSection({ reviews: initialReviews, mediaId, mediaType, tot
               className={`p-5 rounded-xl border bg-card text-card-foreground shadow-sm flex flex-col cursor-pointer transition-colors hover:border-muted-foreground/30 ${spanClasses} ${isLong ? 'select-none' : ''}`}
               role={isLong ? 'button' : undefined}
               tabIndex={isLong ? 0 : undefined}
+              aria-expanded={isLong ? isExpanded : undefined}
+              aria-controls={isLong ? `review-content-${review.id}` : undefined}
               onKeyDown={(event) => {
                 if (isLong && (event.key === 'Enter' || event.key === ' ')) {
                   event.preventDefault();
@@ -267,7 +269,7 @@ export function ReviewSection({ reviews: initialReviews, mediaId, mediaType, tot
                 </div>
               </div>
               
-              <div className="flex-1 mt-3 min-h-0 overflow-y-auto pr-2 custom-scrollbar">
+              <div className={`mt-3 min-h-0 overflow-visible pr-2 md:overflow-y-auto custom-scrollbar ${isExpanded ? 'flex-none md:flex-1' : 'flex-1'}`}>
                 <div id={`review-content-${review.id}`} className={`markdown-body text-sm text-muted-foreground ${!isExpanded ? 'line-clamp-6' : ''}`}>
                   <ReactMarkdown
                     remarkPlugins={[remarkGfm]}
@@ -279,6 +281,8 @@ export function ReviewSection({ reviews: initialReviews, mediaId, mediaType, tot
                           href={href}
                           target="_blank"
                           rel="noreferrer noopener"
+                          onClick={(event) => event.stopPropagation()}
+                          onKeyDown={(event) => event.stopPropagation()}
                           className="text-primary underline underline-offset-2 break-all hover:text-primary/80"
                         >
                           {children}

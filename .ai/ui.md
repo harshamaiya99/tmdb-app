@@ -136,6 +136,7 @@ Current conventions:
 - TMDB `<em>...</em>` tags are converted to markdown emphasis; arbitrary raw HTML is not enabled
 - bare URLs are converted into clickable markdown links before rendering
 - long reviews expand when the card itself is clicked, instead of showing a separate “Read more” control
+- on narrow screens, expanding a review grows its card vertically to show the full content; desktop cards keep their fixed-height, scrollable layout
 - the review date sits beside the rating badge in the header, not beneath the author name
 - the canonical date format is `dd MMM yyyy` via the shared `formatDate` helper
 
