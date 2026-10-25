@@ -199,6 +199,7 @@ export function TVShowDetailsPage() {
   const rating = tvShow.vote_average.toFixed(1);
   const episodeRuntime = tvShow.episode_run_time?.[0];
   const similarShows = (tvShow.recommendations?.results?.length ? tvShow.recommendations.results : tvShow.similar?.results) || [];
+  const selectedSeasonDetails = tvShow.seasons?.find((season) => season.season_number === selectedSeason);
 
   // Sort Crew: Creators & Executive Producers First!
   const aggregateCast = tvShow.aggregate_credits?.cast.map((person) => ({
@@ -428,6 +429,15 @@ export function TVShowDetailsPage() {
                 <h2 className="text-2xl font-semibold leading-none">Season Ratings</h2>
               </div>
             </div>
+
+            {selectedSeasonDetails?.overview?.trim() && (
+              <div className="mb-6">
+                <h3 className="text-lg font-semibold mb-2">
+                  {selectedSeasonDetails.name || `Season ${selectedSeason}`} Overview
+                </h3>
+                <p className="text-muted-foreground leading-relaxed">{selectedSeasonDetails.overview}</p>
+              </div>
+            )}
 
             <div className="grid grid-cols-1 gap-6 md:grid-cols-5">
               {/* The first episode row shares the space with the ratings card. */}
