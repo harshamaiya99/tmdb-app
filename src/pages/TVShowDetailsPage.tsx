@@ -467,7 +467,7 @@ export function TVShowDetailsPage() {
 
               {/* The Heatmap Card */}
               <div 
-                className="w-full h-80 min-h-0 md:col-span-2 md:col-start-4 md:row-start-1"
+                className="w-full min-h-80 md:col-span-2 md:col-start-4 md:row-start-1"
               >
                 <div className="h-full w-full rounded-xl border bg-card text-card-foreground shadow-sm p-4 lg:p-5 flex flex-col">
                   <div className="flex-1 min-w-0 min-h-0">
