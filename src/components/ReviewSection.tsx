@@ -254,7 +254,7 @@ export function ReviewSection({ reviews: initialReviews, mediaId, mediaType, tot
               key={review.id}
               style={{ viewTransitionName: `review-card-${review.id}` }} 
               onClick={(event) => isLong && toggleExpand(review.id, event.currentTarget)}
-              className={`p-5 rounded-xl border ${isExpanded ? 'border-primary/40 bg-primary/5' : 'bg-card'} text-card-foreground shadow-sm flex flex-col cursor-pointer transition-colors hover:border-muted-foreground/30 ${spanClasses} ${isLong ? 'select-none' : ''}`}
+              className={`p-5 rounded-xl border ${isExpanded ? 'border-primary/40 bg-primary/5' : 'bg-card active:border-primary/40 active:bg-primary/5'} text-card-foreground shadow-sm flex flex-col cursor-pointer transition-colors hover:border-muted-foreground/30 ${spanClasses} ${isLong ? 'select-none' : ''}`}
               role={isLong ? 'button' : undefined}
               tabIndex={isLong ? 0 : undefined}
               aria-expanded={isLong ? isExpanded : undefined}

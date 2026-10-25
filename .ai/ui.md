@@ -139,6 +139,7 @@ Current conventions:
 - on narrow screens, expanding a review grows its card vertically to show the full content; desktop cards keep their fixed-height, scrollable layout
 - mobile expansion preserves the card's top position in the viewport so added content flows downward
 - expanded review cards use a subtle primary-tinted background and border, returning to the default surface when collapsed
+- all review cards show a temporary primary-tinted pressed state when tapped, including short reviews that do not expand
 - the review date sits beside the rating badge in the header, not beneath the author name
 - the canonical date format is `dd MMM yyyy` via the shared `formatDate` helper
 

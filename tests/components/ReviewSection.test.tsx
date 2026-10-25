@@ -16,10 +16,10 @@ const longReview: Review = {
   },
 };
 
-function renderReviewSection() {
+function renderReviewSection(reviews: Review[] = [longReview]) {
   return render(
     <ReviewSection
-      reviews={[longReview]}
+      reviews={reviews}
       mediaId={123}
       mediaType="movie"
       totalPages={1}
@@ -75,5 +75,19 @@ describe('ReviewSection', () => {
     fireEvent.click(screen.getByRole('link', { name: 'https://example.com' }));
 
     expect(card).toHaveAttribute('aria-expanded', 'false');
+  });
+
+  it('shows pressed-state color feedback for reviews too short to expand', () => {
+    const shortReview: Review = {
+      ...longReview,
+      id: 'review-2',
+      content: 'A short review.',
+    };
+    renderReviewSection([shortReview]);
+
+    const card = screen.getByText('A short review.').closest('.rounded-xl');
+
+    expect(card).toHaveClass('active:bg-primary/5', 'active:border-primary/40');
+    expect(card).toHaveClass('bg-card');
   });
 });
