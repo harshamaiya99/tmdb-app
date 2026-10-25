@@ -35,18 +35,22 @@ describe('ReviewSection', () => {
     const content = markdown?.parentElement;
 
     expect(card).toHaveAttribute('aria-expanded', 'false');
+    expect(card).toHaveClass('bg-card');
     expect(markdown).toHaveClass('line-clamp-6');
     expect(content).toHaveClass('flex-1', 'overflow-visible', 'md:overflow-y-auto');
 
     fireEvent.click(card);
 
     expect(card).toHaveAttribute('aria-expanded', 'true');
+    expect(card).toHaveClass('bg-primary/5', 'border-primary/40');
     expect(markdown).not.toHaveClass('line-clamp-6');
     expect(content).toHaveClass('flex-none', 'md:flex-1');
 
     fireEvent.click(card);
 
     expect(card).toHaveAttribute('aria-expanded', 'false');
+    expect(card).toHaveClass('bg-card');
+    expect(card).not.toHaveClass('bg-primary/5', 'border-primary/40');
     expect(markdown).toHaveClass('line-clamp-6');
   });
 
