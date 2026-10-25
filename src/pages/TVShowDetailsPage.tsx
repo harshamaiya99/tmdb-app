@@ -833,9 +833,6 @@ export function TVShowDetailsPage() {
                               </div>
                               <div className="p-3">
                                 <p className="line-clamp-2 min-h-10 text-sm font-medium leading-5">{video.name}</p>
-                                <p className="mt-1 text-xs text-muted-foreground">
-                                  {videoUrl ? 'Watch on YouTube' : `Available on ${video.site}`}
-                                </p>
                               </div>
                             </>
                           );
