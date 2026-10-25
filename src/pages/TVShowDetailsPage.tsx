@@ -799,20 +799,46 @@ export function TVShowDetailsPage() {
                         Videos
                         <span className="text-sm font-normal text-muted-foreground">{episodeDetails.videos.results.length}</span>
                       </h3>
-                      <div className="grid gap-2 sm:grid-cols-2">
+                      <div className="grid gap-4 sm:grid-cols-2">
                         {episodeDetails.videos.results.map((video) => {
-                          const videoContent = (
-                            <>
-                              <PlayCircle className="h-5 w-5 shrink-0 text-muted-foreground" />
-                              <span className="min-w-0">
-                                <span className="block truncate font-medium">{video.name}</span>
-                                <span className="block text-xs text-muted-foreground">{video.type} · {video.site}</span>
-                              </span>
-                            </>
-                          );
                           const videoUrl = video.site === 'YouTube'
                             ? `https://www.youtube.com/watch?v=${encodeURIComponent(video.key)}`
                             : null;
+                          const videoCard = (
+                            <>
+                              <div className="relative aspect-video overflow-hidden bg-gradient-to-br from-muted via-muted/70 to-primary/20">
+                                {video.site === 'YouTube' && (
+                                  <img
+                                    src={`https://img.youtube.com/vi/${encodeURIComponent(video.key)}/hqdefault.jpg`}
+                                    alt=""
+                                    loading="lazy"
+                                    className="absolute inset-0 h-full w-full object-cover transition-transform duration-300 group-hover:scale-105"
+                                    onError={(event) => {
+                                      event.currentTarget.style.display = 'none';
+                                    }}
+                                  />
+                                )}
+                                <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-black/10 to-transparent" />
+                                <div className="absolute inset-0 flex items-center justify-center">
+                                  <span className="flex h-12 w-12 items-center justify-center rounded-full border border-white/50 bg-black/45 text-white shadow-lg backdrop-blur-sm transition-transform group-hover:scale-110">
+                                    <PlayCircle className="h-7 w-7" />
+                                  </span>
+                                </div>
+                                <span className="absolute bottom-2 left-2 rounded bg-black/65 px-2 py-1 text-[11px] font-medium text-white backdrop-blur-sm">
+                                  {video.type}
+                                </span>
+                                <span className="absolute bottom-2 right-2 rounded bg-black/65 px-2 py-1 text-[11px] font-medium text-white backdrop-blur-sm">
+                                  {video.site}
+                                </span>
+                              </div>
+                              <div className="p-3">
+                                <p className="line-clamp-2 min-h-10 text-sm font-medium leading-5">{video.name}</p>
+                                <p className="mt-1 text-xs text-muted-foreground">
+                                  {videoUrl ? 'Watch on YouTube' : `Available on ${video.site}`}
+                                </p>
+                              </div>
+                            </>
+                          );
 
                           return videoUrl ? (
                             <a
@@ -820,13 +846,13 @@ export function TVShowDetailsPage() {
                               href={videoUrl}
                               target="_blank"
                               rel="noopener noreferrer"
-                              className="flex items-center gap-3 rounded-lg border p-3 text-sm transition-colors hover:bg-accent"
+                              className="group overflow-hidden rounded-xl border bg-card text-card-foreground shadow-sm transition-all hover:-translate-y-0.5 hover:border-primary/50 hover:shadow-md focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
                             >
-                              {videoContent}
+                              {videoCard}
                             </a>
                           ) : (
-                            <div key={video.id} className="flex items-center gap-3 rounded-lg border p-3 text-sm">
-                              {videoContent}
+                            <div key={video.id} className="group overflow-hidden rounded-xl border bg-card text-card-foreground shadow-sm">
+                              {videoCard}
                             </div>
                           );
                         })}
