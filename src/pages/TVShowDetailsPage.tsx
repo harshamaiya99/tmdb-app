@@ -174,7 +174,7 @@ export function TVShowDetailsPage() {
   }
 
   const firstAirYear = tvShow.first_air_date ? new Date(tvShow.first_air_date).getFullYear() : '';
-  const rating = tvShow.vote_average.toFixed(1);
+  const rating = tvShow.vote_average?.toFixed(1);
   const episodeRuntime = tvShow.episode_run_time?.[0];
   const similarShows = (tvShow.recommendations?.results?.length ? tvShow.recommendations.results : tvShow.similar?.results) || [];
   const selectedSeasonDetails = tvShow.seasons?.find((season) => season.season_number === selectedSeason);
@@ -282,11 +282,13 @@ export function TVShowDetailsPage() {
                         <span>{episodeRuntime} min/ep</span>
                       </div>
                     )}
-                    <div className="flex items-center gap-1">
-                      <Star className="h-4 w-4 fill-current" />
-                      <span className="font-medium text-foreground">{rating}</span>
-                      <span>({tvShow.vote_count.toLocaleString()})</span>
-                    </div>
+                    {rating !== undefined && (
+                      <div className="flex items-center gap-1">
+                        <Star className="h-4 w-4 fill-current" />
+                        <span className="font-medium text-foreground">{rating}</span>
+                        <span>({tvShow.vote_count.toLocaleString()})</span>
+                      </div>
+                    )}
                   </div>
                 </div>
 

@@ -17,7 +17,10 @@ export function MediaCard({ item, type }: MediaCardProps) {
   const imagePath = isPerson ? item.profile_path : item.poster_path;
   const date = isPerson ? undefined : ('release_date' in item && item.release_date ? item.release_date : ('first_air_date' in item ? item.first_air_date : undefined));
   const year = date ? new Date(date).getFullYear() : null;
-  const rating = isPerson ? null : item.vote_average.toFixed(1);
+  const ratingValue = isPerson ? undefined : item.vote_average;
+  const rating = typeof ratingValue === 'number' && Number.isFinite(ratingValue)
+    ? ratingValue.toFixed(1)
+    : null;
 
   return (
     <Link to={isPerson ? `/person/${item.id}` : `/${type}/${item.id}`} className="block h-full">

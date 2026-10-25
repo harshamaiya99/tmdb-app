@@ -66,7 +66,7 @@ export function MovieDetailsPage() {
   }
 
   const releaseDate = formatDate(movie.release_date);
-  const rating = movie.vote_average.toFixed(1);
+  const rating = movie.vote_average?.toFixed(1);
   const similarMovies = (movie.recommendations?.results?.length ? movie.recommendations.results : movie.similar?.results) || [];
   
   const trailer = movie.videos?.results.find((v) => v.type === 'Trailer' && v.site === 'YouTube');
@@ -189,11 +189,13 @@ export function MovieDetailsPage() {
                       <span>{movie.runtime} min</span>
                     </div>
                   )}
-                  <div className="flex items-center gap-1">
-                    <Star className="h-4 w-4 fill-current" />
-                    <span className="font-medium text-foreground">{rating}</span>
-                    <span>({movie.vote_count.toLocaleString()})</span>
-                  </div>
+                  {rating !== undefined && (
+                    <div className="flex items-center gap-1">
+                      <Star className="h-4 w-4 fill-current" />
+                      <span className="font-medium text-foreground">{rating}</span>
+                      <span>({movie.vote_count.toLocaleString()})</span>
+                    </div>
+                  )}
                 </div>
               </div>
 

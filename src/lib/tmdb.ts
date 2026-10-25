@@ -68,7 +68,7 @@ export interface Movie {
   overview: string;
   original_language?: string;
   release_date: string;
-  vote_average: number;
+  vote_average?: number;
   vote_count: number;
   genre_ids?: number[];
   genres?: Genre[];
@@ -105,7 +105,7 @@ export interface TVShow {
   overview: string;
   original_language?: string;
   first_air_date: string;
-  vote_average: number;
+  vote_average?: number;
   vote_count: number;
   genre_ids?: number[];
   genres?: Genre[];
