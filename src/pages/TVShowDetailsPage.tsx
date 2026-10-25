@@ -702,9 +702,13 @@ export function TVShowDetailsPage() {
                       <span className="text-sm font-normal text-muted-foreground">{episodeDetails.crew.length}</span>
                     </h3>
                     {episodeDetails.crew.length ? (
-                      <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
+                      <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-3">
                         {episodeDetails.crew.map((member) => (
-                          <div key={`${member.id}:${member.job}`} className="flex min-w-0 items-center gap-3 rounded-lg border p-2">
+                          <Link
+                            key={`${member.id}:${member.job}`}
+                            to={`/person/${member.id}`}
+                            className="flex min-w-0 items-center gap-3 rounded-lg border p-2 transition-colors hover:bg-accent focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+                          >
                             <div className="h-12 w-12 shrink-0 overflow-hidden rounded-md bg-muted">
                               {member.profile_path ? (
                                 <TMDBImage path={member.profile_path} alt="" width={96} height={144} sizes="48px" className="h-full w-full object-cover" />
@@ -716,7 +720,7 @@ export function TVShowDetailsPage() {
                               <p className="truncate text-sm font-medium">{member.name}</p>
                               <p className="truncate text-xs text-muted-foreground">{member.job}</p>
                             </div>
-                          </div>
+                          </Link>
                         ))}
                       </div>
                     ) : (
@@ -731,9 +735,13 @@ export function TVShowDetailsPage() {
                       <span className="text-sm font-normal text-muted-foreground">{episodeDetails.guest_stars.length}</span>
                     </h3>
                     {episodeDetails.guest_stars.length ? (
-                      <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
+                      <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-3">
                         {episodeDetails.guest_stars.map((guest) => (
-                          <div key={guest.id} className="flex min-w-0 items-center gap-3 rounded-lg border p-2">
+                          <Link
+                            key={guest.id}
+                            to={`/person/${guest.id}`}
+                            className="flex min-w-0 items-center gap-3 rounded-lg border p-2 transition-colors hover:bg-accent focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+                          >
                             <div className="h-12 w-12 shrink-0 overflow-hidden rounded-md bg-muted">
                               {guest.profile_path ? (
                                 <TMDBImage path={guest.profile_path} alt="" width={96} height={144} sizes="48px" className="h-full w-full object-cover" />
@@ -745,7 +753,7 @@ export function TVShowDetailsPage() {
                               <p className="truncate text-sm font-medium">{guest.name}</p>
                               <p className="truncate text-xs text-muted-foreground">{guest.character}</p>
                             </div>
-                          </div>
+                          </Link>
                         ))}
                       </div>
                     ) : (
