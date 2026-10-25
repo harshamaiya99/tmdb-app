@@ -81,6 +81,7 @@ These fetch richer entity data:
 - movie details with credits, videos, similar titles, reviews, and watch providers
 - TV show details with aggregate series-wide cast credits, crew, videos, similar titles, reviews, and related metadata
 - TV season details with episodes and season-specific cast and crew credits
+- TV episode details with crew, guest stars, still images, and videos
 - person details with credits and images
 
 ### Search

@@ -37,6 +37,14 @@ export interface Episode {
   vote_count?: number;
 }
 
+export interface TVEpisodeDetails extends Episode {
+  production_code?: string;
+  crew: Crew[];
+  guest_stars: Cast[];
+  images?: { stills: PersonImage[] };
+  videos?: { results: Video[] };
+}
+
 export interface Season {
   id: number;
   name: string;
@@ -575,6 +583,13 @@ class TMDBService {
 
   async getTVSeasonDetails(tvId: number, seasonNumber: number, options?: TMDBRequestOptions): Promise<TVSeasonDetails> {
     return this.fetchFromTMDB<TVSeasonDetails>(`/tv/${tvId}/season/${seasonNumber}?append_to_response=credits`, options);
+  }
+
+  async getTVEpisodeDetails(tvId: number, seasonNumber: number, episodeNumber: number, options?: TMDBRequestOptions): Promise<TVEpisodeDetails> {
+    return this.fetchFromTMDB<TVEpisodeDetails>(
+      `/tv/${tvId}/season/${seasonNumber}/episode/${episodeNumber}?append_to_response=credits,images,videos`,
+      options,
+    );
   }
 
   async getPersonDetails(id: number, options?: TMDBRequestOptions): Promise<Person> {

@@ -1,13 +1,13 @@
 // src/pages/TVShowDetailsPage.tsx
 import { useEffect, useRef, useState } from 'react';
 import { useParams, useNavigate, Link, useSearchParams } from 'react-router-dom';
-import { Calendar, Clock, Star, PlayCircle, X } from 'lucide-react';
+import { Calendar, Clock, Star, PlayCircle, X, Image as ImageIcon, Video, Users } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Skeleton } from '@/components/ui/skeleton';
 import { MediaCard } from '@/components/MediaCard';
 import { CreditsCarousel } from '@/components/CreditsCarousel';
-import { tmdbService, type Episode, type TVShow, type TVSeasonDetails } from '@/lib/tmdb';
+import { tmdbService, type Episode, type TVShow, type TVEpisodeDetails, type TVSeasonDetails } from '@/lib/tmdb';
 import { buildEmbedUrl, formatDate } from '@/lib/utils';
 import { usePageTitle } from '@/hooks/usePageTitle';
 import { useCachedQuery } from '@/hooks/useCachedQuery';
@@ -136,6 +136,19 @@ export function TVShowDetailsPage() {
     (signal) => tmdbService.getTVSeasonDetails(Number(id), selectedSeason, { signal }),
     { enabled: Boolean(id) && selectedSeason > 0, ttlMs: 15 * 60 * 1000 },
   );
+  const episodeDetailsQuery = useCachedQuery<TVEpisodeDetails>(
+    `tv-episode:${id ?? 'none'}:${selectedEpisode?.episode.season_number ?? 'none'}:${selectedEpisode?.episode.episode_number ?? 'none'}`,
+    (signal) => tmdbService.getTVEpisodeDetails(
+      Number(id),
+      selectedEpisode?.episode.season_number ?? 0,
+      selectedEpisode?.episode.episode_number ?? 0,
+      { signal },
+    ),
+    { enabled: Boolean(id) && Boolean(selectedEpisode), ttlMs: 15 * 60 * 1000 },
+  );
+  const episodeDetails = episodeDetailsQuery.data?.id === selectedEpisode?.episode.id
+    ? episodeDetailsQuery.data
+    : undefined;
   const episodes = seasonQuery.data?.episodes ?? [];
   const seasonCast = seasonQuery.data?.credits?.cast ?? null;
   const seasonCrew = seasonQuery.data?.credits?.crew ?? null;
@@ -598,22 +611,58 @@ export function TVShowDetailsPage() {
               }
             }}
           >
-            <div className="relative aspect-video overflow-hidden bg-muted">
-              {selectedEpisode.episode.still_path ? (
-                <TMDBImage
-                  path={selectedEpisode.episode.still_path}
-                  alt={`${selectedEpisode.episode.name} episode still`}
-                  width={1280}
-                  height={720}
-                  sizes="(min-width: 768px) 768px, 100vw"
-                  loading="eager"
-                  className="h-full w-full object-cover"
-                />
-              ) : (
-                <div className="flex h-full items-center justify-center text-sm text-muted-foreground">
-                  Episode still unavailable
+            <div className="flex gap-4 border-b p-4 pr-14 sm:gap-6 sm:p-6 sm:pr-16">
+              <div className="h-fit w-28 shrink-0 overflow-hidden rounded-lg border bg-muted sm:w-52">
+                {selectedEpisode.episode.still_path ? (
+                  <TMDBImage
+                    path={selectedEpisode.episode.still_path}
+                    alt={`${selectedEpisode.episode.name} episode still`}
+                    width={416}
+                    height={234}
+                    sizes="(min-width: 640px) 208px, 112px"
+                    loading="eager"
+                    className="aspect-video w-full object-cover"
+                  />
+                ) : (
+                  <div className="flex aspect-video items-center justify-center px-2 text-center text-xs text-muted-foreground">
+                    Still unavailable
+                  </div>
+                )}
+              </div>
+              <div className="min-w-0 flex-1 self-center">
+                <p className="text-xs font-medium text-muted-foreground sm:text-sm">
+                  {tvShow.name} · Season {selectedEpisode.episode.season_number}, Episode {selectedEpisode.episode.episode_number}
+                </p>
+                <h2 id="episode-dialog-title" className="mt-1 text-lg font-bold tracking-tight sm:text-2xl">
+                  {selectedEpisode.episode.name}
+                </h2>
+                <div className="mt-2 flex flex-wrap items-center gap-x-3 gap-y-1 text-xs text-muted-foreground sm:text-sm">
+                  {(episodeDetails?.vote_average ?? selectedEpisode.episode.vote_average) !== undefined && (
+                    <span className="inline-flex items-center gap-1 font-medium text-amber-500">
+                      <Star className="h-4 w-4 fill-current" />
+                      {(episodeDetails?.vote_average ?? selectedEpisode.episode.vote_average ?? 0) > 0
+                        ? (episodeDetails?.vote_average ?? selectedEpisode.episode.vote_average ?? 0).toFixed(1)
+                        : 'Not rated'}
+                      {episodeDetails?.vote_count ? ` (${episodeDetails.vote_count.toLocaleString()})` : ''}
+                    </span>
+                  )}
+                  {(episodeDetails?.air_date || selectedEpisode.episode.air_date) && (
+                    <span className="inline-flex items-center gap-1">
+                      <Calendar className="h-4 w-4" />
+                      {formatDate(episodeDetails?.air_date || selectedEpisode.episode.air_date)}
+                    </span>
+                  )}
+                  {(episodeDetails?.runtime || selectedEpisode.episode.runtime) && (
+                    <span className="inline-flex items-center gap-1">
+                      <Clock className="h-4 w-4" />
+                      {episodeDetails?.runtime || selectedEpisode.episode.runtime} min
+                    </span>
+                  )}
                 </div>
-              )}
+                {episodeDetails?.production_code && (
+                  <p className="mt-1 text-xs text-muted-foreground">Production code: {episodeDetails.production_code}</p>
+                )}
+              </div>
               <Button
                 ref={episodeDialogCloseRef}
                 type="button"
@@ -627,59 +676,170 @@ export function TVShowDetailsPage() {
               </Button>
             </div>
 
-            <div className="space-y-5 p-5 sm:p-7">
-              <div className="space-y-2">
-                <p className="text-sm font-medium text-muted-foreground">
-                  {tvShow.name} · Season {selectedEpisode.episode.season_number}, Episode {selectedEpisode.episode.episode_number}
-                </p>
-                <h2 id="episode-dialog-title" className="text-2xl font-bold tracking-tight sm:text-3xl">
-                  {selectedEpisode.episode.name}
-                </h2>
-                <div className="flex flex-wrap items-center gap-x-4 gap-y-2 text-sm text-muted-foreground">
-                  {selectedEpisode.episode.vote_average !== undefined && (
-                    <span className="inline-flex items-center gap-1 font-medium text-amber-500">
-                      <Star className="h-4 w-4 fill-current" />
-                      {selectedEpisode.episode.vote_average > 0
-                        ? selectedEpisode.episode.vote_average.toFixed(1)
-                        : 'Not rated'}
-                    </span>
-                  )}
-                  {selectedEpisode.episode.air_date && (
-                    <span className="inline-flex items-center gap-1">
-                      <Calendar className="h-4 w-4" />
-                      {formatDate(selectedEpisode.episode.air_date)}
-                    </span>
-                  )}
-                  {selectedEpisode.episode.runtime && (
-                    <span className="inline-flex items-center gap-1">
-                      <Clock className="h-4 w-4" />
-                      {selectedEpisode.episode.runtime} min
-                    </span>
-                  )}
-                </div>
-              </div>
-
-              <div className="border-t pt-4">
-                <h3 className="mb-2 text-sm font-semibold uppercase tracking-wide text-muted-foreground">Episode overview</h3>
-                <p className="leading-relaxed">
-                  {selectedEpisode.episode.overview || 'No overview available for this episode.'}
+            <div className="space-y-6 p-4 sm:p-6">
+              <div>
+                <h3 className="mb-2 text-sm font-semibold uppercase tracking-wide text-muted-foreground">Overview</h3>
+                <p className="text-sm leading-relaxed sm:text-base">
+                  {episodeDetails?.overview || selectedEpisode.episode.overview || 'No overview available for this episode.'}
                 </p>
               </div>
 
-              <div className="flex flex-col gap-3 border-t pt-4 sm:flex-row sm:items-center">
-                {selectedEpisode.streamUrl !== '#' ? (
-                  <Button asChild size="lg" className="gap-2">
+              {episodeDetailsQuery.loading && (
+                <p className="text-sm text-muted-foreground" role="status">Loading episode credits and media...</p>
+              )}
+              {episodeDetailsQuery.error && (
+                <p className="text-sm text-destructive" role="alert">
+                  Episode credits and media could not be loaded: {episodeDetailsQuery.error.message}
+                </p>
+              )}
+
+              {episodeDetails && (
+                <>
+                  <div className="grid gap-6 border-t pt-5 sm:grid-cols-2">
+                    <section aria-labelledby="episode-crew-title">
+                      <h3 id="episode-crew-title" className="mb-3 flex items-center gap-2 font-semibold">
+                        <Users className="h-4 w-4 text-muted-foreground" />
+                        Crew
+                        <span className="text-sm font-normal text-muted-foreground">{episodeDetails.crew.length}</span>
+                      </h3>
+                      {episodeDetails.crew.length ? (
+                        <div className="space-y-2">
+                          {episodeDetails.crew.map((member) => (
+                            <div key={`${member.id}:${member.job}`} className="flex justify-between gap-3 text-sm">
+                              <span className="font-medium">{member.name}</span>
+                              <span className="text-right text-muted-foreground">{member.job}</span>
+                            </div>
+                          ))}
+                        </div>
+                      ) : (
+                        <p className="text-sm text-muted-foreground">No crew details available.</p>
+                      )}
+                    </section>
+
+                    <section aria-labelledby="episode-guests-title">
+                      <h3 id="episode-guests-title" className="mb-3 flex items-center gap-2 font-semibold">
+                        <Users className="h-4 w-4 text-muted-foreground" />
+                        Guest stars
+                        <span className="text-sm font-normal text-muted-foreground">{episodeDetails.guest_stars.length}</span>
+                      </h3>
+                      {episodeDetails.guest_stars.length ? (
+                        <div className="grid gap-3">
+                          {episodeDetails.guest_stars.map((guest) => (
+                            <div key={guest.id} className="flex min-w-0 items-center gap-3">
+                              <div className="h-12 w-12 shrink-0 overflow-hidden rounded-md bg-muted">
+                                {guest.profile_path ? (
+                                  <TMDBImage path={guest.profile_path} alt="" width={96} height={144} sizes="48px" className="h-full w-full object-cover" />
+                                ) : (
+                                  <div className="flex h-full items-center justify-center text-xs text-muted-foreground">N/A</div>
+                                )}
+                              </div>
+                              <div className="min-w-0">
+                                <p className="truncate text-sm font-medium">{guest.name}</p>
+                                <p className="truncate text-xs text-muted-foreground">{guest.character}</p>
+                              </div>
+                            </div>
+                          ))}
+                        </div>
+                      ) : (
+                        <p className="text-sm text-muted-foreground">No guest-star credits available.</p>
+                      )}
+                    </section>
+                  </div>
+
+                  {episodeDetails.images?.stills && episodeDetails.images.stills.length > 0 && (
+                    <section aria-labelledby="episode-images-title" className="border-t pt-5">
+                      <h3 id="episode-images-title" className="mb-3 flex items-center gap-2 font-semibold">
+                        <ImageIcon className="h-4 w-4 text-muted-foreground" />
+                        Episode images
+                        <span className="text-sm font-normal text-muted-foreground">{episodeDetails.images.stills.length}</span>
+                      </h3>
+                      <div className="flex gap-3 overflow-x-auto pb-2">
+                        {episodeDetails.images.stills.map((image, index) => (
+                          <a
+                            key={`${image.file_path}:${index}`}
+                            href={tmdbService.getImageUrl(image.file_path)}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            aria-label={`Open episode image ${index + 1}`}
+                            className="w-48 shrink-0 overflow-hidden rounded-lg border bg-muted sm:w-56"
+                          >
+                            <TMDBImage
+                              path={image.file_path}
+                              alt={`${selectedEpisode.episode.name}, image ${index + 1}`}
+                              width={448}
+                              height={252}
+                              sizes="(min-width: 640px) 224px, 192px"
+                              className="aspect-video w-full object-cover transition-transform hover:scale-105"
+                            />
+                          </a>
+                        ))}
+                      </div>
+                    </section>
+                  )}
+
+                  {episodeDetails.videos?.results && episodeDetails.videos.results.length > 0 && (
+                    <section aria-labelledby="episode-videos-title" className="border-t pt-5">
+                      <h3 id="episode-videos-title" className="mb-3 flex items-center gap-2 font-semibold">
+                        <Video className="h-4 w-4 text-muted-foreground" />
+                        Videos
+                        <span className="text-sm font-normal text-muted-foreground">{episodeDetails.videos.results.length}</span>
+                      </h3>
+                      <div className="grid gap-2 sm:grid-cols-2">
+                        {episodeDetails.videos.results.map((video) => {
+                          const videoContent = (
+                            <>
+                              <PlayCircle className="h-5 w-5 shrink-0 text-muted-foreground" />
+                              <span className="min-w-0">
+                                <span className="block truncate font-medium">{video.name}</span>
+                                <span className="block text-xs text-muted-foreground">{video.type} · {video.site}</span>
+                              </span>
+                            </>
+                          );
+                          const videoUrl = video.site === 'YouTube'
+                            ? `https://www.youtube.com/watch?v=${encodeURIComponent(video.key)}`
+                            : null;
+
+                          return videoUrl ? (
+                            <a
+                              key={video.id}
+                              href={videoUrl}
+                              target="_blank"
+                              rel="noopener noreferrer"
+                              className="flex items-center gap-3 rounded-lg border p-3 text-sm transition-colors hover:bg-accent"
+                            >
+                              {videoContent}
+                            </a>
+                          ) : (
+                            <div key={video.id} className="flex items-center gap-3 rounded-lg border p-3 text-sm">
+                              {videoContent}
+                            </div>
+                          );
+                        })}
+                      </div>
+                    </section>
+                  )}
+                </>
+              )}
+
+              <div className="flex flex-col gap-3 border-t pt-5 sm:flex-row sm:items-center">
+                <Button
+                  asChild={selectedEpisode.streamUrl !== '#'}
+                  size="lg"
+                  className="gap-2"
+                  disabled={selectedEpisode.streamUrl === '#'}
+                >
+                  {selectedEpisode.streamUrl !== '#' ? (
                     <a href={selectedEpisode.streamUrl} target="_blank" rel="noopener noreferrer">
                       <PlayCircle className="h-5 w-5" />
                       Watch episode
                     </a>
-                  </Button>
-                ) : (
-                  <Button type="button" size="lg" disabled className="gap-2">
-                    <PlayCircle className="h-5 w-5" />
-                    Watch episode
-                  </Button>
-                )}
+                  ) : (
+                    <>
+                      <PlayCircle className="h-5 w-5" />
+                      Watch episode
+                    </>
+                  )}
+                </Button>
                 {selectedEpisode.streamUrl === '#' && (
                   <p className="text-sm text-muted-foreground">
                     Add a TV URL template in embed settings to enable playback.
