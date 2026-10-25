@@ -42,7 +42,7 @@ export function MovieDetailsPage() {
     return (
       <div className="min-h-screen container py-6 space-y-6">
         <Skeleton className="h-8 w-24" />
-        <div className="grid md:grid-cols-[200px_1fr] gap-6">
+        <div className="grid min-w-0 grid-cols-1 gap-6 md:grid-cols-[200px_minmax(0,1fr)]">
           <Skeleton className="aspect-[2/3]" />
           <div className="space-y-4">
             <Skeleton className="h-10 w-3/4" />
@@ -94,12 +94,12 @@ export function MovieDetailsPage() {
       <div className="container py-6">
         
         {/* TOP SECTION */}
-        <div className="grid md:grid-cols-[200px_1fr] gap-6">
+        <div className="grid min-w-0 grid-cols-1 gap-6 md:grid-cols-[200px_minmax(0,1fr)]">
           
           {/* Left Column: Poster & Watch Button */}
-          <div className="space-y-4">
+          <div className="min-w-0 space-y-4">
             {movie.poster_path ? (
-              <TMDBImage path={movie.poster_path} alt={`${movie.title} poster`} width={500} height={750} sizes="(min-width: 768px) 200px, 50vw" loading="eager" fetchPriority="high" className="w-full rounded-lg border shadow-sm" />
+              <TMDBImage path={movie.poster_path} alt={`${movie.title} poster`} width={500} height={750} sizes="(min-width: 768px) 200px, calc(100vw - 2rem)" loading="eager" fetchPriority="high" className="block h-auto w-full max-w-full rounded-lg border shadow-sm" />
             ) : (
               <div role="img" aria-label={`${movie.title} poster unavailable`} className="aspect-[2/3] bg-muted rounded-lg flex items-center justify-center border shadow-sm text-center text-sm text-muted-foreground">Poster unavailable</div>
             )}
@@ -152,10 +152,10 @@ export function MovieDetailsPage() {
             )}
           </div>
           
-          <div className="flex flex-col xl:flex-row gap-8 items-start">
+          <div className="flex min-w-0 flex-col items-start gap-8 xl:flex-row">
             
             {/* Middle Column: Movie Details */}
-            <div className="flex-1 space-y-6">
+            <div className="min-w-0 flex-1 space-y-6">
               <div>
                 <h1 className="text-3xl md:text-4xl font-bold tracking-tight">{movie.title}</h1>
                 {movie.tagline && (
@@ -255,7 +255,7 @@ export function MovieDetailsPage() {
 
             {/* Right Column: Trailer AND Collection Stacked */}
             {(trailer || hasCollection) && (
-              <div className="xl:w-[400px] w-full shrink-0 flex flex-col gap-8 min-w-0">
+              <div className="min-w-0 w-full shrink-0 flex flex-col gap-8 xl:w-[400px]">
                 
                 {/* Trailer */}
                 {trailer && (
@@ -263,7 +263,7 @@ export function MovieDetailsPage() {
                     <h2 className="text-xl font-semibold mb-2 flex items-center gap-2">
                       <PlayCircle className="w-5 h-5" /> Trailer
                     </h2>
-                    <div className="aspect-video w-full rounded-lg overflow-hidden border shadow-sm">
+                    <div className="aspect-video w-full min-w-0 overflow-hidden rounded-lg border shadow-sm">
                       <iframe
                         width="100%"
                         height="100%"
@@ -271,6 +271,7 @@ export function MovieDetailsPage() {
                         title="Trailer"
                         frameBorder="0"
                         allowFullScreen
+                        className="block h-full w-full"
                       ></iframe>
                     </div>
                   </div>

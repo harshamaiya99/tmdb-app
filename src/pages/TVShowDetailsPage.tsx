@@ -219,10 +219,10 @@ export function TVShowDetailsPage() {
   return (
     <div className="min-h-screen">
       <div className="container py-6">
-        <div className="grid md:grid-cols-[200px_1fr] gap-6">
-          <div className="space-y-4">
+        <div className="grid min-w-0 grid-cols-1 gap-6 md:grid-cols-[200px_minmax(0,1fr)]">
+          <div className="min-w-0 space-y-4">
             {tvShow.poster_path ? (
-              <TMDBImage path={tvShow.poster_path} alt={`${tvShow.name} poster`} width={500} height={750} sizes="(min-width: 768px) 200px, 50vw" loading="eager" fetchPriority="high" className="w-full rounded-lg border" />
+              <TMDBImage path={tvShow.poster_path} alt={`${tvShow.name} poster`} width={500} height={750} sizes="(min-width: 768px) 200px, calc(100vw - 2rem)" loading="eager" fetchPriority="high" className="block h-auto w-full max-w-full rounded-lg border" />
             ) : (
               <div role="img" aria-label={`${tvShow.name} poster unavailable`} className="aspect-[2/3] bg-muted rounded-lg flex items-center justify-center text-center text-sm text-muted-foreground">Poster unavailable</div>
             )}
@@ -245,10 +245,10 @@ export function TVShowDetailsPage() {
             </div>
           </div>
 
-          <div className="space-y-8">
-            <div className="flex flex-col xl:flex-row gap-6">
+          <div className="min-w-0 space-y-8">
+            <div className="flex min-w-0 flex-col gap-6 xl:flex-row">
               
-              <div className="flex-1 space-y-6">
+              <div className="min-w-0 flex-1 space-y-6">
                 <div>
                   <h1 className="text-3xl md:text-4xl font-bold tracking-tight">{tvShow.name}</h1>
                   {tvShow.tagline && (
@@ -311,11 +311,11 @@ export function TVShowDetailsPage() {
               </div>
 
               {tvShow.videos?.results.find((v) => v.type === 'Trailer' && v.site === 'YouTube') && (
-                <div className="xl:w-[400px] shrink-0">
+                <div className="min-w-0 w-full shrink-0 xl:w-[400px]">
                   <h2 className="text-xl font-semibold mb-2 flex items-center gap-2">
                     <PlayCircle className="w-5 h-5" /> Trailer
                   </h2>
-                  <div className="aspect-video w-full rounded-lg overflow-hidden border">
+                  <div className="aspect-video w-full min-w-0 overflow-hidden rounded-lg border">
                     <iframe
                       width="100%"
                       height="100%"
@@ -323,6 +323,7 @@ export function TVShowDetailsPage() {
                       title="Trailer"
                       frameBorder="0"
                       allowFullScreen
+                      className="block h-full w-full"
                     ></iframe>
                   </div>
                 </div>
