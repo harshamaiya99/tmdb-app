@@ -1,6 +1,6 @@
 // src/components/Layout.tsx
 import { ReactNode, useEffect, useState, type ChangeEvent, type FormEvent, type KeyboardEvent } from 'react';
-import { LogOut, Search, Clapperboard, ArrowLeft, Settings2, X } from 'lucide-react';
+import { LogOut, Search, ArrowLeft, Settings2, X } from 'lucide-react';
 import { Link, NavLink, useNavigate, useSearchParams, useLocation } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -253,7 +253,12 @@ export function Layout({ children }: LayoutProps) {
               </Button>
             )}
             <Link to="/" className="flex min-w-0 items-center gap-2">
-              <Clapperboard className="h-5 w-5 shrink-0" />
+              <img
+                src={`${import.meta.env.BASE_URL}favicon.svg`}
+                alt=""
+                aria-hidden="true"
+                className="h-7 w-7 shrink-0"
+              />
               <span
                 className={`min-w-0 truncate font-bold ${
                   showBackButton ? 'max-w-[calc(100vw-16rem)]' : 'max-w-[calc(100vw-13.5rem)]'
