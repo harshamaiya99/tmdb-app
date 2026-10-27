@@ -185,14 +185,6 @@
   color: hsl(var(--foreground));
 }
 
-@media (min-width: 768px) {
-  .episode-grid {
-    display: flex;
-    flex-direction: column;
-    gap: 1.5rem;
-  }
-}
-
 @layer base {
   * {
     @apply border-border;

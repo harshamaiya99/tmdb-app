@@ -76,7 +76,6 @@ export function TVShowDetailsPage() {
   const selectedSeason = parseInt(searchParams.get('season') || '0', 10);
   const [activeCredits, setActiveCredits] = useState<'cast' | 'crew'>('cast');
   const [selectedEpisode, setSelectedEpisode] = useState<{ episode: Episode; streamUrl: string } | null>(null);
-  const episodeGridRef = useRef<HTMLDivElement>(null);
   const episodeDialogCloseRef = useRef<HTMLButtonElement>(null);
 
   const navigate = useNavigate();
@@ -215,6 +214,8 @@ export function TVShowDetailsPage() {
     }
     return unique;
   }, []);
+  const hasCredits = cast.length > 0 || crew.length > 0 || seasonCreditsLoading;
+  const hasSeasonRatings = tvShow.seasons?.some((season) => season.season_number > 0) ?? false;
 
   return (
     <div className="min-h-screen">
@@ -332,168 +333,124 @@ export function TVShowDetailsPage() {
           </div>
         </div>
 
-        {/* Cast and crew */}
-        {(cast.length > 0 || crew.length > 0 || seasonCreditsLoading) && (
-          <div className="mt-12 pt-8 border-t">
-            <div className="flex items-center justify-between gap-4 mb-4">
-              <h2 className="text-xl font-semibold">{activeCredits === 'cast' ? 'Cast' : 'Crew'}</h2>
-              <div className="flex rounded-md border p-1" role="group" aria-label="Credits">
-                <Button
-                  type="button"
-                  variant={activeCredits === 'cast' ? 'secondary' : 'ghost'}
-                  size="sm"
-                  disabled={cast.length === 0}
-                  onClick={() => setActiveCredits('cast')}
-                >
-                  Cast
-                </Button>
-                <Button
-                  type="button"
-                  variant={activeCredits === 'crew' ? 'secondary' : 'ghost'}
-                  size="sm"
-                  disabled={crew.length === 0}
-                  onClick={() => setActiveCredits('crew')}
-                >
-                  Crew
-                </Button>
-              </div>
-            </div>
-
-            <div>
-              {seasonCreditsLoading ? (
-                <div className="flex gap-3 overflow-hidden pb-4">
-                  {[...Array(8)].map((_, index) => (
-                    <Skeleton key={index} className="h-[150px] w-[75px] shrink-0 rounded-md" />
-                  ))}
+        {(hasCredits || hasSeasonRatings) && (
+          <div className="mt-12 grid gap-6 border-t pt-8 lg:grid-cols-5">
+            {hasCredits && (
+              <section className="min-w-0 lg:col-span-3">
+                <div className="mb-4 flex items-center justify-between gap-4">
+                  <h2 className="text-xl font-semibold">{activeCredits === 'cast' ? 'Cast' : 'Crew'}</h2>
+                  <div className="flex rounded-md border p-1" role="group" aria-label="Credits">
+                    <Button
+                      type="button"
+                      variant={activeCredits === 'cast' ? 'secondary' : 'ghost'}
+                      size="sm"
+                      disabled={cast.length === 0}
+                      onClick={() => setActiveCredits('cast')}
+                    >
+                      Cast
+                    </Button>
+                    <Button
+                      type="button"
+                      variant={activeCredits === 'crew' ? 'secondary' : 'ghost'}
+                      size="sm"
+                      disabled={crew.length === 0}
+                      onClick={() => setActiveCredits('crew')}
+                    >
+                      Crew
+                    </Button>
+                  </div>
                 </div>
-              ) : activeCredits === 'cast' && cast.length > 0 ? (
-                <CreditsCarousel people={cast} type="cast" />
-              ) : null}
 
-              {!seasonCreditsLoading && activeCredits === 'crew' && crew.length > 0 && (
-                <CreditsCarousel people={crew} type="crew" />
-              )}
-            </div>
+                {seasonCreditsLoading ? (
+                  <div className="flex gap-3 overflow-hidden pb-4">
+                    {[...Array(8)].map((_, index) => (
+                      <Skeleton key={index} className="h-[150px] w-[75px] shrink-0 rounded-md" />
+                    ))}
+                  </div>
+                ) : activeCredits === 'cast' && cast.length > 0 ? (
+                  <CreditsCarousel people={cast} type="cast" />
+                ) : null}
 
+                {!seasonCreditsLoading && activeCredits === 'crew' && crew.length > 0 && (
+                  <CreditsCarousel people={crew} type="crew" />
+                )}
+              </section>
+            )}
+
+            {hasSeasonRatings && (
+              <section
+                className={`min-w-0 ${hasCredits ? 'lg:col-span-2' : 'lg:col-span-5'}`}
+                aria-labelledby="season-ratings-title"
+              >
+                <h2 id="season-ratings-title" className="mb-4 text-xl font-semibold">Season Ratings</h2>
+                <div className="min-h-64 w-full rounded-xl border bg-card p-4 text-card-foreground shadow-sm lg:min-h-80 lg:p-5">
+                  <EpisodesRatingOverview tvId={tvShow.id} seasons={tvShow.seasons ?? []} />
+                </div>
+              </section>
+            )}
           </div>
         )}
-        
-{/* Dynamic Episodes Section (Dense Masonry Grid) */}
+
+        {/* Episodes */}
         {tvShow.seasons && tvShow.seasons.length > 0 && (
           <div className="mt-12 pt-8 border-t">
-            
-            {/* Perfectly Aligned Header Grid */}
-            <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-6 mb-6">
-              
-              {/* Left Header: Episodes + Dropdown */}
-              <div className="col-span-1 flex flex-col items-stretch gap-3 sm:col-span-2 sm:flex-row sm:items-center md:col-span-1 lg:col-span-2 xl:col-span-3">
-                <h2 className="text-2xl font-semibold leading-none">Episodes</h2>
-                <select
-                  value={selectedSeason || ''}
-                  onChange={(e) => {
-                    const newParams = new URLSearchParams(searchParams);
-                    newParams.set('season', e.target.value);
-                    setSearchParams(newParams);
-                  }}
-                  className="flex h-10 w-full min-w-0 items-center justify-between rounded-md border border-input bg-background px-3 py-1 text-sm ring-offset-background placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 sm:w-[250px]"
-                >
-                  {tvShow.seasons.map((season) => (
-                    <option key={season.id} value={season.season_number}>
-                      {season.name} ({season.episode_count} Episodes)
-                    </option>
-                  ))}
-                </select>
-              </div>
-
-              {/* Right Header: Season Ratings (Matches Heatmap Columns!) */}
-              <div className="hidden md:flex items-center col-span-2 md:col-start-2 lg:col-start-3 xl:col-start-4">
-                <h2 className="text-2xl font-semibold leading-none">Season Ratings</h2>
-              </div>
+            <div className="mb-6 flex flex-col items-stretch gap-3 sm:flex-row sm:items-center">
+              <h2 className="text-2xl font-semibold leading-none">Episodes</h2>
+              <select
+                value={selectedSeason || ''}
+                onChange={(e) => {
+                  const newParams = new URLSearchParams(searchParams);
+                  newParams.set('season', e.target.value);
+                  setSearchParams(newParams);
+                }}
+                className="flex h-10 w-full min-w-0 items-center justify-between rounded-md border border-input bg-background px-3 py-1 text-sm ring-offset-background placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 sm:w-[250px]"
+              >
+                {tvShow.seasons.map((season) => (
+                  <option key={season.id} value={season.season_number}>
+                    {season.name} ({season.episode_count} Episodes)
+                  </option>
+                ))}
+              </select>
             </div>
 
-            <div className="grid grid-cols-1 gap-6 md:grid-cols-5">
-              <div className="md:col-span-3">
-                {selectedSeasonDetails?.overview?.trim() && (
-                  <div className="mb-6">
-                    <h3 className="text-lg font-semibold mb-2">
-                      {selectedSeasonDetails.name || `Season ${selectedSeason}`} Overview
-                    </h3>
-                    <p className="text-muted-foreground leading-relaxed">{selectedSeasonDetails.overview}</p>
-                  </div>
-                )}
-
-                <div className="episode-row grid grid-cols-1 gap-6 md:grid-cols-3">
-                  {loadingEpisodes ? (
-                    [...Array(3)].map((_, i) => (
-                      <Skeleton key={i} className="h-64 w-full rounded-xl" />
-                    ))
-                  ) : episodes.slice(0, 3).map((episode) => {
-                    const imdbId = tvShow.external_ids?.imdb_id || '';
-                    const streamUrl = buildEmbedUrl(tvUrlTemplate, tvShow.id, imdbId)
-                      .replace('{SEASON}', selectedSeason.toString())
-                      .replace('{EPISODE}', episode.episode_number.toString());
-
-                    return (
-                      <EpisodeCard
-                        key={episode.id}
-                        episode={episode}
-                        tvShowName={tvShow.name}
-                        streamUrl={streamUrl}
-                        onSelectEpisode={(selected, url) => setSelectedEpisode({ episode: selected, streamUrl: url })}
-                      />
-                    );
-                  })}
-                </div>
+            {selectedSeasonDetails?.overview?.trim() && (
+              <div className="mb-6">
+                <h3 className="mb-2 text-lg font-semibold">
+                  {selectedSeasonDetails.name || `Season ${selectedSeason}`} Overview
+                </h3>
+                <p className="leading-relaxed text-muted-foreground">{selectedSeasonDetails.overview}</p>
               </div>
+            )}
 
-              {/* The Heatmap Card */}
-              <div className="w-full min-h-64 md:min-h-80 md:col-span-2 md:col-start-4 md:row-start-1">
-                <h3 className="mb-3 text-xl font-semibold md:hidden">Season Ratings</h3>
-                <div className="h-full w-full rounded-xl border bg-card text-card-foreground shadow-sm p-4 lg:p-5 flex flex-col">
-                  <div className="flex-1 min-w-0 min-h-0">
-                    <EpisodesRatingOverview 
-                      tvId={tvShow.id} 
-                      seasons={tvShow.seasons} 
+            <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5">
+              {loadingEpisodes ? (
+                [...Array(5)].map((_, index) => (
+                  <Skeleton key={index} className="h-64 w-full rounded-xl" />
+                ))
+              ) : (
+                episodes.map((episode) => {
+                  const imdbId = tvShow.external_ids?.imdb_id || '';
+                  const streamUrl = buildEmbedUrl(tvUrlTemplate, tvShow.id, imdbId)
+                    .replace('{SEASON}', selectedSeason.toString())
+                    .replace('{EPISODE}', episode.episode_number.toString());
+
+                  return (
+                    <EpisodeCard
+                      key={episode.id}
+                      episode={episode}
+                      tvShowName={tvShow.name}
+                      streamUrl={streamUrl}
+                      onSelectEpisode={(selected, url) => setSelectedEpisode({ episode: selected, streamUrl: url })}
                     />
-                  </div>
-                </div>
-              </div>
+                  );
+                })
+              )}
 
-              {/* Remaining episode rows use the full page width. */}
-              <div ref={episodeGridRef} className="episode-grid col-span-full grid gap-6">
-                {loadingEpisodes ? (
-                  [...Array(7)].map((_, i) => (
-                    <Skeleton key={i} className="h-64 w-full rounded-xl" />
-                  ))
-                ) : (
-                  Array.from({ length: Math.ceil(Math.max(0, episodes.length - 3) / 5) }, (_, rowIndex) => (
-                    <div key={rowIndex} className="episode-row grid grid-cols-1 gap-6 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5">
-                      {episodes.slice(rowIndex * 5 + 3, rowIndex * 5 + 8).map((episode) => {
-                      const imdbId = tvShow.external_ids?.imdb_id || '';
-                      const streamUrl = buildEmbedUrl(tvUrlTemplate, tvShow.id, imdbId)
-                        .replace('{SEASON}', selectedSeason.toString())
-                        .replace('{EPISODE}', episode.episode_number.toString());
-
-                      return (
-                        <EpisodeCard
-                          key={episode.id}
-                          episode={episode}
-                          tvShowName={tvShow.name}
-                          streamUrl={streamUrl}
-                          onSelectEpisode={(selected, url) => setSelectedEpisode({ episode: selected, streamUrl: url })}
-                        />
-                      );
-                      })}
-                    </div>
-                  ))
-                )}
-              
               {!loadingEpisodes && episodes.length === 0 && (
                 <div className="col-span-full pt-8">
-                  <p className="text-muted-foreground text-center">No episodes found for this season.</p>
+                  <p className="text-center text-muted-foreground">No episodes found for this season.</p>
                 </div>
               )}
-              </div>
             </div>
           </div>
         )}

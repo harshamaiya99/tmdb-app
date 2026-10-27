@@ -151,7 +151,7 @@ The shared shell in [src/components/Layout.tsx](src/components/Layout.tsx) provi
 
 On narrow screens, the header keeps the brand and utility actions on its top row, places search on a full-width row, and exposes the primary navigation below it. Header utility controls and mobile navigation links should remain comfortable touch targets. The shared container uses 1rem horizontal padding on small screens and returns to 2rem from the `sm` breakpoint upward.
 
-TV episode controls stack on narrow screens. Season ratings remain horizontally scrollable within their panel, with a visible heading on mobile, and the episode details dialog stacks its image above the text until there is enough width for a side-by-side layout.
+TV show details place cast and crew beside the season ratings heatmap in a 3:2 desktop layout; the sections stack on narrower screens. The heatmap remains horizontally scrollable within its panel. Episode controls stack on narrow screens, and episodes use a responsive grid with up to five cards per row on wide screens. The episode details dialog stacks its image above the text until there is enough width for a side-by-side layout.
 
 ## Spacing and Typography Conventions
 
