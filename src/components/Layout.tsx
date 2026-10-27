@@ -253,12 +253,14 @@ export function Layout({ children }: LayoutProps) {
               </Button>
             )}
             <Link to="/" className="flex min-w-0 items-center gap-2">
-              <img
-                src={`${import.meta.env.BASE_URL}favicon.svg`}
-                alt=""
-                aria-hidden="true"
-                className="h-7 w-7 shrink-0"
-              />
+              {!showBackButton && (
+                <img
+                  src={`${import.meta.env.BASE_URL}favicon.svg`}
+                  alt=""
+                  aria-hidden="true"
+                  className="h-7 w-7 shrink-0"
+                />
+              )}
               <span
                 className={`min-w-0 truncate font-bold ${
                   showBackButton ? 'max-w-[calc(100vw-16rem)]' : 'max-w-[calc(100vw-13.5rem)]'
