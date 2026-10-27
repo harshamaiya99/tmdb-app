@@ -294,7 +294,6 @@ export function Layout({ children }: LayoutProps) {
               className="w-full md:w-52 lg:w-80"
             >
               <div className="relative">
-                <Search className="absolute left-2 top-2.5 h-4 w-4 text-muted-foreground" />
                 <Input
                   type="search"
                   role="combobox"
@@ -307,7 +306,7 @@ export function Layout({ children }: LayoutProps) {
                   onChange={handleSearchInputChange}
                   onFocus={() => setSuggestionsOpen(true)}
                   onKeyDown={handleSearchKeyDown}
-                  className="h-10 pl-8 pr-10"
+                  className="h-10 pr-10"
                 />
                 <Button
                   type="submit"
