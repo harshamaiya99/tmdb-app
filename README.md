@@ -88,6 +88,13 @@ The site can be installed as an app from supported browsers when served over HTT
 ├── .github/
 │   └── workflows/
 │       └── deploy.yml                 # Builds and deploys the site to GitHub Pages
+├── public/
+│   ├── apple-touch-icon.png           # Icon used when adding the app to an Apple device
+│   ├── favicon.svg                    # Browser tab and header logo
+│   ├── icon-192.png                   # Installable app icon
+│   ├── icon-512.png                   # High-resolution installable app icon
+│   ├── manifest.webmanifest           # PWA name, display, theme, and icon settings
+│   └── sw.js                          # Service worker for caching the app shell
 ├── src/
 │   ├── App.tsx                        # Routes, providers, and protected-page access
 │   ├── main.tsx                       # React application entry point
@@ -137,6 +144,15 @@ The site can be installed as an app from supported browsers when served over HTT
 │       ├── PeopleListPage.tsx         # Paginated people listing
 │       ├── PersonDetailsPage.tsx      # Person biography and filmography
 │       └── TVShowDetailsPage.tsx      # TV details, seasons, episodes, and watch links
+├── tests/
+│   ├── components/
+│   │   ├── LoginPage.test.tsx         # Login and API key validation behavior
+│   │   ├── MediaCard.test.tsx         # Media card rendering behavior
+│   │   └── ReviewSection.test.tsx     # Review rendering and interaction behavior
+│   ├── unit/
+│   │   ├── requestCache.test.ts       # Request cache behavior
+│   │   └── utils.test.ts              # Shared utility behavior
+│   └── setup.ts                       # Vitest and Testing Library setup
 ├── .gitignore                         # Excludes dependencies, builds, local env, and editor files
 ├── .env                                # Local-only Vite settings; ignored by Git and should not be committed
 ├── AGENTS.md                          # Repository guidance for contributors and coding agents
@@ -147,7 +163,9 @@ The site can be installed as an app from supported browsers when served over HTT
 ├── tailwind.config.js                 # Tailwind theme and content configuration
 ├── tsconfig.json                      # TypeScript settings for the application
 ├── tsconfig.node.json                 # TypeScript settings for Vite configuration
-└── vite.config.ts                     # Vite plugins, source alias, and GitHub Pages base path
+├── tsconfig.test.json                 # TypeScript settings for tests
+├── vite.config.ts                     # Vite plugins, source alias, and GitHub Pages base path
+└── vitest.config.ts                   # Vitest test environment and setup configuration
 ```
 
 ## Documentation
