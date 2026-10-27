@@ -1,5 +1,14 @@
 const TMDB_BASE_URL = 'https://api.themoviedb.org/3';
 const TMDB_IMAGE_BASE_URL = 'https://image.tmdb.org/t/p';
+const TV_TALK_GENRE_ID = 10767;
+
+function isTalkShow(show: { genre_ids?: number[] } | null | undefined): boolean {
+  return show?.genre_ids?.includes(TV_TALK_GENRE_ID) ?? false;
+}
+
+function withoutTalkShows<T extends { genre_ids?: number[] }>(shows: T[]): T[] {
+  return shows.filter((show) => !isTalkShow(show));
+}
 
 export interface Cast {
   id: number;
@@ -177,6 +186,7 @@ export interface PersonCredit {
   title?: string;
   name?: string;
   poster_path: string | null;
+  genre_ids?: number[];
   vote_average: number;
   release_date?: string;
   first_air_date?: string;
@@ -486,17 +496,17 @@ class TMDBService {
 
   async getTrendingTVShows(options?: TMDBRequestOptions): Promise<TVShow[]> {
     const data = await this.fetchFromTMDB<TrendingResponse<TVShow>>('/trending/tv/day', options);
-    return data.results;
+    return withoutTalkShows(data.results);
   }
 
   async getPopularTVShows(options?: TMDBRequestOptions): Promise<TVShow[]> {
     const data = await this.fetchFromTMDB<TrendingResponse<TVShow>>('/tv/popular', options);
-    return data.results;
+    return withoutTalkShows(data.results);
   }
 
   async getTopRatedTVShows(options?: TMDBRequestOptions): Promise<TVShow[]> {
     const data = await this.fetchFromTMDB<TrendingResponse<TVShow>>('/tv/top_rated', options);
-    return data.results;
+    return withoutTalkShows(data.results);
   }
 
   async getPopularPersons(page: number = 1, options?: TMDBRequestOptions): Promise<TrendingResponse<PersonListResult>> {
@@ -552,16 +562,24 @@ class TMDBService {
     const endpoint = endpoints[category];
     if (!endpoint) throw new Error('Invalid category');
 
-    const filters = language ? `&with_original_language=${encodeURIComponent(language)}` : '';
-    const path = `${endpoint}${filters}`;
-    return this.fetchFromTMDB<TrendingResponse<Movie | TVShow>>(`${applySortParam(path, sortBy)}&page=${page}`, options);
+    const languageFilter = language ? `&with_original_language=${encodeURIComponent(language)}` : '';
+    const talkFilter = category.endsWith('-tv') ? `&without_genres=${TV_TALK_GENRE_ID}` : '';
+    const path = `${endpoint}${languageFilter}${talkFilter}`;
+    const data = await this.fetchFromTMDB<TrendingResponse<Movie | TVShow>>(`${applySortParam(path, sortBy)}&page=${page}`, options);
+    return category.endsWith('-tv')
+      ? { ...data, results: withoutTalkShows(data.results) }
+      : data;
   }
 
   async getGenreMediaList(mediaType: 'movie' | 'tv', genreId: number, page: number = 1, options?: TMDBRequestOptions, language?: string, sortBy: string = 'popularity.desc'): Promise<TrendingResponse<Movie | TVShow>> {
     const endpoint = mediaType === 'movie' ? '/discover/movie' : '/discover/tv';
     const languageFilter = language ? `&with_original_language=${encodeURIComponent(language)}` : '';
-    const path = `${endpoint}?with_genres=${genreId}${languageFilter}`;
-    return this.fetchFromTMDB<TrendingResponse<Movie | TVShow>>(`${applySortParam(path, sortBy)}&page=${page}`, options);
+    const talkFilter = mediaType === 'tv' ? `&without_genres=${TV_TALK_GENRE_ID}` : '';
+    const path = `${endpoint}?with_genres=${genreId}${languageFilter}${talkFilter}`;
+    const data = await this.fetchFromTMDB<TrendingResponse<Movie | TVShow>>(`${applySortParam(path, sortBy)}&page=${page}`, options);
+    return mediaType === 'tv'
+      ? { ...data, results: withoutTalkShows(data.results) }
+      : data;
   }
 
   // --- DETAILS ENDPOINTS ---
@@ -574,7 +592,16 @@ class TMDBService {
   }
 
   async getTVShowDetails(id: number, options?: TMDBRequestOptions): Promise<TVShow> {
-    return this.fetchFromTMDB<TVShow>(`/tv/${id}?append_to_response=credits,aggregate_credits,videos,recommendations,external_ids,reviews`, options);
+    const show = await this.fetchFromTMDB<TVShow>(`/tv/${id}?append_to_response=credits,aggregate_credits,videos,recommendations,external_ids,reviews`, options);
+    return {
+      ...show,
+      recommendations: show.recommendations
+        ? { ...show.recommendations, results: withoutTalkShows(show.recommendations.results) }
+        : undefined,
+      similar: show.similar
+        ? { ...show.similar, results: withoutTalkShows(show.similar.results) }
+        : undefined,
+    };
   }
 
   async getTVShowReviews(id: number, page: number = 1, options?: TMDBRequestOptions): Promise<ReviewResponse> {
@@ -593,7 +620,18 @@ class TMDBService {
   }
 
   async getPersonDetails(id: number, options?: TMDBRequestOptions): Promise<Person> {
-    return this.fetchFromTMDB<Person>(`/person/${id}?append_to_response=combined_credits,images,external_ids`, options);
+    const person = await this.fetchFromTMDB<Person>(`/person/${id}?append_to_response=combined_credits,images,external_ids`, options);
+    return {
+      ...person,
+      combined_credits: person.combined_credits
+        ? {
+            ...person.combined_credits,
+            cast: person.combined_credits.cast.filter(
+              (credit) => credit.media_type !== 'tv' || !isTalkShow(credit),
+            ),
+          }
+        : undefined,
+    };
   }
 
   async getPersonCredits(personId: number, mediaType: 'movie' | 'tv', page: number = 1, options?: TMDBRequestOptions): Promise<TrendingResponse<PersonCredit>> {
@@ -602,7 +640,10 @@ class TMDBService {
 
     const results = mergePersonCredits(
       (data.cast || [])
-        .filter((item) => isActingCredit(item.character, item.name || item.title))
+        .filter((item) => (
+          (mediaType !== 'tv' || !isTalkShow(item))
+          && isActingCredit(item.character, item.name || item.title)
+        ))
         .map((item) => ({ ...item, media_type: mediaType })),
     );
 
@@ -610,7 +651,7 @@ class TMDBService {
       page: data.page ?? page,
       results,
       total_pages: data.total_pages ?? 1,
-      total_results: data.cast?.length ?? 0,
+      total_results: results.length,
     };
   }
 

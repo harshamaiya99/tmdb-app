@@ -95,6 +95,12 @@ The app supports:
 
 Full movie, TV show, and person searches retry a limited number of likely two-word splits when a compact alphanumeric query returns no matches (for example, `iceage` as `ice age`). Header autocomplete uses a single combined-search request for faster suggestions.
 
+TV search results are not filtered by genre, so Talk shows remain discoverable through search.
+
+### TV list filtering
+
+Non-search TV lists exclude shows tagged with TMDB's Talk genre (`10767`), including trending and category lists, genre browsing, person credits, and related shows. Search results and directly opened TV show details are not excluded.
+
 ### Filtered lists
 
 The service also supports category-based browsing for:

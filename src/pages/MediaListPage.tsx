@@ -66,7 +66,6 @@ const GENRE_OPTIONS_BY_TYPE = {
     { value: '10764', label: 'Reality' },
     { value: '10765', label: 'Sci-Fi & Fantasy' },
     { value: '10766', label: 'Soap' },
-    { value: '10767', label: 'Talk' },
     { value: '10768', label: 'War & Politics' },
     { value: '37', label: 'Western' },
   ],
