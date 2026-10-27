@@ -10,6 +10,12 @@ function withoutTalkShows<T extends { genre_ids?: number[] }>(shows: T[]): T[] {
   return shows.filter((show) => !isTalkShow(show));
 }
 
+const SELF_OR_HOST_ROLES = new Set(['himself', 'herself', 'themselves', 'themself', 'self', 'host']);
+
+function shouldIncludePersonCredit(credit: Pick<PersonCredit, 'genre_ids' | 'character'>): boolean {
+  return !isTalkShow(credit) || SELF_OR_HOST_ROLES.has(credit.character.trim().toLowerCase());
+}
+
 export interface Cast {
   id: number;
   name: string;
@@ -277,44 +283,6 @@ export interface WatchProviders {
       buy?: WatchProvider[];
     };
   };
-}
-
-export function isActingCredit(character: string | undefined, title?: string): boolean {
-  const rawCharacter = String(character ?? '').trim().toLowerCase();
-  if (!rawCharacter) return true;
-
-  const genericCharacterPatterns = [
-    'himself',
-    'herself',
-    'themselves',
-    'self',
-    'guest',
-    'host',
-    'presenter',
-    'panelist',
-    'anchor',
-    'commentator',
-    'moderator',
-    'contestant',
-    'judge',
-    'narrator',
-    'interviewee',
-    'guest star',
-  ];
-
-  const talkShowPatterns = /(talk|late|tonight|show|view|today|jimmy|conan|ellen|kimmel|fallon|oprah|daily|watch what happens|award|tony|emmy|golden globe|saturday night live|snl|jimmy kimmel live|the late show|late night)/i;
-  const rawTitle = String(title ?? '').trim().toLowerCase();
-
-  const matchesGenericRole = genericCharacterPatterns.some((pattern) => rawCharacter.includes(pattern));
-  if (!matchesGenericRole) {
-    return true;
-  }
-
-  if (!rawTitle) {
-    return false;
-  }
-
-  return !talkShowPatterns.test(rawTitle);
 }
 
 export interface TrendingResponse<T> {
@@ -627,7 +595,7 @@ class TMDBService {
         ? {
             ...person.combined_credits,
             cast: person.combined_credits.cast.filter(
-              (credit) => credit.media_type !== 'tv' || !isTalkShow(credit),
+              (credit) => credit.media_type !== 'tv' || shouldIncludePersonCredit(credit),
             ),
           }
         : undefined,
@@ -640,10 +608,7 @@ class TMDBService {
 
     const results = mergePersonCredits(
       (data.cast || [])
-        .filter((item) => (
-          (mediaType !== 'tv' || !isTalkShow(item))
-          && isActingCredit(item.character, item.name || item.title)
-        ))
+        .filter((item) => mediaType !== 'tv' || shouldIncludePersonCredit(item))
         .map((item) => ({ ...item, media_type: mediaType })),
     );
 

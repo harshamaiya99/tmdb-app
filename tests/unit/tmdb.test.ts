@@ -89,14 +89,20 @@ describe('TMDB Talk-show filtering', () => {
       page: 1,
       cast: [
         { id: 1, name: 'Drama Series', character: 'Alex', poster_path: '/drama.jpg', vote_average: 8, genre_ids: [18] },
-        { id: 2, name: 'Talk Show', character: 'Alex', poster_path: '/talk.jpg', vote_average: 8, genre_ids: [10767] },
+        { id: 2, name: 'Talk Show', character: 'Host', poster_path: '/talk.jpg', vote_average: 8, genre_ids: [10767] },
+        { id: 3, name: 'Another Talk Show', character: 'Himself', poster_path: '/self.jpg', vote_average: 8, genre_ids: [10767] },
+        { id: 4, name: 'Guest Talk Show', character: 'Guest', poster_path: '/guest.jpg', vote_average: 8, genre_ids: [10767] },
       ],
       total_pages: 1,
     }));
 
     await expect(tmdbService.getPersonCredits(10, 'tv')).resolves.toMatchObject({
-      results: [{ id: 1, name: 'Drama Series' }],
-      total_results: 1,
+      results: [
+        { id: 1, name: 'Drama Series' },
+        { id: 2, name: 'Talk Show' },
+        { id: 3, name: 'Another Talk Show' },
+      ],
+      total_results: 3,
     });
   });
 
@@ -113,8 +119,9 @@ describe('TMDB Talk-show filtering', () => {
       combined_credits: {
         cast: [
           { id: 1, name: 'Drama Series', media_type: 'tv', character: 'Alex', popularity: 1, poster_path: '/drama.jpg', vote_average: 8, genre_ids: [18] },
-          { id: 2, name: 'Talk Show', media_type: 'tv', character: 'Alex', popularity: 1, poster_path: '/talk.jpg', vote_average: 8, genre_ids: [10767] },
-          { id: 3, title: 'Movie', media_type: 'movie', character: 'Alex', popularity: 1, poster_path: '/movie.jpg', vote_average: 8 },
+          { id: 2, name: 'Talk Show', media_type: 'tv', character: 'Host', popularity: 1, poster_path: '/talk.jpg', vote_average: 8, genre_ids: [10767] },
+          { id: 3, name: 'Guest Talk Show', media_type: 'tv', character: 'Guest', popularity: 1, poster_path: '/guest.jpg', vote_average: 8, genre_ids: [10767] },
+          { id: 4, title: 'Movie', media_type: 'movie', character: 'Alex', popularity: 1, poster_path: '/movie.jpg', vote_average: 8 },
         ],
       },
     }));
@@ -123,7 +130,8 @@ describe('TMDB Talk-show filtering', () => {
       combined_credits: {
         cast: [
           { id: 1, name: 'Drama Series' },
-          { id: 3, title: 'Movie' },
+          { id: 2, name: 'Talk Show' },
+          { id: 4, title: 'Movie' },
         ],
       },
     });

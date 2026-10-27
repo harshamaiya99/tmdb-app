@@ -7,7 +7,7 @@ import { ArrowLeft, ArrowRight, Calendar, Facebook, Film, Instagram, MapPin, Mus
 import { Button } from '@/components/ui/button';
 import { Skeleton } from '@/components/ui/skeleton';
 import { MediaSection } from '@/components/MediaSection';
-import { tmdbService, isActingCredit, mergePersonCredits, type Person } from '@/lib/tmdb';
+import { tmdbService, mergePersonCredits, type Person } from '@/lib/tmdb';
 import { formatDate } from '@/lib/utils';
 import { usePageTitle } from '@/hooks/usePageTitle';
 import { useCachedQuery } from '@/hooks/useCachedQuery';
@@ -210,7 +210,7 @@ export function PersonDetailsPage() {
   const credits = mergePersonCredits(person.combined_credits?.cast || []);
   const getActingCredits = (mediaType: 'movie' | 'tv') => {
     return credits
-      .filter((credit) => credit.media_type === mediaType && credit.poster_path && isActingCredit(credit.character, credit.name || credit.title))
+      .filter((credit) => credit.media_type === mediaType && credit.poster_path)
       .sort((a, b) => b.popularity - a.popularity);
   };
 
