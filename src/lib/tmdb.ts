@@ -586,14 +586,24 @@ class TMDBService {
 
   // --- PAGINATED CATEGORY ENDPOINT ---
   async getCategoryList(category: string, page: number = 1, options?: TMDBRequestOptions, language?: string, sortBy: string = 'popularity.desc'): Promise<TrendingResponse<Movie | TVShow>> {
+    if (category === 'trending-movies' || category === 'trending-tv') {
+      const mediaType = category === 'trending-movies' ? 'movie' : 'tv';
+      const data = await this.fetchFromTMDB<TrendingResponse<Movie | TVShow>>(
+        `/trending/${mediaType}/day?page=${page}`,
+        options,
+      );
+      return mediaType === 'tv'
+        ? { ...data, results: withoutTalkShows(data.results) }
+        : data;
+    }
+
     const endpoints: Record<string, string> = {
-      'trending-movies': '/discover/movie?sort_by=popularity.desc',
-      'now-playing-movies': '/discover/movie?sort_by=popularity.desc&primary_release_date.gte=2020-01-01',
-      'top-rated-movies': '/discover/movie?sort_by=vote_average.desc&vote_count.gte=2000',
-      'upcoming-movies': '/discover/movie?sort_by=popularity.desc&release_date.gte=2025-01-01',
-      'trending-tv': '/discover/tv?sort_by=popularity.desc',
-      'popular-tv': '/discover/tv?sort_by=popularity.desc',
-      'top-rated-tv': '/discover/tv?sort_by=vote_average.desc&vote_count.gte=2000',
+      'popular-movies': '/movie/popular',
+      'now-playing-movies': '/movie/now_playing',
+      'top-rated-movies': '/movie/top_rated',
+      'upcoming-movies': '/movie/upcoming',
+      'popular-tv': '/tv/popular',
+      'top-rated-tv': '/tv/top_rated',
       'trending-streaming-movies': '/discover/movie?watch_region=IN&with_watch_monetization_types=flatrate&sort_by=popularity.desc',
       'imdb-top-rated-movies': '/discover/movie?sort_by=vote_average.desc&vote_count.gte=10000'
     };
@@ -601,11 +611,17 @@ class TMDBService {
     const endpoint = endpoints[category];
     if (!endpoint) throw new Error('Invalid category');
 
-    const languageFilter = language ? `&with_original_language=${encodeURIComponent(language)}` : '';
-    const talkFilter = category.endsWith('-tv') ? `&without_genres=${TV_TALK_GENRE_ID}` : '';
-    const path = `${endpoint}${languageFilter}${talkFilter}`;
-    const data = await this.fetchFromTMDB<TrendingResponse<Movie | TVShow>>(`${applySortParam(path, sortBy)}&page=${page}`, options);
-    return category.endsWith('-tv')
+    const isTVCategory = category.endsWith('-tv');
+    const isDiscoverEndpoint = endpoint.startsWith('/discover/');
+    const languageFilter = language
+      ? `${isDiscoverEndpoint ? 'with_original_language' : 'language'}=${encodeURIComponent(language)}`
+      : '';
+    const talkFilter = isTVCategory ? `without_genres=${TV_TALK_GENRE_ID}` : '';
+    const queryParams = [languageFilter, talkFilter, `page=${page}`].filter(Boolean).join('&');
+    const path = `${endpoint}${endpoint.includes('?') ? '&' : '?'}${queryParams}`;
+    const requestPath = isDiscoverEndpoint ? applySortParam(path, sortBy) : path;
+    const data = await this.fetchFromTMDB<TrendingResponse<Movie | TVShow>>(requestPath, options);
+    return isTVCategory
       ? { ...data, results: withoutTalkShows(data.results) }
       : data;
   }

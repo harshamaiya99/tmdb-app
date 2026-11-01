@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState } from 'react';
 import { ChevronLeft, ChevronRight } from 'lucide-react';
 import { Link } from 'react-router-dom';
+import type { ReactNode } from 'react';
 import { Button } from '@/components/ui/button';
 import { MediaCard } from '@/components/MediaCard';
 import { type Movie, type TVShow, type PersonCredit, type PersonListResult } from '@/lib/tmdb';
@@ -10,6 +11,7 @@ interface MediaSectionProps {
   items: (Movie | TVShow | PersonCredit | PersonListResult)[];
   type: 'movie' | 'tv' | 'person';
   category?: string;
+  titleAction?: ReactNode;
   hideSeeMore?: boolean;
   actionLabel?: string;
   limit?: number;
@@ -19,7 +21,7 @@ interface MediaSectionProps {
   horizontalColumns?: 8 | 10;
 }
 
-export function MediaSection({ title, items, type, category, hideSeeMore = false, actionLabel = 'See More', limit = 10, className, gridClassName, horizontalScroll = false, horizontalColumns = 10 }: MediaSectionProps) {
+export function MediaSection({ title, items, type, category, titleAction, hideSeeMore = false, actionLabel = 'See More', limit = 10, className, gridClassName, horizontalScroll = false, horizontalColumns = 10 }: MediaSectionProps) {
   const scrollContainerRef = useRef<HTMLDivElement>(null);
   const [canScrollLeft, setCanScrollLeft] = useState(false);
   const [canScrollRight, setCanScrollRight] = useState(false);
@@ -87,7 +89,10 @@ export function MediaSection({ title, items, type, category, hideSeeMore = false
   return (
     <section className={`min-w-0 ${className ?? 'space-y-4'}`}>
       <div className="mb-4 flex items-center justify-between">
-        <h2 className="text-2xl font-bold tracking-tight">{title}</h2>
+        <div className="flex min-w-0 flex-wrap items-center gap-3">
+          <h2 className="text-2xl font-bold tracking-tight">{title}</h2>
+          {titleAction}
+        </div>
         {!hideSeeMore && category && (
           <Button variant="ghost" size="sm" asChild>
             <Link to={`/category/${category}`}>{actionLabel} &rarr;</Link>

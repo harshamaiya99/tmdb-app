@@ -79,7 +79,7 @@ The API service exposes methods for several categories of requests:
 
 ### Home and discovery
 
-These fetch lists for the landing experience:
+The home page provides separate movie and TV category selectors. Movie options include trending, popular, streaming, in theaters, and top rated; TV options include trending, popular, and top rated. Each selector's paginated view uses the same category as its home carousel.
 
 - trending movies
 - now playing movies

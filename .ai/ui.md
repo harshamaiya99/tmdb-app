@@ -123,6 +123,8 @@ Media imagery is rendered through the shared TMDB image component, which provide
 
 A reusable section wrapper in [src/components/MediaSection.tsx](src/components/MediaSection.tsx) handles the repeated layout for movie, TV, and person lists with a heading, optional see-more action, and responsive grid or horizontal carousel. This pattern is used on the home page, search results, and person detail credit sections to keep those experiences visually consistent.
 
+The home page has separate horizontally scrollable category selectors for movies and TV shows. Each selector updates its own carousel, and its View More link opens the matching paginated category.
+
 TV show details distinguish the series overview from the selected season overview and individual episode overviews. The selected season summary is shown with its episode list.
 
 Episode cards open an in-app details dialog with a compact still, rating and vote count, air date, runtime, production code, director credit above the overview, and overview text. Guest stars and remaining crew share a toggle, and episode images and videos share a separate toggle; show each group only when TMDB returns content. Keep episode cards at a stable size on hover and focus; the watch action stays visible in a pinned dialog footer and uses the configured TV embed URL template.

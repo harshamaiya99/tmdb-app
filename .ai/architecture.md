@@ -109,7 +109,7 @@ Keeping API logic in one place makes it easier to:
 Pages live in [src/pages](src/pages):
 
 - [src/pages/LoginPage.tsx](src/pages/LoginPage.tsx) — collects and validates the TMDB API key
-- [src/pages/HomePage.tsx](src/pages/HomePage.tsx) — loads and displays the homepage sections and search experience
+- [src/pages/HomePage.tsx](src/pages/HomePage.tsx) — displays independently selectable movie and TV categories, and handles search results
 - [src/pages/MediaListPage.tsx](src/pages/MediaListPage.tsx) — renders paginated lists for categories, genres, companies, providers, and people-related media
 - [src/pages/MovieDetailsPage.tsx](src/pages/MovieDetailsPage.tsx) — shows movie metadata, cast, crew, related media, and watch links
 - [src/pages/TVShowDetailsPage.tsx](src/pages/TVShowDetailsPage.tsx) — shows show metadata, seasons, episodes, and related content

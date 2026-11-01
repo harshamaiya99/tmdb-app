@@ -46,7 +46,65 @@ describe('TMDB Talk-show filtering', () => {
     ]);
   });
 
-  it('requests filtered TV categories and excludes Talk shows defensively', async () => {
+  it('loads the paginated daily trending TV endpoint and excludes Talk shows', async () => {
+    const fetchMock = vi.mocked(fetch);
+    fetchMock.mockResolvedValue(responseWith({
+      page: 2,
+      results: [{ id: 2, name: 'Talk Show', genre_ids: [10767] }],
+      total_pages: 1,
+      total_results: 1,
+    }));
+
+    await expect(tmdbService.getCategoryList('trending-tv', 2)).resolves.toMatchObject({
+      page: 2,
+      results: [],
+    });
+
+    const requestUrl = new URL(String(fetchMock.mock.calls[0][0]));
+    expect(requestUrl.pathname).toBe('/3/trending/tv/day');
+    expect(requestUrl.searchParams.get('page')).toBe('2');
+    expect(requestUrl.searchParams.has('without_genres')).toBe(false);
+  });
+
+  it('loads the same daily trending movie endpoint for the paginated category', async () => {
+    const fetchMock = vi.mocked(fetch);
+    fetchMock.mockResolvedValue(responseWith({
+      page: 2,
+      results: [{ id: 1, title: 'Trending Movie' }],
+      total_pages: 5,
+      total_results: 100,
+    }));
+
+    await expect(tmdbService.getCategoryList('trending-movies', 2)).resolves.toMatchObject({
+      page: 2,
+      results: [{ id: 1, title: 'Trending Movie' }],
+    });
+
+    const requestUrl = new URL(String(fetchMock.mock.calls[0][0]));
+    expect(requestUrl.pathname).toBe('/3/trending/movie/day');
+    expect(requestUrl.searchParams.get('page')).toBe('2');
+  });
+
+  it('loads the selected popular and in-theaters category endpoints', async () => {
+    const fetchMock = vi.mocked(fetch);
+    const response = {
+      page: 1,
+      results: [],
+      total_pages: 1,
+      total_results: 0,
+    };
+    fetchMock
+      .mockResolvedValueOnce(responseWith(response))
+      .mockResolvedValueOnce(responseWith(response));
+
+    await tmdbService.getCategoryList('popular-movies');
+    expect(new URL(String(fetchMock.mock.calls[0][0])).pathname).toBe('/3/movie/popular');
+
+    await tmdbService.getCategoryList('now-playing-movies');
+    expect(new URL(String(fetchMock.mock.calls[1][0])).pathname).toBe('/3/movie/now_playing');
+  });
+
+  it('loads the popular TV endpoint and filters Talk shows', async () => {
     const fetchMock = vi.mocked(fetch);
     fetchMock.mockResolvedValue(responseWith({
       page: 1,
@@ -55,11 +113,10 @@ describe('TMDB Talk-show filtering', () => {
       total_results: 1,
     }));
 
-    await expect(tmdbService.getCategoryList('trending-tv')).resolves.toMatchObject({
-      results: [],
-    });
+    await expect(tmdbService.getCategoryList('popular-tv')).resolves.toMatchObject({ results: [] });
 
     const requestUrl = new URL(String(fetchMock.mock.calls[0][0]));
+    expect(requestUrl.pathname).toBe('/3/tv/popular');
     expect(requestUrl.searchParams.get('without_genres')).toBe('10767');
   });
 

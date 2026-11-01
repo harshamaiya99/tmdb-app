@@ -1,8 +1,8 @@
-import { useEffect, useState } from 'react';
 import { useSearchParams } from 'react-router-dom';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { MediaGridSkeleton } from '@/components/MediaGridSkeleton';
 import { MediaSection } from '@/components/MediaSection';
+import { MediaCategoryToggle } from '@/components/MediaCategoryToggle';
 import { tmdbService } from '@/lib/tmdb';
 import { useCachedQuery } from '@/hooks/useCachedQuery';
 import { useDebouncedValue } from '@/hooks/useDebouncedValue';
@@ -16,63 +16,49 @@ function SearchMessage({ message, error = false }: { message: string; error?: bo
   );
 }
 
+const MOVIE_CATEGORIES = [
+  { value: 'trending-movies', label: 'Trending' },
+  { value: 'popular-movies', label: 'Popular' },
+  { value: 'trending-streaming-movies', label: 'Streaming' },
+  { value: 'now-playing-movies', label: 'In Theaters' },
+  { value: 'top-rated-movies', label: 'Top Rated' },
+] as const;
+
+const TV_CATEGORIES = [
+  { value: 'trending-tv', label: 'Trending' },
+  { value: 'popular-tv', label: 'Popular' },
+  { value: 'top-rated-tv', label: 'Top Rated' },
+] as const;
+
 export function HomePage() {
-  const [searchParams] = useSearchParams();
+  const [searchParams, setSearchParams] = useSearchParams();
   const searchTerm = searchParams.get('query')?.trim() ?? '';
   const debouncedSearchTerm = useDebouncedValue(searchTerm, 350);
   const hasActiveSearch = Boolean(searchTerm);
   const searchReady = hasActiveSearch && debouncedSearchTerm === searchTerm;
-  const [secondaryStage, setSecondaryStage] = useState(0);
+  const requestedMovieCategory = searchParams.get('movie_category');
+  const movieCategory = MOVIE_CATEGORIES.find(({ value }) => value === requestedMovieCategory)?.value ?? 'trending-movies';
+  const requestedTVCategory = searchParams.get('tv_category');
+  const tvCategory = TV_CATEGORIES.find(({ value }) => value === requestedTVCategory)?.value ?? 'trending-tv';
 
   usePageTitle('TMDB Explorer');
 
-  const trendingMovies = useCachedQuery(
-    'home:trending-movies',
-    (signal) => tmdbService.getTrendingMovies({ signal }),
+  const movieList = useCachedQuery(
+    `home:${movieCategory}`,
+    (signal) => tmdbService.getCategoryList(movieCategory, 1, { signal }),
     { enabled: !hasActiveSearch },
   );
-  const trendingTV = useCachedQuery(
-    'home:trending-tv',
-    (signal) => tmdbService.getTrendingTVShows({ signal }),
+  const tvList = useCachedQuery(
+    `home:${tvCategory}`,
+    (signal) => tmdbService.getCategoryList(tvCategory, 1, { signal }),
     { enabled: !hasActiveSearch },
   );
 
-  const streamingMovies = useCachedQuery(
-    'home:streaming-movies',
-    (signal) => tmdbService.getTrendingStreamingMovies({ signal }),
-    { enabled: !hasActiveSearch && secondaryStage >= 1 },
-  );
-  const nowPlayingMovies = useCachedQuery(
-    'home:now-playing-movies',
-    (signal) => tmdbService.getNowPlayingMovies({ signal }),
-    { enabled: !hasActiveSearch && secondaryStage >= 1 },
-  );
-  const popularTV = useCachedQuery(
-    'home:popular-tv',
-    (signal) => tmdbService.getPopularTVShows({ signal }),
-    { enabled: !hasActiveSearch && secondaryStage >= 1 },
-  );
-
-  const topRatedMovies = useCachedQuery(
-    'home:top-rated-movies',
-    (signal) => tmdbService.getTopRatedMovies({ signal }),
-    { enabled: !hasActiveSearch && secondaryStage >= 2 },
-  );
-  const upcomingMovies = useCachedQuery(
-    'home:upcoming-movies',
-    (signal) => tmdbService.getUpcomingMovies({ signal }),
-    { enabled: !hasActiveSearch && secondaryStage >= 2 },
-  );
-  const imdbTopMovies = useCachedQuery(
-    'home:imdb-top-movies',
-    (signal) => tmdbService.getIMDbTopRatedMovies({ signal }),
-    { enabled: !hasActiveSearch && secondaryStage >= 2 },
-  );
-  const topRatedTV = useCachedQuery(
-    'home:top-rated-tv',
-    (signal) => tmdbService.getTopRatedTVShows({ signal }),
-    { enabled: !hasActiveSearch && secondaryStage >= 2 },
-  );
+  const updateCategory = (key: 'movie_category' | 'tv_category', value: string) => {
+    const nextParams = new URLSearchParams(searchParams);
+    nextParams.set(key, value);
+    setSearchParams(nextParams, { replace: true });
+  };
 
   const searchMovies = useCachedQuery(
     `search:movies:${debouncedSearchTerm}:1`,
@@ -90,25 +76,9 @@ export function HomePage() {
     { enabled: searchReady },
   );
 
-  useEffect(() => {
-    setSecondaryStage(0);
-  }, [hasActiveSearch]);
-
-  useEffect(() => {
-    if (hasActiveSearch || trendingMovies.loading || trendingTV.loading || !trendingMovies.data || !trendingTV.data) return;
-    const timeout = window.setTimeout(() => setSecondaryStage(1), 150);
-    return () => window.clearTimeout(timeout);
-  }, [hasActiveSearch, trendingMovies.data, trendingMovies.loading, trendingTV.data, trendingTV.loading]);
-
-  useEffect(() => {
-    if (hasActiveSearch || secondaryStage !== 1) return;
-    const timeout = window.setTimeout(() => setSecondaryStage(2), 900);
-    return () => window.clearTimeout(timeout);
-  }, [hasActiveSearch, secondaryStage]);
-
-  const primaryLoading = !hasActiveSearch && (trendingMovies.loading || trendingTV.loading);
+  const primaryLoading = !hasActiveSearch && (movieList.loading || tvList.loading);
   const searchLoading = hasActiveSearch && (!searchReady || searchMovies.loading || searchTV.loading || searchPeople.loading);
-  const primaryError = trendingMovies.error || trendingTV.error;
+  const primaryError = movieList.error || tvList.error;
 
   return (
     <main className="container py-6">
@@ -156,23 +126,38 @@ export function HomePage() {
         </div>
       ) : (
         <div className="space-y-12 pb-12">
-          <MediaSection title="Trending Movies" items={trendingMovies.data ?? []} type="movie" category="trending-movies" horizontalScroll limit={20} />
-          {secondaryStage >= 1 && (
-            <>
-              <MediaSection title="Trending on Streaming" items={streamingMovies.data ?? []} type="movie" category="trending-streaming-movies" horizontalScroll limit={20} />
-              <MediaSection title="Now Playing in Theaters" items={nowPlayingMovies.data ?? []} type="movie" category="now-playing-movies" horizontalScroll limit={20} />
-              <MediaSection title="Popular TV Shows" items={popularTV.data ?? []} type="tv" category="popular-tv" horizontalScroll limit={20} />
-            </>
-          )}
-          <MediaSection title="Trending TV Shows" items={trendingTV.data ?? []} type="tv" category="trending-tv" horizontalScroll limit={20} />
-          {secondaryStage >= 2 && (
-            <>
-              <MediaSection title="Top Rated Movies" items={topRatedMovies.data ?? []} type="movie" category="top-rated-movies" horizontalScroll limit={20} />
-              <MediaSection title="IMDB Top Rated Movies" items={imdbTopMovies.data ?? []} type="movie" category="imdb-top-rated-movies" horizontalScroll limit={20} />
-              <MediaSection title="Upcoming Movies" items={upcomingMovies.data ?? []} type="movie" category="upcoming-movies" horizontalScroll limit={20} />
-              <MediaSection title="Top Rated TV Shows" items={topRatedTV.data ?? []} type="tv" category="top-rated-tv" horizontalScroll limit={20} />
-            </>
-          )}
+          <MediaSection
+            title="Movies"
+            titleAction={
+              <MediaCategoryToggle
+                label="Movies"
+                options={MOVIE_CATEGORIES}
+                value={movieCategory}
+                onChange={(value) => updateCategory('movie_category', value)}
+              />
+            }
+            items={movieList.data?.results ?? []}
+            type="movie"
+            category={movieCategory}
+            horizontalScroll
+            limit={20}
+          />
+          <MediaSection
+            title="TV Shows"
+            titleAction={
+              <MediaCategoryToggle
+                label="TV shows"
+                options={TV_CATEGORIES}
+                value={tvCategory}
+                onChange={(value) => updateCategory('tv_category', value)}
+              />
+            }
+            items={tvList.data?.results ?? []}
+            type="tv"
+            category={tvCategory}
+            horizontalScroll
+            limit={20}
+          />
         </div>
       )}
     </main>
