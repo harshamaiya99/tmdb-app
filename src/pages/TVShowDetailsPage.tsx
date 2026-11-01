@@ -1,7 +1,7 @@
 // src/pages/TVShowDetailsPage.tsx
 import { useEffect, useRef, useState } from 'react';
 import { useParams, useNavigate, Link, useSearchParams } from 'react-router-dom';
-import { Calendar, Clock, Star, PlayCircle, X, Image as ImageIcon, Video, Users } from 'lucide-react';
+import { Calendar, Clock, Star, PlayCircle, X, Users } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Skeleton } from '@/components/ui/skeleton';
@@ -75,6 +75,8 @@ export function TVShowDetailsPage() {
   const [searchParams, setSearchParams] = useSearchParams();
   const selectedSeason = parseInt(searchParams.get('season') || '0', 10);
   const [activeCredits, setActiveCredits] = useState<'cast' | 'crew'>('cast');
+  const [activeEpisodeCredits, setActiveEpisodeCredits] = useState<'guest_stars' | 'crew'>('guest_stars');
+  const [activeEpisodeMedia, setActiveEpisodeMedia] = useState<'images' | 'videos'>('images');
   const [selectedEpisode, setSelectedEpisode] = useState<{ episode: Episode; streamUrl: string } | null>(null);
   const episodeDialogCloseRef = useRef<HTMLButtonElement>(null);
 
@@ -103,6 +105,14 @@ export function TVShowDetailsPage() {
   const episodeDetails = episodeDetailsQuery.data?.id === selectedEpisode?.episode.id
     ? episodeDetailsQuery.data
     : undefined;
+  const episodeGuestStars = episodeDetails?.guest_stars ?? [];
+  const episodeCrew = (episodeDetails?.crew ?? []).filter((member) => member.job !== 'Director');
+  const episodeDirectors = (episodeDetails?.crew ?? []).filter((member, index, crew) =>
+    member.job === 'Director'
+      && crew.findIndex((candidate) => candidate.id === member.id && candidate.job === 'Director') === index,
+  );
+  const episodeImages = episodeDetails?.images?.stills ?? [];
+  const episodeVideos = episodeDetails?.videos?.results ?? [];
   const episodes = seasonQuery.data?.episodes ?? [];
   const seasonCast = seasonQuery.data?.credits?.cast ?? null;
   const seasonCrew = seasonQuery.data?.credits?.crew ?? null;
@@ -122,6 +132,12 @@ export function TVShowDetailsPage() {
   useEffect(() => {
     setActiveCredits('cast');
   }, [selectedSeason]);
+
+  useEffect(() => {
+    if (!episodeDetails) return;
+    setActiveEpisodeCredits(episodeGuestStars.length > 0 ? 'guest_stars' : 'crew');
+    setActiveEpisodeMedia(episodeImages.length > 0 ? 'images' : 'videos');
+  }, [episodeDetails, episodeGuestStars.length, episodeImages.length]);
 
   useEffect(() => {
     if (!selectedEpisode) return;
@@ -575,6 +591,20 @@ export function TVShowDetailsPage() {
             </div>
 
             <div className="min-h-0 flex-1 space-y-6 overflow-y-auto p-4 sm:p-6">
+              {episodeDirectors.length > 0 && (
+                <p className="text-sm font-medium text-muted-foreground">
+                  Directed by{' '}
+                  {episodeDirectors.map((director, index) => (
+                    <span key={director.id}>
+                      <Link to={`/person/${director.id}`} className="font-semibold text-primary hover:underline">
+                        {director.name}
+                      </Link>
+                      {index < episodeDirectors.length - 1 ? ', ' : ''}
+                    </span>
+                  ))}
+                </p>
+              )}
+
               <div>
                 <h3 className="mb-2 text-sm font-semibold uppercase tracking-wide text-muted-foreground">Overview</h3>
                 <p className="text-sm leading-relaxed sm:text-base">
@@ -593,161 +623,193 @@ export function TVShowDetailsPage() {
 
               {episodeDetails && (
                 <>
-                  {episodeDetails.crew.length > 0 && (
-                    <section aria-labelledby="episode-crew-title" className="border-t pt-5">
-                      <h3 id="episode-crew-title" className="mb-3 flex items-center gap-2 font-semibold">
-                        <Users className="h-4 w-4 text-muted-foreground" />
-                        Crew
-                        <span className="text-sm font-normal text-muted-foreground">{episodeDetails.crew.length}</span>
-                      </h3>
-                      <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-3">
-                        {episodeDetails.crew.map((member) => (
-                          <Link
-                            key={`${member.id}:${member.job}`}
-                            to={`/person/${member.id}`}
-                            className="flex min-w-0 items-center gap-3 rounded-lg border p-2 transition-colors hover:bg-accent focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+                  {(episodeDirectors.length > 0 || episodeCrew.length > 0 || episodeGuestStars.length > 0) && (
+                    <section aria-labelledby="episode-credits-title" className="border-t pt-5">
+                      <div className="mb-3 flex flex-wrap items-center justify-between gap-3">
+                        <h3 id="episode-credits-title" className="flex items-center gap-2 font-semibold">
+                          <Users className="h-4 w-4 text-muted-foreground" />
+                          Episode credits
+                        </h3>
+                        {(episodeCrew.length > 0 || episodeGuestStars.length > 0) && (
+                          <div className="flex rounded-md border p-1" role="group" aria-label="Episode credits">
+                          <Button
+                            type="button"
+                            variant={activeEpisodeCredits === 'guest_stars' ? 'secondary' : 'ghost'}
+                            size="sm"
+                            disabled={episodeGuestStars.length === 0}
+                            onClick={() => setActiveEpisodeCredits('guest_stars')}
                           >
-                            <div className="h-12 w-12 shrink-0 overflow-hidden rounded-md bg-muted">
-                              {member.profile_path ? (
-                                <TMDBImage path={member.profile_path} alt="" width={96} height={144} sizes="48px" className="h-full w-full object-cover" />
-                              ) : (
-                                <div className="flex h-full items-center justify-center text-xs text-muted-foreground">N/A</div>
-                              )}
-                            </div>
-                            <div className="min-w-0">
-                              <p className="truncate text-sm font-medium">{member.name}</p>
-                              <p className="truncate text-xs text-muted-foreground">{member.job}</p>
-                            </div>
-                          </Link>
-                        ))}
-                      </div>
-                    </section>
-                  )}
-
-                  {episodeDetails.guest_stars.length > 0 && (
-                    <section aria-labelledby="episode-guests-title" className="border-t pt-5">
-                      <h3 id="episode-guests-title" className="mb-3 flex items-center gap-2 font-semibold">
-                        <Users className="h-4 w-4 text-muted-foreground" />
-                        Guest stars
-                        <span className="text-sm font-normal text-muted-foreground">{episodeDetails.guest_stars.length}</span>
-                      </h3>
-                      <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-3">
-                        {episodeDetails.guest_stars.map((guest) => (
-                          <Link
-                            key={guest.id}
-                            to={`/person/${guest.id}`}
-                            className="flex min-w-0 items-center gap-3 rounded-lg border p-2 transition-colors hover:bg-accent focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+                            Guest stars ({episodeGuestStars.length})
+                          </Button>
+                          <Button
+                            type="button"
+                            variant={activeEpisodeCredits === 'crew' ? 'secondary' : 'ghost'}
+                            size="sm"
+                            disabled={episodeCrew.length === 0}
+                            onClick={() => setActiveEpisodeCredits('crew')}
                           >
-                            <div className="h-12 w-12 shrink-0 overflow-hidden rounded-md bg-muted">
-                              {guest.profile_path ? (
-                                <TMDBImage path={guest.profile_path} alt="" width={96} height={144} sizes="48px" className="h-full w-full object-cover" />
-                              ) : (
-                                <div className="flex h-full items-center justify-center text-xs text-muted-foreground">N/A</div>
-                              )}
-                            </div>
-                            <div className="min-w-0">
-                              <p className="truncate text-sm font-medium">{guest.name}</p>
-                              <p className="truncate text-xs text-muted-foreground">{guest.character}</p>
-                            </div>
-                          </Link>
-                        ))}
+                            Crew ({episodeCrew.length})
+                          </Button>
+                          </div>
+                        )}
                       </div>
-                    </section>
-                  )}
 
-                  {episodeDetails.images?.stills && episodeDetails.images.stills.length > 0 && (
-                    <section aria-labelledby="episode-images-title" className="border-t pt-5">
-                      <h3 id="episode-images-title" className="mb-3 flex items-center gap-2 font-semibold">
-                        <ImageIcon className="h-4 w-4 text-muted-foreground" />
-                        Episode images
-                        <span className="text-sm font-normal text-muted-foreground">{episodeDetails.images.stills.length}</span>
-                      </h3>
-                      <div className="flex gap-3 overflow-x-auto pb-2">
-                        {episodeDetails.images.stills.map((image, index) => (
-                          <a
-                            key={`${image.file_path}:${index}`}
-                            href={tmdbService.getImageUrl(image.file_path)}
-                            target="_blank"
-                            rel="noopener noreferrer"
-                            aria-label={`Open episode image ${index + 1}`}
-                            className="w-48 shrink-0 overflow-hidden rounded-lg border bg-muted sm:w-56"
-                          >
-                            <TMDBImage
-                              path={image.file_path}
-                              alt={`${selectedEpisode.episode.name}, image ${index + 1}`}
-                              width={448}
-                              height={252}
-                              sizes="(min-width: 640px) 224px, 192px"
-                              className="aspect-video w-full object-cover transition-transform hover:scale-105"
-                            />
-                          </a>
-                        ))}
-                      </div>
-                    </section>
-                  )}
-
-                  {episodeDetails.videos?.results && episodeDetails.videos.results.length > 0 && (
-                    <section aria-labelledby="episode-videos-title" className="border-t pt-5">
-                      <h3 id="episode-videos-title" className="mb-3 flex items-center gap-2 font-semibold">
-                        <Video className="h-4 w-4 text-muted-foreground" />
-                        Videos
-                        <span className="text-sm font-normal text-muted-foreground">{episodeDetails.videos.results.length}</span>
-                      </h3>
-                      <div className="flex gap-3 overflow-x-auto pb-2">
-                        {episodeDetails.videos.results.map((video) => {
-                          const videoUrl = video.site === 'YouTube'
-                            ? `https://www.youtube.com/watch?v=${encodeURIComponent(video.key)}`
-                            : null;
-                          const videoCard = (
-                            <>
-                              <div className="relative aspect-video overflow-hidden bg-gradient-to-br from-muted via-muted/70 to-primary/20">
-                                {video.site === 'YouTube' && (
-                                  <img
-                                    src={`https://img.youtube.com/vi/${encodeURIComponent(video.key)}/hqdefault.jpg`}
-                                    alt=""
-                                    loading="lazy"
-                                    className="absolute inset-0 h-full w-full object-cover transition-transform duration-300 group-hover:scale-105"
-                                    onError={(event) => {
-                                      event.currentTarget.style.display = 'none';
-                                    }}
-                                  />
+                      {activeEpisodeCredits === 'crew' && episodeCrew.length > 0 && (
+                        <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-3">
+                          {episodeCrew.map((member) => (
+                            <Link
+                              key={`${member.id}:${member.job}`}
+                              to={`/person/${member.id}`}
+                              className="flex min-w-0 items-center gap-3 rounded-lg border p-2 transition-colors hover:bg-accent focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+                            >
+                              <div className="h-12 w-12 shrink-0 overflow-hidden rounded-md bg-muted">
+                                {member.profile_path ? (
+                                  <TMDBImage path={member.profile_path} alt="" width={96} height={144} sizes="48px" className="h-full w-full object-cover" />
+                                ) : (
+                                  <div className="flex h-full items-center justify-center text-xs text-muted-foreground">N/A</div>
                                 )}
-                                <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-black/10 to-transparent" />
-                                <div className="absolute inset-0 flex items-center justify-center">
-                                  <span className="flex h-12 w-12 items-center justify-center rounded-full border border-white/50 bg-black/45 text-white shadow-lg backdrop-blur-sm transition-transform group-hover:scale-110">
-                                    <PlayCircle className="h-7 w-7" />
-                                  </span>
-                                </div>
-                                <span className="absolute bottom-2 left-2 rounded bg-black/65 px-2 py-1 text-[11px] font-medium text-white backdrop-blur-sm">
-                                  {video.type}
-                                </span>
-                                <span className="absolute bottom-2 right-2 rounded bg-black/65 px-2 py-1 text-[11px] font-medium text-white backdrop-blur-sm">
-                                  {video.site}
-                                </span>
                               </div>
-                              <div className="p-3">
-                                <p className="line-clamp-2 min-h-10 text-sm font-medium leading-5">{video.name}</p>
+                              <div className="min-w-0">
+                                <p className="truncate text-sm font-medium">{member.name}</p>
+                                <p className="truncate text-xs text-muted-foreground">{member.job}</p>
                               </div>
-                            </>
-                          );
+                            </Link>
+                          ))}
+                        </div>
+                      )}
 
-                          return videoUrl ? (
+                      {activeEpisodeCredits === 'guest_stars' && episodeGuestStars.length > 0 && (
+                        <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-3">
+                          {episodeGuestStars.map((guest) => (
+                            <Link
+                              key={guest.id}
+                              to={`/person/${guest.id}`}
+                              className="flex min-w-0 items-center gap-3 rounded-lg border p-2 transition-colors hover:bg-accent focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+                            >
+                              <div className="h-12 w-12 shrink-0 overflow-hidden rounded-md bg-muted">
+                                {guest.profile_path ? (
+                                  <TMDBImage path={guest.profile_path} alt="" width={96} height={144} sizes="48px" className="h-full w-full object-cover" />
+                                ) : (
+                                  <div className="flex h-full items-center justify-center text-xs text-muted-foreground">N/A</div>
+                                )}
+                              </div>
+                              <div className="min-w-0">
+                                <p className="truncate text-sm font-medium">{guest.name}</p>
+                                <p className="truncate text-xs text-muted-foreground">{guest.character}</p>
+                              </div>
+                            </Link>
+                          ))}
+                        </div>
+                      )}
+                    </section>
+                  )}
+
+                  {(episodeImages.length > 0 || episodeVideos.length > 0) && (
+                    <section aria-labelledby="episode-media-title" className="border-t pt-5">
+                      <div className="mb-3 flex flex-wrap items-center justify-between gap-3">
+                        <h3 id="episode-media-title" className="font-semibold">Episode media</h3>
+                        <div className="flex rounded-md border p-1" role="group" aria-label="Episode media">
+                          <Button
+                            type="button"
+                            variant={activeEpisodeMedia === 'images' ? 'secondary' : 'ghost'}
+                            size="sm"
+                            disabled={episodeImages.length === 0}
+                            onClick={() => setActiveEpisodeMedia('images')}
+                          >
+                            Images ({episodeImages.length})
+                          </Button>
+                          <Button
+                            type="button"
+                            variant={activeEpisodeMedia === 'videos' ? 'secondary' : 'ghost'}
+                            size="sm"
+                            disabled={episodeVideos.length === 0}
+                            onClick={() => setActiveEpisodeMedia('videos')}
+                          >
+                            Videos ({episodeVideos.length})
+                          </Button>
+                        </div>
+                      </div>
+                      {activeEpisodeMedia === 'images' && episodeImages.length > 0 && (
+                        <div className="flex gap-3 overflow-x-auto pb-2">
+                          {episodeImages.map((image, index) => (
                             <a
-                              key={video.id}
-                              href={videoUrl}
+                              key={`${image.file_path}:${index}`}
+                              href={tmdbService.getImageUrl(image.file_path)}
                               target="_blank"
                               rel="noopener noreferrer"
-                              className="group w-48 shrink-0 overflow-hidden rounded-xl border bg-card text-card-foreground shadow-sm transition-all hover:-translate-y-0.5 hover:border-primary/50 hover:shadow-md focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring sm:w-56"
+                              aria-label={`Open episode image ${index + 1}`}
+                              className="w-48 shrink-0 overflow-hidden rounded-lg border bg-muted sm:w-56"
                             >
-                              {videoCard}
+                              <TMDBImage
+                                path={image.file_path}
+                                alt={`${selectedEpisode.episode.name}, image ${index + 1}`}
+                                width={448}
+                                height={252}
+                                sizes="(min-width: 640px) 224px, 192px"
+                                className="aspect-video w-full object-cover transition-transform hover:scale-105"
+                              />
                             </a>
-                          ) : (
-                            <div key={video.id} className="group w-48 shrink-0 overflow-hidden rounded-xl border bg-card text-card-foreground shadow-sm sm:w-56">
-                              {videoCard}
-                            </div>
-                          );
-                        })}
-                      </div>
+                          ))}
+                        </div>
+                      )}
+
+                      {activeEpisodeMedia === 'videos' && episodeVideos.length > 0 && (
+                        <div className="flex gap-3 overflow-x-auto pb-2">
+                          {episodeVideos.map((video) => {
+                            const videoUrl = video.site === 'YouTube'
+                              ? `https://www.youtube.com/watch?v=${encodeURIComponent(video.key)}`
+                              : null;
+                            const videoCard = (
+                              <>
+                                <div className="relative aspect-video overflow-hidden bg-gradient-to-br from-muted via-muted/70 to-primary/20">
+                                  {video.site === 'YouTube' && (
+                                    <img
+                                      src={`https://img.youtube.com/vi/${encodeURIComponent(video.key)}/hqdefault.jpg`}
+                                      alt=""
+                                      loading="lazy"
+                                      className="absolute inset-0 h-full w-full object-cover transition-transform duration-300 group-hover:scale-105"
+                                      onError={(event) => {
+                                        event.currentTarget.style.display = 'none';
+                                      }}
+                                    />
+                                  )}
+                                  <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-black/10 to-transparent" />
+                                  <div className="absolute inset-0 flex items-center justify-center">
+                                    <span className="flex h-12 w-12 items-center justify-center rounded-full border border-white/50 bg-black/45 text-white shadow-lg backdrop-blur-sm transition-transform group-hover:scale-110">
+                                      <PlayCircle className="h-7 w-7" />
+                                    </span>
+                                  </div>
+                                  <span className="absolute bottom-2 left-2 rounded bg-black/65 px-2 py-1 text-[11px] font-medium text-white backdrop-blur-sm">
+                                    {video.type}
+                                  </span>
+                                  <span className="absolute bottom-2 right-2 rounded bg-black/65 px-2 py-1 text-[11px] font-medium text-white backdrop-blur-sm">
+                                    {video.site}
+                                  </span>
+                                </div>
+                                <div className="p-3">
+                                  <p className="line-clamp-2 min-h-10 text-sm font-medium leading-5">{video.name}</p>
+                                </div>
+                              </>
+                            );
+
+                            return videoUrl ? (
+                              <a
+                                key={video.id}
+                                href={videoUrl}
+                                target="_blank"
+                                rel="noopener noreferrer"
+                                className="group w-48 shrink-0 overflow-hidden rounded-xl border bg-card text-card-foreground shadow-sm transition-all hover:-translate-y-0.5 hover:border-primary/50 hover:shadow-md focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring sm:w-56"
+                              >
+                                {videoCard}
+                              </a>
+                            ) : (
+                              <div key={video.id} className="group w-48 shrink-0 overflow-hidden rounded-xl border bg-card text-card-foreground shadow-sm sm:w-56">
+                                {videoCard}
+                              </div>
+                            );
+                          })}
+                        </div>
+                      )}
                     </section>
                   )}
                 </>
