@@ -1,21 +1,29 @@
 # Project Roadmap
 
-**Plan 1: Media Card Size Optimization**
-* Optimize the size of the media cards specifically for smaller screens so they scale better in the smartphone view.
+## Migration: GitHub Pages to Vercel
 
-**Plan 2: Header Bar Optimization**
-* Clean up the header by replacing the separate dark/light mode selector, config button, and logout button with a single profile/settings button.
-* Create a popup window triggered by this button to house all of these customization settings, keeping both the desktop and smartphone header views clean.
+**Objective:** Migrate the existing React + Vite application from GitHub Pages to Vercel to host both frontend and backend on a single platform.
 
-**Plan 3: TMDB User Account Integration**
-* Implement TMDB user account functions, such as the watchlist and other relevant account features.
-* Place the navigation for these new account features directly inside the profile/settings popup window proposed in Plan 2.
+**Reason for Migration:**
 
-**Plan 4: Episode Details Window Optimization**
-* Save space on the episode details window by placing Guest Stars and Crew under a single section with a toggle to switch between them.
-* Extract the "Directed by" credit and display it at the top of this area, leaving all remaining crew and stars inside the toggle section.
-* Apply this exact same toggle mechanism to separate Images and Videos.
+* GitHub Pages supports static hosting and doesn't provide backend execution.
+* Vercel supports both frontend hosting and serverless backend functions.
+* Securely store TMDB API keys and access tokens using environment variables.
+* Simplify deployment by integrating GitHub directly with Vercel.
+* Avoid maintaining separate frontend and backend hosting platforms.
 
-**Plan 5: Mobile Bottom Navigation**
+**Implementation Roadmap:**
+
+1. Connect the existing GitHub repository to Vercel.
+2. Migrate frontend hosting from GitHub Pages to Vercel.
+3. Introduce Vercel Serverless Functions for backend API operations.
+4. Configure TMDB credentials as server-side environment variables.
+5. Update frontend API integrations to communicate with the backend.
+6. Test existing functionality, including TMDB login, favourites, watchlists, ratings and custom lists.
+7. Disable the GitHub Pages deployment workflow after successful migration.
+
+**Expected Outcome:** A unified React + Vite application with a serverless backend, hosted on Vercel, with secure credential management and automated GitHub deployments.
+
+## Mobile Bottom Navigation
 
 * Relocate the primary navigation tabs (Movies, TV Shows, and People) from the top of the header to a bottom navigation bar specifically for mobile views to improve ergonomics and navigation reach.
