@@ -114,6 +114,7 @@ export function HomePage() {
         <div className="space-y-12 pb-12">
           <MediaSection
             title="Movies"
+            titleClassName="text-3xl"
             titleAction={
               <MediaCategoryToggle
                 label="Movies"
@@ -130,6 +131,7 @@ export function HomePage() {
           />
           <MediaSection
             title="TV Shows"
+            titleClassName="text-3xl"
             titleAction={
               <MediaCategoryToggle
                 label="TV shows"

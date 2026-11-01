@@ -4,6 +4,7 @@ import { Link } from 'react-router-dom';
 import type { ReactNode } from 'react';
 import { Button } from '@/components/ui/button';
 import { MediaCard } from '@/components/MediaCard';
+import { cn } from '@/lib/utils';
 import { type Movie, type TVShow, type PersonCredit, type PersonListResult } from '@/lib/tmdb';
 
 interface MediaSectionProps {
@@ -12,6 +13,7 @@ interface MediaSectionProps {
   type: 'movie' | 'tv' | 'person';
   category?: string;
   titleAction?: ReactNode;
+  titleClassName?: string;
   hideSeeMore?: boolean;
   actionLabel?: string;
   limit?: number;
@@ -21,7 +23,7 @@ interface MediaSectionProps {
   horizontalColumns?: 8 | 10;
 }
 
-export function MediaSection({ title, items, type, category, titleAction, hideSeeMore = false, actionLabel = 'See More', limit = 10, className, gridClassName, horizontalScroll = false, horizontalColumns = 10 }: MediaSectionProps) {
+export function MediaSection({ title, items, type, category, titleAction, titleClassName, hideSeeMore = false, actionLabel = 'See More', limit = 10, className, gridClassName, horizontalScroll = false, horizontalColumns = 10 }: MediaSectionProps) {
   const scrollContainerRef = useRef<HTMLDivElement>(null);
   const [canScrollLeft, setCanScrollLeft] = useState(false);
   const [canScrollRight, setCanScrollRight] = useState(false);
@@ -90,7 +92,7 @@ export function MediaSection({ title, items, type, category, titleAction, hideSe
     <section className={`min-w-0 ${className ?? 'space-y-4'}`}>
       <div className="mb-4 flex items-center justify-between">
         <div className="flex min-w-0 flex-wrap items-center gap-3">
-          <h2 className="text-2xl font-bold tracking-tight">{title}</h2>
+          <h2 className={cn('text-2xl font-bold tracking-tight', titleClassName)}>{title}</h2>
           {titleAction}
         </div>
         {!hideSeeMore && category && (

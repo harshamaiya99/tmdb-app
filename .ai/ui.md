@@ -124,9 +124,11 @@ Media imagery is rendered through the shared TMDB image component, which provide
 
 A reusable section wrapper in [src/components/MediaSection.tsx](src/components/MediaSection.tsx) handles the repeated layout for movie, TV, and person lists with a heading, optional see-more action, and responsive grid or horizontal carousel. This pattern is used on the home page, search results, and person detail credit sections to keep those experiences visually consistent.
 
-The home page and the main Movies and TV Shows navigation pages use the same category selectors. Movie categories include trending, popular, streaming, in theaters, and top rated; TV categories include trending, popular, and top rated. Home selectors update their carousels, while selectors on the main navigation pages update their paginated lists. Both use the shared [MediaCategoryToggle.tsx](../src/components/MediaCategoryToggle.tsx) component and selected button styling.
+The home page, main Movies and TV Shows navigation pages, and their paginated category views use the same category selectors. Movie categories include trending, popular, streaming, in theaters, and top rated; TV categories include trending, popular, and top rated. Home selectors update their carousels, while selectors on list pages update the paginated results without returning home. All use the shared [MediaCategoryToggle.tsx](../src/components/MediaCategoryToggle.tsx) component and selected button styling.
 
-On the main Movies and TV Shows pages, keep the category selector grouped on the left beside its heading. Language, genre, and sort controls on media list pages are tucked into a compact Filters dropdown.
+The home page Movies and TV Shows headings match the `text-3xl` size of the corresponding main navigation page headings.
+
+On the main Movies and TV Shows pages, keep the category selector grouped on the left beside its heading and put the Filters button on the same row on wider screens. On narrow screens, keep the heading and Filters button together above a full-width, horizontally scrollable category selector. Language, genre, and sort controls on media list pages are tucked into the compact Filters dropdown.
 
 TV show details distinguish the series overview from the selected season overview and individual episode overviews. The selected season summary is shown with its episode list.
 

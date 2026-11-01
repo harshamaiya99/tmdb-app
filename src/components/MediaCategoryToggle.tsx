@@ -1,4 +1,5 @@
 import { Button } from '@/components/ui/button';
+import { cn } from '@/lib/utils';
 
 export const MOVIE_CATEGORIES = [
   { value: 'trending-movies', label: 'Trending' },
@@ -19,6 +20,7 @@ interface MediaCategoryToggleProps<T extends string> {
   options: readonly { value: T; label: string }[];
   value: T;
   onChange: (value: T) => void;
+  className?: string;
 }
 
 export function MediaCategoryToggle<T extends string>({
@@ -26,12 +28,16 @@ export function MediaCategoryToggle<T extends string>({
   options,
   value,
   onChange,
+  className,
 }: MediaCategoryToggleProps<T>) {
   return (
     <div
       role="group"
       aria-label={`${label} category`}
-      className="flex max-w-full items-center overflow-x-auto rounded-md border p-1 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden"
+      className={cn(
+        'flex min-w-0 max-w-full items-center overflow-x-auto rounded-md border p-1 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden',
+        className,
+      )}
     >
       {options.map((option) => (
         <Button

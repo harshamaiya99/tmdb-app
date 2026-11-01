@@ -1,5 +1,5 @@
 // src/pages/MediaListPage.tsx
-import { useParams, useLocation, useSearchParams } from 'react-router-dom';
+import { useParams, useLocation, useNavigate, useSearchParams } from 'react-router-dom';
 import { SlidersHorizontal } from 'lucide-react';
 import * as DropdownMenu from '@radix-ui/react-dropdown-menu';
 import { Button } from '@/components/ui/button';
@@ -133,6 +133,7 @@ const SORT_OPTIONS_BY_TYPE = {
 export function MediaListPage() {
   const { category } = useParams<{ category: string }>();
   const location = useLocation();
+  const navigate = useNavigate();
   
   const [searchParams, setSearchParams] = useSearchParams();
   const { page, setPage } = usePagination();
@@ -141,11 +142,17 @@ export function MediaListPage() {
   const selectedSort = searchParams.get('sort') ?? 'popularity.desc';
   const isMovieTab = location.pathname === '/movie';
   const isTVTab = location.pathname === '/tv';
+  const isMovieCategoryPage = MOVIE_CATEGORIES.some(({ value }) => value === category);
+  const isTVCategoryPage = TV_CATEGORIES.some(({ value }) => value === category);
+  const showMovieCategories = isMovieTab || isMovieCategoryPage;
+  const showTVCategories = isTVTab || isTVCategoryPage;
   const movieTabCategory = MOVIE_CATEGORIES.find(({ value }) => value === searchParams.get('movie_category'))?.value;
   const tvTabCategory = TV_CATEGORIES.find(({ value }) => value === searchParams.get('tv_category'))?.value;
-  const selectedTabCategory = isMovieTab
-    ? movieTabCategory ?? 'trending-movies'
-    : tvTabCategory ?? 'trending-tv';
+  const selectedTabCategory = isMovieCategoryPage || isTVCategoryPage
+    ? category as (typeof MOVIE_CATEGORIES)[number]['value'] | (typeof TV_CATEGORIES)[number]['value']
+    : isMovieTab
+      ? movieTabCategory ?? 'trending-movies'
+      : tvTabCategory ?? 'trending-tv';
 
   let effectiveCategory = category;
   if (!effectiveCategory) {
@@ -259,83 +266,97 @@ export function MediaListPage() {
     const nextParams = new URLSearchParams(searchParams);
     nextParams.delete('page');
     nextParams.delete('genre');
+    if (isMovieCategoryPage || isTVCategoryPage) {
+      const query = nextParams.toString();
+      navigate(`/category/${nextCategory}${query ? `?${query}` : ''}`);
+      return;
+    }
+
     nextParams.set(isMovieTab ? 'movie_category' : 'tv_category', nextCategory);
     setSearchParams(nextParams, { replace: true });
   };
 
+  const filtersControl = (
+    <DropdownMenu.Root>
+      <DropdownMenu.Trigger asChild>
+        <Button type="button" variant="outline" size="sm" className="gap-2">
+          <SlidersHorizontal aria-hidden="true" className="h-4 w-4" />
+          Filters
+        </Button>
+      </DropdownMenu.Trigger>
+      <DropdownMenu.Portal>
+        <DropdownMenu.Content
+          align="end"
+          sideOffset={8}
+          aria-label="Media filters"
+          className="z-50 w-64 space-y-4 rounded-md border bg-popover p-4 text-popover-foreground shadow-md"
+        >
+          <div className="space-y-2">
+            <label htmlFor="media-language-filter" className="text-sm font-medium">Language</label>
+            <select
+              id="media-language-filter"
+              value={selectedLanguage}
+              onChange={(event) => updateLanguageFilter(event.target.value)}
+              className="h-9 w-full rounded-md border border-input bg-background px-3 py-1 text-sm focus:outline-none focus:ring-2 focus:ring-ring"
+            >
+              {LANGUAGE_OPTIONS.map((language) => (
+                <option key={language.value} value={language.value}>{language.label}</option>
+              ))}
+            </select>
+          </div>
+
+          <div className="space-y-2">
+            <label htmlFor="media-genre-filter" className="text-sm font-medium">Genre</label>
+            <select
+              id="media-genre-filter"
+              value={selectedGenre}
+              onChange={(event) => updateGenreFilter(event.target.value)}
+              className="h-9 w-full rounded-md border border-input bg-background px-3 py-1 text-sm focus:outline-none focus:ring-2 focus:ring-ring"
+            >
+              {genreOptions.map((genre) => (
+                <option key={genre.value} value={genre.value}>{genre.label}</option>
+              ))}
+            </select>
+          </div>
+
+          <div className="space-y-2">
+            <label htmlFor="media-sort-filter" className="text-sm font-medium">Sort by</label>
+            <select
+              id="media-sort-filter"
+              value={selectedSort}
+              onChange={(event) => updateSortFilter(event.target.value)}
+              className="h-9 w-full rounded-md border border-input bg-background px-3 py-1 text-sm focus:outline-none focus:ring-2 focus:ring-ring"
+            >
+              {availableSortOptions.map((option) => (
+                <option key={option.value} value={option.value}>{option.label}</option>
+              ))}
+            </select>
+          </div>
+        </DropdownMenu.Content>
+      </DropdownMenu.Portal>
+    </DropdownMenu.Root>
+  );
+
   return (
     <main className="container py-4">
-        <div className="mb-6 flex flex-wrap items-center justify-between gap-4">
-          {(isMovieTab || isTVTab) ? (
-            <div className="flex min-w-0 flex-wrap items-center gap-3">
-              <h1 className="text-3xl font-bold tracking-tight">{isMovieTab ? 'Movies' : 'TV Shows'}</h1>
+        {(showMovieCategories || showTVCategories) && (
+          <div className="mb-6 grid grid-cols-[minmax(0,1fr)_auto] items-center gap-x-3 gap-y-3 sm:flex sm:gap-4">
+            <h1 className="min-w-0 text-3xl font-bold tracking-tight">{showMovieCategories ? 'Movies' : 'TV Shows'}</h1>
+            <div className="col-span-2 min-w-0 sm:col-span-1">
               <MediaCategoryToggle
-                label={isMovieTab ? 'Movies' : 'TV shows'}
-                options={isMovieTab ? MOVIE_CATEGORIES : TV_CATEGORIES}
+                label={showMovieCategories ? 'Movies' : 'TV shows'}
+                options={showMovieCategories ? MOVIE_CATEGORIES : TV_CATEGORIES}
                 value={selectedTabCategory}
                 onChange={updateTabCategory}
+                className="w-full sm:w-auto"
               />
             </div>
-          ) : <div />}
-          <DropdownMenu.Root>
-            <DropdownMenu.Trigger asChild>
-              <Button type="button" variant="outline" size="sm" className="gap-2">
-                <SlidersHorizontal aria-hidden="true" className="h-4 w-4" />
-                Filters
-              </Button>
-            </DropdownMenu.Trigger>
-            <DropdownMenu.Portal>
-              <DropdownMenu.Content
-                align="end"
-                sideOffset={8}
-                aria-label="Media filters"
-                className="z-50 w-64 space-y-4 rounded-md border bg-popover p-4 text-popover-foreground shadow-md"
-              >
-                <div className="space-y-2">
-                  <label htmlFor="media-language-filter" className="text-sm font-medium">Language</label>
-                  <select
-                    id="media-language-filter"
-                    value={selectedLanguage}
-                    onChange={(event) => updateLanguageFilter(event.target.value)}
-                    className="h-9 w-full rounded-md border border-input bg-background px-3 py-1 text-sm focus:outline-none focus:ring-2 focus:ring-ring"
-                  >
-                    {LANGUAGE_OPTIONS.map((language) => (
-                      <option key={language.value} value={language.value}>{language.label}</option>
-                    ))}
-                  </select>
-                </div>
-
-                <div className="space-y-2">
-                  <label htmlFor="media-genre-filter" className="text-sm font-medium">Genre</label>
-                  <select
-                    id="media-genre-filter"
-                    value={selectedGenre}
-                    onChange={(event) => updateGenreFilter(event.target.value)}
-                    className="h-9 w-full rounded-md border border-input bg-background px-3 py-1 text-sm focus:outline-none focus:ring-2 focus:ring-ring"
-                  >
-                    {genreOptions.map((genre) => (
-                      <option key={genre.value} value={genre.value}>{genre.label}</option>
-                    ))}
-                  </select>
-                </div>
-
-                <div className="space-y-2">
-                  <label htmlFor="media-sort-filter" className="text-sm font-medium">Sort by</label>
-                  <select
-                    id="media-sort-filter"
-                    value={selectedSort}
-                    onChange={(event) => updateSortFilter(event.target.value)}
-                    className="h-9 w-full rounded-md border border-input bg-background px-3 py-1 text-sm focus:outline-none focus:ring-2 focus:ring-ring"
-                  >
-                    {availableSortOptions.map((option) => (
-                      <option key={option.value} value={option.value}>{option.label}</option>
-                    ))}
-                  </select>
-                </div>
-              </DropdownMenu.Content>
-            </DropdownMenu.Portal>
-          </DropdownMenu.Root>
-        </div>
+            <div className="col-start-2 row-start-1 shrink-0 sm:ml-auto">{filtersControl}</div>
+          </div>
+        )}
+        {!showMovieCategories && !showTVCategories && (
+          <div className="mb-4 flex justify-end">{filtersControl}</div>
+        )}
         
         {loading ? (
           <div className="space-y-8">
