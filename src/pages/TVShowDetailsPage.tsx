@@ -355,6 +355,66 @@ export function TVShowDetailsPage() {
           </div>
         </div>
 
+        {(tvShow['watch/providers']?.results?.US?.flatrate?.length || tvShow.production_companies?.length) && (
+          <section className="mt-8 grid gap-6 border-t pt-6 sm:grid-cols-2">
+            {tvShow['watch/providers']?.results?.US?.flatrate && tvShow['watch/providers'].results.US.flatrate.length > 0 && (
+              <div>
+                <h2 className="mb-3 text-xl font-semibold">Streaming On</h2>
+                <div className="flex flex-wrap gap-3">
+                  {tvShow['watch/providers'].results.US.flatrate.map((provider) => {
+                    return (
+                      <Link
+                        key={provider.provider_id}
+                        to={`/category/provider-${provider.provider_id}?name=${encodeURIComponent(provider.provider_name)}`}
+                        className="rounded-xl transition-all hover:scale-110 hover:ring-2 hover:ring-primary"
+                      >
+                        <TMDBImage
+                          path={provider.logo_path}
+                          alt={provider.provider_name}
+                          width={500}
+                          height={500}
+                          sizes="40px"
+                          title={provider.provider_name}
+                          className="h-10 w-10 rounded-xl border shadow-sm"
+                        />
+                      </Link>
+                    );
+                  })}
+                </div>
+              </div>
+            )}
+            {tvShow.production_companies && tvShow.production_companies.length > 0 && (
+              <div>
+                <h2 className="mb-3 text-xl font-semibold">Production</h2>
+                <div className="flex flex-wrap items-center gap-6">
+                  {tvShow.production_companies.map((company) => (
+                    <Link
+                      key={company.id}
+                      to={`/category/company-${company.id}?name=${encodeURIComponent(company.name)}`}
+                      className="group flex items-center"
+                      title={company.name}
+                    >
+                      {company.logo_path ? (
+                        <TMDBImage
+                          path={company.logo_path}
+                          alt={company.name}
+                          width={120}
+                          height={40}
+                          sizes="120px"
+                          title={company.name}
+                          className="aspect-auto h-6 w-auto max-w-[120px] object-contain transition-transform group-hover:scale-105 dark:invert md:h-8"
+                        />
+                      ) : (
+                        <span className="text-sm font-medium text-muted-foreground transition-colors group-hover:text-primary">{company.name}</span>
+                      )}
+                    </Link>
+                  ))}
+                </div>
+              </div>
+            )}
+          </section>
+        )}
+
         {tvShow.videos?.results.find((v) => v.type === 'Trailer' && v.site === 'YouTube') && (
           <section className="mt-8 md:hidden">
             <h2 className="mb-2 text-xl font-semibold">Trailer</h2>

@@ -611,7 +611,7 @@ describe('TMDB Talk-show filtering', () => {
     });
   });
 
-  it('filters Talk shows from TV recommendations and similar titles', async () => {
+  it('loads TV production and provider details and filters Talk shows from recommendations', async () => {
     vi.mocked(fetch).mockResolvedValue(responseWith({
       id: 10,
       name: 'Drama Series',
@@ -620,6 +620,15 @@ describe('TMDB Talk-show filtering', () => {
       overview: '',
       first_air_date: '',
       vote_count: 0,
+      production_companies: [{ id: 5, name: 'Studio', logo_path: '/studio.png', origin_country: 'US' }],
+      'watch/providers': {
+        results: {
+          US: {
+            link: 'https://www.themoviedb.org/tv/10/watch',
+            flatrate: [{ provider_id: 8, provider_name: 'Stream', logo_path: '/stream.png' }],
+          },
+        },
+      },
       recommendations: {
         results: [
           { id: 1, name: 'Drama Series', genre_ids: [18] },
@@ -632,8 +641,14 @@ describe('TMDB Talk-show filtering', () => {
     }));
 
     await expect(tmdbService.getTVShowDetails(10)).resolves.toMatchObject({
+      production_companies: [{ id: 5, name: 'Studio' }],
+      'watch/providers': {
+        results: { US: { flatrate: [{ provider_id: 8, provider_name: 'Stream' }] } },
+      },
       recommendations: { results: [{ id: 1, name: 'Drama Series' }] },
       similar: { results: [] },
     });
+    const requestUrl = new URL(String(vi.mocked(fetch).mock.calls[0][0]));
+    expect(requestUrl.searchParams.get('append_to_response')).toContain('watch/providers');
   });
 });
