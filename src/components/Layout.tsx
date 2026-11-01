@@ -97,6 +97,7 @@ function SearchSuggestions({ query, onSelect }: { query: string; onSelect: () =>
 }
 
 export function Layout({ children }: LayoutProps) {
+  const [isMobileViewport, setIsMobileViewport] = useState(false);
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
   const [searchQuery, setSearchQuery] = useState('');
@@ -379,8 +380,20 @@ export function Layout({ children }: LayoutProps) {
     }
   };
 
+  useEffect(() => {
+    if (typeof window.matchMedia !== 'function') return;
+
+    const mediaQuery = window.matchMedia('(max-width: 767px)');
+    const updateViewport = () => setIsMobileViewport(mediaQuery.matches);
+    updateViewport();
+    mediaQuery.addEventListener('change', updateViewport);
+
+    return () => mediaQuery.removeEventListener('change', updateViewport);
+  }, []);
+
   return (
     <div className="min-h-screen bg-background">
+      <DropdownMenu.Root>
       <header className="sticky top-0 z-50 border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
         <div className="container flex min-h-14 flex-wrap items-center justify-between gap-x-3 gap-y-2 py-2 md:h-14 md:flex-nowrap md:py-0">
           <div className="flex min-w-0 items-center gap-2">
@@ -484,8 +497,7 @@ export function Layout({ children }: LayoutProps) {
             </form>
           </div>
 
-          <div className="ml-auto flex shrink-0 items-center space-x-1 md:ml-0">
-            <DropdownMenu.Root>
+          <div className="ml-auto hidden shrink-0 items-center space-x-1 md:flex md:ml-0">
               <DropdownMenu.Trigger asChild>
                 <Button
                   type="button"
@@ -511,6 +523,7 @@ export function Layout({ children }: LayoutProps) {
               <DropdownMenu.Portal>
                 <DropdownMenu.Content
                   align="end"
+                  side={isMobileViewport ? 'top' : 'bottom'}
                   sideOffset={8}
                   className="z-[60] max-h-[calc(100vh-2rem)] min-w-60 max-w-[calc(100vw-2rem)] overflow-y-auto rounded-md border bg-popover p-1 text-popover-foreground shadow-md"
                 >
@@ -605,7 +618,6 @@ export function Layout({ children }: LayoutProps) {
                   </DropdownMenu.Item>
                 </DropdownMenu.Content>
               </DropdownMenu.Portal>
-            </DropdownMenu.Root>
           </div>
         </div>
       </header>
@@ -613,7 +625,7 @@ export function Layout({ children }: LayoutProps) {
         aria-label="Mobile main navigation"
         className="fixed inset-x-0 bottom-0 z-40 border-t bg-background/95 pb-[env(safe-area-inset-bottom)] backdrop-blur supports-[backdrop-filter]:bg-background/80 md:hidden"
       >
-        <div className="container grid min-h-16 grid-cols-3 items-center gap-1">
+        <div className="container grid min-h-16 grid-cols-4 items-center gap-1">
           {mainNavigation.map(({ to, label, icon: Icon }) => (
             <NavLink
               key={to}
@@ -628,8 +640,31 @@ export function Layout({ children }: LayoutProps) {
               <span>{label}</span>
             </NavLink>
           ))}
+          <DropdownMenu.Trigger asChild>
+            <Button
+              type="button"
+              variant="ghost"
+              aria-label="Account and settings"
+              title="Account and settings"
+              className="flex min-h-12 flex-col items-center justify-center gap-1 rounded-md px-2 py-1 text-[11px] font-medium text-muted-foreground hover:bg-accent hover:text-foreground md:hidden"
+            >
+              {account?.avatar?.tmdb?.avatar_path ? (
+                <TMDBImage
+                  path={account.avatar.tmdb.avatar_path}
+                  alt=""
+                  width={24}
+                  height={24}
+                  className="h-5 w-5 rounded-full object-cover"
+                />
+              ) : (
+                <UserRound aria-hidden="true" className="h-5 w-5" />
+              )}
+              <span>Account</span>
+            </Button>
+          </DropdownMenu.Trigger>
         </div>
       </nav>
+      </DropdownMenu.Root>
       <main className="container py-6 pb-[calc(6rem+env(safe-area-inset-bottom))] md:pb-6">{children}</main>
       {settingsOpen && (
         <div
