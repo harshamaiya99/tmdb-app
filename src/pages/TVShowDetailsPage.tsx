@@ -148,8 +148,8 @@ export function TVShowDetailsPage() {
       <div className="min-h-screen">
         <div className="container py-6 space-y-6">
           <Skeleton className="h-8 w-24" />
-          <div className="grid md:grid-cols-[300px_1fr] gap-6">
-            <Skeleton className="aspect-[2/3]" />
+          <div className="grid min-w-0 grid-cols-1 gap-6 md:grid-cols-[200px_minmax(0,1fr)]">
+            <Skeleton className="mx-auto aspect-[2/3] w-full max-w-[180px] md:mx-0 md:max-w-none" />
             <div className="space-y-4">
               <Skeleton className="h-10 w-3/4" />
               <Skeleton className="h-6 w-1/2" />
@@ -221,9 +221,9 @@ export function TVShowDetailsPage() {
     <div className="min-h-screen">
       <div className="container py-6">
         <div className="grid min-w-0 grid-cols-1 gap-6 md:grid-cols-[200px_minmax(0,1fr)]">
-          <div className="min-w-0 space-y-4">
+          <div className="mx-auto w-full max-w-[180px] space-y-4 md:mx-0 md:max-w-none">
             {tvShow.poster_path ? (
-              <TMDBImage path={tvShow.poster_path} alt={`${tvShow.name} poster`} width={500} height={750} sizes="(min-width: 768px) 200px, calc(100vw - 2rem)" loading="eager" fetchPriority="high" className="block h-auto w-full max-w-full rounded-lg border" />
+              <TMDBImage path={tvShow.poster_path} alt={`${tvShow.name} poster`} width={500} height={750} sizes="(min-width: 768px) 200px, 180px" loading="eager" fetchPriority="high" className="block h-auto w-full max-w-full rounded-lg border" />
             ) : (
               <div role="img" aria-label={`${tvShow.name} poster unavailable`} className="aspect-[2/3] bg-muted rounded-lg flex items-center justify-center text-center text-sm text-muted-foreground">Poster unavailable</div>
             )}

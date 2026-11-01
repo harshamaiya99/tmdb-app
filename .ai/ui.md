@@ -155,6 +155,8 @@ On narrow screens, the header keeps the brand and utility actions on its top row
 
 TV show details place cast and crew beside the season ratings heatmap in a 3:2 desktop layout; the sections stack on narrower screens. The heatmap remains horizontally scrollable within its panel. Episode controls stack on narrow screens, and episodes use a responsive grid with up to five cards per row on wide screens. The episode details dialog stacks its image above the text until there is enough width for a side-by-side layout.
 
+Movie and TV show detail posters are centered and capped at 180px wide on mobile so they do not dominate the viewport; at the `md` breakpoint and above, they use the existing 200px desktop column.
+
 ## Spacing and Typography Conventions
 
 ### Spacing
