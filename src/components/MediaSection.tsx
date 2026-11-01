@@ -90,13 +90,25 @@ export function MediaSection({ title, items, type, category, titleAction, titleC
 
   return (
     <section className={`min-w-0 ${className ?? 'space-y-4'}`}>
-      <div className="mb-4 flex items-center justify-between">
-        <div className="flex min-w-0 flex-wrap items-center gap-3">
-          <h2 className={cn('text-2xl font-bold tracking-tight', titleClassName)}>{title}</h2>
-          {titleAction}
-        </div>
+      <div className={cn(
+        'mb-4',
+        titleAction
+          ? 'grid grid-cols-[minmax(0,1fr)_auto] items-center gap-x-3 gap-y-3 sm:grid-cols-[auto_auto_minmax(0,1fr)_auto]'
+          : 'flex items-center justify-between',
+      )}>
+        <h2 className={cn('text-2xl font-bold tracking-tight', titleClassName)}>{title}</h2>
+        {titleAction && (
+          <div className="col-span-2 min-w-0 sm:col-span-1">
+            {titleAction}
+          </div>
+        )}
         {!hideSeeMore && category && (
-          <Button variant="ghost" size="sm" asChild>
+          <Button
+            variant="ghost"
+            size="sm"
+            asChild
+            className={titleAction ? 'col-start-2 row-start-1 sm:col-start-4 sm:row-start-auto' : undefined}
+          >
             <Link to={`/category/${category}`}>{actionLabel} &rarr;</Link>
           </Button>
         )}

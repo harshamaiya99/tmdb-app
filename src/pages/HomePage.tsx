@@ -121,6 +121,7 @@ export function HomePage() {
                 options={MOVIE_CATEGORIES}
                 value={movieCategory}
                 onChange={(value) => updateCategory('movie_category', value)}
+                className="w-full sm:w-auto"
               />
             }
             items={movieList.data?.results ?? []}
@@ -138,6 +139,7 @@ export function HomePage() {
                 options={TV_CATEGORIES}
                 value={tvCategory}
                 onChange={(value) => updateCategory('tv_category', value)}
+                className="w-full sm:w-auto"
               />
             }
             items={tvList.data?.results ?? []}
