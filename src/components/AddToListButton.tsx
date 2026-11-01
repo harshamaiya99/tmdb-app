@@ -13,9 +13,11 @@ interface AddToListButtonProps {
   mediaId: number;
   mediaTitle: string;
   mediaType: 'movie' | 'tv';
+  className?: string;
+  iconOnlyOnMobile?: boolean;
 }
 
-export function AddToListButton({ mediaId, mediaTitle, mediaType }: AddToListButtonProps) {
+export function AddToListButton({ mediaId, mediaTitle, mediaType, className, iconOnlyOnMobile = false }: AddToListButtonProps) {
   const {
     canConnectLists,
     connectListsAccount,
@@ -49,6 +51,13 @@ export function AddToListButton({ mediaId, mediaTitle, mediaType }: AddToListBut
     ?.filter((list) => list.mediaIds[mediaType].includes(mediaId))
     .map((list) => list.listId) ?? [];
   const canToggleMembership = membershipQuery.data !== undefined && !membershipQuery.error;
+  const buttonLabel = membershipQuery.loading
+    ? 'Checking lists…'
+    : membershipQuery.error
+      ? 'Check list status'
+      : addedListIds.length > 0
+        ? 'Added to list'
+        : 'Add to list';
 
   useEffect(() => {
     if (isOpen) closeButtonRef.current?.focus();
@@ -130,19 +139,21 @@ export function AddToListButton({ mediaId, mediaTitle, mediaType }: AddToListBut
 
   return (
     <>
-      <Button type="button" variant={addedListIds.length > 0 ? 'selected' : 'outline'} size="sm" className="gap-1.5" onClick={() => setIsOpen(true)}>
+      <Button
+        type="button"
+        variant={addedListIds.length > 0 ? 'selected' : 'outline'}
+        size="sm"
+        className={className ?? 'gap-1.5'}
+        aria-label={buttonLabel}
+        title={buttonLabel}
+        onClick={() => setIsOpen(true)}
+      >
         {membershipQuery.loading
           ? <Loader2 aria-hidden="true" className="h-4 w-4 animate-spin" />
           : addedListIds.length > 0
           ? <Check aria-hidden="true" className="h-4 w-4" />
           : <ListPlus aria-hidden="true" className="h-4 w-4" />}
-        {membershipQuery.loading
-          ? 'Checking lists…'
-          : membershipQuery.error
-            ? 'Check list status'
-            : addedListIds.length > 0
-              ? 'Added to list'
-              : 'Add to list'}
+        <span className={iconOnlyOnMobile ? 'sr-only md:not-sr-only' : undefined}>{buttonLabel}</span>
       </Button>
       {isOpen && (
         <div

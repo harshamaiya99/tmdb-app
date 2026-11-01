@@ -104,50 +104,64 @@ export function AccountMediaActions({ mediaId, mediaType, mediaTitle }: AccountM
   };
 
   return (
-    <section aria-label="TMDB account actions" className="flex flex-wrap items-center gap-2">
-      <Button
-        type="button"
-        variant={accountState?.watchlist ? 'selected' : 'outline'}
-        size="sm"
-        className="gap-1.5"
-        aria-pressed={accountState?.watchlist ?? false}
-        disabled={pendingAction !== null || !accountState}
-        onClick={() => void handleAction('watchlist')}
-      >
-        {accountState?.watchlist
-          ? <BookmarkCheck aria-hidden="true" className="h-4 w-4" />
-          : <BookmarkPlus aria-hidden="true" className="h-4 w-4" />}
-        {accountState?.watchlist ? 'In watchlist' : 'Watchlist'}
-      </Button>
-      <Button
-        type="button"
-        variant={accountState?.favorite ? 'selected' : 'outline'}
-        size="sm"
-        className={accountState?.favorite ? 'gap-1.5 text-rose-600 dark:text-rose-400' : 'gap-1.5'}
-        aria-pressed={accountState?.favorite ?? false}
-        disabled={pendingAction !== null || !accountState}
-        onClick={() => void handleAction('favorite')}
-      >
-        <Heart aria-hidden="true" className={`h-4 w-4${accountState?.favorite ? ' fill-current' : ''}`} />
-        {accountState?.favorite ? 'Favorited' : 'Favorite'}
-      </Button>
-      <AddToListButton mediaId={mediaId} mediaTitle={mediaTitle} mediaType={mediaType} />
+    <section aria-label="TMDB account actions" className="min-w-0 space-y-2 md:flex md:flex-wrap md:items-center md:gap-2 md:space-y-0">
+      <div className="grid min-w-0 grid-cols-2 gap-2 md:contents">
+        <Button
+          type="button"
+          variant={accountState?.watchlist ? 'selected' : 'outline'}
+          size="sm"
+          className="w-full min-w-0 justify-center gap-1.5 px-2 text-xs md:w-auto md:px-3 md:text-sm"
+          aria-label={accountState?.watchlist ? 'Remove from watchlist' : 'Add to watchlist'}
+          title={accountState?.watchlist ? 'Remove from watchlist' : 'Add to watchlist'}
+          aria-pressed={accountState?.watchlist ?? false}
+          disabled={pendingAction !== null || !accountState}
+          onClick={() => void handleAction('watchlist')}
+        >
+          {accountState?.watchlist
+            ? <BookmarkCheck aria-hidden="true" className="h-4 w-4" />
+            : <BookmarkPlus aria-hidden="true" className="h-4 w-4" />}
+          <span className="sr-only md:not-sr-only">{accountState?.watchlist ? 'In watchlist' : 'Watchlist'}</span>
+        </Button>
+        <Button
+          type="button"
+          variant={accountState?.favorite ? 'selected' : 'outline'}
+          size="sm"
+          className={`w-full min-w-0 justify-center gap-1.5 px-2 text-xs md:w-auto md:px-3 md:text-sm${accountState?.favorite ? ' text-rose-600 dark:text-rose-400' : ''}`}
+          aria-label={accountState?.favorite ? 'Remove from favorites' : 'Add to favorites'}
+          title={accountState?.favorite ? 'Remove from favorites' : 'Add to favorites'}
+          aria-pressed={accountState?.favorite ?? false}
+          disabled={pendingAction !== null || !accountState}
+          onClick={() => void handleAction('favorite')}
+        >
+          <Heart aria-hidden="true" className={`h-4 w-4${accountState?.favorite ? ' fill-current' : ''}`} />
+          <span className="sr-only md:not-sr-only">{accountState?.favorite ? 'Favorited' : 'Favorite'}</span>
+        </Button>
+      </div>
+      <div className="flex min-w-0 items-center gap-2 md:contents">
+        <AddToListButton
+          mediaId={mediaId}
+          mediaTitle={mediaTitle}
+          mediaType={mediaType}
+          iconOnlyOnMobile
+          className="min-w-0 flex-1 justify-center gap-1.5 px-2 text-xs md:flex-none md:px-3 md:text-sm"
+        />
+        {!accountStateQuery.error && (
+          <select
+            id={`account-rate-${mediaType}-${mediaId}`}
+            value={accountState?.rated ? String(accountState.rated.value) : ''}
+            disabled={pendingAction !== null || !accountState}
+            onChange={(event) => void handleRating(Number(event.currentTarget.value))}
+            className="h-8 w-20 shrink-0 rounded-md border border-input bg-background px-2 text-xs md:w-28"
+          >
+            <option value="" disabled>{accountStateQuery.loading ? 'Loading…' : 'Rate'}</option>
+            {ratingValues.map((rating) => <option key={rating} value={rating}>{rating.toFixed(1)}</option>)}
+          </select>
+        )}
+      </div>
       {accountStateQuery.error ? (
         <span role="alert" className="text-xs text-destructive">Account status unavailable.</span>
       ) : (
         <label className="sr-only" htmlFor={`account-rate-${mediaType}-${mediaId}`}>Rate this {mediaType === 'tv' ? 'show' : 'movie'}</label>
-      )}
-      {!accountStateQuery.error && (
-        <select
-          id={`account-rate-${mediaType}-${mediaId}`}
-          value={accountState?.rated ? String(accountState.rated.value) : ''}
-          disabled={pendingAction !== null || !accountState}
-          onChange={(event) => void handleRating(Number(event.currentTarget.value))}
-          className="h-8 w-32 rounded-md border border-input bg-background px-2 text-xs"
-        >
-          <option value="" disabled>{accountStateQuery.loading ? 'Loading…' : 'Rate…'}</option>
-          {ratingValues.map((rating) => <option key={rating} value={rating}>{rating.toFixed(1)} / 10</option>)}
-        </select>
       )}
     </section>
   );
