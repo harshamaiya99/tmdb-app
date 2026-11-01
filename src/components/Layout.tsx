@@ -33,7 +33,15 @@ const mainNavigation = [
   { to: '/person', label: 'People', icon: Users },
 ] as const;
 
-function SearchSuggestions({ query, onSelect }: { query: string; onSelect: () => void }) {
+function SearchSuggestions({
+  query,
+  onSelect,
+  id = 'search-suggestions',
+}: {
+  query: string;
+  onSelect: () => void;
+  id?: string;
+}) {
   const suggestions = useCachedQuery(
     `search:suggestions:${query}:1`,
     (signal) => tmdbService.searchMulti(query, 1, { signal }),
@@ -43,7 +51,7 @@ function SearchSuggestions({ query, onSelect }: { query: string; onSelect: () =>
 
   return (
     <div
-      id="search-suggestions"
+      id={id}
       role="listbox"
       aria-label="Search suggestions"
       className="absolute left-0 right-0 top-full z-50 mt-2 max-h-80 overflow-y-auto rounded-md border bg-popover p-1 text-popover-foreground shadow-md"
@@ -98,6 +106,7 @@ function SearchSuggestions({ query, onSelect }: { query: string; onSelect: () =>
 
 export function Layout({ children }: LayoutProps) {
   const [isMobileViewport, setIsMobileViewport] = useState(false);
+  const [isMobileSearchOpen, setIsMobileSearchOpen] = useState(false);
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
   const [searchQuery, setSearchQuery] = useState('');
@@ -119,6 +128,9 @@ export function Layout({ children }: LayoutProps) {
   const location = useLocation();
   const [settingsOpen, setSettingsOpen] = useState(false);
   const importFileInputRef = useRef<HTMLInputElement>(null);
+  const mobileSearchInputRef = useRef<HTMLInputElement>(null);
+  const mobileSearchButtonRef = useRef<HTMLButtonElement>(null);
+  const mobileSearchWasOpenRef = useRef(false);
   const [movieLinkInputs, setMovieLinkInputs] = useState<EmbedLink[]>(movieLinks.length ? movieLinks : [{ name: '', urlTemplate: '' }]);
   const [tvLinkInputs, setTvLinkInputs] = useState<EmbedLink[]>(tvLinks.length ? tvLinks : [{ name: '', urlTemplate: '' }]);
   const [settingsError, setSettingsError] = useState('');
@@ -145,12 +157,14 @@ export function Layout({ children }: LayoutProps) {
 
   useEffect(() => {
     setSuggestionsOpen(false);
+    setIsMobileSearchOpen(false);
   }, [location.pathname, location.search]);
 
   const handleSearch = (e: FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     const trimmedQuery = searchQuery.trim();
     setSuggestionsOpen(false);
+    setIsMobileSearchOpen(false);
 
     if (!trimmedQuery) {
       restoreSearchOrigin();
@@ -177,7 +191,10 @@ export function Layout({ children }: LayoutProps) {
   };
 
   const handleSearchKeyDown = (event: KeyboardEvent<HTMLInputElement>) => {
-    if (event.key === 'Escape') setSuggestionsOpen(false);
+    if (event.key === 'Escape') {
+      setSuggestionsOpen(false);
+      setIsMobileSearchOpen(false);
+    }
   };
 
   const closeSuggestions = () => setSuggestionsOpen(false);
@@ -391,12 +408,22 @@ export function Layout({ children }: LayoutProps) {
     return () => mediaQuery.removeEventListener('change', updateViewport);
   }, []);
 
+  useEffect(() => {
+    if (isMobileSearchOpen) {
+      mobileSearchWasOpenRef.current = true;
+      mobileSearchInputRef.current?.focus();
+    } else if (mobileSearchWasOpenRef.current) {
+      mobileSearchWasOpenRef.current = false;
+      mobileSearchButtonRef.current?.focus();
+    }
+  }, [isMobileSearchOpen]);
+
   return (
     <div className="min-h-screen bg-background">
       <DropdownMenu.Root>
       <header className="sticky top-0 z-50 border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
         <div className="container flex min-h-14 flex-wrap items-center justify-between gap-x-3 gap-y-2 py-2 md:h-14 md:flex-nowrap md:py-0">
-          <div className="flex min-w-0 items-center gap-2">
+          <div className="flex min-w-0 flex-1 items-center gap-2 md:flex-none">
             {showBackButton && (
               <Button
                 variant="ghost"
@@ -409,7 +436,10 @@ export function Layout({ children }: LayoutProps) {
                 <ArrowLeft className="h-4 w-4" />
               </Button>
             )}
-            <Link to="/" className="flex min-w-0 items-center gap-2">
+            <Link
+              to="/"
+              className={`flex min-w-0 items-center gap-2 ${isMobileSearchOpen ? 'hidden md:flex' : ''}`}
+            >
               {!showBackButton && (
                 <img
                   src={`${import.meta.env.BASE_URL}favicon.svg`}
@@ -426,9 +456,79 @@ export function Layout({ children }: LayoutProps) {
                 {title}
               </span>
             </Link>
+            {!isMobileSearchOpen && (
+              <Button
+                ref={mobileSearchButtonRef}
+                type="button"
+                variant="ghost"
+                size="icon"
+                aria-label="Open search"
+                title="Search"
+                onClick={() => setIsMobileSearchOpen(true)}
+                className="ml-auto h-10 w-10 shrink-0 md:hidden"
+              >
+                <Search className="h-4 w-4" />
+              </Button>
+            )}
+            {isMobileSearchOpen && (
+              <form
+                onSubmit={handleSearch}
+                onBlur={(event) => {
+                  if (!event.currentTarget.contains(event.relatedTarget as Node | null)) {
+                    setSuggestionsOpen(false);
+                  }
+                }}
+                className="flex min-w-0 flex-1 items-center gap-1 md:hidden"
+              >
+                <div className="relative min-w-0 flex-1">
+                  <Input
+                    ref={mobileSearchInputRef}
+                    type="search"
+                    role="combobox"
+                    aria-label="Search movies, TV shows, and people"
+                    aria-autocomplete="list"
+                    aria-expanded={showSuggestions}
+                    aria-controls="mobile-search-suggestions"
+                    placeholder="Search movies, shows & people"
+                    value={searchQuery}
+                    onChange={handleSearchInputChange}
+                    onFocus={() => setSuggestionsOpen(true)}
+                    onKeyDown={handleSearchKeyDown}
+                    className="h-10 pr-10"
+                  />
+                  <Button
+                    type="submit"
+                    variant="ghost"
+                    size="icon"
+                    aria-label="Search"
+                    title="Search"
+                    className="absolute right-0 top-0 h-10 w-10"
+                  >
+                    <Search className="h-4 w-4" />
+                  </Button>
+                  {showSuggestions && (suggestionQueryReady ? (
+                    <SearchSuggestions
+                      id="mobile-search-suggestions"
+                      key={debouncedSearchQuery}
+                      query={debouncedSearchQuery}
+                      onSelect={closeSuggestions}
+                    />
+                  ) : (
+                    <div
+                      id="mobile-search-suggestions"
+                      role="listbox"
+                      aria-label="Search suggestions"
+                      className="absolute left-0 right-0 top-full z-50 mt-2 rounded-md border bg-popover p-1 text-popover-foreground shadow-md"
+                    >
+                      <p className="px-3 py-2 text-sm text-muted-foreground">Searching...</p>
+                    </div>
+                  ))}
+                </div>
+              </form>
+            )}
           </div>
 
-          <div className="order-1 flex w-full flex-col gap-3 md:order-none md:ml-auto md:w-auto md:flex-row md:items-center md:gap-4">
+          <div className="hidden md:ml-auto md:flex md:w-auto md:flex-row md:items-center md:gap-4">
             <nav className="hidden items-center gap-4 text-sm font-medium md:flex lg:gap-6">
               {mainNavigation.map(({ to, label }) => (
                 <NavLink
