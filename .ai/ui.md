@@ -122,6 +122,8 @@ Media imagery is rendered through the shared TMDB image component, which provide
 
 Person details place the person's name above the profile on mobile and at the top of the right-hand details column on desktop, matching movie and TV detail title placement. The poster-sized profile and Personal Info stack in the left column on desktop; on mobile from 360px, Personal Info sits beside the portrait. Biography spans the content width below them on mobile and stays in the right column on desktop. TV credit carousels use full page width and show up to 10 cards across at wide desktop sizes.
 
+Person detail galleries use three image columns on mobile, then expand to four or more columns at larger breakpoints. TV credit carousels use full page width and show up to 10 cards across at wide desktop sizes.
+
 ### Shared media sections
 
 A reusable section wrapper in [src/components/MediaSection.tsx](src/components/MediaSection.tsx) handles the repeated layout for movie, TV, and person lists with a heading, optional see-more action, and responsive grid or horizontal carousel. This pattern is used on the home page, search results, and person detail credit sections to keep those experiences visually consistent.

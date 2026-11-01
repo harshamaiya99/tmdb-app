@@ -366,7 +366,7 @@ export function PersonDetailsPage() {
             <LazySection>
             <div className="w-full border-t pt-8">
               <h2 className="text-2xl font-semibold mb-6">Gallery</h2>
-              <div className="grid grid-cols-2 gap-4 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-8 2xl:grid-cols-10">
+              <div className="grid grid-cols-3 gap-3 sm:gap-4 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-8 2xl:grid-cols-10">
                 {galleryImages.map((image, idx) => {
                   return (
                     <button
@@ -402,7 +402,7 @@ export function PersonDetailsPage() {
                 <p className="mb-5 text-sm text-muted-foreground">
                   Additional images from Wikimedia Commons. Select an image to view its source and licensing details.
                 </p>
-                <div className="grid grid-cols-2 gap-4 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-8 2xl:grid-cols-10">
+                <div className="grid grid-cols-3 gap-3 sm:gap-4 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-8 2xl:grid-cols-10">
                   {wikimediaQuery.data.map((image, idx) => (
                     <button
                       key={image.pageUrl}
