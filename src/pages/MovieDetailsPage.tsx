@@ -105,19 +105,14 @@ export function MovieDetailsPage() {
         {/* TOP SECTION */}
         <div className="grid min-w-0 grid-cols-1 items-start gap-4 min-[360px]:grid-cols-[minmax(0,0.9fr)_minmax(0,1.1fr)] md:grid-cols-[200px_minmax(0,1fr)] md:gap-6">
           
-          {/* Poster and status */}
+          {/* Poster and movie actions */}
           <div className="mx-auto w-full max-w-[180px] space-y-4 min-[360px]:mx-0 min-[360px]:max-w-none md:max-w-none">
             {movie.poster_path ? (
               <TMDBImage path={movie.poster_path} alt={`${movie.title} poster`} width={500} height={750} sizes="(min-width: 768px) 200px, (min-width: 360px) 42vw, 180px" loading="eager" fetchPriority="high" className="block h-auto w-full max-w-full rounded-lg border shadow-sm" />
             ) : (
               <div role="img" aria-label={`${movie.title} poster unavailable`} className="aspect-[2/3] bg-muted rounded-lg flex items-center justify-center border shadow-sm text-center text-sm text-muted-foreground">Poster unavailable</div>
             )}
-            {movie.status && (
-              <p className="text-center text-sm">
-                <span className="text-muted-foreground">Status: </span>
-                <span className="font-medium">{movie.status}</span>
-              </p>
-            )}
+            <AccountMediaActions mediaId={movie.id} mediaType="movie" mediaTitle={movie.title} />
             <WatchLinkButton
               links={movieLinks.map((link) => ({
                 name: link.name,
@@ -131,34 +126,11 @@ export function MovieDetailsPage() {
                 Add a movie URL template in embed settings to enable playback.
               </p>
             )}
-            {movie['watch/providers']?.results?.US?.flatrate && (
-              <div className="border-t pt-4">
-                <h2 className="mb-3 text-base font-semibold">Streaming On</h2>
-                <div className="flex flex-wrap gap-3">
-                  {movie['watch/providers'].results.US.flatrate.map((provider) => (
-                    <Link
-                      key={provider.provider_id}
-                      to={`/category/provider-${provider.provider_id}?name=${encodeURIComponent(provider.provider_name)}`}
-                      className="rounded-xl transition-all hover:scale-110 hover:ring-2 hover:ring-primary"
-                    >
-                      <TMDBImage
-                        path={provider.logo_path}
-                        alt={provider.provider_name}
-                        width={500}
-                        height={500}
-                        sizes="40px"
-                        title={provider.provider_name}
-                        className="h-10 w-10 rounded-xl border shadow-sm"
-                      />
-                    </Link>
-                  ))}
-                </div>
-              </div>
-            )}
           </div>
 
-          <div className="grid min-w-0 gap-6 xl:grid-cols-[minmax(0,1fr)_400px]">
-            <div className="min-w-0 space-y-6">
+          <div className="contents md:grid md:min-w-0 md:grid-cols-1 md:gap-y-4 xl:grid-cols-[minmax(0,1fr)_400px] xl:gap-6">
+            <div className="contents md:col-start-1 md:row-start-1 md:flex md:flex-col md:gap-4">
+            <div className="min-w-0 space-y-6 min-[360px]:col-start-2">
               <div className="hidden md:block">
                 <h1 className="break-words text-3xl font-bold tracking-tight">{movie.title}</h1>
                 {movie.tagline && (
@@ -202,27 +174,33 @@ export function MovieDetailsPage() {
               </div>
 
               {movie.genres && movie.genres.length > 0 && (
-              <div className="flex flex-wrap gap-2">
-                {movie.genres.map((genre) => (
-                  <Link key={genre.id} to={`/category/genre-movie-${genre.id}`} className="inline-flex">
-                    <Badge variant="secondary">{genre.name}</Badge>
-                  </Link>
-                ))}
-              </div>
+                <div className="flex flex-wrap gap-2">
+                  {movie.genres.map((genre) => (
+                    <Link key={genre.id} to={`/category/genre-movie-${genre.id}`} className="inline-flex">
+                      <Badge variant="secondary">{genre.name}</Badge>
+                    </Link>
+                  ))}
+                </div>
               )}
 
-              <AccountMediaActions mediaId={movie.id} mediaType="movie" mediaTitle={movie.title} />
-
-              {movie.overview && (
-                <section className="hidden md:block">
-                  <h2 className="mb-2 text-xl font-semibold">Overview</h2>
-                  <p className="leading-relaxed text-muted-foreground">{movie.overview}</p>
-                </section>
+              {movie.status && (
+                <p className="text-sm">
+                  <span className="text-muted-foreground">Status: </span>
+                  <span className="font-medium">{movie.status}</span>
+                </p>
               )}
             </div>
 
+            {movie.overview && (
+              <section className="min-[360px]:col-span-2">
+                <h2 className="mb-2 text-xl font-semibold">Overview</h2>
+                <p className="leading-relaxed text-muted-foreground">{movie.overview}</p>
+              </section>
+            )}
+            </div>
+
             {(trailer || hasCollection) && (
-              <div className="hidden min-w-0 space-y-8 md:block">
+              <div className="hidden min-w-0 space-y-8 md:col-start-1 md:row-start-2 md:block xl:col-start-2 xl:row-start-1">
                 {trailer && (
                   <section className="min-w-0">
                     <h2 className="mb-2 flex items-center gap-2 text-xl font-semibold">
@@ -260,42 +238,62 @@ export function MovieDetailsPage() {
           </div>
         </div>
 
-        {movie.overview && (
-          <section className="mt-8 md:hidden">
-            <h2 className="mb-2 text-xl font-semibold">Overview</h2>
-            <p className="leading-relaxed text-muted-foreground">{movie.overview}</p>
-
-          </section>
-        )}
-
-        {movie.production_companies && movie.production_companies.length > 0 && (
-          <section className="mt-8 border-t pt-6">
-            <h2 className="mb-4 text-xl font-semibold">Production</h2>
-            <div className="flex flex-wrap items-center gap-6">
-              {movie.production_companies.map((company) => (
-                <Link
-                  key={company.id}
-                  to={`/category/company-${company.id}?name=${encodeURIComponent(company.name)}`}
-                  className="group flex items-center"
-                >
-                  {company.logo_path ? (
-                    <TMDBImage
-                      path={company.logo_path}
-                      alt={company.name}
-                      width={120}
-                      height={40}
-                      sizes="120px"
-                      title={company.name}
-                      className="h-6 max-w-[120px] opacity-60 grayscale transition-all group-hover:scale-105 group-hover:opacity-100 group-hover:grayscale-0 dark:invert dark:group-hover:invert-0 md:h-8"
-                    />
-                  ) : (
-                    <span className="text-sm font-medium text-muted-foreground transition-colors group-hover:text-primary">
-                      {company.name}
-                    </span>
-                  )}
-                </Link>
-              ))}
-            </div>
+        {(movie['watch/providers']?.results?.US?.flatrate?.length || movie.production_companies?.length) && (
+          <section className="mt-8 grid gap-6 border-t pt-6 sm:grid-cols-2">
+            {movie['watch/providers']?.results?.US?.flatrate && movie['watch/providers'].results.US.flatrate.length > 0 && (
+              <div>
+                <h2 className="mb-3 text-xl font-semibold">Streaming On</h2>
+                <div className="flex flex-wrap gap-3">
+                  {movie['watch/providers'].results.US.flatrate.map((provider) => (
+                    <Link
+                      key={provider.provider_id}
+                      to={`/category/provider-${provider.provider_id}?name=${encodeURIComponent(provider.provider_name)}`}
+                      className="rounded-xl transition-all hover:scale-110 hover:ring-2 hover:ring-primary"
+                    >
+                      <TMDBImage
+                        path={provider.logo_path}
+                        alt={provider.provider_name}
+                        width={500}
+                        height={500}
+                        sizes="40px"
+                        title={provider.provider_name}
+                        className="h-10 w-10 rounded-xl border shadow-sm"
+                      />
+                    </Link>
+                  ))}
+                </div>
+              </div>
+            )}
+            {movie.production_companies && movie.production_companies.length > 0 && (
+              <div>
+                <h2 className="mb-3 text-xl font-semibold">Production</h2>
+                <div className="flex flex-wrap items-center gap-6">
+                  {movie.production_companies.map((company) => (
+                    <Link
+                      key={company.id}
+                      to={`/category/company-${company.id}?name=${encodeURIComponent(company.name)}`}
+                      className="group flex items-center"
+                    >
+                      {company.logo_path ? (
+                        <TMDBImage
+                          path={company.logo_path}
+                          alt={company.name}
+                          width={120}
+                          height={40}
+                          sizes="120px"
+                          title={company.name}
+                          className="aspect-auto h-6 w-auto max-w-[120px] object-contain transition-transform group-hover:scale-105 md:h-8"
+                        />
+                      ) : (
+                        <span className="text-sm font-medium text-muted-foreground transition-colors group-hover:text-primary">
+                          {company.name}
+                        </span>
+                      )}
+                    </Link>
+                  ))}
+                </div>
+              </div>
+            )}
           </section>
         )}
 

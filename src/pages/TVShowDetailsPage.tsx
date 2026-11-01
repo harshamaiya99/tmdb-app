@@ -245,32 +245,18 @@ export function TVShowDetailsPage() {
         </div>
 
         <div className="grid min-w-0 grid-cols-1 items-start gap-4 min-[360px]:grid-cols-[minmax(0,0.9fr)_minmax(0,1.1fr)] md:grid-cols-[200px_minmax(0,1fr)] md:gap-6">
-          <div className="mx-auto w-full max-w-[180px] space-y-3 min-[360px]:mx-0 min-[360px]:max-w-none md:max-w-none">
+          <div className="mx-auto w-full max-w-[180px] space-y-4 min-[360px]:mx-0 min-[360px]:max-w-none md:max-w-none">
             {tvShow.poster_path ? (
               <TMDBImage path={tvShow.poster_path} alt={`${tvShow.name} poster`} width={500} height={750} sizes="(min-width: 768px) 200px, (min-width: 360px) 42vw, 180px" loading="eager" fetchPriority="high" className="block h-auto w-full max-w-full rounded-lg border" />
             ) : (
               <div role="img" aria-label={`${tvShow.name} poster unavailable`} className="aspect-[2/3] bg-muted rounded-lg flex items-center justify-center text-center text-sm text-muted-foreground">Poster unavailable</div>
             )}
-            {(tvShow.status || tvShow.number_of_seasons !== undefined) && (
-              <div className="space-y-1 text-center text-sm">
-                {tvShow.status && (
-                  <p>
-                    <span className="text-muted-foreground">Status: </span>
-                    <span className="font-medium">{tvShow.status}</span>
-                  </p>
-                )}
-                {tvShow.number_of_seasons !== undefined && (
-                  <p className="font-medium">
-                    {tvShow.number_of_seasons} Season{tvShow.number_of_seasons !== 1 ? 's' : ''} •{' '}
-                    {tvShow.number_of_episodes} Episode{tvShow.number_of_episodes !== 1 ? 's' : ''}
-                  </p>
-                )}
-              </div>
-            )}
+            <AccountMediaActions mediaId={tvShow.id} mediaType="tv" mediaTitle={tvShow.name} />
           </div>
 
-          <div className="grid min-w-0 gap-6 xl:grid-cols-[minmax(0,1fr)_400px]">
-            <div className="min-w-0 space-y-6">
+          <div className="contents md:grid md:min-w-0 md:grid-cols-1 md:gap-y-4 xl:grid-cols-[minmax(0,1fr)_400px] xl:gap-6">
+            <div className="contents md:col-start-1 md:row-start-1 md:flex md:flex-col md:gap-4">
+            <div className="min-w-0 space-y-6 min-[360px]:col-start-2">
             <div className="hidden md:block">
               <h1 className="break-words text-3xl font-bold tracking-tight">{tvShow.name}</h1>
               {tvShow.tagline && (
@@ -323,10 +309,27 @@ export function TVShowDetailsPage() {
               </div>
             )}
 
-            <AccountMediaActions mediaId={tvShow.id} mediaType="tv" mediaTitle={tvShow.name} />
+            {(tvShow.status || tvShow.number_of_seasons !== undefined) && (
+              <div className="space-y-1 text-sm">
+                {tvShow.status && (
+                  <p>
+                    <span className="text-muted-foreground">Status: </span>
+                    <span className="font-medium">{tvShow.status}</span>
+                  </p>
+                )}
+                {tvShow.number_of_seasons !== undefined && (
+                  <p className="font-medium">
+                    {tvShow.number_of_seasons} Season{tvShow.number_of_seasons !== 1 ? 's' : ''} •{' '}
+                    {tvShow.number_of_episodes} Episode{tvShow.number_of_episodes !== 1 ? 's' : ''}
+                  </p>
+                )}
+              </div>
+            )}
+
+            </div>
 
             {tvShow.overview && (
-              <section className="hidden md:block">
+              <section className="min-[360px]:col-span-2">
                 <h2 className="mb-2 text-xl font-semibold">Overview</h2>
                 <p className="leading-relaxed text-muted-foreground">{tvShow.overview}</p>
               </section>
@@ -334,7 +337,7 @@ export function TVShowDetailsPage() {
             </div>
 
             {tvShow.videos?.results.find((v) => v.type === 'Trailer' && v.site === 'YouTube') && (
-              <section className="hidden min-w-0 md:block">
+              <section className="hidden min-w-0 md:col-start-1 md:row-start-2 md:block xl:col-start-2 xl:row-start-1">
                 <h2 className="mb-2 flex items-center gap-2 text-xl font-semibold">
                   <PlayCircle className="h-5 w-5" /> Trailer
                 </h2>
@@ -353,13 +356,6 @@ export function TVShowDetailsPage() {
             )}
           </div>
         </div>
-
-        {tvShow.overview && (
-          <section className="mt-8 md:hidden">
-            <h2 className="mb-2 text-xl font-semibold">Overview</h2>
-            <p className="leading-relaxed text-muted-foreground">{tvShow.overview}</p>
-          </section>
-        )}
 
         {tvShow.videos?.results.find((v) => v.type === 'Trailer' && v.site === 'YouTube') && (
           <section className="mt-8 md:hidden">

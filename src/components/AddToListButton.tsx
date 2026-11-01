@@ -14,10 +14,10 @@ interface AddToListButtonProps {
   mediaTitle: string;
   mediaType: 'movie' | 'tv';
   className?: string;
-  iconOnlyOnMobile?: boolean;
+  iconOnly?: boolean;
 }
 
-export function AddToListButton({ mediaId, mediaTitle, mediaType, className, iconOnlyOnMobile = false }: AddToListButtonProps) {
+export function AddToListButton({ mediaId, mediaTitle, mediaType, className, iconOnly = false }: AddToListButtonProps) {
   const {
     canConnectLists,
     connectListsAccount,
@@ -153,7 +153,7 @@ export function AddToListButton({ mediaId, mediaTitle, mediaType, className, ico
           : addedListIds.length > 0
           ? <Check aria-hidden="true" className="h-4 w-4" />
           : <ListPlus aria-hidden="true" className="h-4 w-4" />}
-        <span className={iconOnlyOnMobile ? 'sr-only md:not-sr-only' : undefined}>{buttonLabel}</span>
+        <span className={iconOnly ? 'sr-only' : undefined}>{buttonLabel}</span>
       </Button>
       {isOpen && (
         <div
