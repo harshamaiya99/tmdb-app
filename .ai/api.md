@@ -80,6 +80,7 @@ The API service exposes methods for several categories of requests:
 ### Home and discovery
 
 The home page provides separate movie and TV category selectors. Movie options include trending, popular, streaming, in theaters, and top rated; TV options include trending, popular, and top rated. Each selector's paginated view uses the same category as its home carousel.
+The People page provides Popular and daily Trending tabs, both with pagination.
 
 - trending movies
 - now playing movies
@@ -88,6 +89,8 @@ The home page provides separate movie and TV category selectors. Movie options i
 - trending TV shows
 - popular TV shows
 - top rated TV shows
+- popular people
+- daily trending people
 - streaming-focused movie discovery
 - IMDb-style discovery lists
 

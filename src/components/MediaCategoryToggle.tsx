@@ -15,6 +15,11 @@ export const TV_CATEGORIES = [
   { value: 'top-rated-tv', label: 'Top Rated' },
 ] as const;
 
+export const PEOPLE_CATEGORIES = [
+  { value: 'popular', label: 'Popular' },
+  { value: 'trending', label: 'Trending' },
+] as const;
+
 interface MediaCategoryToggleProps<T extends string> {
   label: string;
   options: readonly { value: T; label: string }[];

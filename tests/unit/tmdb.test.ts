@@ -85,6 +85,25 @@ describe('TMDB Talk-show filtering', () => {
     expect(requestUrl.searchParams.get('page')).toBe('2');
   });
 
+  it('loads paginated daily trending people', async () => {
+    const fetchMock = vi.mocked(fetch);
+    fetchMock.mockResolvedValue(responseWith({
+      page: 2,
+      results: [{ id: 1, name: 'Trending Person' }],
+      total_pages: 5,
+      total_results: 100,
+    }));
+
+    await expect(tmdbService.getTrendingPersons(2)).resolves.toMatchObject({
+      page: 2,
+      results: [{ id: 1, name: 'Trending Person' }],
+    });
+
+    const requestUrl = new URL(String(fetchMock.mock.calls[0][0]));
+    expect(requestUrl.pathname).toBe('/3/trending/person/day');
+    expect(requestUrl.searchParams.get('page')).toBe('2');
+  });
+
   it('loads the selected popular and in-theaters category endpoints', async () => {
     const fetchMock = vi.mocked(fetch);
     const response = {

@@ -552,6 +552,10 @@ class TMDBService {
     return this.fetchFromTMDB<TrendingResponse<PersonListResult>>(`/person/popular?page=${page}`, options);
   }
 
+  async getTrendingPersons(page: number = 1, options?: TMDBRequestOptions): Promise<TrendingResponse<PersonListResult>> {
+    return this.fetchFromTMDB<TrendingResponse<PersonListResult>>(`/trending/person/day?page=${page}`, options);
+  }
+
   async getTrendingStreamingMovies(options?: TMDBRequestOptions): Promise<Movie[]> {
     const data = await this.fetchFromTMDB<TrendingResponse<Movie>>('/discover/movie?watch_region=IN&with_watch_monetization_types=flatrate&sort_by=popularity.desc', options);
     return data.results;

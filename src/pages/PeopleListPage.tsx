@@ -6,18 +6,35 @@ import { Alert, AlertDescription } from '@/components/ui/alert';
 import { useCachedQuery } from '@/hooks/useCachedQuery';
 import { usePagination } from '@/hooks/usePagination';
 import { usePageTitle } from '@/hooks/usePageTitle';
+import { MediaCategoryToggle, PEOPLE_CATEGORIES } from '@/components/MediaCategoryToggle';
 
 export function PeopleListPage() {
-  const { page, setPage } = usePagination();
+  const { page, searchParams, setSearchParams, setPage } = usePagination();
+  const category = searchParams.get('category') === 'trending' ? 'trending' : 'popular';
 
-  usePageTitle('Popular People');
+  usePageTitle(category === 'trending' ? 'Trending People' : 'Popular People');
 
   const peopleQuery = useCachedQuery(
-    `people:${page}`,
-    (signal) => tmdbService.getPopularPersons(page, { signal }),
+    `people:${category}:${page}`,
+    (signal) => (
+      category === 'trending'
+        ? tmdbService.getTrendingPersons(page, { signal })
+        : tmdbService.getPopularPersons(page, { signal })
+    ),
   );
   const people = peopleQuery.data?.results ?? [];
   const totalPages = Math.min(peopleQuery.data?.total_pages ?? 1, 500);
+
+  const handleCategoryChange = (nextCategory: (typeof PEOPLE_CATEGORIES)[number]['value']) => {
+    const nextParams = new URLSearchParams(searchParams);
+    if (nextCategory === 'popular') {
+      nextParams.delete('category');
+    } else {
+      nextParams.set('category', nextCategory);
+    }
+    nextParams.delete('page');
+    setSearchParams(nextParams);
+  };
 
   const handlePageChange = (newPage: number) => {
     setPage(newPage);
@@ -25,7 +42,19 @@ export function PeopleListPage() {
   };
 
   return (
-    <main className="container py-8">
+    <main className="container py-4">
+      <div className="mb-6 grid grid-cols-[minmax(0,1fr)_auto] items-center gap-x-3 gap-y-3 sm:flex sm:gap-4">
+        <h1 className="min-w-0 text-3xl font-bold tracking-tight">People</h1>
+        <div className="col-span-2 min-w-0 sm:col-span-1">
+          <MediaCategoryToggle
+            label="People"
+            options={PEOPLE_CATEGORIES}
+            value={category}
+            onChange={handleCategoryChange}
+            className="w-full sm:w-auto"
+          />
+        </div>
+      </div>
       {peopleQuery.loading ? (
         <div className="grid grid-cols-2 gap-3 min-[360px]:grid-cols-3 sm:gap-4 sm:grid-cols-4 md:grid-cols-6 lg:grid-cols-8 xl:grid-cols-8 2xl:grid-cols-10">
           {Array.from({ length: 20 }).map((_, i) => (

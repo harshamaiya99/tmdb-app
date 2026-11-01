@@ -125,6 +125,7 @@ Media imagery is rendered through the shared TMDB image component, which provide
 A reusable section wrapper in [src/components/MediaSection.tsx](src/components/MediaSection.tsx) handles the repeated layout for movie, TV, and person lists with a heading, optional see-more action, and responsive grid or horizontal carousel. This pattern is used on the home page, search results, and person detail credit sections to keep those experiences visually consistent.
 
 The home page, main Movies and TV Shows navigation pages, and their paginated category views use the same category selectors. Movie categories include trending, popular, streaming, in theaters, and top rated; TV categories include trending, popular, and top rated. Home selectors update their carousels, while selectors on list pages update the paginated results without returning home. All use the shared [MediaCategoryToggle.tsx](../src/components/MediaCategoryToggle.tsx) component and selected button styling.
+The People page places its Popular/Trending segmented toggle beside the page heading on wider screens and on a full-width row below the heading on narrow screens, matching the Movies and TV Shows list layout. Switching tabs resets pagination, and the control remains horizontally scrollable on narrow screens.
 
 The home page Movies and TV Shows headings match the `text-3xl` size of the corresponding main navigation page headings.
 
