@@ -752,25 +752,28 @@ class TMDBService {
     );
   }
 
-  async getAccountListItemCounts(
+  async getAccountListPreviews(
     lists: Array<Pick<TMDBUserList, 'id'>>,
     accessToken: string,
     signal?: AbortSignal,
-  ): Promise<Record<number, number>> {
-    const counts: Record<number, number> = {};
+  ): Promise<Record<number, { count: number; items: TMDBUserListItem[] }>> {
+    const previews: Record<number, { count: number; items: TMDBUserListItem[] }> = {};
 
     for (let index = 0; index < lists.length; index += 5) {
       const batch = lists.slice(index, index + 5);
-      const batchCounts = await Promise.all(batch.map(async ({ id }) => {
+      const batchPreviews = await Promise.all(batch.map(async ({ id }) => {
         const details = await this.getUserList(id, accessToken, 1, signal);
-        return [id, details.total_results ?? details.results.length] as const;
+        return [id, {
+          count: details.total_results ?? details.results.length,
+          items: details.results.slice(0, 3),
+        }] as const;
       }));
-      batchCounts.forEach(([id, count]) => {
-        counts[id] = count;
+      batchPreviews.forEach(([id, preview]) => {
+        previews[id] = preview;
       });
     }
 
-    return counts;
+    return previews;
   }
 
   async getAccountUserListMemberships(

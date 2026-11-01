@@ -11,8 +11,9 @@ import { useCachedQuery } from '@/hooks/useCachedQuery';
 import { usePageTitle } from '@/hooks/usePageTitle';
 import { usePagination } from '@/hooks/usePagination';
 import { clearRequestCache } from '@/lib/requestCache';
-import { tmdbService } from '@/lib/tmdb';
+import { tmdbService, type TMDBUserListItem } from '@/lib/tmdb';
 import { useToast } from '@/components/ui/use-toast';
+import { TMDBImage } from '@/components/TMDBImage';
 
 const accountNavigation = [
   { to: '/account/watchlist', label: 'Watchlist' },
@@ -45,9 +46,9 @@ export function AccountListsPage() {
     { enabled: isListAccountConnected && !listId },
   );
   const listSummaries = listsQuery.data?.results ?? [];
-  const listCountsQuery = useCachedQuery(
-    `account:${listAccountId || 'none'}:list-counts:${page}:${revision}`,
-    (signal) => tmdbService.getAccountListItemCounts(listSummaries, listAccessToken, signal),
+  const listPreviewsQuery = useCachedQuery(
+    `account:${listAccountId || 'none'}:list-previews:${page}:${revision}`,
+    (signal) => tmdbService.getAccountListPreviews(listSummaries, listAccessToken, signal),
     {
       enabled: isListAccountConnected
         && !listId
@@ -230,18 +231,24 @@ export function AccountListsPage() {
       ) : (
         <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
           {listSummaries.map((userList) => {
-            const itemCount = listCountsQuery.data?.[userList.id];
+            const preview = listPreviewsQuery.data?.[userList.id];
+            const posterItems = preview?.items.filter((item) => item.poster_path) ?? [];
             return (
               <Link key={userList.id} to={`/account/lists/${userList.id}`} className="block rounded-lg focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring">
-                <Card className="h-full transition-colors hover:bg-accent/50">
-                  <CardContent className="space-y-2 p-4">
-                    <h2 className="line-clamp-2 font-semibold">{userList.name}</h2>
-                    {userList.description && <p className="line-clamp-2 text-sm text-muted-foreground">{userList.description}</p>}
-                    <p className="text-xs text-muted-foreground">
-                      {itemCount === undefined
-                        ? listCountsQuery.error ? 'Could not load title count' : 'Loading title count…'
-                        : `${itemCount} ${itemCount === 1 ? 'title' : 'titles'}`}
-                    </p>
+                <Card className="h-full overflow-hidden transition-colors hover:bg-accent/50">
+                  <CardContent className="flex min-h-32 items-center justify-between gap-3 p-4">
+                    <div className="min-w-0 flex-1 space-y-2">
+                      <h2 className="line-clamp-2 font-semibold">{userList.name}</h2>
+                      {userList.description && <p className="line-clamp-2 text-sm text-muted-foreground">{userList.description}</p>}
+                      <p className="text-xs text-muted-foreground">
+                        {preview === undefined
+                          ? listPreviewsQuery.error ? 'Could not load title count' : 'Loading title count…'
+                          : `${preview.count} ${preview.count === 1 ? 'title' : 'titles'}`}
+                      </p>
+                    </div>
+                    {posterItems.length > 0 && (
+                      <ListPosterStack items={posterItems} />
+                    )}
                   </CardContent>
                 </Card>
               </Link>
@@ -249,9 +256,9 @@ export function AccountListsPage() {
           })}
         </div>
       )}
-      {listCountsQuery.error && (
+      {listPreviewsQuery.error && (
         <Alert variant="destructive">
-          <AlertDescription>Could not load custom-list title counts: {listCountsQuery.error.message}</AlertDescription>
+          <AlertDescription>Could not load custom-list title counts: {listPreviewsQuery.error.message}</AlertDescription>
         </Alert>
       )}
       {totalPages > 1 && (
@@ -262,5 +269,33 @@ export function AccountListsPage() {
         </div>
       )}
     </main>
+  );
+}
+
+function ListPosterStack({ items }: { items: TMDBUserListItem[] }) {
+  const stackPositions = [
+    'left-0 top-2 rotate-[-12deg]',
+    'left-5 top-1 rotate-[-2deg]',
+    'left-10 top-2 rotate-[9deg]',
+  ];
+
+  return (
+    <div aria-hidden="true" className="relative h-24 w-24 shrink-0">
+      {items.slice(0, 3).map((item, index) => (
+        <div
+          key={`${item.media_type}:${item.id}`}
+          className={`absolute h-[4.75rem] w-[3.2rem] overflow-hidden rounded-md border border-background bg-muted shadow-md ${stackPositions[index]}`}
+        >
+          <TMDBImage
+            path={item.poster_path}
+            alt=""
+            width={185}
+            height={278}
+            sizes="52px"
+            className="h-full w-full object-cover"
+          />
+        </div>
+      ))}
+    </div>
   );
 }

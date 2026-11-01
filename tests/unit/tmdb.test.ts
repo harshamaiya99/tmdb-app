@@ -239,13 +239,18 @@ describe('TMDB Talk-show filtering', () => {
       expect(requestHeaders.every((headers) => headers.get('Authorization') === 'Bearer user-access-token')).toBe(true);
     });
 
-    it('gets custom-list counts from list details instead of summary counts', async () => {
+    it('gets custom-list counts and poster previews from list details', async () => {
       const fetchMock = vi.mocked(fetch);
       fetchMock
         .mockResolvedValueOnce(responseWith({
           id: 73,
           total_results: 3,
-          results: [{ id: 1 }, { id: 2 }],
+          results: [
+            { id: 1, media_type: 'movie', poster_path: '/movie.jpg' },
+            { id: 2, media_type: 'tv', poster_path: '/show.jpg' },
+            { id: 3, media_type: 'movie', poster_path: '/third.jpg' },
+            { id: 4, media_type: 'tv', poster_path: '/fourth.jpg' },
+          ],
         }))
         .mockResolvedValueOnce(responseWith({
           id: 74,
@@ -253,10 +258,20 @@ describe('TMDB Talk-show filtering', () => {
           results: [],
         }));
 
-      await expect(tmdbService.getAccountListItemCounts(
+      await expect(tmdbService.getAccountListPreviews(
         [{ id: 73 }, { id: 74 }],
         'user-access-token',
-      )).resolves.toEqual({ 73: 3, 74: 0 });
+      )).resolves.toEqual({
+        73: {
+          count: 3,
+          items: [
+            { id: 1, media_type: 'movie', poster_path: '/movie.jpg' },
+            { id: 2, media_type: 'tv', poster_path: '/show.jpg' },
+            { id: 3, media_type: 'movie', poster_path: '/third.jpg' },
+          ],
+        },
+        74: { count: 0, items: [] },
+      });
 
       const requestUrls = fetchMock.mock.calls.map(([url]) => new URL(String(url)));
       expect(requestUrls.map((url) => url.pathname)).toEqual(['/4/list/73', '/4/list/74']);
