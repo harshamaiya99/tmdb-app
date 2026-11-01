@@ -1,7 +1,7 @@
 // src/pages/MovieDetailsPage.tsx
 import { useLayoutEffect, useRef, useState } from 'react';
 import { useParams, useNavigate, Link } from 'react-router-dom';
-import { Calendar, Clock, Star, PlayCircle } from 'lucide-react';
+import { Calendar, Clock, Star } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Skeleton } from '@/components/ui/skeleton';
@@ -247,9 +247,7 @@ export function MovieDetailsPage() {
               <div ref={rightColumnRef} className={`hidden min-w-0 space-y-8 md:col-start-1 md:row-start-2 md:block xl:col-start-3 xl:row-start-1 xl:self-start${placeCompanyInfoBesideRightColumn ? ' xl:row-span-2' : ''}`}>
                 {trailer && (
                   <section className="min-w-0">
-                    <h2 className="mb-2 flex items-center gap-2 text-xl font-semibold">
-                      <PlayCircle className="h-5 w-5" /> Trailer
-                    </h2>
+                    <h2 className="mb-2 text-xl font-semibold">Trailer</h2>
                     <div className="aspect-video w-full min-w-0 overflow-hidden rounded-lg border shadow-sm">
                       <iframe
                         width="100%"
@@ -348,9 +346,7 @@ export function MovieDetailsPage() {
           <div className="mt-8 grid min-w-0 gap-8 md:hidden">
             {trailer && (
               <section className="min-w-0">
-                <h2 className="mb-2 flex items-center gap-2 text-xl font-semibold">
-                  <PlayCircle className="h-5 w-5" /> Trailer
-                </h2>
+                <h2 className="mb-2 text-xl font-semibold">Trailer</h2>
                 <div className="aspect-video w-full min-w-0 overflow-hidden rounded-lg border shadow-sm">
                   <iframe
                     width="100%"

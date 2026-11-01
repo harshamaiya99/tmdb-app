@@ -338,9 +338,7 @@ export function TVShowDetailsPage() {
 
             {tvShow.videos?.results.find((v) => v.type === 'Trailer' && v.site === 'YouTube') && (
               <section className="hidden min-w-0 md:col-start-1 md:row-start-2 md:block xl:col-start-2 xl:row-start-1">
-                <h2 className="mb-2 flex items-center gap-2 text-xl font-semibold">
-                  <PlayCircle className="h-5 w-5" /> Trailer
-                </h2>
+                <h2 className="mb-2 text-xl font-semibold">Trailer</h2>
                 <div className="aspect-video w-full min-w-0 overflow-hidden rounded-lg border">
                   <iframe
                     width="100%"
@@ -359,9 +357,7 @@ export function TVShowDetailsPage() {
 
         {tvShow.videos?.results.find((v) => v.type === 'Trailer' && v.site === 'YouTube') && (
           <section className="mt-8 md:hidden">
-            <h2 className="mb-2 flex items-center gap-2 text-xl font-semibold">
-              <PlayCircle className="h-5 w-5" /> Trailer
-            </h2>
+            <h2 className="mb-2 text-xl font-semibold">Trailer</h2>
             <div className="aspect-video w-full min-w-0 overflow-hidden rounded-lg border">
               <iframe
                 width="100%"
