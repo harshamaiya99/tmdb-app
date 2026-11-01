@@ -2,7 +2,7 @@ import { useSearchParams } from 'react-router-dom';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { MediaGridSkeleton } from '@/components/MediaGridSkeleton';
 import { MediaSection } from '@/components/MediaSection';
-import { MediaCategoryToggle } from '@/components/MediaCategoryToggle';
+import { MediaCategoryToggle, MOVIE_CATEGORIES, TV_CATEGORIES } from '@/components/MediaCategoryToggle';
 import { tmdbService } from '@/lib/tmdb';
 import { useCachedQuery } from '@/hooks/useCachedQuery';
 import { useDebouncedValue } from '@/hooks/useDebouncedValue';
@@ -15,20 +15,6 @@ function SearchMessage({ message, error = false }: { message: string; error?: bo
     </div>
   );
 }
-
-const MOVIE_CATEGORIES = [
-  { value: 'trending-movies', label: 'Trending' },
-  { value: 'popular-movies', label: 'Popular' },
-  { value: 'trending-streaming-movies', label: 'Streaming' },
-  { value: 'now-playing-movies', label: 'In Theaters' },
-  { value: 'top-rated-movies', label: 'Top Rated' },
-] as const;
-
-const TV_CATEGORIES = [
-  { value: 'trending-tv', label: 'Trending' },
-  { value: 'popular-tv', label: 'Popular' },
-  { value: 'top-rated-tv', label: 'Top Rated' },
-] as const;
 
 export function HomePage() {
   const [searchParams, setSearchParams] = useSearchParams();

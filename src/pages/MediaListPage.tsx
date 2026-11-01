@@ -1,9 +1,12 @@
 // src/pages/MediaListPage.tsx
 import { useParams, useLocation, useSearchParams } from 'react-router-dom';
+import { SlidersHorizontal } from 'lucide-react';
+import * as DropdownMenu from '@radix-ui/react-dropdown-menu';
 import { Button } from '@/components/ui/button';
 import { MediaCard } from '@/components/MediaCard';
 import { MediaGridSkeleton } from '@/components/MediaGridSkeleton';
 import { Alert, AlertDescription } from '@/components/ui/alert';
+import { MediaCategoryToggle, MOVIE_CATEGORIES, TV_CATEGORIES } from '@/components/MediaCategoryToggle';
 import { tmdbService, type Movie, type TVShow, type PersonCredit, type TrendingResponse } from '@/lib/tmdb';
 import { useCachedQuery } from '@/hooks/useCachedQuery';
 import { usePagination } from '@/hooks/usePagination';
@@ -20,6 +23,8 @@ const GENRE_NAMES: Record<string, string> = {
 
 const CATEGORY_TITLES: Record<string, string> = {
   'trending-movies': 'Trending Movies',
+  'popular-movies': 'Popular Movies',
+  'trending-streaming-movies': 'Streaming Movies',
   'now-playing-movies': 'Now Playing in Theaters',
   'top-rated-movies': 'Top Rated Movies',
   'upcoming-movies': 'Upcoming Movies',
@@ -134,11 +139,18 @@ export function MediaListPage() {
   const entityNameParam = searchParams.get('name');
   const selectedLanguage = searchParams.get('language') ?? 'all';
   const selectedSort = searchParams.get('sort') ?? 'popularity.desc';
+  const isMovieTab = location.pathname === '/movie';
+  const isTVTab = location.pathname === '/tv';
+  const movieTabCategory = MOVIE_CATEGORIES.find(({ value }) => value === searchParams.get('movie_category'))?.value;
+  const tvTabCategory = TV_CATEGORIES.find(({ value }) => value === searchParams.get('tv_category'))?.value;
+  const selectedTabCategory = isMovieTab
+    ? movieTabCategory ?? 'trending-movies'
+    : tvTabCategory ?? 'trending-tv';
 
   let effectiveCategory = category;
   if (!effectiveCategory) {
-    if (location.pathname === '/movie') effectiveCategory = 'trending-movies';
-    else if (location.pathname === '/tv') effectiveCategory = 'trending-tv';
+    if (isMovieTab) effectiveCategory = movieTabCategory ?? 'trending-movies';
+    else if (isTVTab) effectiveCategory = tvTabCategory ?? 'trending-tv';
   }
 
   const personMatch = effectiveCategory?.match(/^person-(\d+)-(movies|tv)$/);
@@ -243,41 +255,86 @@ export function MediaListPage() {
     setSearchParams(nextParams, { replace: true });
   };
 
+  const updateTabCategory = (nextCategory: string) => {
+    const nextParams = new URLSearchParams(searchParams);
+    nextParams.delete('page');
+    nextParams.delete('genre');
+    nextParams.set(isMovieTab ? 'movie_category' : 'tv_category', nextCategory);
+    setSearchParams(nextParams, { replace: true });
+  };
+
   return (
     <main className="container py-4">
-        <div className="mb-4 flex flex-wrap items-center justify-end gap-3">
-          <select
-            id="media-language-filter"
-            value={selectedLanguage}
-            onChange={(event) => updateLanguageFilter(event.target.value)}
-            className="h-9 rounded-md border border-input bg-background px-3 py-1 text-sm focus:outline-none focus:ring-2 focus:ring-ring [scrollbar-width:none] [&::-webkit-scrollbar]:hidden"
-          >
-            {LANGUAGE_OPTIONS.map((language) => (
-              <option key={language.value} value={language.value}>{language.label}</option>
-            ))}
-          </select>
+        <div className="mb-6 flex flex-wrap items-center justify-between gap-4">
+          {(isMovieTab || isTVTab) ? (
+            <div className="flex min-w-0 flex-wrap items-center gap-3">
+              <h1 className="text-3xl font-bold tracking-tight">{isMovieTab ? 'Movies' : 'TV Shows'}</h1>
+              <MediaCategoryToggle
+                label={isMovieTab ? 'Movies' : 'TV shows'}
+                options={isMovieTab ? MOVIE_CATEGORIES : TV_CATEGORIES}
+                value={selectedTabCategory}
+                onChange={updateTabCategory}
+              />
+            </div>
+          ) : <div />}
+          <DropdownMenu.Root>
+            <DropdownMenu.Trigger asChild>
+              <Button type="button" variant="outline" size="sm" className="gap-2">
+                <SlidersHorizontal aria-hidden="true" className="h-4 w-4" />
+                Filters
+              </Button>
+            </DropdownMenu.Trigger>
+            <DropdownMenu.Portal>
+              <DropdownMenu.Content
+                align="end"
+                sideOffset={8}
+                aria-label="Media filters"
+                className="z-50 w-64 space-y-4 rounded-md border bg-popover p-4 text-popover-foreground shadow-md"
+              >
+                <div className="space-y-2">
+                  <label htmlFor="media-language-filter" className="text-sm font-medium">Language</label>
+                  <select
+                    id="media-language-filter"
+                    value={selectedLanguage}
+                    onChange={(event) => updateLanguageFilter(event.target.value)}
+                    className="h-9 w-full rounded-md border border-input bg-background px-3 py-1 text-sm focus:outline-none focus:ring-2 focus:ring-ring"
+                  >
+                    {LANGUAGE_OPTIONS.map((language) => (
+                      <option key={language.value} value={language.value}>{language.label}</option>
+                    ))}
+                  </select>
+                </div>
 
-          <select
-            id="media-genre-filter"
-            value={selectedGenre}
-            onChange={(event) => updateGenreFilter(event.target.value)}
-            className="h-9 rounded-md border border-input bg-background px-3 py-1 text-sm focus:outline-none focus:ring-2 focus:ring-ring [scrollbar-width:none] [&::-webkit-scrollbar]:hidden"
-          >
-            {genreOptions.map((genre) => (
-              <option key={genre.value} value={genre.value}>{genre.label}</option>
-            ))}
-          </select>
+                <div className="space-y-2">
+                  <label htmlFor="media-genre-filter" className="text-sm font-medium">Genre</label>
+                  <select
+                    id="media-genre-filter"
+                    value={selectedGenre}
+                    onChange={(event) => updateGenreFilter(event.target.value)}
+                    className="h-9 w-full rounded-md border border-input bg-background px-3 py-1 text-sm focus:outline-none focus:ring-2 focus:ring-ring"
+                  >
+                    {genreOptions.map((genre) => (
+                      <option key={genre.value} value={genre.value}>{genre.label}</option>
+                    ))}
+                  </select>
+                </div>
 
-          <select
-            id="media-sort-filter"
-            value={selectedSort}
-            onChange={(event) => updateSortFilter(event.target.value)}
-            className="h-9 rounded-md border border-input bg-background px-3 py-1 text-sm focus:outline-none focus:ring-2 focus:ring-ring [scrollbar-width:none] [&::-webkit-scrollbar]:hidden"
-          >
-            {availableSortOptions.map((option) => (
-              <option key={option.value} value={option.value}>{option.label}</option>
-            ))}
-          </select>
+                <div className="space-y-2">
+                  <label htmlFor="media-sort-filter" className="text-sm font-medium">Sort by</label>
+                  <select
+                    id="media-sort-filter"
+                    value={selectedSort}
+                    onChange={(event) => updateSortFilter(event.target.value)}
+                    className="h-9 w-full rounded-md border border-input bg-background px-3 py-1 text-sm focus:outline-none focus:ring-2 focus:ring-ring"
+                  >
+                    {availableSortOptions.map((option) => (
+                      <option key={option.value} value={option.value}>{option.label}</option>
+                    ))}
+                  </select>
+                </div>
+              </DropdownMenu.Content>
+            </DropdownMenu.Portal>
+          </DropdownMenu.Root>
         </div>
         
         {loading ? (

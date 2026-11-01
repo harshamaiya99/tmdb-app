@@ -110,7 +110,7 @@ Pages live in [src/pages](src/pages):
 
 - [src/pages/LoginPage.tsx](src/pages/LoginPage.tsx) — collects and validates the TMDB API key
 - [src/pages/HomePage.tsx](src/pages/HomePage.tsx) — displays independently selectable movie and TV categories, and handles search results
-- [src/pages/MediaListPage.tsx](src/pages/MediaListPage.tsx) — renders paginated lists for categories, genres, companies, providers, and people-related media
+- [src/pages/MediaListPage.tsx](src/pages/MediaListPage.tsx) — renders paginated lists for the main movie and TV category tabs, genres, companies, providers, and people-related media
 - [src/pages/MovieDetailsPage.tsx](src/pages/MovieDetailsPage.tsx) — shows movie metadata, cast, crew, related media, and watch links
 - [src/pages/TVShowDetailsPage.tsx](src/pages/TVShowDetailsPage.tsx) — shows show metadata, seasons, episodes, and related content
 - [src/pages/PersonDetailsPage.tsx](src/pages/PersonDetailsPage.tsx) — shows a person’s biography, filmography, and images
