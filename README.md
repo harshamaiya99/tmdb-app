@@ -13,8 +13,15 @@ A clean, minimal web app for browsing movies, TV shows, and people with data fro
 - 🧭 Deep-dive detail pages for movies, TV shows, and people
 - 👤 Connect a TMDB account to manage movie/TV watchlists, favorites, ratings, and mixed movie/TV custom lists
 - 🌗 Light/dark theme toggle
+- ℹ About page with TMDB attribution
 - 📲 Installable as a web app from supported browsers
 - ✨ Responsive, content-first UI with reusable cards, shared media sections, and skeleton states
+
+## TMDB Attribution
+
+This application uses TMDB and the TMDB APIs but is not endorsed, certified, or otherwise approved by TMDB.
+
+The app displays the TMDB logo and attribution on its **About** page, available from the profile menu. See the [TMDB API Terms of Use](https://www.themoviedb.org/api-terms-of-use) and [logo and attribution guidelines](https://www.themoviedb.org/about/logos-attribution).
 
 ## Tech Stack
 

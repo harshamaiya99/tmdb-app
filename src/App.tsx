@@ -11,6 +11,7 @@ import { PeopleListPage } from '@/pages/PeopleListPage';
 import { AccountPage } from '@/pages/AccountPage';
 import { AccountCallbackPage } from '@/pages/AccountCallbackPage';
 import { AccountListsPage } from '@/pages/AccountListsPage';
+import { AboutPage } from '@/pages/AboutPage';
 import { Toaster } from '@/components/ui/toaster';
 import { TitleProvider } from '@/contexts/TitleContext';
 import { tmdbService } from '@/lib/tmdb';
@@ -51,6 +52,7 @@ function App() {
             <Routes>
               <Route path="/" element={<ProtectedRoute><Layout><HomePage /></Layout></ProtectedRoute>} />
               <Route path="/login" element={<LoginPage />} />
+              <Route path="/about" element={<ProtectedRoute><Layout><AboutPage /></Layout></ProtectedRoute>} />
               <Route path="/account/callback" element={<ProtectedRoute><AccountCallbackPage /></ProtectedRoute>} />
               <Route path="/account" element={<Navigate to="/account/watchlist" replace />} />
               <Route path="/account/lists" element={<ProtectedRoute><Layout><AccountListsPage /></Layout></ProtectedRoute>} />

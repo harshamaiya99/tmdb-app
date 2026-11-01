@@ -45,6 +45,7 @@ Routing is defined in [src/App.tsx](src/App.tsx) with React Router's `HashRouter
 ### Main routes
 
 - `/login` — login screen
+- `/about` — application information and TMDB attribution
 - `/` — home page
 - `/movie/:id` — movie details
 - `/tv/:id` — TV show details
@@ -118,6 +119,7 @@ Pages live in [src/pages](src/pages):
 - [src/pages/AccountPage.tsx](src/pages/AccountPage.tsx) — displays and manages the connected account's movie and TV lists
 - [src/pages/AccountListsPage.tsx](src/pages/AccountListsPage.tsx) — browses, displays, and manages mixed-media TMDB custom lists
 - [src/pages/AccountCallbackPage.tsx](src/pages/AccountCallbackPage.tsx) — completes TMDB v3 account and v4 custom-list consent flows
+- [src/pages/AboutPage.tsx](src/pages/AboutPage.tsx) — displays application information and required TMDB attribution
 
 ### Shared feature components
 
