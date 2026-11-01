@@ -1,10 +1,11 @@
 // src/components/Layout.tsx
 import { ReactNode, useEffect, useState, type ChangeEvent, type FormEvent, type KeyboardEvent } from 'react';
-import { LogOut, Search, ArrowLeft, Settings2, X } from 'lucide-react';
+import { LogOut, Search, ArrowLeft, Settings2, X, Moon, Sun } from 'lucide-react';
+import * as DropdownMenu from '@radix-ui/react-dropdown-menu';
 import { Link, NavLink, useNavigate, useSearchParams, useLocation } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { ThemeToggle } from '@/components/ThemeToggle';
+import { useTheme } from '@/hooks/useTheme';
 import { useTitle } from '@/contexts/TitleContext';
 import { tmdbService } from '@/lib/tmdb';
 import { TMDBImage } from '@/components/TMDBImage';
@@ -106,6 +107,7 @@ export function Layout({ children }: LayoutProps) {
   const [suggestionsOpen, setSuggestionsOpen] = useState(false);
   const { title } = useTitle();
   const { toast } = useToast();
+  const { theme, toggleTheme } = useTheme();
   const { movieUrlTemplate, tvUrlTemplate, saveSettings, resetSettings } = useEmbedSettings();
   const location = useLocation();
   const [settingsOpen, setSettingsOpen] = useState(false);
@@ -341,29 +343,53 @@ export function Layout({ children }: LayoutProps) {
           </div>
 
           <div className="ml-auto flex shrink-0 items-center space-x-1 md:ml-0">
-            <div className="flex items-center space-x-1">
-              <Button
-                variant="ghost"
-                size="icon"
-                onClick={openEmbedSettings}
-                aria-label="Embed link settings"
-                title="Embed link settings"
-                className="h-10 w-10"
-              >
-                <Settings2 className="h-[1.2rem] w-[1.2rem]" />
-              </Button>
-              <ThemeToggle />
-              <Button
-                variant="ghost"
-                size="icon"
-                onClick={handleLogout}
-                aria-label="Log out"
-                title="Log out"
-                className="h-10 w-10"
-              >
-                <LogOut className="h-[1.2rem] w-[1.2rem]" />
-              </Button>
-            </div>
+            <DropdownMenu.Root>
+              <DropdownMenu.Trigger asChild>
+                <Button
+                  type="button"
+                  variant="ghost"
+                  size="icon"
+                  aria-label="Settings"
+                  title="Settings"
+                  className="h-10 w-10"
+                >
+                  <Settings2 className="h-[1.2rem] w-[1.2rem]" />
+                </Button>
+              </DropdownMenu.Trigger>
+              <DropdownMenu.Portal>
+                <DropdownMenu.Content
+                  align="end"
+                  sideOffset={8}
+                  className="z-[60] min-w-56 rounded-md border bg-popover p-1 text-popover-foreground shadow-md"
+                >
+                  <DropdownMenu.Label className="px-3 py-2 text-xs font-medium text-muted-foreground">
+                    Preferences
+                  </DropdownMenu.Label>
+                  <DropdownMenu.Item
+                    onSelect={toggleTheme}
+                    className="flex min-h-10 cursor-pointer select-none items-center gap-2 rounded-sm px-3 py-2 text-sm outline-none hover:bg-accent focus:bg-accent focus:text-accent-foreground"
+                  >
+                    {theme === 'dark' ? <Sun className="h-4 w-4" /> : <Moon className="h-4 w-4" />}
+                    Switch to {theme === 'dark' ? 'light' : 'dark'} theme
+                  </DropdownMenu.Item>
+                  <DropdownMenu.Item
+                    onSelect={openEmbedSettings}
+                    className="flex min-h-10 cursor-pointer select-none items-center gap-2 rounded-sm px-3 py-2 text-sm outline-none hover:bg-accent focus:bg-accent focus:text-accent-foreground"
+                  >
+                    <Settings2 className="h-4 w-4" />
+                    Embed link settings
+                  </DropdownMenu.Item>
+                  <DropdownMenu.Separator className="my-1 h-px bg-border" />
+                  <DropdownMenu.Item
+                    onSelect={handleLogout}
+                    className="flex min-h-10 cursor-pointer select-none items-center gap-2 rounded-sm px-3 py-2 text-sm text-destructive outline-none hover:bg-accent focus:bg-accent focus:text-destructive"
+                  >
+                    <LogOut className="h-4 w-4" />
+                    Log out
+                  </DropdownMenu.Item>
+                </DropdownMenu.Content>
+              </DropdownMenu.Portal>
+            </DropdownMenu.Root>
           </div>
           <nav aria-label="Main navigation" className="order-2 flex w-full items-center gap-2 pb-2 md:hidden">
             {mainNavigation.map(({ to, label }) => (
