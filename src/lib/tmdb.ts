@@ -1,4 +1,4 @@
-const TMDB_BASE_URL = 'https://api.themoviedb.org/3';
+const TMDB_BASE_URL = 'https://api.themoviedb.org';
 const TMDB_IMAGE_BASE_URL = 'https://image.tmdb.org/t/p';
 const TV_TALK_GENRE_ID = 10767;
 
@@ -330,9 +330,11 @@ interface TMDBErrorResponse {
 
 export interface TMDBRequestOptions {
   signal?: AbortSignal;
-  method?: 'GET' | 'POST' | 'DELETE';
+  method?: 'GET' | 'POST' | 'PUT' | 'DELETE';
   body?: Record<string, unknown>;
   sessionId?: string;
+  accessToken?: string;
+  apiVersion?: '3' | '4';
 }
 
 export interface TMDBAccount {
@@ -347,13 +349,23 @@ export interface TMDBUserList {
   id: number;
   name: string;
   description: string;
-  item_count: number;
+  item_count?: number;
   favorite_count: number;
   poster_path: string | null;
   iso_639_1: string;
+  total_results?: number;
 }
+
+export type TMDBUserListItem =
+  | (Movie & { media_type: 'movie' })
+  | (TVShow & { media_type: 'tv' });
+
 export interface TMDBUserListDetails extends TMDBUserList {
-  items: Movie[];
+  results: TMDBUserListItem[];
+  object_ids?: { movie?: Array<number | string>; tv?: Array<number | string> };
+  page: number;
+  total_pages: number;
+  total_results: number;
 }
 export interface TMDBMediaAccountState {
   favorite: boolean;
@@ -381,7 +393,10 @@ export class TMDBError extends Error {
 
 class TMDBService {
   private apiKey: string = '';
-  private readonly accessToken = import.meta.env.VITE_TMDB_ACCESS_TOKEN ?? '';
+
+  private get accessToken(): string {
+    return import.meta.env.VITE_TMDB_ACCESS_TOKEN ?? '';
+  }
 
   setApiKey(key: string) {
     this.apiKey = key;
@@ -391,12 +406,16 @@ class TMDBService {
     return this.apiKey;
   }
 
+  hasV4AppAccessToken(): boolean {
+    return Boolean(this.accessToken);
+  }
+
   private async fetchFromTMDB<T>(endpoint: string, options: TMDBRequestOptions = {}): Promise<T> {
-    if (!this.apiKey && !this.accessToken) {
+    if (!this.apiKey && !this.accessToken && !options.accessToken) {
       throw new TMDBError('TMDB credentials are not configured', 'AUTHENTICATION_ERROR');
     }
 
-    const url = new URL(`${TMDB_BASE_URL}${endpoint}`);
+    const url = new URL(`${TMDB_BASE_URL}/${options.apiVersion ?? '3'}${endpoint}`);
     const headers: HeadersInit = {};
 
     if (options.sessionId) {
@@ -406,8 +425,9 @@ class TMDBService {
       headers['Content-Type'] = 'application/json';
     }
 
-    if (this.accessToken) {
-      headers.Authorization = `Bearer ${this.accessToken}`;
+    const accessToken = options.accessToken ?? this.accessToken;
+    if (accessToken) {
+      headers.Authorization = `Bearer ${accessToken}`;
     } else {
       url.searchParams.set('api_key', this.apiKey);
     }
@@ -652,6 +672,44 @@ class TMDBService {
     return this.fetchFromTMDB<TMDBAccount>('/account', { sessionId });
   }
 
+  async createV4RequestToken(redirectTo: string): Promise<string> {
+    this.requireV4AppAccessToken();
+    const result = await this.fetchFromTMDB<{ request_token: string }>('/auth/request_token', {
+      apiVersion: '4',
+      method: 'POST',
+      body: { redirect_to: redirectTo },
+    });
+    return result.request_token;
+  }
+
+  async createV4UserAccessToken(requestToken: string): Promise<{ accessToken: string; accountId: string }> {
+    this.requireV4AppAccessToken();
+    const result = await this.fetchFromTMDB<{ access_token: string; account_id: string }>('/auth/access_token', {
+      apiVersion: '4',
+      method: 'POST',
+      body: { request_token: requestToken },
+    });
+    return { accessToken: result.access_token, accountId: result.account_id };
+  }
+
+  async revokeV4UserAccessToken(accessToken: string): Promise<void> {
+    await this.fetchFromTMDB('/auth/access_token', {
+      apiVersion: '4',
+      method: 'DELETE',
+      accessToken,
+      body: { access_token: accessToken },
+    });
+  }
+
+  private requireV4AppAccessToken() {
+    if (!this.accessToken) {
+      throw new TMDBError(
+        'TMDB custom lists require the app-level v4 access token. Configure VITE_TMDB_ACCESS_TOKEN and rebuild the app.',
+        'AUTHENTICATION_ERROR',
+      );
+    }
+  }
+
   async getAccountList(
     accountId: number,
     section: TMDBAccountSection,
@@ -673,37 +731,81 @@ class TMDBService {
   }
 
   async getAccountLists(
-    accountId: number,
+    accountId: string,
     page: number,
-    sessionId: string,
+    accessToken: string,
     signal?: AbortSignal,
   ): Promise<TrendingResponse<TMDBUserList>> {
     return this.fetchFromTMDB<TrendingResponse<TMDBUserList>>(
-      `/account/${accountId}/lists?page=${page}`,
-      { sessionId, signal },
+      `/account/${encodeURIComponent(accountId)}/lists?page=${page}`,
+      { apiVersion: '4', accessToken, signal },
     );
   }
 
-  async getAccountUserListMemberships(
-    accountId: number,
-    sessionId: string,
+  async getAccountListItemCounts(
+    lists: Array<Pick<TMDBUserList, 'id'>>,
+    accessToken: string,
     signal?: AbortSignal,
-  ): Promise<Array<{ listId: number; mediaIds: number[] }>> {
+  ): Promise<Record<number, number>> {
+    const counts: Record<number, number> = {};
+
+    for (let index = 0; index < lists.length; index += 5) {
+      const batch = lists.slice(index, index + 5);
+      const batchCounts = await Promise.all(batch.map(async ({ id }) => {
+        const details = await this.getUserList(id, accessToken, 1, signal);
+        return [id, details.total_results ?? details.results.length] as const;
+      }));
+      batchCounts.forEach(([id, count]) => {
+        counts[id] = count;
+      });
+    }
+
+    return counts;
+  }
+
+  async getAccountUserListMemberships(
+    accountId: string,
+    accessToken: string,
+    signal?: AbortSignal,
+  ): Promise<Array<{ listId: number; mediaIds: { movie: number[]; tv: number[] } }>> {
     const lists: TMDBUserList[] = [];
     let totalPages = 1;
 
     for (let page = 1; page <= totalPages && page <= 500; page += 1) {
-      const response = await this.getAccountLists(accountId, page, sessionId, signal);
+      const response = await this.getAccountLists(accountId, page, accessToken, signal);
       lists.push(...response.results);
       totalPages = Math.min(response.total_pages, 500);
     }
 
-    const memberships: Array<{ listId: number; mediaIds: number[] }> = [];
+    const memberships: Array<{ listId: number; mediaIds: { movie: number[]; tv: number[] } }> = [];
     for (let index = 0; index < lists.length; index += 5) {
       const batch = lists.slice(index, index + 5);
       const batchMemberships = await Promise.all(batch.map(async (list) => {
-        const details = await this.getUserList(list.id, sessionId, signal);
-        return { listId: list.id, mediaIds: details.items.map((item) => item.id) };
+        const details = await this.getUserList(list.id, accessToken, 1, signal);
+        const mediaIds = {
+          movie: new Set((details.object_ids?.movie ?? []).map(Number).filter(Number.isSafeInteger)),
+          tv: new Set((details.object_ids?.tv ?? []).map(Number).filter(Number.isSafeInteger)),
+        };
+
+        const addPageItems = (pageDetails: TMDBUserListDetails) => {
+          pageDetails.results.forEach((item) => mediaIds[item.media_type].add(item.id));
+        };
+        addPageItems(details);
+
+        const objectIdCount = mediaIds.movie.size + mediaIds.tv.size;
+        if (objectIdCount < details.total_results) {
+          let listPages = Math.min(details.total_pages, 500);
+          for (let page = 2; page <= listPages; page += 1) {
+            const pageDetails = await this.getUserList(list.id, accessToken, page, signal);
+            addPageItems(pageDetails);
+            listPages = Math.min(pageDetails.total_pages, 500);
+          }
+        }
+
+        return {
+          listId: list.id,
+          mediaIds: { movie: [...mediaIds.movie], tv: [...mediaIds.tv] },
+        };
       }));
       memberships.push(...batchMemberships);
     }
@@ -713,43 +815,79 @@ class TMDBService {
 
   async getUserList(
     listId: number,
-    sessionId: string,
+    accessToken: string,
+    page: number,
     signal?: AbortSignal,
   ): Promise<TMDBUserListDetails> {
-    return this.fetchFromTMDB<TMDBUserListDetails>(`/list/${listId}`, { sessionId, signal });
+    return this.fetchFromTMDB<TMDBUserListDetails>(`/list/${listId}?page=${page}`, {
+      apiVersion: '4',
+      accessToken,
+      signal,
+    });
   }
 
   async createUserList(
     name: string,
     description: string,
     isPublic: boolean,
-    sessionId: string,
-  ): Promise<{ list_id: number; success: boolean }> {
-    return this.fetchFromTMDB<{ list_id: number; success: boolean }>('/list', {
+    accessToken: string,
+  ): Promise<{ id: number; success: boolean }> {
+    return this.fetchFromTMDB<{ id: number; success: boolean }>('/list', {
+      apiVersion: '4',
       method: 'POST',
-      sessionId,
-      body: { name, description, language: 'en', public: isPublic },
+      accessToken,
+      body: { name, description, iso_3166_1: 'US', iso_639_1: 'en', public: isPublic },
     });
   }
 
-  async addMediaToUserList(listId: number, mediaId: number, sessionId: string): Promise<void> {
-    await this.fetchFromTMDB(`/list/${listId}/add_item`, {
-      method: 'POST',
-      sessionId,
-      body: { media_id: mediaId },
-    });
+  async addMediaToUserList(
+    listId: number,
+    mediaType: 'movie' | 'tv',
+    mediaId: number,
+    accessToken: string,
+  ): Promise<void> {
+    await this.updateUserListItem(listId, mediaType, mediaId, accessToken, 'POST');
   }
 
-  async removeMediaFromUserList(listId: number, mediaId: number, sessionId: string): Promise<void> {
-    await this.fetchFromTMDB(`/list/${listId}/remove_item`, {
-      method: 'POST',
-      sessionId,
-      body: { media_id: mediaId },
-    });
+  async removeMediaFromUserList(
+    listId: number,
+    mediaType: 'movie' | 'tv',
+    mediaId: number,
+    accessToken: string,
+  ): Promise<void> {
+    await this.updateUserListItem(listId, mediaType, mediaId, accessToken, 'DELETE');
   }
 
-  async deleteUserList(listId: number, sessionId: string): Promise<void> {
-    await this.fetchFromTMDB(`/list/${listId}`, { method: 'DELETE', sessionId });
+  private async updateUserListItem(
+    listId: number,
+    mediaType: 'movie' | 'tv',
+    mediaId: number,
+    accessToken: string,
+    method: 'POST' | 'DELETE',
+  ): Promise<void> {
+    const response = await this.fetchFromTMDB<{
+      success: boolean;
+      status_message?: string;
+      results?: Array<{ media_type: string; media_id: number; success: boolean }>;
+    }>(`/list/${listId}/items`, {
+      apiVersion: '4',
+      method,
+      accessToken,
+      body: { items: [{ media_type: mediaType, media_id: mediaId }] },
+    });
+    const operationResult = response.results?.find(
+      (item) => item.media_type === mediaType && item.media_id === mediaId,
+    );
+    if (!response.success || operationResult?.success === false) {
+      throw new TMDBError(
+        response.status_message ?? 'TMDB could not update this list item.',
+        'API_ERROR',
+      );
+    }
+  }
+
+  async deleteUserList(listId: number, accessToken: string): Promise<void> {
+    await this.fetchFromTMDB(`/${listId}`, { apiVersion: '4', method: 'DELETE', accessToken });
   }
 
   async getMediaAccountState(
@@ -882,7 +1020,7 @@ class TMDBService {
 
   async validateApiKey(key: string, options?: TMDBRequestOptions): Promise<boolean> {
     try {
-      const url = new URL(`${TMDB_BASE_URL}/configuration`);
+      const url = new URL(`${TMDB_BASE_URL}/3/configuration`);
       url.searchParams.set('api_key', key);
       const response = await fetch(url, { signal: options?.signal });
       return response.ok;

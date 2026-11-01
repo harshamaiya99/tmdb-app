@@ -8,14 +8,21 @@ import { useTMDBAccount } from '@/contexts/TMDBAccountContext';
 export function AccountCallbackPage() {
   const [searchParams] = useSearchParams();
   const navigate = useNavigate();
-  const { completeAuthorization } = useTMDBAccount();
+  const { completeAuthorization, completeListsAuthorization } = useTMDBAccount();
   const [error, setError] = useState('');
-  const requestToken = searchParams.get('request_token') ?? '';
-  const approved = searchParams.get('approved') === 'true';
+  const redirectParams = new URLSearchParams(window.location.search);
+  const isListsFlow = (searchParams.get('flow') ?? redirectParams.get('flow')) === 'lists';
+  const requestToken = searchParams.get('request_token')
+    ?? redirectParams.get('request_token')
+    ?? sessionStorage.getItem(isListsFlow ? 'tmdb_list_request_token' : 'tmdb_account_request_token')
+    ?? '';
+  const approvalStatus = searchParams.get('approved') ?? redirectParams.get('approved');
+  const approved = approvalStatus === 'true'
+    || (isListsFlow && approvalStatus === null && Boolean(requestToken));
 
   useEffect(() => {
-    if (!approved) {
-      sessionStorage.removeItem('tmdb_account_request_token');
+    if (approvalStatus === 'false') {
+      sessionStorage.removeItem(isListsFlow ? 'tmdb_list_request_token' : 'tmdb_account_request_token');
       setError('TMDB account authorization was not approved.');
       return;
     }
@@ -23,11 +30,17 @@ export function AccountCallbackPage() {
       setError('TMDB did not return an authorization token. Please try connecting again.');
       return;
     }
+    if (!approved) {
+      sessionStorage.removeItem(isListsFlow ? 'tmdb_list_request_token' : 'tmdb_account_request_token');
+      setError('TMDB account authorization was not approved.');
+      return;
+    }
 
     let active = true;
-    void completeAuthorization(requestToken)
+    const complete = isListsFlow ? completeListsAuthorization : completeAuthorization;
+    void complete(requestToken)
       .then(() => {
-        if (active) navigate('/account/watchlist', { replace: true });
+        if (active) navigate(isListsFlow ? '/account/lists' : '/account/watchlist', { replace: true });
       })
       .catch((authorizationError: unknown) => {
         if (active) {
@@ -40,13 +53,13 @@ export function AccountCallbackPage() {
     return () => {
       active = false;
     };
-  }, [approved, completeAuthorization, navigate, requestToken]);
+  }, [approvalStatus, approved, completeAuthorization, completeListsAuthorization, isListsFlow, navigate, requestToken]);
 
   return (
     <main className="container flex min-h-screen items-center justify-center py-8">
       <Card className="w-full max-w-md">
         <CardHeader>
-          <CardTitle>{error ? 'Could not connect account' : 'Connecting your TMDB account'}</CardTitle>
+          <CardTitle>{error ? 'Could not connect account' : isListsFlow ? 'Connecting your TMDB lists' : 'Connecting your TMDB account'}</CardTitle>
         </CardHeader>
         <CardContent className="space-y-4">
           {error ? (

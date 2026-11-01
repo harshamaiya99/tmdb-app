@@ -11,7 +11,7 @@ A clean, minimal web app for browsing movies, TV shows, and people with data fro
 - 📺 Explore popular and top-rated TV shows
 - 🔍 Search movies, TV shows, and people
 - 🧭 Deep-dive detail pages for movies, TV shows, and people
-- 👤 Connect a TMDB account to manage movie/TV watchlists, favorites, and ratings, plus create private-by-default movie lists
+- 👤 Connect a TMDB account to manage movie/TV watchlists, favorites, ratings, and mixed movie/TV custom lists
 - 🌗 Light/dark theme toggle
 - 📲 Installable as a web app from supported browsers
 - ✨ Responsive, content-first UI with reusable cards, shared media sections, and skeleton states
@@ -49,7 +49,7 @@ A clean, minimal web app for browsing movies, TV shows, and people with data fro
 3. Open http://localhost:5173 in your browser
 
 4. Enter your TMDB API key to start browsing
-5. To use watchlists, favorites, ratings, or custom movie lists, connect your TMDB account from the header's **Settings** menu and approve access on TMDB. This is separate from the API key login; the app never asks for your TMDB password. Custom lists can be created from a movie detail page, and movies can be saved to multiple lists; each movie's list membership is shown and can be changed in the **Add to list** dialog. Lists can be managed from **Settings → Custom lists**; new lists are private by default.
+5. To use watchlists, favorites, and ratings, connect your TMDB account from the header's **Settings** menu and approve access on TMDB. Custom lists use TMDB's v4 user authorization and require the app-level `VITE_TMDB_ACCESS_TOKEN`; connect them separately from **Settings → Connect custom lists**. This is separate from the API key login; the app never asks for your TMDB password. Mixed movie/TV lists can be created from a movie or TV detail page, and a title can be saved to multiple lists; membership is shown and can be changed in the **Add to list** dialog. Lists can be managed from **Settings → Custom lists**; new lists are private by default.
 
 ### Optional embed URL templates
 
@@ -62,7 +62,7 @@ VITE_TV_EMBED_URL=https://example.com/tv/{TMDB_ID}/{SEASON}/{EPISODE}
 
 On the deployed app, use **Embed link settings** in the header to save templates in that browser. A saved browser value overrides the build-time default; leaving a field blank or choosing **Reset to defaults** uses the build-time value when present. Browser settings are not shared across browsers or devices.
 
-The optional TMDB account session is stored in the browser's local storage. Disconnect it from the **Settings** menu to revoke the TMDB session and remove its local copy.
+The optional TMDB v3 account session and v4 custom-list user access token are stored separately in the browser's local storage. Disconnect each from the **Settings** menu to revoke that credential and remove its local copy. The app-level `VITE_TMDB_ACCESS_TOKEN` is included in the client build and must not be treated as a server-side secret.
 
 ## Build and Verification
 
@@ -113,7 +113,7 @@ The site can be installed as an app from supported browsers when served over HTT
 │   │   ├── CreditsCarousel.tsx        # Cast and crew carousel
 │   │   ├── EpisodesRatingOverview.tsx # Episode rating visualization
 │   │   ├── AccountMediaActions.tsx    # TMDB account actions on media detail pages
-│   │   ├── AddToListButton.tsx        # Add movies to existing or new custom lists
+│   │   ├── AddToListButton.tsx        # Add movies and TV shows to TMDB custom lists
 │   │   ├── Layout.tsx                 # App header, navigation, search, and settings menu
 │   │   ├── LazySection.tsx            # Defers section rendering until near the viewport
 │   │   ├── MediaCard.tsx              # Reusable movie, TV, and person card

@@ -7,19 +7,34 @@ const ACCOUNT_ID_STORAGE_KEY = 'tmdb_account_id';
 const ACCOUNT_NAME_STORAGE_KEY = 'tmdb_account_name';
 const ACCOUNT_USERNAME_STORAGE_KEY = 'tmdb_account_username';
 const REQUEST_TOKEN_STORAGE_KEY = 'tmdb_account_request_token';
+const LIST_ACCESS_TOKEN_STORAGE_KEY = 'tmdb_list_access_token';
+const LIST_ACCOUNT_ID_STORAGE_KEY = 'tmdb_list_account_id';
+const LIST_REQUEST_TOKEN_STORAGE_KEY = 'tmdb_list_request_token';
 
 interface AccountSession {
   sessionId: string;
   account: TMDBAccount;
 }
 
+interface ListAccountSession {
+  accessToken: string;
+  accountId: string;
+}
+
 interface TMDBAccountContextValue {
   account: TMDBAccount | null;
   sessionId: string;
   isConnected: boolean;
+  listAccessToken: string;
+  listAccountId: string;
+  isListAccountConnected: boolean;
+  canConnectLists: boolean;
   connectAccount: () => Promise<void>;
   completeAuthorization: (requestToken: string) => Promise<void>;
   disconnectAccount: () => Promise<void>;
+  connectListsAccount: () => Promise<void>;
+  completeListsAuthorization: (requestToken: string) => Promise<void>;
+  disconnectListsAccount: () => Promise<void>;
 }
 
 const TMDBAccountContext = createContext<TMDBAccountContextValue | null>(null);
@@ -56,9 +71,33 @@ function clearSavedSession() {
   localStorage.removeItem(ACCOUNT_USERNAME_STORAGE_KEY);
 }
 
+function readSavedListSession(): ListAccountSession | null {
+  const accessToken = localStorage.getItem(LIST_ACCESS_TOKEN_STORAGE_KEY);
+  const accountId = localStorage.getItem(LIST_ACCOUNT_ID_STORAGE_KEY);
+  return accessToken && accountId ? { accessToken, accountId } : null;
+}
+
+function saveListSession(session: ListAccountSession) {
+  try {
+    localStorage.setItem(LIST_ACCESS_TOKEN_STORAGE_KEY, session.accessToken);
+    localStorage.setItem(LIST_ACCOUNT_ID_STORAGE_KEY, session.accountId);
+  } catch (error) {
+    localStorage.removeItem(LIST_ACCESS_TOKEN_STORAGE_KEY);
+    localStorage.removeItem(LIST_ACCOUNT_ID_STORAGE_KEY);
+    throw error;
+  }
+}
+
+function clearSavedListSession() {
+  localStorage.removeItem(LIST_ACCESS_TOKEN_STORAGE_KEY);
+  localStorage.removeItem(LIST_ACCOUNT_ID_STORAGE_KEY);
+}
+
 export function TMDBAccountProvider({ children }: { children: ReactNode }) {
   const [session, setSession] = useState<AccountSession | null>(readSavedSession);
+  const [listSession, setListSession] = useState<ListAccountSession | null>(readSavedListSession);
   const authorizationRequests = useRef(new Map<string, Promise<void>>());
+  const listAuthorizationRequests = useRef(new Map<string, Promise<void>>());
 
   const connectAccount = useCallback(async () => {
     const requestToken = await tmdbService.createAccountRequestToken();
@@ -106,14 +145,75 @@ export function TMDBAccountProvider({ children }: { children: ReactNode }) {
     }
   }, [session]);
 
+  const connectListsAccount = useCallback(async () => {
+    const callbackUrl = `${window.location.origin}${window.location.pathname}#/account/callback?flow=lists`;
+    const requestToken = await tmdbService.createV4RequestToken(callbackUrl);
+    sessionStorage.setItem(LIST_REQUEST_TOKEN_STORAGE_KEY, requestToken);
+
+    const authorizationUrl = new URL('https://www.themoviedb.org/auth/access');
+    authorizationUrl.searchParams.set('request_token', requestToken);
+    window.location.assign(authorizationUrl.toString());
+  }, []);
+
+  const completeListsAuthorization = useCallback((requestToken: string) => {
+    const existingRequest = listAuthorizationRequests.current.get(requestToken);
+    if (existingRequest) return existingRequest;
+
+    const request = (async () => {
+      const pendingToken = sessionStorage.getItem(LIST_REQUEST_TOKEN_STORAGE_KEY);
+      if (!pendingToken || pendingToken !== requestToken) {
+        throw new Error('The TMDB list authorization request is missing or expired. Please try connecting again.');
+      }
+
+      const authorization = await tmdbService.createV4UserAccessToken(requestToken);
+      const nextSession = { accessToken: authorization.accessToken, accountId: authorization.accountId };
+      saveListSession(nextSession);
+      sessionStorage.removeItem(LIST_REQUEST_TOKEN_STORAGE_KEY);
+      setListSession(nextSession);
+      clearRequestCache('account:');
+    })();
+
+    listAuthorizationRequests.current.set(requestToken, request);
+    void request.catch(() => listAuthorizationRequests.current.delete(requestToken));
+    return request;
+  }, []);
+
+  const disconnectListsAccount = useCallback(async () => {
+    if (!listSession) return;
+    try {
+      await tmdbService.revokeV4UserAccessToken(listSession.accessToken);
+    } finally {
+      clearSavedListSession();
+      sessionStorage.removeItem(LIST_REQUEST_TOKEN_STORAGE_KEY);
+      setListSession(null);
+      clearRequestCache('account:');
+    }
+  }, [listSession]);
+
   const value = useMemo<TMDBAccountContextValue>(() => ({
     sessionId: session?.sessionId ?? '',
     account: session?.account ?? null,
     isConnected: Boolean(session),
+    listAccessToken: listSession?.accessToken ?? '',
+    listAccountId: listSession?.accountId ?? '',
+    isListAccountConnected: Boolean(listSession),
+    canConnectLists: tmdbService.hasV4AppAccessToken(),
     connectAccount,
     completeAuthorization,
     disconnectAccount,
-  }), [session, connectAccount, completeAuthorization, disconnectAccount]);
+    connectListsAccount,
+    completeListsAuthorization,
+    disconnectListsAccount,
+  }), [
+    session,
+    listSession,
+    connectAccount,
+    completeAuthorization,
+    disconnectAccount,
+    connectListsAccount,
+    completeListsAuthorization,
+    disconnectListsAccount,
+  ]);
 
   return <TMDBAccountContext.Provider value={value}>{children}</TMDBAccountContext.Provider>;
 }

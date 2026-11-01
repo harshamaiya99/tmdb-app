@@ -12,10 +12,17 @@ import { tmdbService } from '@/lib/tmdb';
 interface AddToListButtonProps {
   mediaId: number;
   mediaTitle: string;
+  mediaType: 'movie' | 'tv';
 }
 
-export function AddToListButton({ mediaId, mediaTitle }: AddToListButtonProps) {
-  const { account, sessionId } = useTMDBAccount();
+export function AddToListButton({ mediaId, mediaTitle, mediaType }: AddToListButtonProps) {
+  const {
+    canConnectLists,
+    connectListsAccount,
+    isListAccountConnected,
+    listAccessToken,
+    listAccountId,
+  } = useTMDBAccount();
   const { toast } = useToast();
   const [isOpen, setIsOpen] = useState(false);
   const [isCreateFormOpen, setIsCreateFormOpen] = useState(false);
@@ -28,18 +35,18 @@ export function AddToListButton({ mediaId, mediaTitle }: AddToListButtonProps) {
   const [listPage, setListPage] = useState(1);
   const closeButtonRef = useRef<HTMLButtonElement>(null);
   const membershipQuery = useCachedQuery(
-    `account:${account?.id ?? 'none'}:user-list-memberships:${membershipRevision}`,
-    (signal) => tmdbService.getAccountUserListMemberships(account?.id ?? 0, sessionId, signal),
-    { enabled: Boolean(account) },
+    `account:${listAccountId || 'none'}:user-list-memberships:${membershipRevision}`,
+    (signal) => tmdbService.getAccountUserListMemberships(listAccountId, listAccessToken, signal),
+    { enabled: isListAccountConnected },
   );
   const listsQuery = useCachedQuery(
-    `account:${account?.id ?? 'none'}:user-lists:${listPage}:${membershipRevision}`,
-    (signal) => tmdbService.getAccountLists(account?.id ?? 0, listPage, sessionId, signal),
-    { enabled: isOpen && Boolean(account) },
+    `account:${listAccountId || 'none'}:user-lists:${listPage}:${membershipRevision}`,
+    (signal) => tmdbService.getAccountLists(listAccountId, listPage, listAccessToken, signal),
+    { enabled: isOpen && isListAccountConnected },
   );
   const lists = listsQuery.data?.results ?? [];
   const addedListIds = membershipQuery.data
-    ?.filter((list) => list.mediaIds.includes(mediaId))
+    ?.filter((list) => list.mediaIds[mediaType].includes(mediaId))
     .map((list) => list.listId) ?? [];
   const canToggleMembership = membershipQuery.data !== undefined && !membershipQuery.error;
 
@@ -65,9 +72,9 @@ export function AddToListButton({ mediaId, mediaTitle }: AddToListButtonProps) {
     setPendingListId(listId);
     try {
       if (isAdded) {
-        await tmdbService.removeMediaFromUserList(listId, mediaId, sessionId);
+        await tmdbService.removeMediaFromUserList(listId, mediaType, mediaId, listAccessToken);
       } else {
-        await tmdbService.addMediaToUserList(listId, mediaId, sessionId);
+        await tmdbService.addMediaToUserList(listId, mediaType, mediaId, listAccessToken);
       }
       clearRequestCache('account:');
       setMembershipRevision((revision) => revision + 1);
@@ -91,9 +98,9 @@ export function AddToListButton({ mediaId, mediaTitle }: AddToListButtonProps) {
     setIsSubmittingCreate(true);
     let createdListId: number | null = null;
     try {
-      const createdList = await tmdbService.createUserList(name, description.trim(), isPublic, sessionId);
-      createdListId = createdList.list_id;
-      await tmdbService.addMediaToUserList(createdList.list_id, mediaId, sessionId);
+      const createdList = await tmdbService.createUserList(name, description.trim(), isPublic, listAccessToken);
+      createdListId = createdList.id;
+      await tmdbService.addMediaToUserList(createdList.id, mediaType, mediaId, listAccessToken);
       clearRequestCache('account:');
       setMembershipRevision((revision) => revision + 1);
       toast({ title: `Created ${name} and added title` });
@@ -109,6 +116,16 @@ export function AddToListButton({ mediaId, mediaTitle }: AddToListButtonProps) {
     } finally {
       setIsSubmittingCreate(false);
     }
+  };
+
+  const handleConnectLists = () => {
+    void connectListsAccount().catch((error: unknown) => {
+      toast({
+        title: 'Could not start TMDB lists authorization',
+        description: error instanceof Error ? error.message : 'Please try again.',
+        variant: 'destructive',
+      });
+    });
   };
 
   return (
@@ -159,14 +176,29 @@ export function AddToListButton({ mediaId, mediaTitle }: AddToListButtonProps) {
               </Button>
             </header>
 
-            {listsQuery.loading ? (
+            {!isListAccountConnected ? (
+              <div className="space-y-3">
+                <p className="text-sm text-muted-foreground">
+                  Connect TMDB custom lists to save movies and TV shows in mixed lists.
+                </p>
+                {canConnectLists ? (
+                  <Button type="button" className="w-full" onClick={handleConnectLists}>Connect TMDB lists</Button>
+                ) : (
+                  <Alert variant="destructive">
+                    <AlertDescription>
+                      Custom lists need the app-level v4 access token. Configure VITE_TMDB_ACCESS_TOKEN and rebuild the app.
+                    </AlertDescription>
+                  </Alert>
+                )}
+              </div>
+            ) : listsQuery.loading ? (
               <p className="py-6 text-center text-sm text-muted-foreground">Loading your lists…</p>
             ) : listsQuery.error ? (
               <p role="alert" className="py-4 text-sm text-destructive">{listsQuery.error.message}</p>
             ) : lists.length > 0 ? (
               <>
                 {membershipQuery.loading ? (
-                  <p className="mb-2 text-xs text-muted-foreground">Checking which lists contain this movie…</p>
+                  <p className="mb-2 text-xs text-muted-foreground">Checking which lists contain this title…</p>
                 ) : membershipQuery.error ? (
                   <Alert variant="destructive" className="mb-2">
                     <AlertDescription>Could not check list membership: {membershipQuery.error.message}</AlertDescription>
@@ -221,12 +253,12 @@ export function AddToListButton({ mediaId, mediaTitle }: AddToListButtonProps) {
               </div>
             )}
 
-            {!isCreateFormOpen ? (
+            {isListAccountConnected && !isCreateFormOpen ? (
               <Button type="button" variant="outline" className="mt-4 w-full" disabled={pendingListId !== null} onClick={() => setIsCreateFormOpen(true)}>
                 <Plus aria-hidden="true" className="mr-2 h-4 w-4" />
                 Create a new list
               </Button>
-            ) : (
+            ) : isListAccountConnected ? (
               <form onSubmit={(event) => void handleCreate(event)} className="mt-4 space-y-3 border-t pt-4">
                 <label className="sr-only" htmlFor={`new-list-name-${mediaId}`}>List name</label>
                 <Input
@@ -257,7 +289,7 @@ export function AddToListButton({ mediaId, mediaTitle }: AddToListButtonProps) {
                   </Button>
                 </div>
               </form>
-            )}
+            ) : null}
           </section>
         </div>
       )}

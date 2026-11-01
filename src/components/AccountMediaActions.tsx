@@ -37,12 +37,15 @@ export function AccountMediaActions({ mediaId, mediaType, mediaTitle }: AccountM
 
   if (!isConnected || !account) {
     return (
-      <p className="text-xs text-muted-foreground">
-        <Link to="/account/watchlist" className="text-primary underline-offset-4 hover:underline">
-          Connect a TMDB account
-        </Link>
-        {' '}to manage your lists and ratings.
-      </p>
+      <section aria-label="TMDB account actions" className="flex flex-wrap items-center gap-2">
+        <p className="text-xs text-muted-foreground">
+          <Link to="/account/watchlist" className="text-primary underline-offset-4 hover:underline">
+            Connect a TMDB account
+          </Link>
+          {' '}to manage your watchlist, favorites, and ratings.
+        </p>
+        <AddToListButton mediaId={mediaId} mediaTitle={mediaTitle} mediaType={mediaType} />
+      </section>
     );
   }
 
@@ -128,7 +131,7 @@ export function AccountMediaActions({ mediaId, mediaType, mediaTitle }: AccountM
         <Heart aria-hidden="true" className={`h-4 w-4${accountState?.favorite ? ' fill-current' : ''}`} />
         {accountState?.favorite ? 'Favorited' : 'Favorite'}
       </Button>
-      {mediaType === 'movie' && <AddToListButton mediaId={mediaId} mediaTitle={mediaTitle} />}
+      <AddToListButton mediaId={mediaId} mediaTitle={mediaTitle} mediaType={mediaType} />
       {accountStateQuery.error ? (
         <span role="alert" className="text-xs text-destructive">Account status unavailable.</span>
       ) : (

@@ -25,32 +25,51 @@ export function AccountListsPage() {
   const { listId: listIdParam } = useParams<{ listId?: string }>();
   const parsedListId = Number(listIdParam);
   const listId = Number.isSafeInteger(parsedListId) && parsedListId > 0 ? parsedListId : null;
-  const { account, isConnected, sessionId } = useTMDBAccount();
+  const {
+    canConnectLists,
+    connectListsAccount,
+    isListAccountConnected,
+    listAccessToken,
+    listAccountId,
+  } = useTMDBAccount();
   const { toast } = useToast();
   const navigate = useNavigate();
   const { page, setPage } = usePagination();
   const [revision, setRevision] = useState(0);
-  const [pendingMediaId, setPendingMediaId] = useState<number | null>(null);
+  const [pendingMediaKey, setPendingMediaKey] = useState<string | null>(null);
   const [isDeleting, setIsDeleting] = useState(false);
 
   const listsQuery = useCachedQuery(
-    `account:${account?.id ?? 'none'}:lists:${page}:${revision}`,
-    (signal) => tmdbService.getAccountLists(account?.id ?? 0, page, sessionId, signal),
-    { enabled: isConnected && Boolean(account) && !listId },
+    `account:${listAccountId || 'none'}:lists:${page}:${revision}`,
+    (signal) => tmdbService.getAccountLists(listAccountId, page, listAccessToken, signal),
+    { enabled: isListAccountConnected && !listId },
+  );
+  const listSummaries = listsQuery.data?.results ?? [];
+  const listCountsQuery = useCachedQuery(
+    `account:${listAccountId || 'none'}:list-counts:${page}:${revision}`,
+    (signal) => tmdbService.getAccountListItemCounts(listSummaries, listAccessToken, signal),
+    {
+      enabled: isListAccountConnected
+        && !listId
+        && !listsQuery.loading
+        && !listsQuery.error
+        && listSummaries.length > 0,
+    },
   );
   const detailQuery = useCachedQuery(
-    `account:${account?.id ?? 'none'}:list:${listId ?? 'none'}:${revision}`,
-    (signal) => tmdbService.getUserList(listId ?? 0, sessionId, signal),
-    { enabled: isConnected && Boolean(account) && Boolean(listId) },
+    `account:${listAccountId || 'none'}:list:${listId ?? 'none'}:${page}:${revision}`,
+    (signal) => tmdbService.getUserList(listId ?? 0, listAccessToken, page, signal),
+    { enabled: isListAccountConnected && Boolean(listId) },
   );
   const list = detailQuery.data;
   usePageTitle(list ? list.name : 'Your Lists');
 
-  const handleRemoveItem = async (mediaId: number) => {
+  const handleRemoveItem = async (mediaType: 'movie' | 'tv', mediaId: number) => {
     if (!listId) return;
-    setPendingMediaId(mediaId);
+    const mediaKey = `${mediaType}:${mediaId}`;
+    setPendingMediaKey(mediaKey);
     try {
-      await tmdbService.removeMediaFromUserList(listId, mediaId, sessionId);
+      await tmdbService.removeMediaFromUserList(listId, mediaType, mediaId, listAccessToken);
       clearRequestCache('account:');
       setRevision((value) => value + 1);
       toast({ title: 'Title removed from list' });
@@ -61,7 +80,7 @@ export function AccountListsPage() {
         variant: 'destructive',
       });
     } finally {
-      setPendingMediaId(null);
+      setPendingMediaKey(null);
     }
   };
 
@@ -69,7 +88,7 @@ export function AccountListsPage() {
     if (!listId || !window.confirm(`Delete "${list?.name ?? 'this list'}"? This cannot be undone.`)) return;
     setIsDeleting(true);
     try {
-      await tmdbService.deleteUserList(listId, sessionId);
+      await tmdbService.deleteUserList(listId, listAccessToken);
       clearRequestCache('account:');
       toast({ title: 'List deleted' });
       navigate('/account/lists');
@@ -84,16 +103,32 @@ export function AccountListsPage() {
     }
   };
 
-  if (!isConnected || !account) {
+  const handleConnectLists = () => {
+    void connectListsAccount().catch((error: unknown) => {
+      toast({
+        title: 'Could not start TMDB lists authorization',
+        description: error instanceof Error ? error.message : 'Please try again.',
+        variant: 'destructive',
+      });
+    });
+  };
+
+  if (!isListAccountConnected) {
     return (
       <main className="container py-8">
         <Card className="mx-auto max-w-xl">
           <CardContent className="space-y-4 p-6">
-            <h1 className="text-xl font-semibold">Connect your TMDB account</h1>
+            <h1 className="text-xl font-semibold">Connect TMDB custom lists</h1>
             <p className="text-sm leading-relaxed text-muted-foreground">
-              Connect your TMDB account to view and manage your custom lists.
+              Approve custom-list access on TMDB to view and manage lists with movies and TV shows.
             </p>
-            <Button asChild><Link to="/account/watchlist">Account settings</Link></Button>
+            {canConnectLists ? (
+              <Button type="button" onClick={handleConnectLists}>Connect TMDB lists</Button>
+            ) : (
+              <p role="alert" className="text-sm text-destructive">
+                Custom lists need the app-level v4 access token. Configure VITE_TMDB_ACCESS_TOKEN and rebuild the app.
+              </p>
+            )}
           </CardContent>
         </Card>
       </main>
@@ -101,7 +136,7 @@ export function AccountListsPage() {
   }
 
   if (listId) {
-    const items = list?.items ?? [];
+    const items = list?.results ?? [];
     return (
       <main className="container space-y-6 py-6">
         <div className="flex flex-wrap items-end justify-between gap-4">
@@ -136,26 +171,33 @@ export function AccountListsPage() {
         ) : (
           <div className="grid grid-cols-2 gap-3 min-[360px]:grid-cols-3 sm:gap-4 sm:grid-cols-4 md:grid-cols-5 lg:grid-cols-6 xl:grid-cols-8 2xl:grid-cols-10">
             {items.map((item) => (
-                <MediaCard
-                  key={item.id}
-                  item={item}
-                  type="movie"
-                  metadataAction={(
-                    <Button
-                      type="button"
-                      variant="ghost"
-                      size="icon"
-                      className="h-7 w-7 text-muted-foreground hover:text-destructive"
-                      aria-label={`Remove ${item.title} from ${list?.name ?? 'list'}`}
-                      title="Remove from list"
-                      disabled={pendingMediaId === item.id}
-                      onClick={() => void handleRemoveItem(item.id)}
-                    >
-                      <Trash2 aria-hidden="true" className="h-4 w-4" />
-                    </Button>
-                  )}
-                />
+              <MediaCard
+                key={`${item.media_type}:${item.id}`}
+                item={item}
+                type={item.media_type}
+                metadataAction={(
+                  <Button
+                    type="button"
+                    variant="ghost"
+                    size="icon"
+                    className="h-7 w-7 text-muted-foreground hover:text-destructive"
+                    aria-label={`Remove ${item.media_type === 'movie' ? item.title : item.name} from ${list?.name ?? 'list'}`}
+                    title="Remove from list"
+                    disabled={pendingMediaKey === `${item.media_type}:${item.id}`}
+                    onClick={() => void handleRemoveItem(item.media_type, item.id)}
+                  >
+                    <Trash2 aria-hidden="true" className="h-4 w-4" />
+                  </Button>
+                )}
+              />
             ))}
+          </div>
+        )}
+        {list && list.total_pages > 1 && (
+          <div className="flex items-center justify-center gap-6 border-t pt-6">
+            <Button variant="outline" onClick={() => setPage(Math.max(1, page - 1))} disabled={page === 1}>Previous</Button>
+            <span className="text-sm font-medium text-muted-foreground">Page {page} of {list.total_pages}</span>
+            <Button variant="outline" onClick={() => setPage(Math.min(list.total_pages, page + 1))} disabled={page === list.total_pages}>Next</Button>
           </div>
         )}
 
@@ -163,7 +205,6 @@ export function AccountListsPage() {
     );
   }
 
-  const lists = listsQuery.data?.results ?? [];
   const totalPages = Math.min(listsQuery.data?.total_pages ?? 1, 500);
 
   return (
@@ -182,24 +223,36 @@ export function AccountListsPage() {
         <MediaGridSkeleton />
       ) : listsQuery.error ? (
         <Alert variant="destructive"><AlertDescription>{listsQuery.error.message}</AlertDescription></Alert>
-      ) : lists.length === 0 ? (
+      ) : listSummaries.length === 0 ? (
         <div className="rounded-xl border border-dashed p-8 text-center text-sm text-muted-foreground">
-          No custom lists yet. Use <ListPlus aria-hidden="true" className="inline h-4 w-4" /> Add to list on a movie page to create one.
+          No custom lists yet. Use <ListPlus aria-hidden="true" className="inline h-4 w-4" /> Add to list on a movie or TV show page to create one.
         </div>
       ) : (
         <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
-          {lists.map((userList) => (
-            <Link key={userList.id} to={`/account/lists/${userList.id}`} className="block rounded-lg focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring">
-              <Card className="h-full transition-colors hover:bg-accent/50">
-                <CardContent className="space-y-2 p-4">
-                  <h2 className="line-clamp-2 font-semibold">{userList.name}</h2>
-                  {userList.description && <p className="line-clamp-2 text-sm text-muted-foreground">{userList.description}</p>}
-                  <p className="text-xs text-muted-foreground">{userList.item_count} {userList.item_count === 1 ? 'title' : 'titles'}</p>
-                </CardContent>
-              </Card>
-            </Link>
-          ))}
+          {listSummaries.map((userList) => {
+            const itemCount = listCountsQuery.data?.[userList.id];
+            return (
+              <Link key={userList.id} to={`/account/lists/${userList.id}`} className="block rounded-lg focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring">
+                <Card className="h-full transition-colors hover:bg-accent/50">
+                  <CardContent className="space-y-2 p-4">
+                    <h2 className="line-clamp-2 font-semibold">{userList.name}</h2>
+                    {userList.description && <p className="line-clamp-2 text-sm text-muted-foreground">{userList.description}</p>}
+                    <p className="text-xs text-muted-foreground">
+                      {itemCount === undefined
+                        ? listCountsQuery.error ? 'Could not load title count' : 'Loading title count…'
+                        : `${itemCount} ${itemCount === 1 ? 'title' : 'titles'}`}
+                    </p>
+                  </CardContent>
+                </Card>
+              </Link>
+            );
+          })}
         </div>
+      )}
+      {listCountsQuery.error && (
+        <Alert variant="destructive">
+          <AlertDescription>Could not load custom-list title counts: {listCountsQuery.error.message}</AlertDescription>
+        </Alert>
       )}
       {totalPages > 1 && (
         <div className="flex items-center justify-center gap-6 border-t pt-6">

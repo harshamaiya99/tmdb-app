@@ -53,9 +53,9 @@ Routing is defined in [src/App.tsx](src/App.tsx) with React Router's `HashRouter
 - `/movie` — movie listing view
 - `/tv` — TV listing view
 - `/person` — people listing view
-- `/account/callback` — TMDB account authorization return
+- `/account/callback` — TMDB v3 account or v4 custom-list authorization return
 - `/account/:section` — account watchlist, favorites, and ratings
-- `/account/lists` — browse custom movie lists
+- `/account/lists` — browse mixed movie/TV custom lists
 - `/account/lists/:listId` — view and manage a custom list
 
 ### Routing behavior
@@ -116,19 +116,19 @@ Pages live in [src/pages](src/pages):
 - [src/pages/PersonDetailsPage.tsx](src/pages/PersonDetailsPage.tsx) — shows a person’s biography, filmography, and images
 - [src/pages/PeopleListPage.tsx](src/pages/PeopleListPage.tsx) — shows a list of people results
 - [src/pages/AccountPage.tsx](src/pages/AccountPage.tsx) — displays and manages the connected account's movie and TV lists
-- [src/pages/AccountListsPage.tsx](src/pages/AccountListsPage.tsx) — browses, displays, and manages TMDB custom movie lists
-- [src/pages/AccountCallbackPage.tsx](src/pages/AccountCallbackPage.tsx) — completes TMDB's user-consent flow
+- [src/pages/AccountListsPage.tsx](src/pages/AccountListsPage.tsx) — browses, displays, and manages mixed-media TMDB custom lists
+- [src/pages/AccountCallbackPage.tsx](src/pages/AccountCallbackPage.tsx) — completes TMDB v3 account and v4 custom-list consent flows
 
 ### Shared feature components
 
 - [src/components/CreditsCarousel.tsx](src/components/CreditsCarousel.tsx) renders reusable horizontally scrollable cast and crew credits.
 - [src/components/AccountMediaActions.tsx](src/components/AccountMediaActions.tsx) adds titles to account lists and submits user ratings from details pages.
-- [src/components/AddToListButton.tsx](src/components/AddToListButton.tsx) adds movies to existing lists or creates a private-by-default list.
+- [src/components/AddToListButton.tsx](src/components/AddToListButton.tsx) adds movies and TV shows to existing lists or creates a private-by-default list.
 - [src/components/MediaGridSkeleton.tsx](src/components/MediaGridSkeleton.tsx) provides loading placeholders.
 
 ### Account context
 
-`TMDBAccountProvider` shares the connected account identity and session with the settings menu, account pages, and detail-page actions. TMDB account requests and authentication endpoints remain centralized in `src/lib/tmdb.ts`.
+`TMDBAccountProvider` shares the v3 account identity/session and the separate v4 custom-list access token with the settings menu, account pages, and detail-page actions. Both TMDB account requests and authentication endpoints remain centralized in `src/lib/tmdb.ts`.
 
 ### Shared hooks
 

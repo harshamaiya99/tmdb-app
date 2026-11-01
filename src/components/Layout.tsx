@@ -109,7 +109,16 @@ export function Layout({ children }: LayoutProps) {
   const { title } = useTitle();
   const { toast } = useToast();
   const { theme, toggleTheme } = useTheme();
-  const { account, isConnected: isTMDBAccountConnected, connectAccount, disconnectAccount } = useTMDBAccount();
+  const {
+    account,
+    canConnectLists,
+    connectAccount,
+    connectListsAccount,
+    disconnectAccount,
+    disconnectListsAccount,
+    isConnected: isTMDBAccountConnected,
+    isListAccountConnected,
+  } = useTMDBAccount();
   const { movieUrlTemplate, tvUrlTemplate, saveSettings, resetSettings } = useEmbedSettings();
   const location = useLocation();
   const [settingsOpen, setSettingsOpen] = useState(false);
@@ -203,6 +212,30 @@ export function Layout({ children }: LayoutProps) {
         description: error instanceof Error
           ? `TMDB could not revoke the session remotely: ${error.message}`
           : 'TMDB could not revoke the session remotely.',
+        variant: 'destructive',
+      });
+    });
+  };
+
+  const handleConnectListsAccount = () => {
+    void connectListsAccount().catch((error: unknown) => {
+      toast({
+        title: 'Could not start TMDB lists authorization',
+        description: error instanceof Error ? error.message : 'Please try again.',
+        variant: 'destructive',
+      });
+    });
+  };
+
+  const handleDisconnectListsAccount = () => {
+    void disconnectListsAccount().then(() => {
+      toast({ title: 'TMDB custom lists disconnected' });
+    }).catch((error: unknown) => {
+      toast({
+        title: 'TMDB custom lists disconnected locally',
+        description: error instanceof Error
+          ? `Could not revoke access remotely: ${error.message}`
+          : 'Could not revoke access remotely.',
         variant: 'destructive',
       });
     });
@@ -431,6 +464,14 @@ export function Layout({ children }: LayoutProps) {
                   >
                     <UserRound className="h-4 w-4" />
                     {isTMDBAccountConnected ? 'Disconnect TMDB account' : 'Connect TMDB account'}
+                  </DropdownMenu.Item>
+                  <DropdownMenu.Item
+                    disabled={!isListAccountConnected && !canConnectLists}
+                    onSelect={isListAccountConnected ? handleDisconnectListsAccount : handleConnectListsAccount}
+                    className="flex min-h-10 cursor-pointer select-none items-center gap-2 rounded-sm px-3 py-2 text-sm outline-none hover:bg-accent focus:bg-accent focus:text-accent-foreground data-[disabled]:pointer-events-none data-[disabled]:opacity-50"
+                  >
+                    <ListPlus className="h-4 w-4" />
+                    {isListAccountConnected ? 'Disconnect custom lists' : canConnectLists ? 'Connect custom lists' : 'Configure v4 token for lists'}
                   </DropdownMenu.Item>
                   <DropdownMenu.Separator className="my-1 h-px bg-border" />
                   <DropdownMenu.Item

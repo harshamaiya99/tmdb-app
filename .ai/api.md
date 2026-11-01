@@ -52,15 +52,15 @@ Request methods accept an optional `AbortSignal` through `TMDBRequestOptions`. C
 
 ### API key validation
 
-The app validates a key by calling the TMDB configuration endpoint:
+The app validates a key by calling the TMDB v3 configuration endpoint:
 
-- `/configuration?api_key=<key>`
+- `/3/configuration?api_key=<key>`
 
 If the response is successful, the key is considered valid.
 
 ### TMDB user account authorization
 
-The account connection flow follows TMDB's request-token process:
+The watchlist, favorites, and ratings connection follows TMDB v3's request-token process:
 
 1. Create a temporary request token.
 2. Redirect the user to TMDB to approve access, returning to the app's `/account/callback` hash route.
@@ -69,7 +69,9 @@ The account connection flow follows TMDB's request-token process:
 
 The session ID is a sensitive credential and is treated like a password. Users can disconnect from the Settings menu; the app asks TMDB to revoke the session and clears its local account data. This browser-only app does not send account credentials to a project backend.
 
-Account requests use the account ID and session ID with TMDB's account endpoints. The service supports movie and TV watchlists, favorites, and rated lists; reading per-title account state to show whether a title is already saved or rated; adding/removing watchlist and favorite items; submitting half-point ratings from 0.5 to 10; and deleting ratings. TMDB custom lists are managed separately: users can create private-by-default movie lists, browse their lists and the `items` returned by list details, check movie membership across all account lists, add movies through `POST /list/{list_id}/add_item`, remove movies through `POST /list/{list_id}/remove_item`, and delete lists. TV shows are not added to custom lists through this API feature.
+Account requests use the account ID and session ID with TMDB's v3 account endpoints. The service supports movie and TV watchlists, favorites, and rated lists; reading per-title account state to show whether a title is already saved or rated; adding/removing watchlist and favorite items; submitting half-point ratings from 0.5 to 10; and deleting ratings.
+
+TMDB custom lists use a separate v4 user authorization flow. The application must have the app-level `VITE_TMDB_ACCESS_TOKEN` to create a request token; after user approval, the app exchanges it for a user access token and stores that token and the returned account object ID in browser local storage. If TMDB omits the approval flag from a v4 callback but returns a request token, the access-token exchange verifies the approval. Private list access and mutation use that user token as a bearer credential. V4 list operations support mixed movies and TV shows: create with `POST /4/list`, add with `POST /4/list/{list_id}/items` using `{ items: [{ media_type, media_id }] }`, remove with `DELETE /4/list/{list_id}/items` using the same body, retrieve lists from `/4/account/{account_object_id}/lists`, and read paginated `results` and `total_results` from `/4/list/{list_id}`. The custom-list overview reads item counts from each list's detail response because the account-list summary may not provide an accurate count. Membership checks combine `object_ids.movie` and `object_ids.tv` with the list's paginated `results`, so list items are detected even when those ID arrays are incomplete. Disconnecting custom lists revokes the v4 user access token.
 
 ## Endpoint Categories
 
