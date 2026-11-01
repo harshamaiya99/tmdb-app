@@ -8,6 +8,7 @@ import { tmdbService } from '@/lib/tmdb';
 
 export function LoginPage() {
   const [apiKey, setApiKey] = useState('');
+  const [accessToken, setAccessToken] = useState('');
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
   const navigate = useNavigate();
@@ -28,7 +29,13 @@ export function LoginPage() {
       
       if (isValid) {
         tmdbService.setApiKey(apiKey);
+        tmdbService.setAccessToken(accessToken);
         localStorage.setItem('tmdb_api_key', apiKey);
+        if (accessToken.trim()) {
+          localStorage.setItem('tmdb_v4_access_token', accessToken.trim());
+        } else {
+          localStorage.removeItem('tmdb_v4_access_token');
+        }
         navigate('/');
       } else {
         setError('Invalid API key. Please check and try again.');
@@ -55,6 +62,7 @@ export function LoginPage() {
               <div className="space-y-2">
                 <Input
                   type="password"
+                  aria-label="TMDB API key"
                   placeholder="API key"
                   value={apiKey}
                   onChange={(e) => setApiKey(e.target.value)}
@@ -70,6 +78,20 @@ export function LoginPage() {
                   >
                     Get one here
                   </a>
+                </p>
+              </div>
+
+              <div className="space-y-2">
+                <Input
+                  type="password"
+                  aria-label="TMDB v4 access token"
+                  placeholder="v4 access token (optional)"
+                  value={accessToken}
+                  onChange={(e) => setAccessToken(e.target.value)}
+                  disabled={loading}
+                />
+                <p className="text-xs text-muted-foreground">
+                  Required for custom lists. It is stored in this browser and is visible to anyone who can inspect the app.
                 </p>
               </div>
 

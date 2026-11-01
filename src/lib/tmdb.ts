@@ -398,13 +398,18 @@ export class TMDBError extends Error {
 
 class TMDBService {
   private apiKey: string = '';
+  private configuredAccessToken = '';
 
   private get accessToken(): string {
-    return import.meta.env.VITE_TMDB_ACCESS_TOKEN ?? '';
+    return this.configuredAccessToken || import.meta.env.VITE_TMDB_ACCESS_TOKEN || '';
   }
 
   setApiKey(key: string) {
     this.apiKey = key;
+  }
+
+  setAccessToken(token: string) {
+    this.configuredAccessToken = token.trim();
   }
 
   getApiKey(): string {
@@ -709,7 +714,7 @@ class TMDBService {
   private requireV4AppAccessToken() {
     if (!this.accessToken) {
       throw new TMDBError(
-        'TMDB custom lists require the app-level v4 access token. Configure VITE_TMDB_ACCESS_TOKEN and rebuild the app.',
+        'TMDB custom lists require the app-level v4 access token. Enter it on the login screen or configure VITE_TMDB_ACCESS_TOKEN at build time.',
         'AUTHENTICATION_ERROR',
       );
     }

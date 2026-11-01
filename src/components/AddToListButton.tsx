@@ -186,7 +186,7 @@ export function AddToListButton({ mediaId, mediaTitle, mediaType }: AddToListBut
                 ) : (
                   <Alert variant="destructive">
                     <AlertDescription>
-                      Custom lists need the app-level v4 access token. Configure VITE_TMDB_ACCESS_TOKEN and rebuild the app.
+                      Custom lists need the app-level v4 access token. Enter it on the login screen or configure VITE_TMDB_ACCESS_TOKEN at build time.
                     </AlertDescription>
                   </Alert>
                 )}

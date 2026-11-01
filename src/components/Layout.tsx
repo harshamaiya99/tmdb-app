@@ -189,7 +189,9 @@ export function Layout({ children }: LayoutProps) {
 
   const handleLogout = () => {
     localStorage.removeItem('tmdb_api_key');
+    localStorage.removeItem('tmdb_v4_access_token');
     tmdbService.setApiKey('');
+    tmdbService.setAccessToken('');
     navigate('/login');
   };
 

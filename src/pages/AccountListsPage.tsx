@@ -126,7 +126,7 @@ export function AccountListsPage() {
               <Button type="button" onClick={handleConnectLists}>Connect TMDB lists</Button>
             ) : (
               <p role="alert" className="text-sm text-destructive">
-                Custom lists need the app-level v4 access token. Configure VITE_TMDB_ACCESS_TOKEN and rebuild the app.
+                Custom lists need the app-level v4 access token. Enter it on the login screen or configure VITE_TMDB_ACCESS_TOKEN at build time.
               </p>
             )}
           </CardContent>

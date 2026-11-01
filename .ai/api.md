@@ -10,7 +10,7 @@ This means the project is fully client-side and does not rely on a separate back
 
 The default TMDB credential is provided by the user and stored in local storage. The app does not rely on a server-side secret or a separate auth service. Optional `VITE_MOVIE_EMBED_URL` and `VITE_TV_EMBED_URL` variables provide build-time defaults for movie and TV watch-link templates. Browser-local settings can override those defaults and are stored separately in local storage.
 
-The service also supports an optional `VITE_TMDB_ACCESS_TOKEN` bearer token for TMDB v4 authentication. Vite client variables are bundled into the browser application, so this is suitable only for a personal hobby deployment; a server-side proxy is required to keep credentials private.
+The service also supports an optional TMDB v4 app access token for custom-list authorization. Users may enter it on the login screen; it is stored in browser local storage under `tmdb_v4_access_token`. A build-time `VITE_TMDB_ACCESS_TOKEN` remains supported as a fallback. Both approaches expose the app-level token to the browser and are suitable only when that exposure is acceptable; a server-side proxy is required to keep credentials private.
 
 Account features use a separate TMDB user session. The API key or configured bearer token identifies the application; it does not grant access to a user's private account data. Users must approve access on TMDB's website before the app can create a session.
 
@@ -20,7 +20,7 @@ A typical request follows this path:
 
 1. A page component requests data from the TMDB service.
 2. The service builds a full TMDB URL.
-3. The request uses a bearer token when `VITE_TMDB_ACCESS_TOKEN` is configured; otherwise the user-supplied v3 API key is appended as a query parameter.
+3. The request uses the user-entered v4 access token, or the build-time `VITE_TMDB_ACCESS_TOKEN` fallback, as a bearer token when available; otherwise the user-supplied v3 API key is appended as a query parameter.
 4. The response is parsed as JSON and returned to the calling page.
 5. The page stores the result in React state and renders the UI.
 
@@ -71,7 +71,7 @@ The session ID is a sensitive credential and is treated like a password. Users c
 
 Account requests use the account ID and session ID with TMDB's v3 account endpoints. The service supports movie and TV watchlists, favorites, and rated lists; reading per-title account state to show whether a title is already saved or rated; adding/removing watchlist and favorite items; submitting half-point ratings from 0.5 to 10; and deleting ratings.
 
-TMDB custom lists use a separate v4 user authorization flow. The application must have the app-level `VITE_TMDB_ACCESS_TOKEN` to create a request token; after user approval, the app exchanges it for a user access token and stores that token and the returned account object ID in browser local storage. If TMDB omits the approval flag from a v4 callback but returns a request token, the access-token exchange verifies the approval. Private list access and mutation use that user token as a bearer credential. V4 list operations support mixed movies and TV shows: create with `POST /4/list`, add with `POST /4/list/{list_id}/items` using `{ items: [{ media_type, media_id }] }`, remove with `DELETE /4/list/{list_id}/items` using the same body, retrieve lists from `/4/account/{account_object_id}/lists`, and read paginated `results` and `total_results` from `/4/list/{list_id}`. The custom-list overview reads item counts from each list's detail response because the account-list summary may not provide an accurate count. Membership checks combine `object_ids.movie` and `object_ids.tv` with the list's paginated `results`, so list items are detected even when those ID arrays are incomplete. Disconnecting custom lists revokes the v4 user access token.
+TMDB custom lists use a separate v4 user authorization flow. The application must have an app-level v4 access token, entered at login or provided by `VITE_TMDB_ACCESS_TOKEN`, to create a request token; after user approval, the app exchanges it for a user access token and stores that token and the returned account object ID in browser local storage. If TMDB omits the approval flag from a v4 callback but returns a request token, the access-token exchange verifies the approval. Private list access and mutation use that user token as a bearer credential. V4 list operations support mixed movies and TV shows: create with `POST /4/list`, add with `POST /4/list/{list_id}/items` using `{ items: [{ media_type, media_id }] }`, remove with `DELETE /4/list/{list_id}/items` using the same body, retrieve lists from `/4/account/{account_object_id}/lists`, and read paginated `results` and `total_results` from `/4/list/{list_id}`. The custom-list overview reads item counts from each list's detail response because the account-list summary may not provide an accurate count. Membership checks combine `object_ids.movie` and `object_ids.tv` with the list's paginated `results`, so list items are detected even when those ID arrays are incomplete. Disconnecting custom lists revokes the v4 user access token.
 
 ## Endpoint Categories
 

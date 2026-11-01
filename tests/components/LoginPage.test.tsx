@@ -9,6 +9,7 @@ vi.mock('@/lib/tmdb', () => ({
   tmdbService: {
     validateApiKey: vi.fn(),
     setApiKey: vi.fn(),
+    setAccessToken: vi.fn(),
   },
 }));
 
@@ -33,6 +34,7 @@ describe('LoginPage', () => {
   beforeEach(() => {
     vi.mocked(tmdbService.validateApiKey).mockReset();
     vi.mocked(tmdbService.setApiKey).mockReset();
+    vi.mocked(tmdbService.setAccessToken).mockReset();
   });
 
   it('requires an API key before validating', async () => {
@@ -58,6 +60,24 @@ describe('LoginPage', () => {
     });
     expect(tmdbService.setApiKey).toHaveBeenCalledWith('valid-key');
     expect(window.localStorage.getItem('tmdb_api_key')).toBe('valid-key');
+    expect(tmdbService.setAccessToken).toHaveBeenCalledWith('');
+    expect(window.localStorage.getItem('tmdb_v4_access_token')).toBeNull();
+  });
+
+  it('stores an optional v4 access token for custom lists', async () => {
+    const user = userEvent.setup();
+    vi.mocked(tmdbService.validateApiKey).mockResolvedValue(true);
+    renderLoginPage();
+
+    await user.type(screen.getByLabelText('TMDB API key'), 'valid-key');
+    await user.type(screen.getByLabelText('TMDB v4 access token'), ' v4-token ');
+    await user.click(screen.getByRole('button', { name: 'Continue' }));
+
+    await waitFor(() => {
+      expect(screen.getByLabelText('Current path')).toHaveTextContent('/');
+    });
+    expect(tmdbService.setAccessToken).toHaveBeenCalledWith(' v4-token ');
+    expect(window.localStorage.getItem('tmdb_v4_access_token')).toBe('v4-token');
   });
 
   it('shows an error and does not store an invalid key', async () => {
