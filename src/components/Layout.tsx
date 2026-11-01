@@ -105,7 +105,6 @@ function SearchSuggestions({
 }
 
 export function Layout({ children }: LayoutProps) {
-  const [isMobileViewport, setIsMobileViewport] = useState(false);
   const [isMobileSearchOpen, setIsMobileSearchOpen] = useState(false);
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
@@ -398,17 +397,6 @@ export function Layout({ children }: LayoutProps) {
   };
 
   useEffect(() => {
-    if (typeof window.matchMedia !== 'function') return;
-
-    const mediaQuery = window.matchMedia('(max-width: 767px)');
-    const updateViewport = () => setIsMobileViewport(mediaQuery.matches);
-    updateViewport();
-    mediaQuery.addEventListener('change', updateViewport);
-
-    return () => mediaQuery.removeEventListener('change', updateViewport);
-  }, []);
-
-  useEffect(() => {
     if (isMobileSearchOpen) {
       mobileSearchWasOpenRef.current = true;
       mobileSearchInputRef.current?.focus();
@@ -418,9 +406,110 @@ export function Layout({ children }: LayoutProps) {
     }
   }, [isMobileSearchOpen]);
 
+  const renderAccountMenu = (side: 'top' | 'bottom') => (
+    <DropdownMenu.Portal>
+      <DropdownMenu.Content
+        align="end"
+        side={side}
+        sideOffset={8}
+        collisionPadding={8}
+        className="z-[60] max-h-[calc(100vh-2rem)] min-w-60 max-w-[calc(100vw-2rem)] overflow-y-auto rounded-md border bg-popover p-1 text-popover-foreground shadow-md"
+      >
+        <DropdownMenu.Label className="flex items-center gap-3 px-3 py-3">
+          {account?.avatar?.tmdb?.avatar_path ? (
+            <TMDBImage
+              path={account.avatar.tmdb.avatar_path}
+              alt=""
+              width={40}
+              height={40}
+              className="h-10 w-10 shrink-0 rounded-full object-cover"
+            />
+          ) : (
+            <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-muted">
+              <UserRound className="h-5 w-5 text-muted-foreground" />
+            </span>
+          )}
+          <span className="min-w-0">
+            <span className="block truncate text-sm font-medium text-foreground">
+              {isTMDBAccountConnected ? account?.username : 'TMDB account'}
+            </span>
+            <span className="block truncate text-xs font-normal text-muted-foreground">
+              {isTMDBAccountConnected ? account?.name || 'Connected' : 'Not connected'}
+            </span>
+          </span>
+        </DropdownMenu.Label>
+        {[
+          { to: '/account/watchlist', label: 'Watchlist', icon: Bookmark },
+          { to: '/account/favorites', label: 'Favorites', icon: Heart },
+          { to: '/account/ratings', label: 'Ratings', icon: Star },
+          { to: '/account/lists', label: 'Custom lists', icon: ListPlus },
+        ].map(({ to, label, icon: Icon }) => (
+          <DropdownMenu.Item key={to} asChild>
+            <Link
+              to={to}
+              className="flex min-h-10 cursor-pointer select-none items-center gap-2 rounded-sm px-3 py-2 text-sm outline-none hover:bg-accent focus:bg-accent focus:text-accent-foreground"
+            >
+              <Icon className="h-4 w-4" />
+              {label}
+            </Link>
+          </DropdownMenu.Item>
+        ))}
+        <DropdownMenu.Item
+          onSelect={isTMDBAccountConnected ? handleDisconnectAccount : handleConnectAccount}
+          className="flex min-h-10 cursor-pointer select-none items-center gap-2 rounded-sm px-3 py-2 text-sm outline-none hover:bg-accent focus:bg-accent focus:text-accent-foreground"
+        >
+          <UserRound className="h-4 w-4" />
+          {isTMDBAccountConnected ? 'Disconnect TMDB account' : 'Connect TMDB account'}
+        </DropdownMenu.Item>
+        <DropdownMenu.Item
+          disabled={!isListAccountConnected && !canConnectLists}
+          onSelect={isListAccountConnected ? handleDisconnectListsAccount : handleConnectListsAccount}
+          className="flex min-h-10 cursor-pointer select-none items-center gap-2 rounded-sm px-3 py-2 text-sm outline-none hover:bg-accent focus:bg-accent focus:text-accent-foreground data-[disabled]:pointer-events-none data-[disabled]:opacity-50"
+        >
+          <ListPlus className="h-4 w-4" />
+          {isListAccountConnected ? 'Disconnect custom lists' : canConnectLists ? 'Connect custom lists' : 'Configure v4 token for lists'}
+        </DropdownMenu.Item>
+        <DropdownMenu.Separator className="my-1 h-px bg-border" />
+        <DropdownMenu.Label className="px-3 py-2 text-xs font-medium text-muted-foreground">
+          System
+        </DropdownMenu.Label>
+        <DropdownMenu.Item
+          onSelect={openEmbedSettings}
+          className="flex min-h-10 cursor-pointer select-none items-center gap-2 rounded-sm px-3 py-2 text-sm outline-none hover:bg-accent focus:bg-accent focus:text-accent-foreground"
+        >
+          <Settings2 className="h-4 w-4" />
+          Embed link settings
+        </DropdownMenu.Item>
+        <DropdownMenu.Item
+          onSelect={toggleTheme}
+          className="flex min-h-10 cursor-pointer select-none items-center gap-2 rounded-sm px-3 py-2 text-sm outline-none hover:bg-accent focus:bg-accent focus:text-accent-foreground"
+        >
+          {theme === 'dark' ? <Sun className="h-4 w-4" /> : <Moon className="h-4 w-4" />}
+          Switch to {theme === 'dark' ? 'light' : 'dark'} theme
+        </DropdownMenu.Item>
+        <DropdownMenu.Item asChild>
+          <Link
+            to="/about"
+            className="flex min-h-10 cursor-pointer select-none items-center gap-2 rounded-sm px-3 py-2 text-sm outline-none hover:bg-accent focus:bg-accent focus:text-accent-foreground"
+          >
+            <Info className="h-4 w-4" />
+            About
+          </Link>
+        </DropdownMenu.Item>
+        <DropdownMenu.Separator className="my-1 h-px bg-border" />
+        <DropdownMenu.Item
+          onSelect={handleLogout}
+          className="flex min-h-10 cursor-pointer select-none items-center gap-2 rounded-sm px-3 py-2 text-sm text-destructive outline-none hover:bg-accent focus:bg-accent focus:text-destructive"
+        >
+          <LogOut className="h-4 w-4" />
+          Log out
+        </DropdownMenu.Item>
+      </DropdownMenu.Content>
+    </DropdownMenu.Portal>
+  );
+
   return (
     <div className="min-h-screen bg-background">
-      <DropdownMenu.Root>
       <header className="sticky top-0 z-50 border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
         <div className="container flex min-h-14 flex-wrap items-center justify-between gap-x-3 gap-y-2 py-2 md:h-14 md:flex-nowrap md:py-0">
           <div className="flex min-w-0 flex-1 items-center gap-2 md:flex-none">
@@ -597,6 +686,7 @@ export function Layout({ children }: LayoutProps) {
             </form>
           </div>
 
+          <DropdownMenu.Root>
           <div className="ml-auto hidden shrink-0 items-center space-x-1 md:flex md:ml-0">
               <DropdownMenu.Trigger asChild>
                 <Button
@@ -620,107 +710,12 @@ export function Layout({ children }: LayoutProps) {
                   )}
                 </Button>
               </DropdownMenu.Trigger>
-              <DropdownMenu.Portal>
-                <DropdownMenu.Content
-                  align="end"
-                  side={isMobileViewport ? 'top' : 'bottom'}
-                  sideOffset={8}
-                  className="z-[60] max-h-[calc(100vh-2rem)] min-w-60 max-w-[calc(100vw-2rem)] overflow-y-auto rounded-md border bg-popover p-1 text-popover-foreground shadow-md"
-                >
-                  <DropdownMenu.Label className="flex items-center gap-3 px-3 py-3">
-                    {account?.avatar?.tmdb?.avatar_path ? (
-                      <TMDBImage
-                        path={account.avatar.tmdb.avatar_path}
-                        alt=""
-                        width={40}
-                        height={40}
-                        className="h-10 w-10 shrink-0 rounded-full object-cover"
-                      />
-                    ) : (
-                      <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-muted">
-                        <UserRound className="h-5 w-5 text-muted-foreground" />
-                      </span>
-                    )}
-                    <span className="min-w-0">
-                      <span className="block truncate text-sm font-medium text-foreground">
-                        {isTMDBAccountConnected ? account?.username : 'TMDB account'}
-                      </span>
-                      <span className="block truncate text-xs font-normal text-muted-foreground">
-                        {isTMDBAccountConnected ? account?.name || 'Connected' : 'Not connected'}
-                      </span>
-                    </span>
-                  </DropdownMenu.Label>
-                  {[
-                    { to: '/account/watchlist', label: 'Watchlist', icon: Bookmark },
-                    { to: '/account/favorites', label: 'Favorites', icon: Heart },
-                    { to: '/account/ratings', label: 'Ratings', icon: Star },
-                    { to: '/account/lists', label: 'Custom lists', icon: ListPlus },
-                  ].map(({ to, label, icon: Icon }) => (
-                    <DropdownMenu.Item key={to} asChild>
-                      <Link
-                        to={to}
-                        className="flex min-h-10 cursor-pointer select-none items-center gap-2 rounded-sm px-3 py-2 text-sm outline-none hover:bg-accent focus:bg-accent focus:text-accent-foreground"
-                      >
-                        <Icon className="h-4 w-4" />
-                        {label}
-                      </Link>
-                    </DropdownMenu.Item>
-                  ))}
-                  <DropdownMenu.Item
-                    onSelect={isTMDBAccountConnected ? handleDisconnectAccount : handleConnectAccount}
-                    className="flex min-h-10 cursor-pointer select-none items-center gap-2 rounded-sm px-3 py-2 text-sm outline-none hover:bg-accent focus:bg-accent focus:text-accent-foreground"
-                  >
-                    <UserRound className="h-4 w-4" />
-                    {isTMDBAccountConnected ? 'Disconnect TMDB account' : 'Connect TMDB account'}
-                  </DropdownMenu.Item>
-                  <DropdownMenu.Item
-                    disabled={!isListAccountConnected && !canConnectLists}
-                    onSelect={isListAccountConnected ? handleDisconnectListsAccount : handleConnectListsAccount}
-                    className="flex min-h-10 cursor-pointer select-none items-center gap-2 rounded-sm px-3 py-2 text-sm outline-none hover:bg-accent focus:bg-accent focus:text-accent-foreground data-[disabled]:pointer-events-none data-[disabled]:opacity-50"
-                  >
-                    <ListPlus className="h-4 w-4" />
-                    {isListAccountConnected ? 'Disconnect custom lists' : canConnectLists ? 'Connect custom lists' : 'Configure v4 token for lists'}
-                  </DropdownMenu.Item>
-                  <DropdownMenu.Separator className="my-1 h-px bg-border" />
-                  <DropdownMenu.Label className="px-3 py-2 text-xs font-medium text-muted-foreground">
-                    System
-                  </DropdownMenu.Label>
-                  <DropdownMenu.Item
-                    onSelect={openEmbedSettings}
-                    className="flex min-h-10 cursor-pointer select-none items-center gap-2 rounded-sm px-3 py-2 text-sm outline-none hover:bg-accent focus:bg-accent focus:text-accent-foreground"
-                  >
-                    <Settings2 className="h-4 w-4" />
-                    Embed link settings
-                  </DropdownMenu.Item>
-                  <DropdownMenu.Item
-                    onSelect={toggleTheme}
-                    className="flex min-h-10 cursor-pointer select-none items-center gap-2 rounded-sm px-3 py-2 text-sm outline-none hover:bg-accent focus:bg-accent focus:text-accent-foreground"
-                  >
-                    {theme === 'dark' ? <Sun className="h-4 w-4" /> : <Moon className="h-4 w-4" />}
-                    Switch to {theme === 'dark' ? 'light' : 'dark'} theme
-                  </DropdownMenu.Item>
-                  <DropdownMenu.Item asChild>
-                    <Link
-                      to="/about"
-                      className="flex min-h-10 cursor-pointer select-none items-center gap-2 rounded-sm px-3 py-2 text-sm outline-none hover:bg-accent focus:bg-accent focus:text-accent-foreground"
-                    >
-                      <Info className="h-4 w-4" />
-                      About
-                    </Link>
-                  </DropdownMenu.Item>
-                  <DropdownMenu.Separator className="my-1 h-px bg-border" />
-                  <DropdownMenu.Item
-                    onSelect={handleLogout}
-                    className="flex min-h-10 cursor-pointer select-none items-center gap-2 rounded-sm px-3 py-2 text-sm text-destructive outline-none hover:bg-accent focus:bg-accent focus:text-destructive"
-                  >
-                    <LogOut className="h-4 w-4" />
-                    Log out
-                  </DropdownMenu.Item>
-                </DropdownMenu.Content>
-              </DropdownMenu.Portal>
+              {renderAccountMenu('bottom')}
           </div>
+          </DropdownMenu.Root>
         </div>
       </header>
+      <DropdownMenu.Root>
       <nav
         aria-label="Mobile main navigation"
         className="fixed inset-x-0 bottom-0 z-40 border-t bg-background/95 pb-[env(safe-area-inset-bottom)] backdrop-blur supports-[backdrop-filter]:bg-background/80 md:hidden"
@@ -762,6 +757,7 @@ export function Layout({ children }: LayoutProps) {
               <span>Account</span>
             </Button>
           </DropdownMenu.Trigger>
+          {renderAccountMenu('top')}
         </div>
       </nav>
       </DropdownMenu.Root>
