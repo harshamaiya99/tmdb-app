@@ -1,10 +1,12 @@
-import { useState, type FormEvent } from 'react';
+import { useState } from 'react';
 import { Link } from 'react-router-dom';
+import { BookmarkCheck, BookmarkPlus, Heart } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { useToast } from '@/components/ui/use-toast';
 import { useTMDBAccount } from '@/contexts/TMDBAccountContext';
+import { useCachedQuery } from '@/hooks/useCachedQuery';
 import { clearRequestCache } from '@/lib/requestCache';
-import { tmdbService } from '@/lib/tmdb';
+import { tmdbService, type TMDBMediaAccountState } from '@/lib/tmdb';
 
 const ratingValues = Array.from({ length: 20 }, (_, index) => (index + 1) / 2);
 
@@ -17,10 +19,23 @@ export function AccountMediaActions({ mediaId, mediaType }: AccountMediaActionsP
   const { account, isConnected, sessionId } = useTMDBAccount();
   const { toast } = useToast();
   const [pendingAction, setPendingAction] = useState<'watchlist' | 'favorite' | 'rating' | null>(null);
+  const accountStateKey = `account:${account?.id ?? 'none'}:state:${mediaType}:${mediaId}`;
+  const accountStateQuery = useCachedQuery(
+    accountStateKey,
+    (signal) => tmdbService.getMediaAccountState(mediaType, mediaId, sessionId, signal),
+    { enabled: isConnected && Boolean(account) },
+  );
+  const [stateOverride, setStateOverride] = useState<{
+    key: string;
+    value: TMDBMediaAccountState;
+  } | null>(null);
+  const accountState = stateOverride?.key === accountStateKey
+    ? stateOverride.value
+    : accountStateQuery.data;
 
   if (!isConnected || !account) {
     return (
-      <p className="text-center text-xs text-muted-foreground">
+      <p className="text-xs text-muted-foreground">
         <Link to="/account/watchlist" className="text-primary underline-offset-4 hover:underline">
           Connect a TMDB account
         </Link>
@@ -29,7 +44,9 @@ export function AccountMediaActions({ mediaId, mediaType }: AccountMediaActionsP
     );
   }
 
-  const handleAction = async (action: 'watchlist' | 'favorite', enabled: boolean) => {
+  const handleAction = async (action: 'watchlist' | 'favorite') => {
+    if (!accountState) return;
+    const enabled = !accountState[action];
     setPendingAction(action);
     try {
       if (action === 'watchlist') {
@@ -38,7 +55,15 @@ export function AccountMediaActions({ mediaId, mediaType }: AccountMediaActionsP
         await tmdbService.setAccountFavorite(account.id, mediaType, mediaId, enabled, sessionId);
       }
       clearRequestCache('account:');
-      toast({ title: action === 'watchlist' ? 'Watchlist updated' : 'Favorites updated' });
+      setStateOverride({
+        key: accountStateKey,
+        value: { ...accountState, [action]: enabled },
+      });
+      toast({
+        title: action === 'watchlist'
+          ? enabled ? 'Added to watchlist' : 'Removed from watchlist'
+          : enabled ? 'Added to favorites' : 'Removed from favorites',
+      });
     } catch (error) {
       toast({
         title: 'Could not update your TMDB account',
@@ -50,14 +75,17 @@ export function AccountMediaActions({ mediaId, mediaType }: AccountMediaActionsP
     }
   };
 
-  const handleRating = async (event: FormEvent<HTMLFormElement>) => {
-    event.preventDefault();
-    const formData = new FormData(event.currentTarget);
-    const rating = Number(formData.get('rating'));
+  const handleRating = async (rating: number) => {
+    if (!accountState) return;
+    const currentState = accountState;
     setPendingAction('rating');
     try {
       await tmdbService.rateMedia(mediaType, mediaId, rating, sessionId);
       clearRequestCache('account:');
+      setStateOverride({
+        key: accountStateKey,
+        value: { ...currentState, rated: { value: rating } },
+      });
       toast({ title: 'Rating saved' });
     } catch (error) {
       toast({
@@ -71,29 +99,50 @@ export function AccountMediaActions({ mediaId, mediaType }: AccountMediaActionsP
   };
 
   return (
-    <section aria-label="TMDB account actions" className="space-y-2">
-      <div className="grid grid-cols-2 gap-2">
-        <Button type="button" variant="outline" className="w-full" disabled={pendingAction !== null} onClick={() => void handleAction('watchlist', true)}>
-          Add to watchlist
-        </Button>
-        <Button type="button" variant="outline" className="w-full" disabled={pendingAction !== null} onClick={() => void handleAction('favorite', true)}>
-          Add to favorites
-        </Button>
-      </div>
-      <form onSubmit={(event) => void handleRating(event)} className="flex gap-2">
-        <label className="sr-only" htmlFor={`account-rate-${mediaType}-${mediaId}`}>Your rating</label>
+    <section aria-label="TMDB account actions" className="flex flex-wrap items-center gap-2">
+      <Button
+        type="button"
+        variant={accountState?.watchlist ? 'secondary' : 'outline'}
+        size="sm"
+        className="gap-1.5"
+        aria-pressed={accountState?.watchlist ?? false}
+        disabled={pendingAction !== null || !accountState}
+        onClick={() => void handleAction('watchlist')}
+      >
+        {accountState?.watchlist
+          ? <BookmarkCheck aria-hidden="true" className="h-4 w-4" />
+          : <BookmarkPlus aria-hidden="true" className="h-4 w-4" />}
+        {accountState?.watchlist ? 'In watchlist' : 'Watchlist'}
+      </Button>
+      <Button
+        type="button"
+        variant={accountState?.favorite ? 'secondary' : 'outline'}
+        size="sm"
+        className={accountState?.favorite ? 'gap-1.5 text-rose-600 dark:text-rose-400' : 'gap-1.5'}
+        aria-pressed={accountState?.favorite ?? false}
+        disabled={pendingAction !== null || !accountState}
+        onClick={() => void handleAction('favorite')}
+      >
+        <Heart aria-hidden="true" className={`h-4 w-4${accountState?.favorite ? ' fill-current' : ''}`} />
+        {accountState?.favorite ? 'Favorited' : 'Favorite'}
+      </Button>
+      {accountStateQuery.error ? (
+        <span role="alert" className="text-xs text-destructive">Account status unavailable.</span>
+      ) : (
+        <label className="sr-only" htmlFor={`account-rate-${mediaType}-${mediaId}`}>Rate this {mediaType === 'tv' ? 'show' : 'movie'}</label>
+      )}
+      {!accountStateQuery.error && (
         <select
           id={`account-rate-${mediaType}-${mediaId}`}
-          name="rating"
-          defaultValue=""
-          required
-          className="h-9 min-w-0 flex-1 rounded-md border border-input bg-background px-2 text-sm"
+          value={accountState?.rated ? String(accountState.rated.value) : ''}
+          disabled={pendingAction !== null || !accountState}
+          onChange={(event) => void handleRating(Number(event.currentTarget.value))}
+          className="h-8 w-32 rounded-md border border-input bg-background px-2 text-sm"
         >
-          <option value="" disabled>Rate this {mediaType === 'tv' ? 'show' : 'movie'}</option>
+          <option value="" disabled>{accountStateQuery.loading ? 'Loading…' : 'Rate…'}</option>
           {ratingValues.map((rating) => <option key={rating} value={rating}>{rating.toFixed(1)} / 10</option>)}
         </select>
-        <Button type="submit" variant="outline" disabled={pendingAction !== null}>Rate</Button>
-      </form>
+      )}
     </section>
   );
 }

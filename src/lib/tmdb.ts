@@ -343,6 +343,11 @@ export interface TMDBAccount {
 
 export type TMDBAccountSection = 'watchlist' | 'favorites' | 'ratings';
 export type TMDBAccountMedia = (Movie | TVShow) & { rating?: number };
+export interface TMDBMediaAccountState {
+  favorite: boolean;
+  watchlist: boolean;
+  rated: false | { value: number };
+}
 
 export type TMDBErrorCode =
   | 'AUTHENTICATION_ERROR'
@@ -651,6 +656,18 @@ class TMDBService {
         : `rated/${mediaPath}`;
     return this.fetchFromTMDB(
       `/account/${accountId}/${sectionPath}?page=${page}&sort_by=created_at.desc`,
+      { sessionId, signal },
+    );
+  }
+
+  async getMediaAccountState(
+    mediaType: 'movie' | 'tv',
+    mediaId: number,
+    sessionId: string,
+    signal?: AbortSignal,
+  ): Promise<TMDBMediaAccountState> {
+    return this.fetchFromTMDB<TMDBMediaAccountState>(
+      `/${mediaType}/${mediaId}/account_states`,
       { sessionId, signal },
     );
   }

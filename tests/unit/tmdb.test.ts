@@ -174,6 +174,25 @@ describe('TMDB Talk-show filtering', () => {
       expect(JSON.parse(String(revokeRequest?.body))).toEqual({ session_id: 'session-id' });
     });
 
+    it('loads a media title account state for favorite, watchlist, and rating feedback', async () => {
+      const fetchMock = vi.mocked(fetch);
+      fetchMock.mockResolvedValue(responseWith({
+        favorite: true,
+        watchlist: false,
+        rated: { value: 8.5 },
+      }));
+
+      await expect(tmdbService.getMediaAccountState('movie', 200, 'session-id')).resolves.toEqual({
+        favorite: true,
+        watchlist: false,
+        rated: { value: 8.5 },
+      });
+
+      const requestUrl = new URL(String(fetchMock.mock.calls[0][0]));
+      expect(requestUrl.pathname).toBe('/3/movie/200/account_states');
+      expect(requestUrl.searchParams.get('session_id')).toBe('session-id');
+    });
+
     it('sends favorite and rating changes through TMDB account endpoints', async () => {
       const fetchMock = vi.mocked(fetch);
       fetchMock

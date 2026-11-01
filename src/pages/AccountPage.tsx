@@ -1,5 +1,6 @@
-import { useState, type FormEvent } from 'react';
+import { useState } from 'react';
 import { Link, useParams, useSearchParams } from 'react-router-dom';
+import { BookmarkX, Heart, StarOff } from 'lucide-react';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
@@ -17,8 +18,6 @@ const accountSections: { id: TMDBAccountSection; label: string }[] = [
   { id: 'favorites', label: 'Favorites' },
   { id: 'ratings', label: 'Ratings' },
 ];
-
-const ratings = Array.from({ length: 20 }, (_, index) => (index + 1) / 2);
 
 function isAccountSection(value: string | undefined): value is TMDBAccountSection {
   return accountSections.some((section) => section.id === value);
@@ -68,26 +67,6 @@ export function AccountPage() {
     } catch (error) {
       toast({
         title: 'Could not update your TMDB account',
-        description: error instanceof Error ? error.message : 'Please try again.',
-        variant: 'destructive',
-      });
-    } finally {
-      setPendingMediaId(null);
-    }
-  };
-
-  const handleUpdateRating = async (event: FormEvent<HTMLFormElement>, item: TMDBAccountMedia) => {
-    event.preventDefault();
-    const formData = new FormData(event.currentTarget);
-    const rating = Number(formData.get('rating'));
-    setPendingMediaId(item.id);
-    try {
-      await tmdbService.rateMedia(mediaType, item.id, rating, sessionId);
-      setRevision((value) => value + 1);
-      toast({ title: 'Rating saved' });
-    } catch (error) {
-      toast({
-        title: 'Could not save your rating',
         description: error instanceof Error ? error.message : 'Please try again.',
         variant: 'destructive',
       });
@@ -157,39 +136,39 @@ export function AccountPage() {
         <div className="grid grid-cols-2 gap-3 min-[360px]:grid-cols-3 sm:gap-4 sm:grid-cols-4 md:grid-cols-5 lg:grid-cols-6 xl:grid-cols-8 2xl:grid-cols-10">
           {items.map((item) => (
             <div key={item.id} className="flex min-w-0 flex-col gap-2">
-              <MediaCard item={item} type={mediaType} />
-              {section === 'ratings' && (
-                <p className="text-center text-xs text-muted-foreground">
-                  Your rating: {item.rating?.toFixed(1) ?? '—'}/10
-                </p>
-              )}
-              {section === 'ratings' ? (
-                <form onSubmit={(event) => void handleUpdateRating(event, item)} className="space-y-2">
-                  <label className="sr-only" htmlFor={`account-rating-${item.id}`}>Update your rating for {'title' in item ? item.title : item.name}</label>
-                  <select
-                    id={`account-rating-${item.id}`}
-                    name="rating"
-                    defaultValue={item.rating ? String(item.rating) : ''}
-                    required
-                    className="h-9 w-full rounded-md border border-input bg-background px-2 text-sm"
-                  >
-                    <option value="" disabled>Choose rating</option>
-                    {ratings.map((rating) => <option key={rating} value={rating}>{rating.toFixed(1)} / 10</option>)}
-                  </select>
-                  <Button type="submit" variant="outline" className="w-full" disabled={pendingMediaId === item.id}>Save rating</Button>
-                  <Button type="button" variant="ghost" className="w-full text-destructive" disabled={pendingMediaId === item.id} onClick={() => void handleRemove(item)}>Remove rating</Button>
-                </form>
-              ) : (
-                <Button
-                  type="button"
-                  variant="outline"
-                  className="w-full"
-                  disabled={pendingMediaId === item.id}
-                  onClick={() => void handleRemove(item)}
-                >
-                  Remove from {section === 'watchlist' ? 'watchlist' : 'favorites'}
-                </Button>
-              )}
+              <MediaCard
+                item={item}
+                type={mediaType}
+                metadataAction={(
+                  <div className="flex items-center gap-1">
+                    {section === 'ratings' && (
+                      <span className="text-[10px] font-medium text-muted-foreground">
+                        {item.rating?.toFixed(1) ?? '—'}
+                      </span>
+                    )}
+                    <Button
+                      type="button"
+                      variant="ghost"
+                      size="icon"
+                      className={`h-7 w-7 ${
+                        section === 'favorites' ? 'text-rose-500 hover:text-rose-400' : 'text-muted-foreground hover:text-destructive'
+                      }`}
+                      aria-label={`Remove ${'title' in item ? item.title : item.name} from ${section === 'watchlist' ? 'watchlist' : section === 'favorites' ? 'favorites' : 'ratings'}`}
+                      title={`Remove from ${section === 'watchlist' ? 'watchlist' : section === 'favorites' ? 'favorites' : 'ratings'}`}
+                      disabled={pendingMediaId === item.id}
+                      onClick={() => void handleRemove(item)}
+                    >
+                      {section === 'favorites' ? (
+                        <Heart aria-hidden="true" className="h-4 w-4 fill-current" />
+                      ) : section === 'watchlist' ? (
+                        <BookmarkX aria-hidden="true" className="h-4 w-4" />
+                      ) : (
+                        <StarOff aria-hidden="true" className="h-4 w-4" />
+                      )}
+                    </Button>
+                  </div>
+                )}
+              />
             </div>
           ))}
         </div>
