@@ -40,3 +40,9 @@
 ## Mobile Bottom Navigation
 
 * Relocate the primary navigation tabs (Movies, TV Shows, and People) from the top of the header to a bottom navigation bar specifically for mobile views to improve ergonomics and navigation reach.
+
+## TV Episode Release Calendar
+
+* Add a calendar view for upcoming TV episode air dates, inspired by TMDB's website calendar. Show a navigable date range in a seven-column week grid on larger screens, with episode title, show name, season/episode number, poster or still, and premiere/finale labels where available. Indicate overflow when a day has more episodes than can be displayed, and allow users to open the episode or TV show details.
+* Use TMDB's date-filtered TV discovery to find candidate shows, then retrieve their season episode data and group episodes by air date. Discovery returns shows rather than a complete episode schedule, so fetching must be bounded and account for pagination, API limits, missing dates, and time zones.
+* Reuse the existing TMDB service, request cache, image component, and TV episode details experience where practical. On narrow screens, present a compact agenda/list instead of forcing the desktop week grid into the viewport.
