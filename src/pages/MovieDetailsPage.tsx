@@ -43,10 +43,10 @@ export function MovieDetailsPage() {
   if (loading) {
     return (
       <div className="min-h-screen container py-6 space-y-6">
-        <Skeleton className="h-8 w-24" />
-        <div className="grid min-w-0 grid-cols-1 gap-6 md:grid-cols-[200px_minmax(0,1fr)]">
-          <Skeleton className="mx-auto aspect-[2/3] w-full max-w-[180px] md:mx-0 md:max-w-none" />
-          <div className="space-y-4">
+        <div className="grid min-w-0 grid-cols-1 gap-4 min-[360px]:grid-cols-[minmax(0,0.9fr)_minmax(0,1.1fr)] md:grid-cols-[200px_minmax(0,1fr)] md:gap-6">
+          <Skeleton className="min-[360px]:col-span-2 h-10 w-3/4 md:hidden" />
+          <Skeleton className="mx-auto aspect-[2/3] w-full max-w-[180px] min-[360px]:max-w-none md:mx-0 md:max-w-none" />
+          <div className="min-w-0 space-y-4">
             <Skeleton className="h-10 w-3/4" />
             <Skeleton className="h-6 w-1/2" />
             <Skeleton className="h-32 w-full" />
@@ -95,50 +95,51 @@ export function MovieDetailsPage() {
     <div className="min-h-screen">
       <div className="container py-6">
         
+        <div className="mb-6 min-w-0 md:hidden">
+          <h1 className="break-words text-3xl font-bold tracking-tight md:text-4xl">{movie.title}</h1>
+          {movie.tagline && (
+            <p className="mt-1 text-sm italic text-muted-foreground">"{movie.tagline}"</p>
+          )}
+        </div>
+
         {/* TOP SECTION */}
-        <div className="grid min-w-0 grid-cols-1 gap-6 md:grid-cols-[200px_minmax(0,1fr)]">
+        <div className="grid min-w-0 grid-cols-1 items-start gap-4 min-[360px]:grid-cols-[minmax(0,0.9fr)_minmax(0,1.1fr)] md:grid-cols-[200px_minmax(0,1fr)] md:gap-6">
           
-          {/* Left Column: Poster & Watch Button */}
-          <div className="mx-auto w-full max-w-[180px] space-y-4 md:mx-0 md:max-w-none">
+          {/* Poster and status */}
+          <div className="mx-auto w-full max-w-[180px] space-y-4 min-[360px]:mx-0 min-[360px]:max-w-none md:max-w-none">
             {movie.poster_path ? (
-              <TMDBImage path={movie.poster_path} alt={`${movie.title} poster`} width={500} height={750} sizes="(min-width: 768px) 200px, 180px" loading="eager" fetchPriority="high" className="block h-auto w-full max-w-full rounded-lg border shadow-sm" />
+              <TMDBImage path={movie.poster_path} alt={`${movie.title} poster`} width={500} height={750} sizes="(min-width: 768px) 200px, (min-width: 360px) 42vw, 180px" loading="eager" fetchPriority="high" className="block h-auto w-full max-w-full rounded-lg border shadow-sm" />
             ) : (
               <div role="img" aria-label={`${movie.title} poster unavailable`} className="aspect-[2/3] bg-muted rounded-lg flex items-center justify-center border shadow-sm text-center text-sm text-muted-foreground">Poster unavailable</div>
             )}
-            
             {movie.status && (
-              <div className="text-sm text-center mb-2">
+              <p className="text-center text-sm">
                 <span className="text-muted-foreground">Status: </span>
                 <span className="font-medium">{movie.status}</span>
-              </div>
+              </p>
             )}
-
             <WatchLinkButton
               links={movieLinks.map((link) => ({
                 name: link.name,
                 url: buildEmbedUrl(link.urlTemplate, movie.id, movie.external_ids?.imdb_id || ''),
               }))}
               label="Watch movie"
-              className="w-full mt-2"
+              className="w-full"
             />
             {movieLinks.length === 0 && (
               <p className="text-center text-sm text-muted-foreground">
                 Add a movie URL template in embed settings to enable playback.
               </p>
             )}
-
-           {/* NEW: Streaming Platforms Block */}
             {movie['watch/providers']?.results?.US?.flatrate && (
-              <div className="mt-6 pt-4 border-t">
-                <h3 className="text-base font-semibold mb-3">
-                  Streaming On
-                </h3>
+              <div className="border-t pt-4">
+                <h2 className="mb-3 text-base font-semibold">Streaming On</h2>
                 <div className="flex flex-wrap gap-3">
-                  {movie['watch/providers'].results.US.flatrate.map(provider => (
-                    <Link 
-                      key={provider.provider_id} 
+                  {movie['watch/providers'].results.US.flatrate.map((provider) => (
+                    <Link
+                      key={provider.provider_id}
                       to={`/category/provider-${provider.provider_id}?name=${encodeURIComponent(provider.provider_name)}`}
-                      className="hover:scale-110 hover:ring-2 hover:ring-primary rounded-xl transition-all"
+                      className="rounded-xl transition-all hover:scale-110 hover:ring-2 hover:ring-primary"
                     >
                       <TMDBImage
                         path={provider.logo_path}
@@ -147,7 +148,7 @@ export function MovieDetailsPage() {
                         height={500}
                         sizes="40px"
                         title={provider.provider_name}
-                        className="w-10 h-10 rounded-xl shadow-sm border"
+                        className="h-10 w-10 rounded-xl border shadow-sm"
                       />
                     </Link>
                   ))}
@@ -155,119 +156,77 @@ export function MovieDetailsPage() {
               </div>
             )}
           </div>
-          
-          <div className="flex min-w-0 flex-col items-start gap-8 xl:flex-row">
-            
-            {/* Middle Column: Movie Details */}
-            <div className="min-w-0 flex-1 space-y-6">
-              <div>
-                <h1 className="text-3xl md:text-4xl font-bold tracking-tight">{movie.title}</h1>
-                {movie.tagline && (
-                  <p className="text-sm italic text-muted-foreground mt-1">"{movie.tagline}"</p>
-                )}
-                
-                {directors.length > 0 && (
-                  <p className="text-sm font-medium mt-3 text-muted-foreground">
-                    Directed by{' '}
-                    {directors.map((director, idx) => (
-                      <span key={director.id}>
-                        <Link to={`/person/${director.id}`} className="text-primary hover:underline font-semibold">
-                          {director.name}
-                        </Link>
-                        {idx < directors.length - 1 ? ', ' : ''}
-                      </span>
-                    ))}
-                  </p>
-                )}
 
-                <div className="flex flex-wrap items-center gap-4 mt-3 text-sm text-muted-foreground">
-                  {releaseDate && (
-                    <div className="flex items-center gap-1">
-                      <Calendar className="h-4 w-4" />
-                      <span>{releaseDate}</span>
-                    </div>
-                  )}
-                  {movie.runtime && (
-                    <div className="flex items-center gap-1">
-                      <Clock className="h-4 w-4" />
-                      <span>{movie.runtime} min</span>
-                    </div>
-                  )}
-                  {rating !== undefined && (
-                    <div className="flex items-center gap-1">
-                      <Star className="h-4 w-4 fill-current" />
-                      <span className="font-medium text-foreground">{rating}</span>
-                      <span>({movie.vote_count.toLocaleString()})</span>
-                    </div>
-                  )}
-                </div>
+          <div className="grid min-w-0 gap-6 xl:grid-cols-[minmax(0,1fr)_400px]">
+            <div className="min-w-0 space-y-6">
+              <div className="hidden md:block">
+                <h1 className="break-words text-3xl font-bold tracking-tight">{movie.title}</h1>
+                {movie.tagline && (
+                  <p className="mt-1 text-sm italic text-muted-foreground">"{movie.tagline}"</p>
+                )}
+              </div>
+              {directors.length > 0 && (
+                <p className="mt-3 text-sm font-medium text-muted-foreground">
+                  Directed by{' '}
+                  {directors.map((director, idx) => (
+                    <span key={director.id}>
+                      <Link to={`/person/${director.id}`} className="text-primary hover:underline font-semibold">
+                        {director.name}
+                      </Link>
+                      {idx < directors.length - 1 ? ', ' : ''}
+                    </span>
+                  ))}
+                </p>
+              )}
+
+              <div className="flex flex-wrap items-center gap-4 mt-3 text-sm text-muted-foreground">
+                {releaseDate && (
+                  <div className="flex items-center gap-1">
+                    <Calendar className="h-4 w-4" />
+                    <span>{releaseDate}</span>
+                  </div>
+                )}
+                {movie.runtime && (
+                  <div className="flex items-center gap-1">
+                    <Clock className="h-4 w-4" />
+                    <span>{movie.runtime} min</span>
+                  </div>
+                )}
+                {rating !== undefined && (
+                  <div className="flex items-center gap-1">
+                    <Star className="h-4 w-4 fill-current" />
+                    <span className="font-medium text-foreground">{rating}</span>
+                    <span>({movie.vote_count.toLocaleString()})</span>
+                  </div>
+                )}
               </div>
 
               {movie.genres && movie.genres.length > 0 && (
-                <div className="flex flex-wrap gap-2">
-                  {movie.genres.map((genre) => (
-                    <Link key={genre.id} to={`/category/genre-movie-${genre.id}`} className="inline-flex">
-                      <Badge variant="secondary">{genre.name}</Badge>
-                    </Link>
-                  ))}
-                </div>
+              <div className="flex flex-wrap gap-2">
+                {movie.genres.map((genre) => (
+                  <Link key={genre.id} to={`/category/genre-movie-${genre.id}`} className="inline-flex">
+                    <Badge variant="secondary">{genre.name}</Badge>
+                  </Link>
+                ))}
+              </div>
               )}
 
               <AccountMediaActions mediaId={movie.id} mediaType="movie" mediaTitle={movie.title} />
 
               {movie.overview && (
-                <div>
-                  <h2 className="text-xl font-semibold mb-2">Overview</h2>
-                  <p className="text-muted-foreground leading-relaxed">{movie.overview}</p>
-                  
-                {/* NEW: Production Companies Block */}
-                  {movie.production_companies && movie.production_companies.length > 0 && (
-                    <div className="mt-8 pt-6 border-t">
-                      <h3 className="text-xl font-semibold mb-4">
-                        Production
-                      </h3>
-                      <div className="flex flex-wrap items-center gap-6">
-                        {movie.production_companies.map(company => (
-                          <Link 
-                            key={company.id} 
-                            to={`/category/company-${company.id}?name=${encodeURIComponent(company.name)}`}
-                            className="flex items-center group"
-                          >
-                            {company.logo_path ? (
-                              <TMDBImage
-                                path={company.logo_path}
-                                alt={company.name}
-                                width={120}
-                                height={40}
-                                sizes="120px"
-                                title={company.name}
-                                className="h-6 md:h-8 max-w-[120px] object-contain filter grayscale opacity-60 group-hover:grayscale-0 group-hover:opacity-100 group-hover:scale-105 transition-all dark:invert dark:group-hover:invert-0"
-                              />
-                            ) : (
-                              <span className="text-sm font-medium text-muted-foreground group-hover:text-primary transition-colors">
-                                {company.name}
-                              </span>
-                            )}
-                          </Link>
-                        ))}
-                      </div>
-                    </div>
-                  )}
-                </div>
-              )}  
+                <section className="hidden md:block">
+                  <h2 className="mb-2 text-xl font-semibold">Overview</h2>
+                  <p className="leading-relaxed text-muted-foreground">{movie.overview}</p>
+                </section>
+              )}
             </div>
 
-            
-
-            {/* Right Column: Trailer AND Collection Stacked */}
             {(trailer || hasCollection) && (
-              <div className="min-w-0 w-full shrink-0 flex flex-col gap-8 xl:w-[400px]">
-                
-                {/* Trailer */}
+              <div className="hidden min-w-0 space-y-8 md:block">
                 {trailer && (
-                  <div>
-                    <h2 className="text-xl font-semibold mb-2 flex items-center gap-2">
-                      <PlayCircle className="w-5 h-5" /> Trailer
+                  <section className="min-w-0">
+                    <h2 className="mb-2 flex items-center gap-2 text-xl font-semibold">
+                      <PlayCircle className="h-5 w-5" /> Trailer
                     </h2>
                     <div className="aspect-video w-full min-w-0 overflow-hidden rounded-lg border shadow-sm">
                       <iframe
@@ -280,32 +239,103 @@ export function MovieDetailsPage() {
                         className="block h-full w-full"
                       ></iframe>
                     </div>
-                  </div>
+                  </section>
                 )}
-
-                {/* Collection (Horizontal Scroll without Scrollbar) */}
                 {hasCollection && (
-                  <div className="min-w-0 w-full">
-                    <h2 className="text-xl font-semibold mb-4 line-clamp-1">
-                      More from Collection
-                    </h2>
-                    <div className="flex overflow-x-auto gap-3 pb-4 snap-x [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none]">
+                  <section className="min-w-0">
+                    <h2 className="mb-4 line-clamp-1 text-xl font-semibold">More from Collection</h2>
+                    <div className="flex gap-3 overflow-x-auto snap-x pb-4 [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none]">
                       {collection.parts
                         .sort((a, b) => new Date(a.release_date).getTime() - new Date(b.release_date).getTime())
                         .map((part) => (
                           <div key={part.id} className="w-[120px] shrink-0 snap-start">
                             <MediaCard item={part as any} type="movie" />
                           </div>
-                        ))
-                      }
+                        ))}
                     </div>
-                  </div>
+                  </section>
                 )}
               </div>
             )}
-
           </div>
         </div>
+
+        {movie.overview && (
+          <section className="mt-8 md:hidden">
+            <h2 className="mb-2 text-xl font-semibold">Overview</h2>
+            <p className="leading-relaxed text-muted-foreground">{movie.overview}</p>
+
+          </section>
+        )}
+
+        {movie.production_companies && movie.production_companies.length > 0 && (
+          <section className="mt-8 border-t pt-6">
+            <h2 className="mb-4 text-xl font-semibold">Production</h2>
+            <div className="flex flex-wrap items-center gap-6">
+              {movie.production_companies.map((company) => (
+                <Link
+                  key={company.id}
+                  to={`/category/company-${company.id}?name=${encodeURIComponent(company.name)}`}
+                  className="group flex items-center"
+                >
+                  {company.logo_path ? (
+                    <TMDBImage
+                      path={company.logo_path}
+                      alt={company.name}
+                      width={120}
+                      height={40}
+                      sizes="120px"
+                      title={company.name}
+                      className="h-6 max-w-[120px] opacity-60 grayscale transition-all group-hover:scale-105 group-hover:opacity-100 group-hover:grayscale-0 dark:invert dark:group-hover:invert-0 md:h-8"
+                    />
+                  ) : (
+                    <span className="text-sm font-medium text-muted-foreground transition-colors group-hover:text-primary">
+                      {company.name}
+                    </span>
+                  )}
+                </Link>
+              ))}
+            </div>
+          </section>
+        )}
+
+        {(trailer || hasCollection) && (
+          <div className="mt-8 grid min-w-0 gap-8 md:hidden">
+            {trailer && (
+              <section className="min-w-0">
+                <h2 className="mb-2 flex items-center gap-2 text-xl font-semibold">
+                  <PlayCircle className="h-5 w-5" /> Trailer
+                </h2>
+                <div className="aspect-video w-full min-w-0 overflow-hidden rounded-lg border shadow-sm">
+                  <iframe
+                    width="100%"
+                    height="100%"
+                    src={`https://www.youtube.com/embed/${trailer.key}`}
+                    title="Trailer"
+                    frameBorder="0"
+                    allowFullScreen
+                    className="block h-full w-full"
+                  ></iframe>
+                </div>
+              </section>
+            )}
+
+            {hasCollection && (
+              <section className="min-w-0">
+                <h2 className="mb-4 line-clamp-1 text-xl font-semibold">More from Collection</h2>
+                <div className="flex gap-3 overflow-x-auto snap-x pb-4 [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none]">
+                  {collection.parts
+                    .sort((a, b) => new Date(a.release_date).getTime() - new Date(b.release_date).getTime())
+                    .map((part) => (
+                      <div key={part.id} className="w-[120px] shrink-0 snap-start">
+                        <MediaCard item={part as any} type="movie" />
+                      </div>
+                    ))}
+                </div>
+              </section>
+            )}
+          </div>
+        )}
 
         {/* Cast and crew */}
         {(cast.length > 0 || crew.length > 0) && (

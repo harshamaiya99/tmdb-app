@@ -164,10 +164,10 @@ export function TVShowDetailsPage() {
     return (
       <div className="min-h-screen">
         <div className="container py-6 space-y-6">
-          <Skeleton className="h-8 w-24" />
-          <div className="grid min-w-0 grid-cols-1 gap-6 md:grid-cols-[200px_minmax(0,1fr)]">
-            <Skeleton className="mx-auto aspect-[2/3] w-full max-w-[180px] md:mx-0 md:max-w-none" />
-            <div className="space-y-4">
+          <div className="grid min-w-0 grid-cols-1 gap-4 min-[360px]:grid-cols-[minmax(0,0.9fr)_minmax(0,1.1fr)] md:grid-cols-[200px_minmax(0,1fr)] md:gap-6">
+            <Skeleton className="min-[360px]:col-span-2 h-10 w-3/4 md:hidden" />
+            <Skeleton className="mx-auto aspect-[2/3] w-full max-w-[180px] min-[360px]:max-w-none md:mx-0 md:max-w-none" />
+            <div className="min-w-0 space-y-4">
               <Skeleton className="h-10 w-3/4" />
               <Skeleton className="h-6 w-1/2" />
               <Skeleton className="h-32 w-full" />
@@ -237,120 +237,148 @@ export function TVShowDetailsPage() {
   return (
     <div className="min-h-screen">
       <div className="container py-6">
-        <div className="grid min-w-0 grid-cols-1 gap-6 md:grid-cols-[200px_minmax(0,1fr)]">
-          <div className="mx-auto w-full max-w-[180px] space-y-4 md:mx-0 md:max-w-none">
+        <div className="mb-6 min-w-0 md:hidden">
+          <h1 className="break-words text-3xl font-bold tracking-tight md:text-4xl">{tvShow.name}</h1>
+          {tvShow.tagline && (
+            <p className="mt-1 text-sm italic text-muted-foreground">"{tvShow.tagline}"</p>
+          )}
+        </div>
+
+        <div className="grid min-w-0 grid-cols-1 items-start gap-4 min-[360px]:grid-cols-[minmax(0,0.9fr)_minmax(0,1.1fr)] md:grid-cols-[200px_minmax(0,1fr)] md:gap-6">
+          <div className="mx-auto w-full max-w-[180px] space-y-3 min-[360px]:mx-0 min-[360px]:max-w-none md:max-w-none">
             {tvShow.poster_path ? (
-              <TMDBImage path={tvShow.poster_path} alt={`${tvShow.name} poster`} width={500} height={750} sizes="(min-width: 768px) 200px, 180px" loading="eager" fetchPriority="high" className="block h-auto w-full max-w-full rounded-lg border" />
+              <TMDBImage path={tvShow.poster_path} alt={`${tvShow.name} poster`} width={500} height={750} sizes="(min-width: 768px) 200px, (min-width: 360px) 42vw, 180px" loading="eager" fetchPriority="high" className="block h-auto w-full max-w-full rounded-lg border" />
             ) : (
               <div role="img" aria-label={`${tvShow.name} poster unavailable`} className="aspect-[2/3] bg-muted rounded-lg flex items-center justify-center text-center text-sm text-muted-foreground">Poster unavailable</div>
             )}
-            
-            <div className="space-y-2 text-sm text-center">
-              {tvShow.status && (
-                <div>
-                  <span className="text-muted-foreground">Status: </span>
-                  <span className="font-medium">{tvShow.status}</span>
-                </div>
-              )}
-              {tvShow.number_of_seasons !== undefined && (
-                <div className="flex items-center justify-center gap-1">
-                  <span className="font-medium">
-                    {tvShow.number_of_seasons} Season{tvShow.number_of_seasons !== 1 ? 's' : ''} • {' '}
-                    {tvShow.number_of_episodes} Episode{tvShow.number_of_episodes !== 1 ? 's' : ''}
-                  </span>
-                </div>
-              )}
-            </div>
-          </div>
-
-          <div className="min-w-0 space-y-8">
-            <div className="flex min-w-0 flex-col gap-6 xl:flex-row">
-              
-              <div className="min-w-0 flex-1 space-y-6">
-                <div>
-                  <h1 className="text-3xl md:text-4xl font-bold tracking-tight">{tvShow.name}</h1>
-                  {tvShow.tagline && (
-                    <p className="text-sm italic text-muted-foreground mt-1">"{tvShow.tagline}"</p>
-                  )}
-
-                  {tvShow.created_by && tvShow.created_by.length > 0 && (
-                    <p className="text-sm font-medium mt-3 text-muted-foreground">
-                      Created by{' '}
-                      {tvShow.created_by.map((creator, index) => (
-                        <span key={creator.id}>
-                          <Link to={`/person/${creator.id}`} className="text-primary hover:underline font-semibold">
-                            {creator.name}
-                          </Link>
-                          {index < (tvShow.created_by?.length ?? 0) - 1 ? ', ' : ''}
-                        </span>
-                      ))}
-                    </p>
-                  )}
-
-                  <div className="flex flex-wrap items-center gap-4 mt-3 text-sm text-muted-foreground">
-                    {firstAirYear && (
-                      <div className="flex items-center gap-1">
-                        <Calendar className="h-4 w-4" />
-                        <span>{firstAirYear}</span>
-                      </div>
-                    )}
-                    {episodeRuntime && (
-                      <div className="flex items-center gap-1">
-                        <Clock className="h-4 w-4" />
-                        <span>{episodeRuntime} min/ep</span>
-                      </div>
-                    )}
-                    {rating !== undefined && (
-                      <div className="flex items-center gap-1">
-                        <Star className="h-4 w-4 fill-current" />
-                        <span className="font-medium text-foreground">{rating}</span>
-                        <span>({tvShow.vote_count.toLocaleString()})</span>
-                      </div>
-                    )}
-                  </div>
-                </div>
-
-                {tvShow.genres && tvShow.genres.length > 0 && (
-                  <div className="flex flex-wrap gap-2">
-                    {tvShow.genres.map((genre) => (
-                      <Link key={genre.id} to={`/category/genre-tv-${genre.id}`} className="inline-flex">
-                        <Badge variant="secondary">{genre.name}</Badge>
-                      </Link>
-                    ))}
-                  </div>
+            {(tvShow.status || tvShow.number_of_seasons !== undefined) && (
+              <div className="space-y-1 text-center text-sm">
+                {tvShow.status && (
+                  <p>
+                    <span className="text-muted-foreground">Status: </span>
+                    <span className="font-medium">{tvShow.status}</span>
+                  </p>
                 )}
-
-                <AccountMediaActions mediaId={tvShow.id} mediaType="tv" mediaTitle={tvShow.name} />
-
-                {tvShow.overview && (
-                  <div>
-                    <h2 className="text-xl font-semibold mb-2">Overview</h2>
-                    <p className="text-muted-foreground leading-relaxed">{tvShow.overview}</p>
-                  </div>
+                {tvShow.number_of_seasons !== undefined && (
+                  <p className="font-medium">
+                    {tvShow.number_of_seasons} Season{tvShow.number_of_seasons !== 1 ? 's' : ''} •{' '}
+                    {tvShow.number_of_episodes} Episode{tvShow.number_of_episodes !== 1 ? 's' : ''}
+                  </p>
                 )}
               </div>
+            )}
+          </div>
 
-              {tvShow.videos?.results.find((v) => v.type === 'Trailer' && v.site === 'YouTube') && (
-                <div className="min-w-0 w-full shrink-0 xl:w-[400px]">
-                  <h2 className="text-xl font-semibold mb-2 flex items-center gap-2">
-                    <PlayCircle className="w-5 h-5" /> Trailer
-                  </h2>
-                  <div className="aspect-video w-full min-w-0 overflow-hidden rounded-lg border">
-                    <iframe
-                      width="100%"
-                      height="100%"
-                      src={`https://www.youtube.com/embed/${tvShow.videos.results.find((v) => v.type === 'Trailer' && v.site === 'YouTube')?.key}`}
-                      title="Trailer"
-                      frameBorder="0"
-                      allowFullScreen
-                      className="block h-full w-full"
-                    ></iframe>
-                  </div>
+          <div className="grid min-w-0 gap-6 xl:grid-cols-[minmax(0,1fr)_400px]">
+            <div className="min-w-0 space-y-6">
+            <div className="hidden md:block">
+              <h1 className="break-words text-3xl font-bold tracking-tight">{tvShow.name}</h1>
+              {tvShow.tagline && (
+                <p className="mt-1 text-sm italic text-muted-foreground">"{tvShow.tagline}"</p>
+              )}
+            </div>
+            {tvShow.created_by && tvShow.created_by.length > 0 && (
+              <p className="text-sm font-medium text-muted-foreground">
+                Created by{' '}
+                {tvShow.created_by.map((creator, index) => (
+                  <span key={creator.id}>
+                    <Link to={`/person/${creator.id}`} className="text-primary hover:underline font-semibold">
+                      {creator.name}
+                    </Link>
+                    {index < (tvShow.created_by?.length ?? 0) - 1 ? ', ' : ''}
+                  </span>
+                ))}
+              </p>
+            )}
+
+            <div className="flex flex-wrap items-center gap-4 text-sm text-muted-foreground">
+              {firstAirYear && (
+                <div className="flex items-center gap-1">
+                  <Calendar className="h-4 w-4" />
+                  <span>{firstAirYear}</span>
+                </div>
+              )}
+              {episodeRuntime && (
+                <div className="flex items-center gap-1">
+                  <Clock className="h-4 w-4" />
+                  <span>{episodeRuntime} min/ep</span>
+                </div>
+              )}
+              {rating !== undefined && (
+                <div className="flex items-center gap-1">
+                  <Star className="h-4 w-4 fill-current" />
+                  <span className="font-medium text-foreground">{rating}</span>
+                  <span>({tvShow.vote_count.toLocaleString()})</span>
                 </div>
               )}
             </div>
+
+            {tvShow.genres && tvShow.genres.length > 0 && (
+              <div className="flex flex-wrap gap-2">
+                {tvShow.genres.map((genre) => (
+                  <Link key={genre.id} to={`/category/genre-tv-${genre.id}`} className="inline-flex">
+                    <Badge variant="secondary">{genre.name}</Badge>
+                  </Link>
+                ))}
+              </div>
+            )}
+
+            <AccountMediaActions mediaId={tvShow.id} mediaType="tv" mediaTitle={tvShow.name} />
+
+            {tvShow.overview && (
+              <section className="hidden md:block">
+                <h2 className="mb-2 text-xl font-semibold">Overview</h2>
+                <p className="leading-relaxed text-muted-foreground">{tvShow.overview}</p>
+              </section>
+            )}
+            </div>
+
+            {tvShow.videos?.results.find((v) => v.type === 'Trailer' && v.site === 'YouTube') && (
+              <section className="hidden min-w-0 md:block">
+                <h2 className="mb-2 flex items-center gap-2 text-xl font-semibold">
+                  <PlayCircle className="h-5 w-5" /> Trailer
+                </h2>
+                <div className="aspect-video w-full min-w-0 overflow-hidden rounded-lg border">
+                  <iframe
+                    width="100%"
+                    height="100%"
+                    src={`https://www.youtube.com/embed/${tvShow.videos.results.find((v) => v.type === 'Trailer' && v.site === 'YouTube')?.key}`}
+                    title="Trailer"
+                    frameBorder="0"
+                    allowFullScreen
+                    className="block h-full w-full"
+                  ></iframe>
+                </div>
+              </section>
+            )}
           </div>
         </div>
+
+        {tvShow.overview && (
+          <section className="mt-8 md:hidden">
+            <h2 className="mb-2 text-xl font-semibold">Overview</h2>
+            <p className="leading-relaxed text-muted-foreground">{tvShow.overview}</p>
+          </section>
+        )}
+
+        {tvShow.videos?.results.find((v) => v.type === 'Trailer' && v.site === 'YouTube') && (
+          <section className="mt-8 md:hidden">
+            <h2 className="mb-2 flex items-center gap-2 text-xl font-semibold">
+              <PlayCircle className="h-5 w-5" /> Trailer
+            </h2>
+            <div className="aspect-video w-full min-w-0 overflow-hidden rounded-lg border">
+              <iframe
+                width="100%"
+                height="100%"
+                src={`https://www.youtube.com/embed/${tvShow.videos.results.find((v) => v.type === 'Trailer' && v.site === 'YouTube')?.key}`}
+                title="Trailer"
+                frameBorder="0"
+                allowFullScreen
+                className="block h-full w-full"
+              ></iframe>
+            </div>
+          </section>
+        )}
 
         {(hasCredits || hasSeasonRatings) && (
           <div className="mt-12 grid gap-6 border-t pt-8 lg:grid-cols-5">

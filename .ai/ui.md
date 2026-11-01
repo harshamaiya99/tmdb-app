@@ -166,7 +166,7 @@ On narrow screens, keep the brand/title and utility controls in one header row. 
 
 TV show details place cast and crew beside the season ratings heatmap in a 3:2 desktop layout; the sections stack on narrower screens. The heatmap remains horizontally scrollable within its panel. Episode controls stack on narrow screens, and episodes use a responsive grid with up to five cards per row on wide screens. Episode cards use a compact horizontal still-and-details layout below the `sm` breakpoint, then retain the stacked image-over-details layout on wider screens. The episode details dialog stacks its image above the text until there is enough width for a side-by-side layout.
 
-Movie and TV show detail posters are centered and capped at 180px wide on mobile so they do not dominate the viewport; at the `md` breakpoint and above, they use the existing 200px desktop column.
+Movie and TV show details keep the title and tagline together above a side-by-side poster and metadata layout on mobile screens from 360px wide. Status and TV season counts sit below the poster; movie watch and streaming controls also stay below the poster, while remaining metadata and account actions sit beside it. The overview uses the full page width on mobile and appears below the account actions in the desktop metadata column. On desktop, trailers appear in a separate right-hand column beside the metadata.
 
 ## Spacing and Typography Conventions
 
