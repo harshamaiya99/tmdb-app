@@ -1,5 +1,5 @@
 // src/pages/MovieDetailsPage.tsx
-import { useState } from 'react';
+import { useLayoutEffect, useRef, useState } from 'react';
 import { useParams, useNavigate, Link } from 'react-router-dom';
 import { Calendar, Clock, Star, PlayCircle } from 'lucide-react';
 import { Button } from '@/components/ui/button';
@@ -21,6 +21,11 @@ import { WatchLinkButton } from '@/components/WatchLinkButton';
 export function MovieDetailsPage() {
   const { id } = useParams<{ id: string }>();
   const [activeCredits, setActiveCredits] = useState<'cast' | 'crew'>('cast');
+  const [placeCompanyInfoBesideRightColumn, setPlaceCompanyInfoBesideRightColumn] = useState(false);
+  const posterColumnRef = useRef<HTMLDivElement>(null);
+  const detailsColumnRef = useRef<HTMLDivElement>(null);
+  const rightColumnRef = useRef<HTMLDivElement>(null);
+  const companyInfoRef = useRef<HTMLElement>(null);
   const { movieLinks } = useEmbedSettings();
   
   const navigate = useNavigate();
@@ -39,6 +44,48 @@ export function MovieDetailsPage() {
   const movie = movieQuery.data ?? null;
   const collection = collectionQuery.data ?? null;
   const loading = movieQuery.loading;
+  const trailer = movie?.videos?.results.find((v) => v.type === 'Trailer' && v.site === 'YouTube');
+  const hasCollection = collection && collection.parts.length > 1;
+  const hasStreamingProviders = Boolean(movie?.['watch/providers']?.results?.US?.flatrate?.length);
+  const hasProductionCompanies = Boolean(movie?.production_companies?.length);
+  const hasRightColumn = Boolean(trailer || hasCollection);
+
+  useLayoutEffect(() => {
+    const posterColumn = posterColumnRef.current;
+    const detailsColumn = detailsColumnRef.current;
+    const rightColumn = rightColumnRef.current;
+    const companyInfo = companyInfoRef.current;
+
+    if (!posterColumn || !detailsColumn || !rightColumn || !companyInfo) {
+      setPlaceCompanyInfoBesideRightColumn(false);
+      return;
+    }
+
+    const updatePlacement = () => {
+      const isWideDesktop = window.matchMedia('(min-width: 1280px)').matches;
+      const leftColumnsBottom = Math.max(
+        posterColumn.getBoundingClientRect().bottom,
+        detailsColumn.getBoundingClientRect().bottom,
+      );
+      const availableHeight = rightColumn.getBoundingClientRect().bottom - leftColumnsBottom - 24;
+      const hasRoom = isWideDesktop && availableHeight >= companyInfo.getBoundingClientRect().height;
+
+      setPlaceCompanyInfoBesideRightColumn((current) => current === hasRoom ? current : hasRoom);
+    };
+
+    updatePlacement();
+    const observer = new ResizeObserver(updatePlacement);
+    observer.observe(posterColumn);
+    observer.observe(detailsColumn);
+    observer.observe(rightColumn);
+    observer.observe(companyInfo);
+    window.addEventListener('resize', updatePlacement);
+
+    return () => {
+      observer.disconnect();
+      window.removeEventListener('resize', updatePlacement);
+    };
+  }, [movie?.id, hasCollection, hasProductionCompanies, hasStreamingProviders, trailer?.key]);
 
   if (loading) {
     return (
@@ -71,9 +118,6 @@ export function MovieDetailsPage() {
   const rating = movie.vote_average?.toFixed(1);
   const similarMovies = (movie.recommendations?.results?.length ? movie.recommendations.results : movie.similar?.results) || [];
   
-  const trailer = movie.videos?.results.find((v) => v.type === 'Trailer' && v.site === 'YouTube');
-  const hasCollection = collection && collection.parts && collection.parts.length > 1;
-
   // Sort Crew: Director First!
   const cast = movie.credits?.cast || [];
   const rawCrew = movie.credits?.crew || [];
@@ -103,10 +147,10 @@ export function MovieDetailsPage() {
         </div>
 
         {/* TOP SECTION */}
-        <div className="grid min-w-0 grid-cols-1 items-start gap-4 min-[360px]:grid-cols-[minmax(0,0.9fr)_minmax(0,1.1fr)] md:grid-cols-[200px_minmax(0,1fr)] md:gap-6">
+        <div className={`grid min-w-0 grid-cols-1 items-start gap-4 min-[360px]:grid-cols-[minmax(0,0.9fr)_minmax(0,1.1fr)] md:grid-cols-[200px_minmax(0,1fr)] md:gap-6${hasRightColumn ? ' xl:grid-cols-[200px_minmax(0,1fr)_400px]' : ' xl:grid-cols-[200px_minmax(0,1fr)]'}`}>
           
           {/* Poster and movie actions */}
-          <div className="mx-auto w-full max-w-[180px] space-y-4 min-[360px]:mx-0 min-[360px]:max-w-none md:max-w-none">
+          <div ref={posterColumnRef} className="mx-auto w-full max-w-[180px] space-y-4 min-[360px]:mx-0 min-[360px]:max-w-none md:max-w-none xl:col-start-1 xl:row-start-1 xl:self-start">
             {movie.poster_path ? (
               <TMDBImage path={movie.poster_path} alt={`${movie.title} poster`} width={500} height={750} sizes="(min-width: 768px) 200px, (min-width: 360px) 42vw, 180px" loading="eager" fetchPriority="high" className="block h-auto w-full max-w-full rounded-lg border shadow-sm" />
             ) : (
@@ -128,8 +172,8 @@ export function MovieDetailsPage() {
             )}
           </div>
 
-          <div className="contents md:grid md:min-w-0 md:grid-cols-1 md:gap-y-4 xl:grid-cols-[minmax(0,1fr)_400px] xl:gap-6">
-            <div className="contents md:col-start-1 md:row-start-1 md:flex md:flex-col md:gap-4">
+          <div className="contents md:grid md:min-w-0 md:grid-cols-1 md:gap-y-4 xl:contents">
+            <div ref={detailsColumnRef} className="contents md:col-start-1 md:row-start-1 md:flex md:flex-col md:gap-4 xl:col-start-2 xl:row-start-1 xl:self-start">
             <div className="min-w-0 space-y-6 min-[360px]:col-start-2">
               <div className="hidden md:block">
                 <h1 className="break-words text-3xl font-bold tracking-tight">{movie.title}</h1>
@@ -200,7 +244,7 @@ export function MovieDetailsPage() {
             </div>
 
             {(trailer || hasCollection) && (
-              <div className="hidden min-w-0 space-y-8 md:col-start-1 md:row-start-2 md:block xl:col-start-2 xl:row-start-1">
+              <div ref={rightColumnRef} className={`hidden min-w-0 space-y-8 md:col-start-1 md:row-start-2 md:block xl:col-start-3 xl:row-start-1 xl:self-start${placeCompanyInfoBesideRightColumn ? ' xl:row-span-2' : ''}`}>
                 {trailer && (
                   <section className="min-w-0">
                     <h2 className="mb-2 flex items-center gap-2 text-xl font-semibold">
@@ -236,10 +280,12 @@ export function MovieDetailsPage() {
               </div>
             )}
           </div>
-        </div>
 
         {(movie['watch/providers']?.results?.US?.flatrate?.length || movie.production_companies?.length) && (
-          <section className="mt-8 grid gap-6 border-t pt-6 sm:grid-cols-2">
+          <section
+            ref={companyInfoRef}
+            className={`mt-4 grid gap-6 border-t pt-6 min-[360px]:col-span-2 sm:grid-cols-2 md:col-span-2 md:mt-0 xl:col-start-1 xl:row-start-2${placeCompanyInfoBesideRightColumn ? ' xl:col-span-2' : hasRightColumn ? ' xl:col-span-3' : ' xl:col-span-2'}`}
+          >
             {movie['watch/providers']?.results?.US?.flatrate && movie['watch/providers'].results.US.flatrate.length > 0 && (
               <div>
                 <h2 className="mb-3 text-xl font-semibold">Streaming On</h2>
@@ -296,6 +342,7 @@ export function MovieDetailsPage() {
             )}
           </section>
         )}
+        </div>
 
         {(trailer || hasCollection) && (
           <div className="mt-8 grid min-w-0 gap-8 md:hidden">
