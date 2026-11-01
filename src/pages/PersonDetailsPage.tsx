@@ -3,7 +3,7 @@ import { useEffect, useLayoutEffect, useRef, useState } from 'react';
 import ReactMarkdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
 import { useParams, useNavigate } from 'react-router-dom';
-import { ArrowLeft, ArrowRight, Calendar, Facebook, Film, Instagram, MapPin, Music2, Twitter, X, Youtube } from 'lucide-react';
+import { ArrowLeft, ArrowRight, Calendar, Facebook, Film, Instagram, Music2, Twitter, X, Youtube } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Skeleton } from '@/components/ui/skeleton';
 import { MediaSection } from '@/components/MediaSection';
@@ -219,38 +219,33 @@ export function PersonDetailsPage() {
   const creditLimit = creditsFullWidth ? 10 : 8;
   const movieCredits = allMovieCredits;
   const tvCredits = allTvCredits;
-  const creditsSection = (movieCredits.length > 0 || tvCredits.length > 0) && (
-    <div className="border-t pt-8 space-y-8">
-      {movieCredits.length > 0 && (
-        <MediaSection
-          title="Movies"
-          items={movieCredits}
-          type="movie"
-          className="space-y-4"
-          horizontalScroll
-          horizontalColumns={creditsFullWidth ? 10 : 8}
-          limit={movieCredits.length}
-          actionLabel="See All"
-          category={`person-${person.id}-movies`}
-          hideSeeMore={allMovieCredits.length <= creditLimit}
-        />
-      )}
-
-      {tvCredits.length > 0 && (
-        <MediaSection
-          title="TV Shows"
-          items={tvCredits}
-          type="tv"
-          className="space-y-4"
-          horizontalScroll
-          horizontalColumns={creditsFullWidth ? 10 : 8}
-          limit={tvCredits.length}
-          actionLabel="See All"
-          category={`person-${person.id}-tv`}
-          hideSeeMore={allTvCredits.length <= creditLimit}
-        />
-      )}
-    </div>
+  const movieCreditsSection = movieCredits.length > 0 && (
+    <MediaSection
+      title="Movies"
+      items={movieCredits}
+      type="movie"
+      className="space-y-4"
+      horizontalScroll
+      horizontalColumns={creditsFullWidth ? 10 : 8}
+      limit={movieCredits.length}
+      actionLabel="See All"
+      category={`person-${person.id}-movies`}
+      hideSeeMore={allMovieCredits.length <= creditLimit}
+    />
+  );
+  const tvCreditsSection = tvCredits.length > 0 && (
+    <MediaSection
+      title="TV Shows"
+      items={tvCredits}
+      type="tv"
+      className="space-y-4"
+      horizontalScroll
+      horizontalColumns={10}
+      limit={tvCredits.length}
+      actionLabel="See All"
+      category={`person-${person.id}-tv`}
+      hideSeeMore={allTvCredits.length <= 10}
+    />
   );
 
   const selectedImage = selectedImageIndex === null ? null : galleryImages[selectedImageIndex] ?? null;
@@ -262,28 +257,33 @@ export function PersonDetailsPage() {
     <div className="min-h-screen">
       <div className="container py-6">
         <div className="space-y-8">
-          <div className="grid md:grid-cols-[250px_1fr] lg:grid-cols-[300px_1fr] gap-8">
-            {/* Left Column: Profile Picture & Personal Info */}
-            <div className="space-y-6">
+          <h1 className="text-3xl font-bold tracking-tight md:hidden">
+            {person.name}
+          </h1>
+
+          <div className="grid min-w-0 grid-cols-1 items-start gap-4 min-[360px]:grid-cols-[minmax(0,0.9fr)_minmax(0,1.1fr)] md:grid-cols-[200px_minmax(0,1fr)] md:gap-6">
+            <div className="contents md:col-start-1 md:row-start-1 md:flex md:flex-col md:gap-6">
+            <div className="mx-auto w-full max-w-[180px] min-[360px]:mx-0 min-[360px]:max-w-none md:max-w-none">
               {person.profile_path ? (
                 <TMDBImage
                   path={person.profile_path}
                   alt={`${person.name} profile`}
                   width={500}
                   height={750}
-                  sizes="(min-width: 1024px) 300px, (min-width: 768px) 250px, 80vw"
+                  sizes="(min-width: 768px) 200px, (min-width: 360px) 42vw, 180px"
                   loading="eager"
                   fetchPriority="high"
-                  className="w-full rounded-xl border bg-muted shadow-sm"
+                  className="block h-auto w-full max-w-full rounded-xl border bg-muted shadow-sm"
                 />
               ) : (
-                <div className="aspect-[2/3] bg-muted rounded-xl border flex items-center justify-center">
+                <div className="aspect-[2/3] rounded-xl border bg-muted flex items-center justify-center">
                   <span role="img" aria-label={`${person.name} profile unavailable`} className="text-muted-foreground">Profile unavailable</span>
                 </div>
               )}
+            </div>
 
-              <div ref={personalInfoRef} className="space-y-4 text-sm bg-card p-4 rounded-xl border shadow-sm">
-                <h3 className="font-semibold text-lg border-b pb-2">Personal Info</h3>
+            <div ref={personalInfoRef} className="min-w-0 space-y-4 text-sm min-[360px]:col-start-2 md:col-start-1 md:row-start-2">
+                <h2 className="mb-2 text-xl font-semibold">Personal Info</h2>
 
                 <div>
                   <p className="font-medium">Known For</p>
@@ -292,7 +292,7 @@ export function PersonDetailsPage() {
 
                 {birthDate && (
                   <div>
-                    <p className="font-medium flex items-center gap-1"><Calendar className="w-4 h-4" /> Born</p>
+                    <p className="font-medium">Born</p>
                     <p className="text-muted-foreground">
                       {birthDate}
                       {birthAge !== null && <span> ({birthAge})</span>}
@@ -309,7 +309,7 @@ export function PersonDetailsPage() {
 
                 {person.place_of_birth && (
                   <div>
-                    <p className="font-medium flex items-center gap-1"><MapPin className="w-4 h-4" /> Place of Birth</p>
+                    <p className="font-medium">Place of Birth</p>
                     <p className="text-muted-foreground">{person.place_of_birth}</p>
                   </div>
                 )}
@@ -334,16 +334,13 @@ export function PersonDetailsPage() {
                     </div>
                   </div>
                 )}
-              </div>
+            </div>
             </div>
 
-            {/* Right Column: Biography & Known For Grid */}
-            <div className="min-w-0 space-y-8">
-              <div>
-                <h1 className="text-3xl md:text-5xl font-bold tracking-tight mb-6">
+            <div className="min-w-0 space-y-8 min-[360px]:col-span-2 md:col-span-1 md:col-start-2 md:row-start-1">
+                <h1 className="hidden text-3xl font-bold tracking-tight md:block">
                   {person.name}
                 </h1>
-
                 {person.biography && (
                   <div ref={biographyRef}>
                     <h2 className="text-xl font-semibold mb-3">Biography</h2>
@@ -358,12 +355,12 @@ export function PersonDetailsPage() {
                     </div>
                   </div>
                 )}
-              </div>
-              {!creditsFullWidth && creditsSection}
+              {!creditsFullWidth && movieCreditsSection}
             </div>
           </div>
 
-          {creditsFullWidth && creditsSection}
+          {creditsFullWidth && movieCreditsSection}
+          {tvCreditsSection}
 
           {galleryImages.length > 0 && (
             <LazySection>
