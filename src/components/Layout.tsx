@@ -667,12 +667,12 @@ export function Layout({ children }: LayoutProps) {
                 className="hidden"
                 onChange={(event) => void handleEmbedSettingsImport(event)}
               />
-              <div className="flex gap-2">
-                <Button type="button" variant="outline" size="sm" onClick={() => importFileInputRef.current?.click()} className="gap-2">
+              <div className="flex gap-2 rounded-md border border-border/60 bg-muted/40 p-2">
+                <Button type="button" variant="ghost" size="sm" onClick={() => importFileInputRef.current?.click()} className="gap-2">
                   <Upload className="h-4 w-4" />
                   Import JSON
                 </Button>
-                <Button type="button" variant="outline" size="sm" onClick={handleEmbedSettingsExport} className="gap-2">
+                <Button type="button" variant="ghost" size="sm" onClick={handleEmbedSettingsExport} className="gap-2">
                   <Download className="h-4 w-4" />
                   Export JSON
                 </Button>
@@ -681,11 +681,11 @@ export function Layout({ children }: LayoutProps) {
                 { mediaType: 'movie' as const, label: 'Movie', links: movieLinkInputs, placeholder: 'https://example.com/movie/{TMDB_ID}/{IMDB_ID}' },
                 { mediaType: 'tv' as const, label: 'TV', links: tvLinkInputs, placeholder: 'https://example.com/tv/{TMDB_ID}/{SEASON}/{EPISODE}' },
               ]).map(({ mediaType, label, links, placeholder }) => (
-                <section key={mediaType} className="space-y-3">
+                <section key={mediaType} className="space-y-3 rounded-lg border border-border/60 bg-card p-3">
                   <h3 className="text-sm font-semibold">{label} links</h3>
                   {links.map((link, index) => (
-                    <div key={`${mediaType}-link-${index}`} className="flex min-w-0 items-center gap-2 rounded-md border px-2 py-1.5">
-                      <h4 className="w-20 shrink-0 truncate text-xs font-medium sm:w-24">
+                    <div key={`${mediaType}-link-${index}`} className="flex min-w-0 items-center gap-2 rounded-md border border-border/60 bg-muted/40 p-1.5">
+                      <h4 className="w-20 shrink-0 truncate rounded bg-background px-2 py-1.5 text-xs font-medium text-muted-foreground sm:w-24">
                           {getEmbedLinkName(link.urlTemplate) || `Link ${index + 1}`}
                       </h4>
                       <Input
@@ -695,7 +695,7 @@ export function Layout({ children }: LayoutProps) {
                         onChange={(event) => updateEmbedLink(mediaType, index, event.target.value)}
                         placeholder={placeholder}
                         autoComplete="url"
-                        className="h-8 min-w-0"
+                        className="h-8 min-w-0 border-border/60 bg-background shadow-none"
                       />
                       <Button
                         type="button"
@@ -703,19 +703,25 @@ export function Layout({ children }: LayoutProps) {
                         size="icon"
                         onClick={() => removeEmbedLink(mediaType, index)}
                         aria-label={`Remove ${label.toLowerCase()} link ${index + 1}`}
-                        className="h-8 w-8 shrink-0"
+                        className="h-8 w-8 shrink-0 text-muted-foreground hover:bg-destructive/10 hover:text-destructive"
                       >
                         <Trash2 className="h-4 w-4" />
                       </Button>
                     </div>
                   ))}
-                  <Button type="button" variant="outline" size="sm" onClick={() => addEmbedLink(mediaType)} className="gap-2">
+                  <Button
+                    type="button"
+                    variant="outline"
+                    size="sm"
+                    onClick={() => addEmbedLink(mediaType)}
+                    className="gap-2 border-border bg-background text-foreground"
+                  >
                     <Plus className="h-4 w-4" />
                     Add {label.toLowerCase()} link
                   </Button>
                 </section>
               ))}
-              <div className="rounded-md bg-muted/50 px-3 py-2.5 text-xs leading-relaxed text-muted-foreground">
+              <div className="rounded-md border border-border/50 bg-muted/40 px-3 py-2.5 text-xs leading-relaxed text-muted-foreground">
                 Use {'{TMDB_ID}'} and {'{IMDB_ID}'} for movies. TV links also support {'{SEASON}'} and {'{EPISODE}'}. Removing all links disables that watch button; reset restores any build-time defaults.
               </div>
               {settingsError && (
