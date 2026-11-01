@@ -402,7 +402,7 @@ export function TVShowDetailsPage() {
                 aria-labelledby="season-ratings-title"
               >
                 <h2 id="season-ratings-title" className="mb-4 text-xl font-semibold">Season Ratings</h2>
-                <div className="min-h-64 w-full rounded-xl border bg-card p-4 text-card-foreground shadow-sm lg:min-h-80 lg:p-5">
+                <div className="h-[190px] w-full overflow-hidden rounded-xl border bg-card p-4 text-card-foreground shadow-sm lg:p-5">
                   <EpisodesRatingOverview tvId={tvShow.id} seasons={tvShow.seasons ?? []} />
                 </div>
               </section>
