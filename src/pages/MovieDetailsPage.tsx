@@ -328,7 +328,7 @@ export function MovieDetailsPage() {
                           height={40}
                           sizes="120px"
                           title={company.name}
-                          className="aspect-auto h-6 w-auto max-w-[120px] object-contain transition-transform group-hover:scale-105 md:h-8"
+                          className="aspect-auto h-6 w-auto max-w-[120px] object-contain transition-transform group-hover:scale-105 dark:invert md:h-8"
                         />
                       ) : (
                         <span className="text-sm font-medium text-muted-foreground transition-colors group-hover:text-primary">
