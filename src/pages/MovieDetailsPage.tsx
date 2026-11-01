@@ -174,7 +174,7 @@ export function MovieDetailsPage() {
 
           <div className="contents md:grid md:min-w-0 md:grid-cols-1 md:gap-y-4 xl:contents">
             <div ref={detailsColumnRef} className="contents md:col-start-1 md:row-start-1 md:flex md:flex-col md:gap-4 xl:col-start-2 xl:row-start-1 xl:self-start">
-            <div className="min-w-0 space-y-6 min-[360px]:col-start-2">
+            <div className="min-w-0 flex flex-col gap-6 min-[360px]:col-start-2">
               <div className="hidden md:block">
                 <h1 className="break-words text-3xl font-bold tracking-tight">{movie.title}</h1>
                 {movie.tagline && (
@@ -182,7 +182,7 @@ export function MovieDetailsPage() {
                 )}
               </div>
               {directors.length > 0 && (
-                <p className="mt-3 text-sm font-medium text-muted-foreground">
+                <p className="text-sm font-medium text-muted-foreground">
                   Directed by{' '}
                   {directors.map((director, idx) => (
                     <span key={director.id}>

@@ -256,7 +256,7 @@ export function TVShowDetailsPage() {
 
           <div className="contents md:grid md:min-w-0 md:grid-cols-1 md:gap-y-4 xl:grid-cols-[minmax(0,1fr)_400px] xl:gap-6">
             <div className="contents md:col-start-1 md:row-start-1 md:flex md:flex-col md:gap-4">
-            <div className="min-w-0 space-y-6 min-[360px]:col-start-2">
+            <div className="min-w-0 flex flex-col gap-6 min-[360px]:col-start-2">
             <div className="hidden md:block">
               <h1 className="break-words text-3xl font-bold tracking-tight">{tvShow.name}</h1>
               {tvShow.tagline && (
