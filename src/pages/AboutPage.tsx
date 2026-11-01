@@ -1,3 +1,4 @@
+import { Github } from 'lucide-react';
 import { usePageTitle } from '@/hooks/usePageTitle';
 
 export function AboutPage() {
@@ -34,7 +35,7 @@ export function AboutPage() {
             href="https://www.themoviedb.org/api-terms-of-use"
             target="_blank"
             rel="noreferrer"
-            className="text-primary underline-offset-4 hover:underline"
+            className="text-blue-600 underline-offset-4 hover:text-blue-500 hover:underline dark:text-blue-400 dark:hover:text-blue-300"
           >
             TMDB API Terms of Use
           </a>
@@ -42,11 +43,24 @@ export function AboutPage() {
             href="https://www.themoviedb.org/about/logos-attribution"
             target="_blank"
             rel="noreferrer"
-            className="text-primary underline-offset-4 hover:underline"
+            className="text-blue-600 underline-offset-4 hover:text-blue-500 hover:underline dark:text-blue-400 dark:hover:text-blue-300"
           >
             TMDB logo and attribution guidelines
           </a>
         </div>
+      </section>
+
+      <section className="rounded-lg border bg-card p-5 shadow-sm sm:p-6">
+        <h2 className="text-xl font-semibold">Project</h2>
+        <a
+          href="https://github.com/harshamaiya99/tmdb-app"
+          target="_blank"
+          rel="noreferrer"
+          className="mt-3 inline-flex items-center gap-2 text-sm text-primary underline-offset-4 hover:underline"
+        >
+          <Github className="h-4 w-4" aria-hidden="true" />
+          <span>GitHub</span>
+        </a>
       </section>
     </article>
   );
