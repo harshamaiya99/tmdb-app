@@ -6,6 +6,7 @@ const SESSION_STORAGE_KEY = 'tmdb_account_session_id';
 const ACCOUNT_ID_STORAGE_KEY = 'tmdb_account_id';
 const ACCOUNT_NAME_STORAGE_KEY = 'tmdb_account_name';
 const ACCOUNT_USERNAME_STORAGE_KEY = 'tmdb_account_username';
+const ACCOUNT_AVATAR_PATH_STORAGE_KEY = 'tmdb_account_avatar_path';
 const REQUEST_TOKEN_STORAGE_KEY = 'tmdb_account_request_token';
 const LIST_ACCESS_TOKEN_STORAGE_KEY = 'tmdb_list_access_token';
 const LIST_ACCOUNT_ID_STORAGE_KEY = 'tmdb_list_account_id';
@@ -44,9 +45,18 @@ function readSavedSession(): AccountSession | null {
   const id = Number(localStorage.getItem(ACCOUNT_ID_STORAGE_KEY));
   const name = localStorage.getItem(ACCOUNT_NAME_STORAGE_KEY) ?? '';
   const username = localStorage.getItem(ACCOUNT_USERNAME_STORAGE_KEY) ?? '';
+  const avatarPath = localStorage.getItem(ACCOUNT_AVATAR_PATH_STORAGE_KEY);
 
   if (!sessionId || !Number.isSafeInteger(id) || id <= 0 || !username) return null;
-  return { sessionId, account: { id, name, username } };
+  return {
+    sessionId,
+    account: {
+      id,
+      name,
+      username,
+      ...(avatarPath ? { avatar: { tmdb: { avatar_path: avatarPath } } } : {}),
+    },
+  };
 }
 
 function saveSession(session: AccountSession) {
@@ -55,11 +65,18 @@ function saveSession(session: AccountSession) {
     localStorage.setItem(ACCOUNT_ID_STORAGE_KEY, String(session.account.id));
     localStorage.setItem(ACCOUNT_NAME_STORAGE_KEY, session.account.name);
     localStorage.setItem(ACCOUNT_USERNAME_STORAGE_KEY, session.account.username);
+    const avatarPath = session.account.avatar?.tmdb?.avatar_path;
+    if (avatarPath) {
+      localStorage.setItem(ACCOUNT_AVATAR_PATH_STORAGE_KEY, avatarPath);
+    } else {
+      localStorage.removeItem(ACCOUNT_AVATAR_PATH_STORAGE_KEY);
+    }
   } catch (error) {
     localStorage.removeItem(SESSION_STORAGE_KEY);
     localStorage.removeItem(ACCOUNT_ID_STORAGE_KEY);
     localStorage.removeItem(ACCOUNT_NAME_STORAGE_KEY);
     localStorage.removeItem(ACCOUNT_USERNAME_STORAGE_KEY);
+    localStorage.removeItem(ACCOUNT_AVATAR_PATH_STORAGE_KEY);
     throw error;
   }
 }
@@ -69,6 +86,7 @@ function clearSavedSession() {
   localStorage.removeItem(ACCOUNT_ID_STORAGE_KEY);
   localStorage.removeItem(ACCOUNT_NAME_STORAGE_KEY);
   localStorage.removeItem(ACCOUNT_USERNAME_STORAGE_KEY);
+  localStorage.removeItem(ACCOUNT_AVATAR_PATH_STORAGE_KEY);
 }
 
 function readSavedListSession(): ListAccountSession | null {

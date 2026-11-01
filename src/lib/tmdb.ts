@@ -341,6 +341,11 @@ export interface TMDBAccount {
   id: number;
   name: string;
   username: string;
+  avatar?: {
+    tmdb?: {
+      avatar_path: string | null;
+    } | null;
+  } | null;
 }
 
 export type TMDBAccountSection = 'watchlist' | 'favorites' | 'ratings';

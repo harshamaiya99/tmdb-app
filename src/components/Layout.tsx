@@ -408,11 +408,21 @@ export function Layout({ children }: LayoutProps) {
                   type="button"
                   variant="ghost"
                   size="icon"
-                  aria-label="Settings"
-                  title="Settings"
+                  aria-label="Profile"
+                  title="Profile"
                   className="h-10 w-10"
                 >
-                  <Settings2 className="h-[1.2rem] w-[1.2rem]" />
+                  {account?.avatar?.tmdb?.avatar_path ? (
+                    <TMDBImage
+                      path={account.avatar.tmdb.avatar_path}
+                      alt=""
+                      width={40}
+                      height={40}
+                      className="h-8 w-8 rounded-full object-cover"
+                    />
+                  ) : (
+                    <UserRound className="h-[1.2rem] w-[1.2rem]" />
+                  )}
                 </Button>
               </DropdownMenu.Trigger>
               <DropdownMenu.Portal>
@@ -421,26 +431,28 @@ export function Layout({ children }: LayoutProps) {
                   sideOffset={8}
                   className="z-[60] max-h-[calc(100vh-2rem)] min-w-60 max-w-[calc(100vw-2rem)] overflow-y-auto rounded-md border bg-popover p-1 text-popover-foreground shadow-md"
                 >
-                  <DropdownMenu.Label className="px-3 py-2 text-xs font-medium text-muted-foreground">
-                    Preferences
-                  </DropdownMenu.Label>
-                  <DropdownMenu.Item
-                    onSelect={toggleTheme}
-                    className="flex min-h-10 cursor-pointer select-none items-center gap-2 rounded-sm px-3 py-2 text-sm outline-none hover:bg-accent focus:bg-accent focus:text-accent-foreground"
-                  >
-                    {theme === 'dark' ? <Sun className="h-4 w-4" /> : <Moon className="h-4 w-4" />}
-                    Switch to {theme === 'dark' ? 'light' : 'dark'} theme
-                  </DropdownMenu.Item>
-                  <DropdownMenu.Item
-                    onSelect={openEmbedSettings}
-                    className="flex min-h-10 cursor-pointer select-none items-center gap-2 rounded-sm px-3 py-2 text-sm outline-none hover:bg-accent focus:bg-accent focus:text-accent-foreground"
-                  >
-                    <Settings2 className="h-4 w-4" />
-                    Embed link settings
-                  </DropdownMenu.Item>
-                  <DropdownMenu.Separator className="my-1 h-px bg-border" />
-                  <DropdownMenu.Label className="px-3 py-2 text-xs font-medium text-muted-foreground">
-                    {isTMDBAccountConnected ? account?.username : 'TMDB account'}
+                  <DropdownMenu.Label className="flex items-center gap-3 px-3 py-3">
+                    {account?.avatar?.tmdb?.avatar_path ? (
+                      <TMDBImage
+                        path={account.avatar.tmdb.avatar_path}
+                        alt=""
+                        width={40}
+                        height={40}
+                        className="h-10 w-10 shrink-0 rounded-full object-cover"
+                      />
+                    ) : (
+                      <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-muted">
+                        <UserRound className="h-5 w-5 text-muted-foreground" />
+                      </span>
+                    )}
+                    <span className="min-w-0">
+                      <span className="block truncate text-sm font-medium text-foreground">
+                        {isTMDBAccountConnected ? account?.username : 'TMDB account'}
+                      </span>
+                      <span className="block truncate text-xs font-normal text-muted-foreground">
+                        {isTMDBAccountConnected ? account?.name || 'Connected' : 'Not connected'}
+                      </span>
+                    </span>
                   </DropdownMenu.Label>
                   {[
                     { to: '/account/watchlist', label: 'Watchlist', icon: Bookmark },
@@ -472,6 +484,24 @@ export function Layout({ children }: LayoutProps) {
                   >
                     <ListPlus className="h-4 w-4" />
                     {isListAccountConnected ? 'Disconnect custom lists' : canConnectLists ? 'Connect custom lists' : 'Configure v4 token for lists'}
+                  </DropdownMenu.Item>
+                  <DropdownMenu.Separator className="my-1 h-px bg-border" />
+                  <DropdownMenu.Label className="px-3 py-2 text-xs font-medium text-muted-foreground">
+                    System
+                  </DropdownMenu.Label>
+                  <DropdownMenu.Item
+                    onSelect={openEmbedSettings}
+                    className="flex min-h-10 cursor-pointer select-none items-center gap-2 rounded-sm px-3 py-2 text-sm outline-none hover:bg-accent focus:bg-accent focus:text-accent-foreground"
+                  >
+                    <Settings2 className="h-4 w-4" />
+                    Embed link settings
+                  </DropdownMenu.Item>
+                  <DropdownMenu.Item
+                    onSelect={toggleTheme}
+                    className="flex min-h-10 cursor-pointer select-none items-center gap-2 rounded-sm px-3 py-2 text-sm outline-none hover:bg-accent focus:bg-accent focus:text-accent-foreground"
+                  >
+                    {theme === 'dark' ? <Sun className="h-4 w-4" /> : <Moon className="h-4 w-4" />}
+                    Switch to {theme === 'dark' ? 'light' : 'dark'} theme
                   </DropdownMenu.Item>
                   <DropdownMenu.Separator className="my-1 h-px bg-border" />
                   <DropdownMenu.Item
