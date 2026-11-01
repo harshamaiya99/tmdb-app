@@ -115,6 +115,8 @@ The media browsing experience uses [src/components/MediaCard.tsx](src/components
 
 Keep people cards aligned with movie and show cards. Whenever the `MediaCard` layout or styling changes, preserve the same image aspect ratio, rounded image corners, title height, metadata spacing, and hover behavior for people cards as well. Keep the people loading skeleton in sync with the card layout.
 
+On screens from 360px wide up to the `sm` breakpoint, media grids and horizontal card rows show three cards across with tighter gaps; narrower screens retain two columns for readability. Existing tablet and desktop column counts remain unchanged. Keep loading skeleton grids aligned with these responsive card layouts.
+
 Media imagery is rendered through the shared TMDB image component, which provides responsive `srcSet` candidates, intrinsic dimensions, layout-aware `sizes`, lazy loading by default, and consistent alt text.
 
 ### Shared media sections

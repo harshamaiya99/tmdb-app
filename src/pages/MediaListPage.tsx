@@ -297,7 +297,7 @@ export function MediaListPage() {
                 No {itemType === 'tv' ? 'TV shows' : 'movies'} found for this selection.
               </div>
             ) : (
-              <div className="grid grid-cols-2 gap-4 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-8 2xl:grid-cols-10">
+              <div className="grid grid-cols-2 gap-3 min-[360px]:grid-cols-3 sm:gap-4 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-8 2xl:grid-cols-10">
                 {items.map((item) => (
                   <MediaCard key={item.id} item={item} type={itemType} />
                 ))}

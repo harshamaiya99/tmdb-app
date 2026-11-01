@@ -27,7 +27,7 @@ export function PeopleListPage() {
   return (
     <main className="container py-8">
       {peopleQuery.loading ? (
-        <div className="grid grid-cols-2 gap-4 sm:grid-cols-4 md:grid-cols-6 lg:grid-cols-8 xl:grid-cols-8 2xl:grid-cols-10">
+        <div className="grid grid-cols-2 gap-3 min-[360px]:grid-cols-3 sm:gap-4 sm:grid-cols-4 md:grid-cols-6 lg:grid-cols-8 xl:grid-cols-8 2xl:grid-cols-10">
           {Array.from({ length: 20 }).map((_, i) => (
             <div key={i} className="flex flex-col overflow-hidden rounded-lg bg-card">
               <Skeleton className="aspect-[2/3] w-full rounded-lg" />
@@ -53,7 +53,7 @@ export function PeopleListPage() {
               No people found.
             </div>
           ) : (
-            <div className="grid grid-cols-2 gap-4 sm:grid-cols-4 md:grid-cols-6 lg:grid-cols-8 xl:grid-cols-8 2xl:grid-cols-10">
+            <div className="grid grid-cols-2 gap-3 min-[360px]:grid-cols-3 sm:gap-4 sm:grid-cols-4 md:grid-cols-6 lg:grid-cols-8 xl:grid-cols-8 2xl:grid-cols-10">
               {people.map((person) => (
                 <MediaCard key={person.id} item={person} type="person" />
               ))}
