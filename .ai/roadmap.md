@@ -39,7 +39,7 @@
 
 ## Mobile Bottom Navigation
 
-* Relocate the primary navigation tabs (Movies, TV Shows, and People) from the top of the header to a bottom navigation bar specifically for mobile views to improve ergonomics and navigation reach.
+* Move the Movies, TV Shows, and People navigation from the mobile header to a fixed bottom bar across all pages using the shared app shell. Keep desktop navigation in the header, respect mobile safe areas, and ensure the bar does not obscure page content.
 
 ## TV Episode Release Calendar
 

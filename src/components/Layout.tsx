@@ -1,6 +1,6 @@
 // src/components/Layout.tsx
 import { ReactNode, useEffect, useRef, useState, type ChangeEvent, type FormEvent, type KeyboardEvent } from 'react';
-import { LogOut, Search, ArrowLeft, Settings2, X, Moon, Sun, Bookmark, Heart, Star, UserRound, ListPlus, Info, Plus, Trash2, Upload, Download } from 'lucide-react';
+import { LogOut, Search, ArrowLeft, Settings2, X, Moon, Sun, Bookmark, Heart, Star, UserRound, ListPlus, Info, Plus, Trash2, Upload, Download, Film, Tv, Users } from 'lucide-react';
 import * as DropdownMenu from '@radix-ui/react-dropdown-menu';
 import { Link, NavLink, useNavigate, useSearchParams, useLocation } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
@@ -28,9 +28,9 @@ interface LayoutProps {
 const SEARCH_ORIGIN_STORAGE_KEY = 'tmdb_search_origin';
 
 const mainNavigation = [
-  { to: '/movie', label: 'Movies' },
-  { to: '/tv', label: 'TV Shows' },
-  { to: '/person', label: 'People' },
+  { to: '/movie', label: 'Movies', icon: Film },
+  { to: '/tv', label: 'TV Shows', icon: Tv },
+  { to: '/person', label: 'People', icon: Users },
 ] as const;
 
 function SearchSuggestions({ query, onSelect }: { query: string; onSelect: () => void }) {
@@ -607,24 +607,30 @@ export function Layout({ children }: LayoutProps) {
               </DropdownMenu.Portal>
             </DropdownMenu.Root>
           </div>
-          <nav aria-label="Main navigation" className="order-2 flex w-full items-center gap-2 pb-2 md:hidden">
-            {mainNavigation.map(({ to, label }) => (
-              <NavLink
-                key={to}
-                to={to}
-                className={({ isActive }) =>
-                  `flex min-h-10 flex-1 items-center justify-center rounded-md px-3 text-sm font-medium transition-colors hover:bg-accent ${
-                    isActive ? 'bg-accent text-foreground' : 'text-muted-foreground'
-                  }`
-                }
-              >
-                {label}
-              </NavLink>
-            ))}
-          </nav>
         </div>
       </header>
-      <main className="container py-6">{children}</main>
+      <nav
+        aria-label="Mobile main navigation"
+        className="fixed inset-x-0 bottom-0 z-40 border-t bg-background/95 pb-[env(safe-area-inset-bottom)] backdrop-blur supports-[backdrop-filter]:bg-background/80 md:hidden"
+      >
+        <div className="container grid min-h-16 grid-cols-3 items-center gap-1">
+          {mainNavigation.map(({ to, label, icon: Icon }) => (
+            <NavLink
+              key={to}
+              to={to}
+              className={({ isActive }) =>
+                `flex min-h-12 flex-col items-center justify-center gap-1 rounded-md px-2 py-1 text-[11px] font-medium transition-colors hover:bg-accent ${
+                  isActive ? 'bg-accent text-foreground' : 'text-muted-foreground'
+                }`
+              }
+            >
+              <Icon aria-hidden="true" className="h-5 w-5" />
+              <span>{label}</span>
+            </NavLink>
+          ))}
+        </div>
+      </nav>
+      <main className="container py-6 pb-[calc(6rem+env(safe-area-inset-bottom))] md:pb-6">{children}</main>
       {settingsOpen && (
         <div
           className="fixed inset-0 z-[100] flex items-center justify-center bg-black/60 p-4"
