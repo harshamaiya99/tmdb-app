@@ -37,10 +37,6 @@
 * Review and rotate any TMDB app credential previously embedded in a public deployment, including credentials supplied through `VITE_TMDB_ACCESS_TOKEN`.
 * Avoid caching personalized TMDB responses in shared caches. Do not log API keys, session identifiers, access tokens, or authorization codes.
 
-## Mobile Bottom Navigation
-
-* Move the Movies, TV Shows, and People navigation from the mobile header to a fixed bottom bar across all pages using the shared app shell. Keep desktop navigation in the header, respect mobile safe areas, and ensure the bar does not obscure page content.
-
 ## TV Episode Release Calendar
 
 * Add a calendar view for upcoming TV episode air dates, inspired by TMDB's website calendar. Show a navigable date range in a seven-column week grid on larger screens, with episode title, show name, season/episode number, poster or still, and premiere/finale labels where available. Indicate overflow when a day has more episodes than can be displayed, and allow users to open the episode or TV show details.
