@@ -27,30 +27,30 @@ interface EpisodeCardProps {
 
 function EpisodeCard({ episode, tvShowName, onSelectEpisode }: EpisodeCardProps) {
   return (
-    <div className="relative min-w-0 min-h-64">
+    <div className="relative min-w-0 sm:min-h-64">
       <button
         type="button"
         onClick={() => onSelectEpisode(episode)}
-        className="group relative flex h-full w-full cursor-pointer appearance-none flex-col overflow-hidden rounded-xl border bg-card text-left text-card-foreground shadow-sm transition-[border-color,box-shadow] duration-200 hover:border-primary/50 hover:shadow-md focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
+        className="group relative flex h-full w-full cursor-pointer appearance-none flex-row overflow-hidden rounded-xl border bg-card text-left text-card-foreground shadow-sm transition-[border-color,box-shadow] duration-200 hover:border-primary/50 hover:shadow-md focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 sm:flex-col"
       >
-        <div className="relative shrink-0 overflow-hidden">
+        <div className="relative w-2/5 shrink-0 self-stretch overflow-hidden sm:w-auto">
           {episode.still_path ? (
             <TMDBImage
               path={episode.still_path}
               alt={`${tvShowName}, episode ${episode.episode_number}: ${episode.name}`}
               width={500}
               height={281}
-              sizes="(min-width: 1536px) 18vw, (min-width: 1024px) 25vw, (min-width: 640px) 33vw, 100vw"
-              className="aspect-video w-full bg-muted object-cover"
+              sizes="(min-width: 1536px) 18vw, (min-width: 1024px) 25vw, (min-width: 768px) 33vw, (min-width: 640px) 50vw, 40vw"
+              className="h-full min-h-[112px] w-full bg-muted object-cover sm:aspect-video sm:h-auto sm:min-h-0"
             />
           ) : (
-            <div role="img" aria-label={`${episode.name} still unavailable`} className="w-full aspect-video bg-muted flex items-center justify-center border-b text-sm text-muted-foreground">
+            <div role="img" aria-label={`${episode.name} still unavailable`} className="flex h-full min-h-[112px] w-full items-center justify-center bg-muted text-center text-sm text-muted-foreground sm:aspect-video sm:h-auto sm:min-h-0">
               Still unavailable
             </div>
           )}
         </div>
 
-        <div className="z-10 flex min-h-0 flex-1 flex-col bg-card p-4">
+        <div className="z-10 flex min-h-0 min-w-0 flex-1 flex-col bg-card p-3 sm:p-4">
           <h3 className="font-semibold text-base line-clamp-2 group-hover:text-primary transition-colors">
             <span className="text-muted-foreground mr-1">{episode.episode_number}.</span>
             {episode.name}
@@ -61,7 +61,7 @@ function EpisodeCard({ episode, tvShowName, onSelectEpisode }: EpisodeCardProps)
               {episode.runtime && <span>{episode.runtime} min</span>}
             </div>
           </div>
-          <p className="shrink-0 line-clamp-3 text-xs leading-relaxed text-muted-foreground">
+          <p className="shrink-0 line-clamp-2 text-xs leading-relaxed text-muted-foreground sm:line-clamp-3">
             {episode.overview || 'No overview available for this episode.'}
           </p>
         </div>
