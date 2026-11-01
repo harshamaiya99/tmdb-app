@@ -120,6 +120,9 @@ export function AccountPage() {
             <Link to={`/account/${id}?type=${mediaType}`}>{label}</Link>
           </Button>
         ))}
+        <Button asChild variant="ghost" size="sm">
+          <Link to="/account/lists">Custom lists</Link>
+        </Button>
       </nav>
 
       {listQuery.loading ? (

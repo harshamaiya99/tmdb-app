@@ -11,7 +11,7 @@ A clean, minimal web app for browsing movies, TV shows, and people with data fro
 - 📺 Explore popular and top-rated TV shows
 - 🔍 Search movies, TV shows, and people
 - 🧭 Deep-dive detail pages for movies, TV shows, and people
-- 👤 Connect a TMDB account to manage movie/TV watchlists, favorites, and ratings
+- 👤 Connect a TMDB account to manage movie/TV watchlists, favorites, and ratings, plus create private-by-default movie lists
 - 🌗 Light/dark theme toggle
 - 📲 Installable as a web app from supported browsers
 - ✨ Responsive, content-first UI with reusable cards, shared media sections, and skeleton states
@@ -49,7 +49,7 @@ A clean, minimal web app for browsing movies, TV shows, and people with data fro
 3. Open http://localhost:5173 in your browser
 
 4. Enter your TMDB API key to start browsing
-5. To use watchlists, favorites, or ratings, connect your TMDB account from the header's **Settings** menu and approve access on TMDB. This is separate from the API key login; the app never asks for your TMDB password.
+5. To use watchlists, favorites, ratings, or custom movie lists, connect your TMDB account from the header's **Settings** menu and approve access on TMDB. This is separate from the API key login; the app never asks for your TMDB password. Custom lists can be created from a movie detail page, and movies can be saved to multiple lists; each movie's list membership is shown and can be changed in the **Add to list** dialog. Lists can be managed from **Settings → Custom lists**; new lists are private by default.
 
 ### Optional embed URL templates
 
@@ -113,6 +113,7 @@ The site can be installed as an app from supported browsers when served over HTT
 │   │   ├── CreditsCarousel.tsx        # Cast and crew carousel
 │   │   ├── EpisodesRatingOverview.tsx # Episode rating visualization
 │   │   ├── AccountMediaActions.tsx    # TMDB account actions on media detail pages
+│   │   ├── AddToListButton.tsx        # Add movies to existing or new custom lists
 │   │   ├── Layout.tsx                 # App header, navigation, search, and settings menu
 │   │   ├── LazySection.tsx            # Defers section rendering until near the viewport
 │   │   ├── MediaCard.tsx              # Reusable movie, TV, and person card
@@ -149,6 +150,7 @@ The site can be installed as an app from supported browsers when served over HTT
 │   │   └── wikimedia.ts               # Wikimedia image lookup helpers
 │   └── pages/
 │       ├── AccountCallbackPage.tsx    # TMDB user authorization callback
+│       ├── AccountListsPage.tsx       # Browse, view, and manage custom lists
 │       ├── AccountPage.tsx            # Watchlists, favorites, and ratings
 │       ├── HomePage.tsx               # Home browsing and search results
 │       ├── LoginPage.tsx              # TMDB API key entry and validation

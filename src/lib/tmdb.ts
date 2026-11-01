@@ -343,6 +343,18 @@ export interface TMDBAccount {
 
 export type TMDBAccountSection = 'watchlist' | 'favorites' | 'ratings';
 export type TMDBAccountMedia = (Movie | TVShow) & { rating?: number };
+export interface TMDBUserList {
+  id: number;
+  name: string;
+  description: string;
+  item_count: number;
+  favorite_count: number;
+  poster_path: string | null;
+  iso_639_1: string;
+}
+export interface TMDBUserListDetails extends TMDBUserList {
+  items: Movie[];
+}
 export interface TMDBMediaAccountState {
   favorite: boolean;
   watchlist: boolean;
@@ -658,6 +670,86 @@ class TMDBService {
       `/account/${accountId}/${sectionPath}?page=${page}&sort_by=created_at.desc`,
       { sessionId, signal },
     );
+  }
+
+  async getAccountLists(
+    accountId: number,
+    page: number,
+    sessionId: string,
+    signal?: AbortSignal,
+  ): Promise<TrendingResponse<TMDBUserList>> {
+    return this.fetchFromTMDB<TrendingResponse<TMDBUserList>>(
+      `/account/${accountId}/lists?page=${page}`,
+      { sessionId, signal },
+    );
+  }
+
+  async getAccountUserListMemberships(
+    accountId: number,
+    sessionId: string,
+    signal?: AbortSignal,
+  ): Promise<Array<{ listId: number; mediaIds: number[] }>> {
+    const lists: TMDBUserList[] = [];
+    let totalPages = 1;
+
+    for (let page = 1; page <= totalPages && page <= 500; page += 1) {
+      const response = await this.getAccountLists(accountId, page, sessionId, signal);
+      lists.push(...response.results);
+      totalPages = Math.min(response.total_pages, 500);
+    }
+
+    const memberships: Array<{ listId: number; mediaIds: number[] }> = [];
+    for (let index = 0; index < lists.length; index += 5) {
+      const batch = lists.slice(index, index + 5);
+      const batchMemberships = await Promise.all(batch.map(async (list) => {
+        const details = await this.getUserList(list.id, sessionId, signal);
+        return { listId: list.id, mediaIds: details.items.map((item) => item.id) };
+      }));
+      memberships.push(...batchMemberships);
+    }
+
+    return memberships;
+  }
+
+  async getUserList(
+    listId: number,
+    sessionId: string,
+    signal?: AbortSignal,
+  ): Promise<TMDBUserListDetails> {
+    return this.fetchFromTMDB<TMDBUserListDetails>(`/list/${listId}`, { sessionId, signal });
+  }
+
+  async createUserList(
+    name: string,
+    description: string,
+    isPublic: boolean,
+    sessionId: string,
+  ): Promise<{ list_id: number; success: boolean }> {
+    return this.fetchFromTMDB<{ list_id: number; success: boolean }>('/list', {
+      method: 'POST',
+      sessionId,
+      body: { name, description, language: 'en', public: isPublic },
+    });
+  }
+
+  async addMediaToUserList(listId: number, mediaId: number, sessionId: string): Promise<void> {
+    await this.fetchFromTMDB(`/list/${listId}/add_item`, {
+      method: 'POST',
+      sessionId,
+      body: { media_id: mediaId },
+    });
+  }
+
+  async removeMediaFromUserList(listId: number, mediaId: number, sessionId: string): Promise<void> {
+    await this.fetchFromTMDB(`/list/${listId}/remove_item`, {
+      method: 'POST',
+      sessionId,
+      body: { media_id: mediaId },
+    });
+  }
+
+  async deleteUserList(listId: number, sessionId: string): Promise<void> {
+    await this.fetchFromTMDB(`/list/${listId}`, { method: 'DELETE', sessionId });
   }
 
   async getMediaAccountState(

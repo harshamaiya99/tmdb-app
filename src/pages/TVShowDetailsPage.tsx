@@ -320,7 +320,7 @@ export function TVShowDetailsPage() {
                   </div>
                 )}
 
-                <AccountMediaActions mediaId={tvShow.id} mediaType="tv" />
+                <AccountMediaActions mediaId={tvShow.id} mediaType="tv" mediaTitle={tvShow.name} />
 
                 {tvShow.overview && (
                   <div>

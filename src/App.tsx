@@ -10,6 +10,7 @@ import { MediaListPage } from '@/pages/MediaListPage';
 import { PeopleListPage } from '@/pages/PeopleListPage';
 import { AccountPage } from '@/pages/AccountPage';
 import { AccountCallbackPage } from '@/pages/AccountCallbackPage';
+import { AccountListsPage } from '@/pages/AccountListsPage';
 import { Toaster } from '@/components/ui/toaster';
 import { TitleProvider } from '@/contexts/TitleContext';
 import { tmdbService } from '@/lib/tmdb';
@@ -52,6 +53,8 @@ function App() {
               <Route path="/login" element={<LoginPage />} />
               <Route path="/account/callback" element={<ProtectedRoute><AccountCallbackPage /></ProtectedRoute>} />
               <Route path="/account" element={<Navigate to="/account/watchlist" replace />} />
+              <Route path="/account/lists" element={<ProtectedRoute><Layout><AccountListsPage /></Layout></ProtectedRoute>} />
+              <Route path="/account/lists/:listId" element={<ProtectedRoute><Layout><AccountListsPage /></Layout></ProtectedRoute>} />
               <Route path="/account/:section" element={<ProtectedRoute><Layout><AccountPage /></Layout></ProtectedRoute>} />
               <Route path="/movie/:id" element={<ProtectedRoute><Layout><MovieDetailsPage /></Layout></ProtectedRoute>} />
               <Route path="/tv/:id" element={<ProtectedRoute><Layout><TVShowDetailsPage /></Layout></ProtectedRoute>} />

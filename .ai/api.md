@@ -69,7 +69,7 @@ The account connection flow follows TMDB's request-token process:
 
 The session ID is a sensitive credential and is treated like a password. Users can disconnect from the Settings menu; the app asks TMDB to revoke the session and clears its local account data. This browser-only app does not send account credentials to a project backend.
 
-Account requests use the account ID and session ID with TMDB's account endpoints. The service supports movie and TV watchlists, favorites, and rated lists; reading per-title account state to show whether a title is already saved or rated; adding/removing list items; submitting half-point ratings from 0.5 to 10; and deleting ratings.
+Account requests use the account ID and session ID with TMDB's account endpoints. The service supports movie and TV watchlists, favorites, and rated lists; reading per-title account state to show whether a title is already saved or rated; adding/removing watchlist and favorite items; submitting half-point ratings from 0.5 to 10; and deleting ratings. TMDB custom lists are managed separately: users can create private-by-default movie lists, browse their lists and the `items` returned by list details, check movie membership across all account lists, add movies through `POST /list/{list_id}/add_item`, remove movies through `POST /list/{list_id}/remove_item`, and delete lists. TV shows are not added to custom lists through this API feature.
 
 ## Endpoint Categories
 

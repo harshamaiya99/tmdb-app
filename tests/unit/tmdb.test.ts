@@ -152,6 +152,46 @@ describe('TMDB Talk-show filtering', () => {
       expect(requestUrl.searchParams.get('api_key')).toBe('test-api-key');
     });
 
+    it('finds every custom list containing a movie across account-list pages', async () => {
+      const fetchMock = vi.mocked(fetch);
+      fetchMock
+        .mockResolvedValueOnce(responseWith({
+          page: 1,
+          results: [{ id: 73, name: 'Favorites' }],
+          total_pages: 2,
+          total_results: 2,
+        }))
+        .mockResolvedValueOnce(responseWith({
+          page: 2,
+          results: [{ id: 74, name: 'Watch later' }],
+          total_pages: 2,
+          total_results: 2,
+        }))
+        .mockResolvedValueOnce(responseWith({
+          id: 73,
+          items: [{ id: 200, title: 'Example movie' }],
+        }))
+        .mockResolvedValueOnce(responseWith({
+          id: 74,
+          items: [{ id: 200, title: 'Example movie' }],
+        }));
+
+      await expect(tmdbService.getAccountUserListMemberships(42, 'session-id')).resolves.toEqual([
+        { listId: 73, mediaIds: [200] },
+        { listId: 74, mediaIds: [200] },
+      ]);
+
+      const requestUrls = fetchMock.mock.calls.map(([url]) => new URL(String(url)));
+      expect(requestUrls.map((url) => url.pathname)).toEqual([
+        '/3/account/42/lists',
+        '/3/account/42/lists',
+        '/3/list/73',
+        '/3/list/74',
+      ]);
+      expect(requestUrls[1].searchParams.get('page')).toBe('2');
+      expect(requestUrls.every((url) => url.searchParams.get('session_id') === 'session-id')).toBe(true);
+    });
+
     it('loads the connected account and revokes its session when disconnected', async () => {
       const fetchMock = vi.mocked(fetch);
       fetchMock
@@ -172,6 +212,77 @@ describe('TMDB Talk-show filtering', () => {
       const revokeRequest = fetchMock.mock.calls[1][1];
       expect(revokeRequest?.method).toBe('DELETE');
       expect(JSON.parse(String(revokeRequest?.body))).toEqual({ session_id: 'session-id' });
+    });
+
+    it('manages private custom lists and their movie items', async () => {
+      const fetchMock = vi.mocked(fetch);
+      fetchMock
+        .mockResolvedValueOnce(responseWith({ page: 1, results: [], total_pages: 1, total_results: 0 }))
+        .mockResolvedValueOnce(responseWith({ list_id: 73, success: true }))
+        .mockResolvedValueOnce(responseWith({ status_code: 1, status_message: 'Success.' }))
+        .mockResolvedValueOnce(responseWith({ status_code: 1, status_message: 'Success.' }))
+        .mockResolvedValueOnce(responseWith({ status_code: 13, status_message: 'The item/record was deleted successfully.' }));
+
+      await tmdbService.getAccountLists(42, 1, 'session-id');
+      await tmdbService.createUserList('Favorites', 'A private list', false, 'session-id');
+      await tmdbService.addMediaToUserList(73, 200, 'session-id');
+      await tmdbService.removeMediaFromUserList(73, 200, 'session-id');
+      await tmdbService.deleteUserList(73, 'session-id');
+
+      const listUrl = new URL(String(fetchMock.mock.calls[0][0]));
+      expect(listUrl.pathname).toBe('/3/account/42/lists');
+      expect(listUrl.searchParams.get('page')).toBe('1');
+      expect(listUrl.searchParams.get('session_id')).toBe('session-id');
+
+      const createRequest = fetchMock.mock.calls[1][1];
+      expect(new URL(String(fetchMock.mock.calls[1][0])).pathname).toBe('/3/list');
+      expect(JSON.parse(String(createRequest?.body))).toEqual({
+        name: 'Favorites',
+        description: 'A private list',
+        language: 'en',
+        public: false,
+      });
+
+      expect(new URL(String(fetchMock.mock.calls[2][0])).pathname).toBe('/3/list/73/add_item');
+      expect(fetchMock.mock.calls[2][1]?.method).toBe('POST');
+      expect(JSON.parse(String(fetchMock.mock.calls[2][1]?.body))).toEqual({ media_id: 200 });
+      expect(new URL(String(fetchMock.mock.calls[3][0])).pathname).toBe('/3/list/73/remove_item');
+      expect(fetchMock.mock.calls[3][1]?.method).toBe('POST');
+      expect(JSON.parse(String(fetchMock.mock.calls[3][1]?.body))).toEqual({ media_id: 200 });
+      expect(new URL(String(fetchMock.mock.calls[4][0])).pathname).toBe('/3/list/73');
+      expect(fetchMock.mock.calls[4][1]?.method).toBe('DELETE');
+    });
+
+    it('loads custom list details with the connected account session', async () => {
+      const fetchMock = vi.mocked(fetch);
+      fetchMock.mockResolvedValue(responseWith({
+        id: 73,
+        name: 'Favorites',
+        description: '',
+        item_count: 1,
+        favorite_count: 0,
+        poster_path: null,
+        iso_639_1: 'en',
+        items: [{
+          id: 200,
+          title: 'Example movie',
+          poster_path: '/example.jpg',
+          backdrop_path: null,
+          overview: 'Example overview',
+          release_date: '2024-01-01',
+          vote_average: 7.5,
+          vote_count: 100,
+        }],
+      }));
+
+      await expect(tmdbService.getUserList(73, 'session-id')).resolves.toMatchObject({
+        item_count: 1,
+        items: [{ id: 200, title: 'Example movie' }],
+      });
+
+      const requestUrl = new URL(String(fetchMock.mock.calls[0][0]));
+      expect(requestUrl.pathname).toBe('/3/list/73');
+      expect(requestUrl.searchParams.get('session_id')).toBe('session-id');
     });
 
     it('loads a media title account state for favorite, watchlist, and rating feedback', async () => {

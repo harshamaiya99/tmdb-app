@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { Link } from 'react-router-dom';
 import { BookmarkCheck, BookmarkPlus, Heart } from 'lucide-react';
+import { AddToListButton } from '@/components/AddToListButton';
 import { Button } from '@/components/ui/button';
 import { useToast } from '@/components/ui/use-toast';
 import { useTMDBAccount } from '@/contexts/TMDBAccountContext';
@@ -13,9 +14,10 @@ const ratingValues = Array.from({ length: 20 }, (_, index) => (index + 1) / 2);
 interface AccountMediaActionsProps {
   mediaId: number;
   mediaType: 'movie' | 'tv';
+  mediaTitle: string;
 }
 
-export function AccountMediaActions({ mediaId, mediaType }: AccountMediaActionsProps) {
+export function AccountMediaActions({ mediaId, mediaType, mediaTitle }: AccountMediaActionsProps) {
   const { account, isConnected, sessionId } = useTMDBAccount();
   const { toast } = useToast();
   const [pendingAction, setPendingAction] = useState<'watchlist' | 'favorite' | 'rating' | null>(null);
@@ -126,6 +128,7 @@ export function AccountMediaActions({ mediaId, mediaType }: AccountMediaActionsP
         <Heart aria-hidden="true" className={`h-4 w-4${accountState?.favorite ? ' fill-current' : ''}`} />
         {accountState?.favorite ? 'Favorited' : 'Favorite'}
       </Button>
+      {mediaType === 'movie' && <AddToListButton mediaId={mediaId} mediaTitle={mediaTitle} />}
       {accountStateQuery.error ? (
         <span role="alert" className="text-xs text-destructive">Account status unavailable.</span>
       ) : (

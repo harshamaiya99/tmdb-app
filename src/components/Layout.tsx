@@ -1,6 +1,6 @@
 // src/components/Layout.tsx
 import { ReactNode, useEffect, useState, type ChangeEvent, type FormEvent, type KeyboardEvent } from 'react';
-import { LogOut, Search, ArrowLeft, Settings2, X, Moon, Sun, Bookmark, Heart, Star, UserRound } from 'lucide-react';
+import { LogOut, Search, ArrowLeft, Settings2, X, Moon, Sun, Bookmark, Heart, Star, UserRound, ListPlus } from 'lucide-react';
 import * as DropdownMenu from '@radix-ui/react-dropdown-menu';
 import { Link, NavLink, useNavigate, useSearchParams, useLocation } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
@@ -413,6 +413,7 @@ export function Layout({ children }: LayoutProps) {
                     { to: '/account/watchlist', label: 'Watchlist', icon: Bookmark },
                     { to: '/account/favorites', label: 'Favorites', icon: Heart },
                     { to: '/account/ratings', label: 'Ratings', icon: Star },
+                    { to: '/account/lists', label: 'Custom lists', icon: ListPlus },
                   ].map(({ to, label, icon: Icon }) => (
                     <DropdownMenu.Item key={to} asChild>
                       <Link
