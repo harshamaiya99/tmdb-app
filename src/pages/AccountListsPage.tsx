@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { Link, useNavigate, useParams } from 'react-router-dom';
-import { ArrowLeft, ListPlus, Trash2 } from 'lucide-react';
+import { ListPlus, Trash2 } from 'lucide-react';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
@@ -13,6 +13,13 @@ import { usePagination } from '@/hooks/usePagination';
 import { clearRequestCache } from '@/lib/requestCache';
 import { tmdbService } from '@/lib/tmdb';
 import { useToast } from '@/components/ui/use-toast';
+
+const accountNavigation = [
+  { to: '/account/watchlist', label: 'Watchlist' },
+  { to: '/account/favorites', label: 'Favorites' },
+  { to: '/account/ratings', label: 'Ratings' },
+  { to: '/account/lists', label: 'Custom lists' },
+];
 
 export function AccountListsPage() {
   const { listId: listIdParam } = useParams<{ listId?: string }>();
@@ -99,12 +106,11 @@ export function AccountListsPage() {
       <main className="container space-y-6 py-6">
         <div className="flex flex-wrap items-end justify-between gap-4">
           <div className="min-w-0">
-            <Link to="/account/lists" className="mb-2 inline-flex items-center gap-1 text-sm text-muted-foreground hover:text-foreground">
-              <ArrowLeft aria-hidden="true" className="h-4 w-4" />
-              Your Lists
-            </Link>
-            <p className="text-sm text-muted-foreground">TMDB account · {account.username}</p>
-            <h1 className="mt-1 break-words text-3xl font-bold tracking-tight">{list?.name ?? 'List'}</h1>
+            <h1 className="flex flex-wrap items-baseline gap-x-2 break-words text-3xl font-bold tracking-tight">
+              <Link to="/account/lists" className="text-muted-foreground hover:text-foreground">Your Lists</Link>
+              <span aria-hidden="true" className="text-muted-foreground">&gt;</span>
+              <span>{list?.name ?? 'List'}</span>
+            </h1>
             {list?.description && <p className="mt-2 max-w-2xl text-sm text-muted-foreground">{list.description}</p>}
           </div>
           <Button type="button" variant="outline" className="gap-2 text-destructive" disabled={isDeleting} onClick={() => void handleDeleteList()}>
@@ -112,6 +118,14 @@ export function AccountListsPage() {
             Delete list
           </Button>
         </div>
+
+        <nav aria-label="Account lists" className="flex flex-wrap gap-2 border-b pb-3">
+          {accountNavigation.map(({ to, label }) => (
+            <Button key={to} asChild variant={to === '/account/lists' ? 'secondary' : 'ghost'} size="sm">
+              <Link to={to}>{label}</Link>
+            </Button>
+          ))}
+        </nav>
 
         {detailQuery.loading ? (
           <MediaGridSkeleton />
@@ -155,16 +169,10 @@ export function AccountListsPage() {
   return (
     <main className="container space-y-6 py-6">
       <div>
-        <p className="text-sm text-muted-foreground">TMDB account · {account.username}</p>
-        <h1 className="mt-1 text-3xl font-bold tracking-tight">Your Lists</h1>
+        <h1 className="text-3xl font-bold tracking-tight">Your Lists</h1>
       </div>
       <nav aria-label="Account lists" className="flex flex-wrap gap-2 border-b pb-3">
-        {[
-          { to: '/account/watchlist', label: 'Watchlist' },
-          { to: '/account/favorites', label: 'Favorites' },
-          { to: '/account/ratings', label: 'Ratings' },
-          { to: '/account/lists', label: 'Custom lists' },
-        ].map(({ to, label }) => (
+        {accountNavigation.map(({ to, label }) => (
           <Button key={to} asChild variant={to === '/account/lists' ? 'secondary' : 'ghost'} size="sm">
             <Link to={to}>{label}</Link>
           </Button>

@@ -140,7 +140,7 @@ export function AccountMediaActions({ mediaId, mediaType, mediaTitle }: AccountM
           value={accountState?.rated ? String(accountState.rated.value) : ''}
           disabled={pendingAction !== null || !accountState}
           onChange={(event) => void handleRating(Number(event.currentTarget.value))}
-          className="h-8 w-32 rounded-md border border-input bg-background px-2 text-sm"
+          className="h-8 w-32 rounded-md border border-input bg-background px-2 text-xs"
         >
           <option value="" disabled>{accountStateQuery.loading ? 'Loading…' : 'Rate…'}</option>
           {ratingValues.map((rating) => <option key={rating} value={rating}>{rating.toFixed(1)} / 10</option>)}

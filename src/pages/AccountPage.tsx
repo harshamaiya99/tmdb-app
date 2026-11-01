@@ -31,36 +31,54 @@ export function AccountPage() {
   const [searchParams, setSearchParams] = useSearchParams();
   const { page, setPage } = usePagination();
   const [revision, setRevision] = useState(0);
-  const [pendingMediaId, setPendingMediaId] = useState<number | null>(null);
-  const mediaType = searchParams.get('type') === 'tv' ? 'tv' : 'movie';
+  const [pendingMediaKey, setPendingMediaKey] = useState<string | null>(null);
+  const selectedMediaType = searchParams.get('type');
+  const mediaType = selectedMediaType === 'movie' || selectedMediaType === 'tv' ? selectedMediaType : 'all';
   const pageTitle = section === 'watchlist' ? 'Your Watchlist' : section === 'favorites' ? 'Your Favorites' : 'Your Ratings';
   usePageTitle(pageTitle);
 
-  const listQuery = useCachedQuery(
-    `account:${account?.id ?? 'none'}:${section}:${mediaType}:${page}:${revision}`,
-    (signal) => tmdbService.getAccountList(account?.id ?? 0, section, mediaType, page, sessionId, signal),
-    { enabled: isConnected && Boolean(account) },
+  const movieQuery = useCachedQuery(
+    `account:${account?.id ?? 'none'}:${section}:movie:${page}:${revision}`,
+    (signal) => tmdbService.getAccountList(account?.id ?? 0, section, 'movie', page, sessionId, signal),
+    { enabled: isConnected && Boolean(account) && mediaType !== 'tv' },
   );
-  const items = listQuery.data?.results ?? [];
-  const totalPages = Math.min(listQuery.data?.total_pages ?? 1, 500);
+  const tvQuery = useCachedQuery(
+    `account:${account?.id ?? 'none'}:${section}:tv:${page}:${revision}`,
+    (signal) => tmdbService.getAccountList(account?.id ?? 0, section, 'tv', page, sessionId, signal),
+    { enabled: isConnected && Boolean(account) && mediaType !== 'movie' },
+  );
+  const loading = movieQuery.loading || tvQuery.loading;
+  const error = movieQuery.error ?? tvQuery.error;
+  const items = [
+    ...(mediaType !== 'tv' ? (movieQuery.data?.results ?? []).map((item) => ({ item, mediaType: 'movie' as const })) : []),
+    ...(mediaType !== 'movie' ? (tvQuery.data?.results ?? []).map((item) => ({ item, mediaType: 'tv' as const })) : []),
+  ];
+  const totalPages = Math.min(
+    Math.max(
+      mediaType !== 'tv' ? movieQuery.data?.total_pages ?? 1 : 1,
+      mediaType !== 'movie' ? tvQuery.data?.total_pages ?? 1 : 1,
+    ),
+    500,
+  );
 
-  const handleMediaTypeChange = (nextType: 'movie' | 'tv') => {
+  const handleMediaTypeChange = (nextType: 'all' | 'movie' | 'tv') => {
     const nextParams = new URLSearchParams(searchParams);
-    nextParams.set('type', nextType);
+    if (nextType === 'all') nextParams.delete('type');
+    else nextParams.set('type', nextType);
     nextParams.delete('page');
     setSearchParams(nextParams);
   };
 
-  const handleRemove = async (item: TMDBAccountMedia) => {
+  const handleRemove = async (item: TMDBAccountMedia, itemMediaType: 'movie' | 'tv') => {
     if (!account) return;
-    setPendingMediaId(item.id);
+    setPendingMediaKey(`${itemMediaType}:${item.id}`);
     try {
       if (section === 'watchlist') {
-        await tmdbService.setAccountWatchlist(account.id, mediaType, item.id, false, sessionId);
+        await tmdbService.setAccountWatchlist(account.id, itemMediaType, item.id, false, sessionId);
       } else if (section === 'favorites') {
-        await tmdbService.setAccountFavorite(account.id, mediaType, item.id, false, sessionId);
+        await tmdbService.setAccountFavorite(account.id, itemMediaType, item.id, false, sessionId);
       } else {
-        await tmdbService.deleteMediaRating(mediaType, item.id, sessionId);
+        await tmdbService.deleteMediaRating(itemMediaType, item.id, sessionId);
       }
       setRevision((value) => value + 1);
       toast({ title: section === 'ratings' ? 'Rating removed' : 'Title removed' });
@@ -71,7 +89,7 @@ export function AccountPage() {
         variant: 'destructive',
       });
     } finally {
-      setPendingMediaId(null);
+      setPendingMediaKey(null);
     }
   };
 
@@ -105,10 +123,10 @@ export function AccountPage() {
     <main className="container space-y-6 py-6">
       <div className="flex flex-wrap items-end justify-between gap-4">
         <div>
-          <p className="text-sm text-muted-foreground">TMDB account · {account.username}</p>
-          <h1 className="mt-1 text-3xl font-bold tracking-tight">{pageTitle}</h1>
+          <h1 className="text-3xl font-bold tracking-tight">{pageTitle}</h1>
         </div>
         <div className="flex rounded-md border p-1" role="group" aria-label="Media type">
+          <Button type="button" size="sm" variant={mediaType === 'all' ? 'secondary' : 'ghost'} aria-pressed={mediaType === 'all'} onClick={() => handleMediaTypeChange('all')}>All</Button>
           <Button type="button" size="sm" variant={mediaType === 'movie' ? 'secondary' : 'ghost'} aria-pressed={mediaType === 'movie'} onClick={() => handleMediaTypeChange('movie')}>Movies</Button>
           <Button type="button" size="sm" variant={mediaType === 'tv' ? 'secondary' : 'ghost'} aria-pressed={mediaType === 'tv'} onClick={() => handleMediaTypeChange('tv')}>TV shows</Button>
         </div>
@@ -117,7 +135,7 @@ export function AccountPage() {
       <nav aria-label="Account lists" className="flex flex-wrap gap-2 border-b pb-3">
         {accountSections.map(({ id, label }) => (
           <Button key={id} asChild variant={section === id ? 'secondary' : 'ghost'} size="sm">
-            <Link to={`/account/${id}?type=${mediaType}`}>{label}</Link>
+            <Link to={mediaType === 'all' ? `/account/${id}` : `/account/${id}?type=${mediaType}`}>{label}</Link>
           </Button>
         ))}
         <Button asChild variant="ghost" size="sm">
@@ -125,23 +143,23 @@ export function AccountPage() {
         </Button>
       </nav>
 
-      {listQuery.loading ? (
+      {loading ? (
         <MediaGridSkeleton />
-      ) : listQuery.error ? (
+      ) : error ? (
         <Alert variant="destructive">
-          <AlertDescription>{listQuery.error.message}</AlertDescription>
+          <AlertDescription>{error.message}</AlertDescription>
         </Alert>
       ) : items.length === 0 ? (
         <div className="rounded-xl border border-dashed p-8 text-center text-sm text-muted-foreground">
-          No {mediaType === 'tv' ? 'TV shows' : 'movies'} in your {section}.
+          No {mediaType === 'all' ? 'movies or TV shows' : mediaType === 'tv' ? 'TV shows' : 'movies'} in your {section}.
         </div>
       ) : (
         <div className="grid grid-cols-2 gap-3 min-[360px]:grid-cols-3 sm:gap-4 sm:grid-cols-4 md:grid-cols-5 lg:grid-cols-6 xl:grid-cols-8 2xl:grid-cols-10">
-          {items.map((item) => (
-            <div key={item.id} className="flex min-w-0 flex-col gap-2">
+          {items.map(({ item, mediaType: itemMediaType }) => (
+            <div key={`${itemMediaType}:${item.id}`} className="flex min-w-0 flex-col gap-2">
               <MediaCard
                 item={item}
-                type={mediaType}
+                type={itemMediaType}
                 metadataAction={(
                   <div className="flex items-center gap-1">
                     {section === 'ratings' && (
@@ -158,8 +176,8 @@ export function AccountPage() {
                       }`}
                       aria-label={`Remove ${'title' in item ? item.title : item.name} from ${section === 'watchlist' ? 'watchlist' : section === 'favorites' ? 'favorites' : 'ratings'}`}
                       title={`Remove from ${section === 'watchlist' ? 'watchlist' : section === 'favorites' ? 'favorites' : 'ratings'}`}
-                      disabled={pendingMediaId === item.id}
-                      onClick={() => void handleRemove(item)}
+                      disabled={pendingMediaKey === `${itemMediaType}:${item.id}`}
+                      onClick={() => void handleRemove(item, itemMediaType)}
                     >
                       {section === 'favorites' ? (
                         <Heart aria-hidden="true" className="h-4 w-4 fill-current" />
