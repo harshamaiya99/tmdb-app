@@ -17,20 +17,20 @@ import { LazySection } from '@/components/LazySection';
 import { TMDBImage } from '@/components/TMDBImage';
 import { useEmbedSettings } from '@/contexts/EmbedSettingsContext';
 import { AccountMediaActions } from '@/components/AccountMediaActions';
+import { WatchLinkButton } from '@/components/WatchLinkButton';
 
 interface EpisodeCardProps {
   episode: Episode;
   tvShowName: string;
-  streamUrl: string;
-  onSelectEpisode: (episode: Episode, streamUrl: string) => void;
+  onSelectEpisode: (episode: Episode) => void;
 }
 
-function EpisodeCard({ episode, tvShowName, streamUrl, onSelectEpisode }: EpisodeCardProps) {
+function EpisodeCard({ episode, tvShowName, onSelectEpisode }: EpisodeCardProps) {
   return (
     <div className="relative min-w-0 min-h-64">
       <button
         type="button"
-        onClick={() => onSelectEpisode(episode, streamUrl)}
+        onClick={() => onSelectEpisode(episode)}
         className="group relative flex h-full w-full cursor-pointer appearance-none flex-col overflow-hidden rounded-xl border bg-card text-left text-card-foreground shadow-sm transition-[border-color,box-shadow] duration-200 hover:border-primary/50 hover:shadow-md focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
       >
         <div className="relative shrink-0 overflow-hidden">
@@ -71,14 +71,14 @@ function EpisodeCard({ episode, tvShowName, streamUrl, onSelectEpisode }: Episod
 }
 
 export function TVShowDetailsPage() {
-  const { tvUrlTemplate } = useEmbedSettings();
+  const { tvLinks } = useEmbedSettings();
   const { id } = useParams<{ id: string }>();
   const [searchParams, setSearchParams] = useSearchParams();
   const selectedSeason = parseInt(searchParams.get('season') || '0', 10);
   const [activeCredits, setActiveCredits] = useState<'cast' | 'crew'>('cast');
   const [activeEpisodeCredits, setActiveEpisodeCredits] = useState<'guest_stars' | 'crew'>('guest_stars');
   const [activeEpisodeMedia, setActiveEpisodeMedia] = useState<'images' | 'videos'>('images');
-  const [selectedEpisode, setSelectedEpisode] = useState<{ episode: Episode; streamUrl: string } | null>(null);
+  const [selectedEpisode, setSelectedEpisode] = useState<{ episode: Episode } | null>(null);
   const episodeDialogCloseRef = useRef<HTMLButtonElement>(null);
 
   const navigate = useNavigate();
@@ -447,22 +447,14 @@ export function TVShowDetailsPage() {
                   <Skeleton key={index} className="h-64 w-full rounded-xl" />
                 ))
               ) : (
-                episodes.map((episode) => {
-                  const imdbId = tvShow.external_ids?.imdb_id || '';
-                  const streamUrl = buildEmbedUrl(tvUrlTemplate, tvShow.id, imdbId)
-                    .replace('{SEASON}', selectedSeason.toString())
-                    .replace('{EPISODE}', episode.episode_number.toString());
-
-                  return (
-                    <EpisodeCard
-                      key={episode.id}
-                      episode={episode}
-                      tvShowName={tvShow.name}
-                      streamUrl={streamUrl}
-                      onSelectEpisode={(selected, url) => setSelectedEpisode({ episode: selected, streamUrl: url })}
-                    />
-                  );
-                })
+                episodes.map((episode) => (
+                  <EpisodeCard
+                    key={episode.id}
+                    episode={episode}
+                    tvShowName={tvShow.name}
+                    onSelectEpisode={(selected) => setSelectedEpisode({ episode: selected })}
+                  />
+                ))
               )}
 
               {!loadingEpisodes && episodes.length === 0 && (
@@ -820,25 +812,18 @@ export function TVShowDetailsPage() {
 
             </div>
             <div className="flex shrink-0 flex-col gap-3 border-t bg-card/95 p-4 backdrop-blur sm:flex-row sm:items-center sm:px-6">
-              <Button
-                asChild={selectedEpisode.streamUrl !== '#'}
+              <WatchLinkButton
+                links={tvShow ? tvLinks.map((link) => ({
+                  name: link.name,
+                  url: buildEmbedUrl(link.urlTemplate, tvShow.id, tvShow.external_ids?.imdb_id || '')
+                    .replace(/\{SEASON\}/g, selectedEpisode.episode.season_number.toString())
+                    .replace(/\{EPISODE\}/g, selectedEpisode.episode.episode_number.toString()),
+                })) : []}
+                label="Watch episode"
                 size="lg"
                 className="gap-2"
-                disabled={selectedEpisode.streamUrl === '#'}
-              >
-                {selectedEpisode.streamUrl !== '#' ? (
-                  <a href={selectedEpisode.streamUrl} target="_blank" rel="noopener noreferrer">
-                    <PlayCircle className="h-5 w-5" />
-                    Watch episode
-                  </a>
-                ) : (
-                  <>
-                    <PlayCircle className="h-5 w-5" />
-                    Watch episode
-                  </>
-                )}
-              </Button>
-              {selectedEpisode.streamUrl === '#' && (
+              />
+              {tvLinks.length === 0 && (
                 <p className="text-sm text-muted-foreground">
                   Add a TV URL template in embed settings to enable playback.
                 </p>

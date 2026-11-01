@@ -36,7 +36,7 @@ TMDB account features use an additional, optional user-consent flow. The app cre
 
 ### Environment and runtime config
 
-The app uses Vite environment variables for optional client-side integrations. `VITE_MOVIE_EMBED_URL` and `VITE_TV_EMBED_URL` provide default watch-link templates. Authenticated users can override these defaults with settings stored in the current browser. New environment variables should remain client-safe and should not be used for secrets.
+The app uses Vite environment variables for optional client-side integrations. `VITE_MOVIE_EMBED_URL` and `VITE_TV_EMBED_URL` provide default watch-link templates. Authenticated users can save multiple movie and TV link templates in the current browser; source names are derived from their URL hostnames. One configured link opens directly, while multiple links present a source menu. Settings can be exported to or imported from a versioned JSON file. Reset restores the build-time defaults. New environment variables should remain client-safe and should not be used for secrets.
 
 ## 3. Routing Model
 
@@ -158,7 +158,7 @@ The app uses [src/contexts/TitleContext.tsx](src/contexts/TitleContext.tsx) to k
 
 That title state is now wrapped by a small hook abstraction in [src/hooks/usePageTitle.ts](src/hooks/usePageTitle.ts), which keeps page-level code simpler and more consistent.
 
-The embed URL templates are shared through [src/contexts/EmbedSettingsContext.tsx](src/contexts/EmbedSettingsContext.tsx). Browser-local values override the optional Vite build-time defaults and are editable from the authenticated app header.
+The embed URL templates are shared through [src/contexts/EmbedSettingsContext.tsx](src/contexts/EmbedSettingsContext.tsx). Browser-local links override the optional Vite build-time defaults and are editable from the authenticated app header. Link names are derived from URL hostnames, and older single-template browser settings are migrated.
 
 ## 7. Data Flow
 

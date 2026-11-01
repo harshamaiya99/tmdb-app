@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { buildEmbedUrl, formatDate } from '@/lib/utils';
+import { buildEmbedUrl, formatDate, getEmbedLinkName } from '@/lib/utils';
 
 describe('formatDate', () => {
   it('formats valid dates using the shared display format', () => {
@@ -21,5 +21,15 @@ describe('buildEmbedUrl', () => {
 
   it('returns a placeholder URL when no template is configured', () => {
     expect(buildEmbedUrl(undefined, 42)).toBe('#');
+  });
+});
+
+describe('getEmbedLinkName', () => {
+  it('uses the URL hostname, without a leading www, as the link name', () => {
+    expect(getEmbedLinkName('https://www.example.com/movie/{TMDB_ID}')).toBe('example.com');
+  });
+
+  it('returns an empty name for invalid URLs', () => {
+    expect(getEmbedLinkName('not a URL')).toBe('');
   });
 });

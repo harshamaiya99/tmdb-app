@@ -16,11 +16,12 @@ import { TMDBImage } from '@/components/TMDBImage';
 import { LazySection } from '@/components/LazySection';
 import { useEmbedSettings } from '@/contexts/EmbedSettingsContext';
 import { AccountMediaActions } from '@/components/AccountMediaActions';
+import { WatchLinkButton } from '@/components/WatchLinkButton';
 
 export function MovieDetailsPage() {
   const { id } = useParams<{ id: string }>();
   const [activeCredits, setActiveCredits] = useState<'cast' | 'crew'>('cast');
-  const { movieUrlTemplate } = useEmbedSettings();
+  const { movieLinks } = useEmbedSettings();
   
   const navigate = useNavigate();
   usePageTitle('Movie Details');
@@ -112,17 +113,19 @@ export function MovieDetailsPage() {
               </div>
             )}
 
-            {(() => {
-              const streamUrl = buildEmbedUrl(movieUrlTemplate, movie.id, movie.external_ids?.imdb_id || '');
-              
-              return (
-                <Button asChild className="w-full gap-2 mt-2">
-                  <a href={streamUrl} target="_blank" rel="noopener noreferrer">
-                    <PlayCircle className="w-4 h-4" /> Watch Movie
-                  </a>
-                </Button>
-              );
-            })()}
+            <WatchLinkButton
+              links={movieLinks.map((link) => ({
+                name: link.name,
+                url: buildEmbedUrl(link.urlTemplate, movie.id, movie.external_ids?.imdb_id || ''),
+              }))}
+              label="Watch movie"
+              className="w-full mt-2"
+            />
+            {movieLinks.length === 0 && (
+              <p className="text-center text-sm text-muted-foreground">
+                Add a movie URL template in embed settings to enable playback.
+              </p>
+            )}
 
            {/* NEW: Streaming Platforms Block */}
             {movie['watch/providers']?.results?.US?.flatrate && (

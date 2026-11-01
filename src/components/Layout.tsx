@@ -1,6 +1,6 @@
 // src/components/Layout.tsx
-import { ReactNode, useEffect, useState, type ChangeEvent, type FormEvent, type KeyboardEvent } from 'react';
-import { LogOut, Search, ArrowLeft, Settings2, X, Moon, Sun, Bookmark, Heart, Star, UserRound, ListPlus, Info } from 'lucide-react';
+import { ReactNode, useEffect, useRef, useState, type ChangeEvent, type FormEvent, type KeyboardEvent } from 'react';
+import { LogOut, Search, ArrowLeft, Settings2, X, Moon, Sun, Bookmark, Heart, Star, UserRound, ListPlus, Info, Plus, Trash2, Upload, Download } from 'lucide-react';
 import * as DropdownMenu from '@radix-ui/react-dropdown-menu';
 import { Link, NavLink, useNavigate, useSearchParams, useLocation } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
@@ -11,7 +11,13 @@ import { tmdbService } from '@/lib/tmdb';
 import { TMDBImage } from '@/components/TMDBImage';
 import { useCachedQuery } from '@/hooks/useCachedQuery';
 import { useDebouncedValue } from '@/hooks/useDebouncedValue';
-import { useEmbedSettings } from '@/contexts/EmbedSettingsContext';
+import { useEmbedSettings, type EmbedLink } from '@/contexts/EmbedSettingsContext';
+import { getEmbedLinkName } from '@/lib/utils';
+import {
+  createEmbedSettingsFile,
+  isValidEmbedUrlTemplate,
+  parseEmbedSettingsFile,
+} from '@/lib/embedSettings';
 import { useToast } from '@/components/ui/use-toast';
 import { useTMDBAccount } from '@/contexts/TMDBAccountContext';
 
@@ -26,17 +32,6 @@ const mainNavigation = [
   { to: '/tv', label: 'TV Shows' },
   { to: '/person', label: 'People' },
 ] as const;
-
-function isValidEmbedUrlTemplate(template: string) {
-  if (!template.trim()) return true;
-
-  try {
-    const url = new URL(template.trim().replace(/\{(TMDB_ID|IMDB_ID|SEASON|EPISODE)\}/g, '1'));
-    return url.protocol === 'http:' || url.protocol === 'https:';
-  } catch {
-    return false;
-  }
-}
 
 function SearchSuggestions({ query, onSelect }: { query: string; onSelect: () => void }) {
   const suggestions = useCachedQuery(
@@ -119,11 +114,12 @@ export function Layout({ children }: LayoutProps) {
     isConnected: isTMDBAccountConnected,
     isListAccountConnected,
   } = useTMDBAccount();
-  const { movieUrlTemplate, tvUrlTemplate, saveSettings, resetSettings } = useEmbedSettings();
+  const { movieLinks, tvLinks, saveSettings, resetSettings } = useEmbedSettings();
   const location = useLocation();
   const [settingsOpen, setSettingsOpen] = useState(false);
-  const [movieTemplateInput, setMovieTemplateInput] = useState(movieUrlTemplate);
-  const [tvTemplateInput, setTvTemplateInput] = useState(tvUrlTemplate);
+  const importFileInputRef = useRef<HTMLInputElement>(null);
+  const [movieLinkInputs, setMovieLinkInputs] = useState<EmbedLink[]>(movieLinks.length ? movieLinks : [{ name: '', urlTemplate: '' }]);
+  const [tvLinkInputs, setTvLinkInputs] = useState<EmbedLink[]>(tvLinks.length ? tvLinks : [{ name: '', urlTemplate: '' }]);
   const [settingsError, setSettingsError] = useState('');
   const debouncedSearchQuery = useDebouncedValue(searchQuery.trim(), 120);
   const normalizedSearchQuery = searchQuery.trim();
@@ -244,25 +240,112 @@ export function Layout({ children }: LayoutProps) {
   };
 
   const openEmbedSettings = () => {
-    setMovieTemplateInput(movieUrlTemplate);
-    setTvTemplateInput(tvUrlTemplate);
+    setMovieLinkInputs(movieLinks.length ? movieLinks : [{ name: '', urlTemplate: '' }]);
+    setTvLinkInputs(tvLinks.length ? tvLinks : [{ name: '', urlTemplate: '' }]);
     setSettingsError('');
     setSettingsOpen(true);
+  };
+
+  const updateEmbedLink = (
+    mediaType: 'movie' | 'tv',
+    index: number,
+    value: string,
+  ) => {
+    const update = (links: EmbedLink[]) => links.map((link, linkIndex) => (
+      linkIndex === index ? { ...link, name: getEmbedLinkName(value), urlTemplate: value } : link
+    ));
+    if (mediaType === 'movie') {
+      setMovieLinkInputs(update);
+    } else {
+      setTvLinkInputs(update);
+    }
+  };
+
+  const addEmbedLink = (mediaType: 'movie' | 'tv') => {
+    const add = (links: EmbedLink[]) => [
+      ...links,
+      { name: '', urlTemplate: '' },
+    ];
+    if (mediaType === 'movie') {
+      setMovieLinkInputs(add);
+    } else {
+      setTvLinkInputs(add);
+    }
+  };
+
+  const removeEmbedLink = (mediaType: 'movie' | 'tv', index: number) => {
+    const remove = (links: EmbedLink[]) => {
+      const remaining = links.filter((_, linkIndex) => linkIndex !== index);
+      return remaining.length ? remaining : [{ name: '', urlTemplate: '' }];
+    };
+    if (mediaType === 'movie') {
+      setMovieLinkInputs(remove);
+    } else {
+      setTvLinkInputs(remove);
+    }
+  };
+
+  const handleEmbedSettingsImport = async (event: ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0];
+    event.target.value = '';
+    if (!file) return;
+
+    try {
+      const importedSettings = parseEmbedSettingsFile(await file.text());
+      setMovieLinkInputs(importedSettings.movieLinks.length ? importedSettings.movieLinks : [{ name: '', urlTemplate: '' }]);
+      setTvLinkInputs(importedSettings.tvLinks.length ? importedSettings.tvLinks : [{ name: '', urlTemplate: '' }]);
+      setSettingsError('');
+    } catch (error) {
+      setSettingsError(error instanceof Error ? error.message : 'Could not read the selected settings file.');
+    }
+  };
+
+  const handleEmbedSettingsExport = () => {
+    setSettingsError('');
+    try {
+      const file = new Blob(
+        [createEmbedSettingsFile(movieLinkInputs, tvLinkInputs)],
+        { type: 'application/json' },
+      );
+      const url = URL.createObjectURL(file);
+      const downloadLink = document.createElement('a');
+      downloadLink.href = url;
+      downloadLink.download = 'tmdb-embed-settings.json';
+      downloadLink.click();
+      URL.revokeObjectURL(url);
+    } catch (error) {
+      setSettingsError(error instanceof Error ? error.message : 'Could not export embed settings.');
+    }
   };
 
   const handleEmbedSettingsSubmit = (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
     setSettingsError('');
 
-    if (!isValidEmbedUrlTemplate(movieTemplateInput) || !isValidEmbedUrlTemplate(tvTemplateInput)) {
-      setSettingsError('Enter a valid http or https URL template, or leave the field blank.');
+    const movieLinksToSave = movieLinkInputs
+      .filter((link) => link.urlTemplate.trim())
+      .map((link) => ({
+        name: getEmbedLinkName(link.urlTemplate.trim()),
+        urlTemplate: link.urlTemplate.trim(),
+      }));
+    const tvLinksToSave = tvLinkInputs
+      .filter((link) => link.urlTemplate.trim())
+      .map((link) => ({
+        name: getEmbedLinkName(link.urlTemplate.trim()),
+        urlTemplate: link.urlTemplate.trim(),
+      }));
+    const hasInvalidLinks = [...movieLinksToSave, ...tvLinksToSave]
+      .some((link) => !isValidEmbedUrlTemplate(link.urlTemplate));
+
+    if (hasInvalidLinks) {
+      setSettingsError('Enter a valid http or https URL template for each link.');
       return;
     }
 
     try {
       saveSettings({
-        movieUrlTemplate: movieTemplateInput,
-        tvUrlTemplate: tvTemplateInput,
+        movieLinks: movieLinksToSave,
+        tvLinks: tvLinksToSave,
       });
       setSettingsOpen(false);
       toast({
@@ -278,8 +361,6 @@ export function Layout({ children }: LayoutProps) {
     setSettingsError('');
     try {
       resetSettings();
-      setMovieTemplateInput(import.meta.env.VITE_MOVIE_EMBED_URL ?? '');
-      setTvTemplateInput(import.meta.env.VITE_TV_EMBED_URL ?? '');
       setSettingsOpen(false);
       toast({
         title: 'Settings reset',
@@ -556,13 +637,13 @@ export function Layout({ children }: LayoutProps) {
             aria-modal="true"
             aria-labelledby="embed-settings-title"
             aria-describedby="embed-settings-description"
-            className="max-h-[calc(100vh-2rem)] w-full max-w-lg overflow-y-auto rounded-lg border bg-background p-5 shadow-lg sm:p-6"
+            className="flex max-h-[calc(100vh-2rem)] w-full max-w-lg flex-col overflow-hidden rounded-lg border bg-background p-5 shadow-lg sm:p-6"
           >
-            <div className="mb-5 flex items-start justify-between gap-4">
+            <div className="mb-5 flex shrink-0 items-start justify-between gap-4">
               <div>
                 <h2 id="embed-settings-title" className="text-lg font-semibold">Embed link settings</h2>
                 <p id="embed-settings-description" className="mt-1 text-sm leading-relaxed text-muted-foreground">
-                  Customize movie and TV watch links for this browser.
+                  Add movie and TV URLs. Each domain is used as the link name.
                 </p>
               </div>
               <Button
@@ -576,34 +657,72 @@ export function Layout({ children }: LayoutProps) {
               </Button>
             </div>
 
-            <form onSubmit={handleEmbedSettingsSubmit} className="space-y-5">
-              <div className="space-y-2">
-                <label htmlFor="movie-embed-template" className="text-sm font-medium">Movie URL template</label>
-                <Input
-                  id="movie-embed-template"
-                  value={movieTemplateInput}
-                  onChange={(event) => setMovieTemplateInput(event.target.value)}
-                  placeholder="https://example.com/movie/{TMDB_ID}/{IMDB_ID}"
-                  autoComplete="url"
-                />
+            <form onSubmit={handleEmbedSettingsSubmit} className="flex min-h-0 flex-1 flex-col">
+              <div className="min-h-0 flex-1 space-y-5 overflow-y-auto pb-5">
+              <input
+                ref={importFileInputRef}
+                type="file"
+                accept="application/json,.json"
+                aria-label="Import embed settings JSON"
+                className="hidden"
+                onChange={(event) => void handleEmbedSettingsImport(event)}
+              />
+              <div className="flex gap-2">
+                <Button type="button" variant="outline" size="sm" onClick={() => importFileInputRef.current?.click()} className="gap-2">
+                  <Upload className="h-4 w-4" />
+                  Import JSON
+                </Button>
+                <Button type="button" variant="outline" size="sm" onClick={handleEmbedSettingsExport} className="gap-2">
+                  <Download className="h-4 w-4" />
+                  Export JSON
+                </Button>
               </div>
-              <div className="space-y-2">
-                <label htmlFor="tv-embed-template" className="text-sm font-medium">TV URL template</label>
-                <Input
-                  id="tv-embed-template"
-                  value={tvTemplateInput}
-                  onChange={(event) => setTvTemplateInput(event.target.value)}
-                  placeholder="https://example.com/tv/{TMDB_ID}/{SEASON}/{EPISODE}"
-                  autoComplete="url"
-                />
-              </div>
+              {([
+                { mediaType: 'movie' as const, label: 'Movie', links: movieLinkInputs, placeholder: 'https://example.com/movie/{TMDB_ID}/{IMDB_ID}' },
+                { mediaType: 'tv' as const, label: 'TV', links: tvLinkInputs, placeholder: 'https://example.com/tv/{TMDB_ID}/{SEASON}/{EPISODE}' },
+              ]).map(({ mediaType, label, links, placeholder }) => (
+                <section key={mediaType} className="space-y-3">
+                  <h3 className="text-sm font-semibold">{label} links</h3>
+                  {links.map((link, index) => (
+                    <div key={`${mediaType}-link-${index}`} className="flex min-w-0 items-center gap-2 rounded-md border px-2 py-1.5">
+                      <h4 className="w-20 shrink-0 truncate text-xs font-medium sm:w-24">
+                          {getEmbedLinkName(link.urlTemplate) || `Link ${index + 1}`}
+                      </h4>
+                      <Input
+                        id={`${mediaType}-embed-template-${index}`}
+                        aria-label={`${label} link URL template ${index + 1}`}
+                        value={link.urlTemplate}
+                        onChange={(event) => updateEmbedLink(mediaType, index, event.target.value)}
+                        placeholder={placeholder}
+                        autoComplete="url"
+                        className="h-8 min-w-0"
+                      />
+                      <Button
+                        type="button"
+                        variant="ghost"
+                        size="icon"
+                        onClick={() => removeEmbedLink(mediaType, index)}
+                        aria-label={`Remove ${label.toLowerCase()} link ${index + 1}`}
+                        className="h-8 w-8 shrink-0"
+                      >
+                        <Trash2 className="h-4 w-4" />
+                      </Button>
+                    </div>
+                  ))}
+                  <Button type="button" variant="outline" size="sm" onClick={() => addEmbedLink(mediaType)} className="gap-2">
+                    <Plus className="h-4 w-4" />
+                    Add {label.toLowerCase()} link
+                  </Button>
+                </section>
+              ))}
               <div className="rounded-md bg-muted/50 px-3 py-2.5 text-xs leading-relaxed text-muted-foreground">
-                Leave a field blank to use its default. Placeholders: {'{TMDB_ID}'}, {'{IMDB_ID}'}, {'{SEASON}'}, {'{EPISODE}'}.
+                Use {'{TMDB_ID}'} and {'{IMDB_ID}'} for movies. TV links also support {'{SEASON}'} and {'{EPISODE}'}. Removing all links disables that watch button; reset restores any build-time defaults.
               </div>
               {settingsError && (
                 <p role="alert" className="text-sm text-destructive">{settingsError}</p>
               )}
-              <div className="flex flex-col gap-3 border-t pt-4 sm:flex-row sm:items-center sm:justify-between">
+              </div>
+              <div className="flex shrink-0 flex-col gap-3 border-t bg-background pt-4 sm:flex-row sm:items-center sm:justify-between">
                 <Button
                   type="button"
                   variant="ghost"

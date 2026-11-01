@@ -19,6 +19,15 @@ export function formatDate(dateString: string | undefined | null): string {
   return `${day} ${month} ${year}`;
 }
 
+export function getEmbedLinkName(template: string): string {
+  try {
+    const url = new URL(template.trim().replace(/\{(TMDB_ID|IMDB_ID|SEASON|EPISODE)\}/g, '1'));
+    return url.hostname.replace(/^www\./, '');
+  } catch {
+    return '';
+  }
+}
+
 export function buildEmbedUrl(template?: string, tmdbId?: number, imdbId?: string): string {
   if (!template) return '#';
 
