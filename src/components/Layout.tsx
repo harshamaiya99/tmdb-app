@@ -1,6 +1,6 @@
 // src/components/Layout.tsx
 import { ReactNode, useEffect, useState, type ChangeEvent, type FormEvent, type KeyboardEvent } from 'react';
-import { LogOut, Search, ArrowLeft, Settings2, X, Moon, Sun } from 'lucide-react';
+import { LogOut, Search, ArrowLeft, Settings2, X, Moon, Sun, Bookmark, Heart, Star, UserRound } from 'lucide-react';
 import * as DropdownMenu from '@radix-ui/react-dropdown-menu';
 import { Link, NavLink, useNavigate, useSearchParams, useLocation } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
@@ -13,6 +13,7 @@ import { useCachedQuery } from '@/hooks/useCachedQuery';
 import { useDebouncedValue } from '@/hooks/useDebouncedValue';
 import { useEmbedSettings } from '@/contexts/EmbedSettingsContext';
 import { useToast } from '@/components/ui/use-toast';
+import { useTMDBAccount } from '@/contexts/TMDBAccountContext';
 
 interface LayoutProps {
   children: ReactNode;
@@ -108,6 +109,7 @@ export function Layout({ children }: LayoutProps) {
   const { title } = useTitle();
   const { toast } = useToast();
   const { theme, toggleTheme } = useTheme();
+  const { account, isConnected: isTMDBAccountConnected, connectAccount, disconnectAccount } = useTMDBAccount();
   const { movieUrlTemplate, tvUrlTemplate, saveSettings, resetSettings } = useEmbedSettings();
   const location = useLocation();
   const [settingsOpen, setSettingsOpen] = useState(false);
@@ -180,6 +182,30 @@ export function Layout({ children }: LayoutProps) {
     localStorage.removeItem('tmdb_api_key');
     tmdbService.setApiKey('');
     navigate('/login');
+  };
+
+  const handleConnectAccount = () => {
+    void connectAccount().catch((error: unknown) => {
+      toast({
+        title: 'Could not start TMDB account connection',
+        description: error instanceof Error ? error.message : 'Please try again.',
+        variant: 'destructive',
+      });
+    });
+  };
+
+  const handleDisconnectAccount = () => {
+    void disconnectAccount().then(() => {
+      toast({ title: 'TMDB account disconnected' });
+    }).catch((error: unknown) => {
+      toast({
+        title: 'TMDB account disconnected locally',
+        description: error instanceof Error
+          ? `TMDB could not revoke the session remotely: ${error.message}`
+          : 'TMDB could not revoke the session remotely.',
+        variant: 'destructive',
+      });
+    });
   };
 
   const openEmbedSettings = () => {
@@ -360,7 +386,7 @@ export function Layout({ children }: LayoutProps) {
                 <DropdownMenu.Content
                   align="end"
                   sideOffset={8}
-                  className="z-[60] min-w-56 rounded-md border bg-popover p-1 text-popover-foreground shadow-md"
+                  className="z-[60] max-h-[calc(100vh-2rem)] min-w-60 max-w-[calc(100vw-2rem)] overflow-y-auto rounded-md border bg-popover p-1 text-popover-foreground shadow-md"
                 >
                   <DropdownMenu.Label className="px-3 py-2 text-xs font-medium text-muted-foreground">
                     Preferences
@@ -378,6 +404,32 @@ export function Layout({ children }: LayoutProps) {
                   >
                     <Settings2 className="h-4 w-4" />
                     Embed link settings
+                  </DropdownMenu.Item>
+                  <DropdownMenu.Separator className="my-1 h-px bg-border" />
+                  <DropdownMenu.Label className="px-3 py-2 text-xs font-medium text-muted-foreground">
+                    {isTMDBAccountConnected ? account?.username : 'TMDB account'}
+                  </DropdownMenu.Label>
+                  {[
+                    { to: '/account/watchlist', label: 'Watchlist', icon: Bookmark },
+                    { to: '/account/favorites', label: 'Favorites', icon: Heart },
+                    { to: '/account/ratings', label: 'Ratings', icon: Star },
+                  ].map(({ to, label, icon: Icon }) => (
+                    <DropdownMenu.Item key={to} asChild>
+                      <Link
+                        to={to}
+                        className="flex min-h-10 cursor-pointer select-none items-center gap-2 rounded-sm px-3 py-2 text-sm outline-none hover:bg-accent focus:bg-accent focus:text-accent-foreground"
+                      >
+                        <Icon className="h-4 w-4" />
+                        {label}
+                      </Link>
+                    </DropdownMenu.Item>
+                  ))}
+                  <DropdownMenu.Item
+                    onSelect={isTMDBAccountConnected ? handleDisconnectAccount : handleConnectAccount}
+                    className="flex min-h-10 cursor-pointer select-none items-center gap-2 rounded-sm px-3 py-2 text-sm outline-none hover:bg-accent focus:bg-accent focus:text-accent-foreground"
+                  >
+                    <UserRound className="h-4 w-4" />
+                    {isTMDBAccountConnected ? 'Disconnect TMDB account' : 'Connect TMDB account'}
                   </DropdownMenu.Item>
                   <DropdownMenu.Separator className="my-1 h-px bg-border" />
                   <DropdownMenu.Item

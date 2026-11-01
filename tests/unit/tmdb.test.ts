@@ -106,6 +106,105 @@ describe('TMDB Talk-show filtering', () => {
     });
   });
 
+  describe('TMDB account integration', () => {
+    beforeEach(() => {
+      tmdbService.setApiKey('test-api-key');
+      vi.stubGlobal('fetch', vi.fn());
+    });
+
+    afterEach(() => {
+      vi.unstubAllGlobals();
+    });
+
+    it('creates a request token and exchanges approved tokens for sessions', async () => {
+      const fetchMock = vi.mocked(fetch);
+      fetchMock
+        .mockResolvedValueOnce(responseWith({ request_token: 'request-token' }))
+        .mockResolvedValueOnce(responseWith({ session_id: 'session-id' }));
+
+      await expect(tmdbService.createAccountRequestToken()).resolves.toBe('request-token');
+      await expect(tmdbService.createAccountSession('request-token')).resolves.toBe('session-id');
+
+      const requestUrl = new URL(String(fetchMock.mock.calls[0][0]));
+      expect(requestUrl.pathname).toBe('/3/authentication/token/new');
+      expect(requestUrl.searchParams.get('api_key')).toBe('test-api-key');
+
+      const sessionRequest = fetchMock.mock.calls[1][1];
+      expect(sessionRequest?.method).toBe('POST');
+      expect(JSON.parse(String(sessionRequest?.body))).toEqual({ request_token: 'request-token' });
+    });
+
+    it('requests account lists with session credentials and correct endpoint paths', async () => {
+      const fetchMock = vi.mocked(fetch);
+      fetchMock.mockResolvedValue(responseWith({
+        page: 1,
+        results: [],
+        total_pages: 1,
+        total_results: 0,
+      }));
+
+      await tmdbService.getAccountList(42, 'watchlist', 'movie', 2, 'session-id');
+
+      const requestUrl = new URL(String(fetchMock.mock.calls[0][0]));
+      expect(requestUrl.pathname).toBe('/3/account/42/watchlist/movies');
+      expect(requestUrl.searchParams.get('session_id')).toBe('session-id');
+      expect(requestUrl.searchParams.get('page')).toBe('2');
+      expect(requestUrl.searchParams.get('api_key')).toBe('test-api-key');
+    });
+
+    it('loads the connected account and revokes its session when disconnected', async () => {
+      const fetchMock = vi.mocked(fetch);
+      fetchMock
+        .mockResolvedValueOnce(responseWith({ id: 42, name: 'Example', username: 'example-user' }))
+        .mockResolvedValueOnce(responseWith({ success: true }));
+
+      await expect(tmdbService.getCurrentAccount('session-id')).resolves.toEqual({
+        id: 42,
+        name: 'Example',
+        username: 'example-user',
+      });
+      await tmdbService.deleteAccountSession('session-id');
+
+      const accountUrl = new URL(String(fetchMock.mock.calls[0][0]));
+      expect(accountUrl.pathname).toBe('/3/account');
+      expect(accountUrl.searchParams.get('session_id')).toBe('session-id');
+
+      const revokeRequest = fetchMock.mock.calls[1][1];
+      expect(revokeRequest?.method).toBe('DELETE');
+      expect(JSON.parse(String(revokeRequest?.body))).toEqual({ session_id: 'session-id' });
+    });
+
+    it('sends favorite and rating changes through TMDB account endpoints', async () => {
+      const fetchMock = vi.mocked(fetch);
+      fetchMock
+        .mockResolvedValueOnce(responseWith({ status_code: 1, status_message: 'Success.' }))
+        .mockResolvedValueOnce(responseWith({ status_code: 1, status_message: 'Success.' }));
+
+      await tmdbService.setAccountFavorite(42, 'tv', 100, true, 'session-id');
+      await tmdbService.rateMedia('movie', 200, 8.5, 'session-id');
+
+      const favoriteUrl = new URL(String(fetchMock.mock.calls[0][0]));
+      expect(favoriteUrl.pathname).toBe('/3/account/42/favorite');
+      expect(favoriteUrl.searchParams.get('session_id')).toBe('session-id');
+      expect(JSON.parse(String(fetchMock.mock.calls[0][1]?.body))).toEqual({
+        media_type: 'tv',
+        media_id: 100,
+        favorite: true,
+      });
+
+      const ratingUrl = new URL(String(fetchMock.mock.calls[1][0]));
+      expect(ratingUrl.pathname).toBe('/3/movie/200/rating');
+      expect(JSON.parse(String(fetchMock.mock.calls[1][1]?.body))).toEqual({ value: 8.5 });
+    });
+
+    it('rejects invalid ratings before making a request', async () => {
+      const fetchMock = vi.mocked(fetch);
+
+      await expect(tmdbService.rateMedia('movie', 200, 8.25, 'session-id')).rejects.toThrow(RangeError);
+      expect(fetchMock).not.toHaveBeenCalled();
+    });
+  });
+
   it('filters Talk shows from combined person credits', async () => {
     vi.mocked(fetch).mockResolvedValue(responseWith({
       id: 10,

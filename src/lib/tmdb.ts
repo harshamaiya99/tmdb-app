@@ -330,7 +330,19 @@ interface TMDBErrorResponse {
 
 export interface TMDBRequestOptions {
   signal?: AbortSignal;
+  method?: 'GET' | 'POST' | 'DELETE';
+  body?: Record<string, unknown>;
+  sessionId?: string;
 }
+
+export interface TMDBAccount {
+  id: number;
+  name: string;
+  username: string;
+}
+
+export type TMDBAccountSection = 'watchlist' | 'favorites' | 'ratings';
+export type TMDBAccountMedia = (Movie | TVShow) & { rating?: number };
 
 export type TMDBErrorCode =
   | 'AUTHENTICATION_ERROR'
@@ -370,6 +382,13 @@ class TMDBService {
     const url = new URL(`${TMDB_BASE_URL}${endpoint}`);
     const headers: HeadersInit = {};
 
+    if (options.sessionId) {
+      url.searchParams.set('session_id', options.sessionId);
+    }
+    if (options.body) {
+      headers['Content-Type'] = 'application/json';
+    }
+
     if (this.accessToken) {
       headers.Authorization = `Bearer ${this.accessToken}`;
     } else {
@@ -378,7 +397,12 @@ class TMDBService {
 
     let response: Response;
     try {
-      response = await fetch(url, { headers, signal: options.signal });
+      response = await fetch(url, {
+        headers,
+        signal: options.signal,
+        method: options.method,
+        body: options.body ? JSON.stringify(options.body) : undefined,
+      });
     } catch (error) {
       if (error instanceof DOMException && error.name === 'AbortError') {
         throw error;
@@ -585,6 +609,101 @@ class TMDBService {
       `/tv/${tvId}/season/${seasonNumber}/episode/${episodeNumber}?append_to_response=credits,images,videos`,
       options,
     );
+  }
+
+  async createAccountRequestToken(): Promise<string> {
+    const result = await this.fetchFromTMDB<{ request_token: string }>('/authentication/token/new');
+    return result.request_token;
+  }
+
+  async createAccountSession(requestToken: string): Promise<string> {
+    const result = await this.fetchFromTMDB<{ session_id: string }>('/authentication/session/new', {
+      method: 'POST',
+      body: { request_token: requestToken },
+    });
+    return result.session_id;
+  }
+
+  async deleteAccountSession(sessionId: string): Promise<void> {
+    await this.fetchFromTMDB<{ success: boolean }>('/authentication/session', {
+      method: 'DELETE',
+      body: { session_id: sessionId },
+    });
+  }
+
+  async getCurrentAccount(sessionId: string): Promise<TMDBAccount> {
+    return this.fetchFromTMDB<TMDBAccount>('/account', { sessionId });
+  }
+
+  async getAccountList(
+    accountId: number,
+    section: TMDBAccountSection,
+    mediaType: 'movie' | 'tv',
+    page: number,
+    sessionId: string,
+    signal?: AbortSignal,
+  ): Promise<TrendingResponse<TMDBAccountMedia>> {
+    const mediaPath = mediaType === 'movie' ? 'movies' : 'tv';
+    const sectionPath = section === 'watchlist'
+      ? `watchlist/${mediaPath}`
+      : section === 'favorites'
+        ? `favorite/${mediaPath}`
+        : `rated/${mediaPath}`;
+    return this.fetchFromTMDB(
+      `/account/${accountId}/${sectionPath}?page=${page}&sort_by=created_at.desc`,
+      { sessionId, signal },
+    );
+  }
+
+  async setAccountWatchlist(
+    accountId: number,
+    mediaType: 'movie' | 'tv',
+    mediaId: number,
+    watchlist: boolean,
+    sessionId: string,
+  ): Promise<void> {
+    await this.fetchFromTMDB(`/account/${accountId}/watchlist`, {
+      method: 'POST',
+      sessionId,
+      body: { media_type: mediaType, media_id: mediaId, watchlist },
+    });
+  }
+
+  async setAccountFavorite(
+    accountId: number,
+    mediaType: 'movie' | 'tv',
+    mediaId: number,
+    favorite: boolean,
+    sessionId: string,
+  ): Promise<void> {
+    await this.fetchFromTMDB(`/account/${accountId}/favorite`, {
+      method: 'POST',
+      sessionId,
+      body: { media_type: mediaType, media_id: mediaId, favorite },
+    });
+  }
+
+  async rateMedia(
+    mediaType: 'movie' | 'tv',
+    mediaId: number,
+    rating: number,
+    sessionId: string,
+  ): Promise<void> {
+    if (!Number.isFinite(rating) || rating < 0.5 || rating > 10 || rating * 2 % 1 !== 0) {
+      throw new RangeError('TMDB ratings must be between 0.5 and 10 in half-point increments.');
+    }
+    await this.fetchFromTMDB(`/${mediaType}/${mediaId}/rating`, {
+      method: 'POST',
+      sessionId,
+      body: { value: rating },
+    });
+  }
+
+  async deleteMediaRating(mediaType: 'movie' | 'tv', mediaId: number, sessionId: string): Promise<void> {
+    await this.fetchFromTMDB(`/${mediaType}/${mediaId}/rating`, {
+      method: 'DELETE',
+      sessionId,
+    });
   }
 
   async getPersonDetails(id: number, options?: TMDBRequestOptions): Promise<Person> {

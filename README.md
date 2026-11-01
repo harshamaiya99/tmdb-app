@@ -11,6 +11,7 @@ A clean, minimal web app for browsing movies, TV shows, and people with data fro
 - 📺 Explore popular and top-rated TV shows
 - 🔍 Search movies, TV shows, and people
 - 🧭 Deep-dive detail pages for movies, TV shows, and people
+- 👤 Connect a TMDB account to manage movie/TV watchlists, favorites, and ratings
 - 🌗 Light/dark theme toggle
 - 📲 Installable as a web app from supported browsers
 - ✨ Responsive, content-first UI with reusable cards, shared media sections, and skeleton states
@@ -48,6 +49,7 @@ A clean, minimal web app for browsing movies, TV shows, and people with data fro
 3. Open http://localhost:5173 in your browser
 
 4. Enter your TMDB API key to start browsing
+5. To use watchlists, favorites, or ratings, connect your TMDB account from the header's **Settings** menu and approve access on TMDB. This is separate from the API key login; the app never asks for your TMDB password.
 
 ### Optional embed URL templates
 
@@ -60,13 +62,20 @@ VITE_TV_EMBED_URL=https://example.com/tv/{TMDB_ID}/{SEASON}/{EPISODE}
 
 On the deployed app, use **Embed link settings** in the header to save templates in that browser. A saved browser value overrides the build-time default; leaving a field blank or choosing **Reset to defaults** uses the build-time value when present. Browser settings are not shared across browsers or devices.
 
+The optional TMDB account session is stored in the browser's local storage. Disconnect it from the **Settings** menu to revoke the TMDB session and remove its local copy.
+
 ## Build and Verification
 
 ```bash
 npm run build
 ```
 
-There are no dedicated automated tests in the repository at the moment, so the build is the main verification step after changes.
+Run the automated test suite and production build with:
+
+```bash
+npm test
+npm run build
+```
 
 ## Deploy to GitHub Pages
 
@@ -103,7 +112,8 @@ The site can be installed as an app from supported browsers when served over HTT
 │   ├── components/
 │   │   ├── CreditsCarousel.tsx        # Cast and crew carousel
 │   │   ├── EpisodesRatingOverview.tsx # Episode rating visualization
-│   │   ├── Layout.tsx                 # App header, navigation, search, and embed settings
+│   │   ├── AccountMediaActions.tsx    # TMDB account actions on media detail pages
+│   │   ├── Layout.tsx                 # App header, navigation, search, and settings menu
 │   │   ├── LazySection.tsx            # Defers section rendering until near the viewport
 │   │   ├── MediaCard.tsx              # Reusable movie, TV, and person card
 │   │   ├── MediaGridSkeleton.tsx      # Loading placeholders for media grids
@@ -122,6 +132,7 @@ The site can be installed as an app from supported browsers when served over HTT
 │   │       ├── toaster.tsx            # Renders queued toast notifications
 │   │       └── use-toast.ts           # Toast state and notification helper
 │   ├── contexts/
+│   │   ├── TMDBAccountContext.tsx     # TMDB consent flow and browser-local account session
 │   │   ├── EmbedSettingsContext.tsx   # Browser-local embed URL overrides and env defaults
 │   │   └── TitleContext.tsx           # Shares the current page title with the layout
 │   ├── hooks/
@@ -137,6 +148,8 @@ The site can be installed as an app from supported browsers when served over HTT
 │   │   ├── utils.ts                   # Shared styling, date, and embed URL helpers
 │   │   └── wikimedia.ts               # Wikimedia image lookup helpers
 │   └── pages/
+│       ├── AccountCallbackPage.tsx    # TMDB user authorization callback
+│       ├── AccountPage.tsx            # Watchlists, favorites, and ratings
 │       ├── HomePage.tsx               # Home browsing and search results
 │       ├── LoginPage.tsx              # TMDB API key entry and validation
 │       ├── MediaListPage.tsx          # Filtered and paginated movie/TV lists

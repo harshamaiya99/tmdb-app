@@ -16,6 +16,7 @@ import { EpisodesRatingOverview } from '../components/EpisodesRatingOverview';
 import { LazySection } from '@/components/LazySection';
 import { TMDBImage } from '@/components/TMDBImage';
 import { useEmbedSettings } from '@/contexts/EmbedSettingsContext';
+import { AccountMediaActions } from '@/components/AccountMediaActions';
 
 interface EpisodeCardProps {
   episode: Episode;
@@ -318,6 +319,8 @@ export function TVShowDetailsPage() {
                     ))}
                   </div>
                 )}
+
+                <AccountMediaActions mediaId={tvShow.id} mediaType="tv" />
 
                 {tvShow.overview && (
                   <div>

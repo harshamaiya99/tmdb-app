@@ -15,6 +15,7 @@ import { ReviewSection } from '../components/ReviewSection';
 import { TMDBImage } from '@/components/TMDBImage';
 import { LazySection } from '@/components/LazySection';
 import { useEmbedSettings } from '@/contexts/EmbedSettingsContext';
+import { AccountMediaActions } from '@/components/AccountMediaActions';
 
 export function MovieDetailsPage() {
   const { id } = useParams<{ id: string }>();
@@ -208,6 +209,8 @@ export function MovieDetailsPage() {
                   ))}
                 </div>
               )}
+
+              <AccountMediaActions mediaId={movie.id} mediaType="movie" />
 
               {movie.overview && (
                 <div>

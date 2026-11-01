@@ -46,6 +46,7 @@ The app is organized around a few clear layers:
 2. The key is validated and saved in local storage.
 3. Protected routes render the app shell and fetch TMDB data through the central service layer.
 4. Pages render content and use shared UI components for cards, skeletons, badges, and toasts.
+5. Users who want personal account features separately authorize the app on TMDB; the approved session is stored in browser local storage and enables watchlists, favorites, and ratings.
 
 ## Directory Structure
 
@@ -150,6 +151,8 @@ When a new feature seems to require a new file, confirm that the existing reposi
 - The API key is stored in local storage after successful validation.
 - TMDB integration is centralized in [src/lib/tmdb.ts](src/lib/tmdb.ts) so pages do not directly call the API.
 - Routing is handled by React Router, with protected routes preventing access until authentication succeeds.
+- Personal TMDB account access is optional and requires a separate website approval/session; the API key login alone never grants access to watchlists, favorites, or ratings.
+- Account authorization state is shared through the TMDB account context, while all account requests stay centralized in the TMDB service.
 - The header title is shared through the title context, with a small hook wrapper for page-specific title updates.
 - Images come from TMDB and are resolved through the centralized image URL helper.
 - The app uses Vite environment variables such as VITE_MOVIE_EMBED_URL for optional watch-link behavior; keep any new environment usage client-safe and non-secret.

@@ -12,6 +12,8 @@ The default TMDB credential is provided by the user and stored in local storage.
 
 The service also supports an optional `VITE_TMDB_ACCESS_TOKEN` bearer token for TMDB v4 authentication. Vite client variables are bundled into the browser application, so this is suitable only for a personal hobby deployment; a server-side proxy is required to keep credentials private.
 
+Account features use a separate TMDB user session. The API key or configured bearer token identifies the application; it does not grant access to a user's private account data. Users must approve access on TMDB's website before the app can create a session.
+
 ## Request Flow
 
 A typical request follows this path:
@@ -55,6 +57,19 @@ The app validates a key by calling the TMDB configuration endpoint:
 - `/configuration?api_key=<key>`
 
 If the response is successful, the key is considered valid.
+
+### TMDB user account authorization
+
+The account connection flow follows TMDB's request-token process:
+
+1. Create a temporary request token.
+2. Redirect the user to TMDB to approve access, returning to the app's `/account/callback` hash route.
+3. Exchange the approved request token for a TMDB session ID and retrieve the user's account details.
+4. Store the session ID and account identity in browser local storage. The temporary request token is held in session storage while the user is redirected.
+
+The session ID is a sensitive credential and is treated like a password. Users can disconnect from the Settings menu; the app asks TMDB to revoke the session and clears its local account data. This browser-only app does not send account credentials to a project backend.
+
+Account requests use the account ID and session ID with TMDB's account endpoints. The service supports movie and TV watchlists, favorites, and rated lists; adding/removing list items; submitting half-point ratings from 0.5 to 10; and deleting ratings.
 
 ## Endpoint Categories
 

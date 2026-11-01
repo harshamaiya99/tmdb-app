@@ -32,6 +32,8 @@ The main application shell is defined in [src/App.tsx](src/App.tsx). It wires to
 
 This means the app is fully client-driven and does not rely on a backend server.
 
+TMDB account features use an additional, optional user-consent flow. The app creates a request token, redirects the user to TMDB for approval, then exchanges the approved token for a session ID and account identity. The session and account identity are stored locally by `TMDBAccountProvider`; the temporary request token stays in session storage during the redirect. Account list routes remain protected by the app API-key login and require the separate TMDB session.
+
 ### Environment and runtime config
 
 The app uses Vite environment variables for optional client-side integrations. `VITE_MOVIE_EMBED_URL` and `VITE_TV_EMBED_URL` provide default watch-link templates. Authenticated users can override these defaults with settings stored in the current browser. New environment variables should remain client-safe and should not be used for secrets.
@@ -51,6 +53,8 @@ Routing is defined in [src/App.tsx](src/App.tsx) with React Router's `HashRouter
 - `/movie` — movie listing view
 - `/tv` — TV listing view
 - `/person` — people listing view
+- `/account/callback` — TMDB account authorization return
+- `/account/:section` — account watchlist, favorites, and ratings
 
 ### Routing behavior
 
@@ -109,11 +113,18 @@ Pages live in [src/pages](src/pages):
 - [src/pages/TVShowDetailsPage.tsx](src/pages/TVShowDetailsPage.tsx) — shows show metadata, seasons, episodes, and related content
 - [src/pages/PersonDetailsPage.tsx](src/pages/PersonDetailsPage.tsx) — shows a person’s biography, filmography, and images
 - [src/pages/PeopleListPage.tsx](src/pages/PeopleListPage.tsx) — shows a list of people results
+- [src/pages/AccountPage.tsx](src/pages/AccountPage.tsx) — displays and manages the connected account's movie and TV lists
+- [src/pages/AccountCallbackPage.tsx](src/pages/AccountCallbackPage.tsx) — completes TMDB's user-consent flow
 
 ### Shared feature components
 
 - [src/components/CreditsCarousel.tsx](src/components/CreditsCarousel.tsx) renders reusable horizontally scrollable cast and crew credits.
+- [src/components/AccountMediaActions.tsx](src/components/AccountMediaActions.tsx) adds titles to account lists and submits user ratings from details pages.
 - [src/components/MediaGridSkeleton.tsx](src/components/MediaGridSkeleton.tsx) provides loading placeholders.
+
+### Account context
+
+`TMDBAccountProvider` shares the connected account identity and session with the settings menu, account pages, and detail-page actions. TMDB account requests and authentication endpoints remain centralized in `src/lib/tmdb.ts`.
 
 ### Shared hooks
 
