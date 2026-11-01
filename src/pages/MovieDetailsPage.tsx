@@ -312,7 +312,7 @@ export function MovieDetailsPage() {
               <div className="flex rounded-md border p-1" role="group" aria-label="Credits">
                 <Button
                   type="button"
-                  variant={activeCredits === 'cast' ? 'secondary' : 'ghost'}
+                  variant={activeCredits === 'cast' ? 'selected' : 'ghost'}
                   size="sm"
                   disabled={cast.length === 0}
                   onClick={() => setActiveCredits('cast')}
@@ -321,7 +321,7 @@ export function MovieDetailsPage() {
                 </Button>
                 <Button
                   type="button"
-                  variant={activeCredits === 'crew' ? 'secondary' : 'ghost'}
+                  variant={activeCredits === 'crew' ? 'selected' : 'ghost'}
                   size="sm"
                   disabled={crew.length === 0}
                   onClick={() => setActiveCredits('crew')}

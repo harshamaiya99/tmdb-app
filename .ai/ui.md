@@ -92,6 +92,7 @@ The shared UI components follow a few recurring patterns:
 Buttons are implemented through [src/components/ui/button.tsx](src/components/ui/button.tsx). They support variants such as:
 
 - `default`
+- `selected` for a high-contrast active state on toggles, segmented controls, and selected navigation
 - `outline`
 - `secondary`
 - `ghost`

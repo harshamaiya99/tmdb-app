@@ -107,7 +107,7 @@ export function AccountMediaActions({ mediaId, mediaType, mediaTitle }: AccountM
     <section aria-label="TMDB account actions" className="flex flex-wrap items-center gap-2">
       <Button
         type="button"
-        variant={accountState?.watchlist ? 'secondary' : 'outline'}
+        variant={accountState?.watchlist ? 'selected' : 'outline'}
         size="sm"
         className="gap-1.5"
         aria-pressed={accountState?.watchlist ?? false}
@@ -121,7 +121,7 @@ export function AccountMediaActions({ mediaId, mediaType, mediaTitle }: AccountM
       </Button>
       <Button
         type="button"
-        variant={accountState?.favorite ? 'secondary' : 'outline'}
+        variant={accountState?.favorite ? 'selected' : 'outline'}
         size="sm"
         className={accountState?.favorite ? 'gap-1.5 text-rose-600 dark:text-rose-400' : 'gap-1.5'}
         aria-pressed={accountState?.favorite ?? false}

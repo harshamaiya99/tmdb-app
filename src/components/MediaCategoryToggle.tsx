@@ -24,10 +24,10 @@ export function MediaCategoryToggle<T extends string>({
           key={option.value}
           type="button"
           size="sm"
-          variant={value === option.value ? 'default' : 'ghost'}
+          variant={value === option.value ? 'selected' : 'ghost'}
           aria-pressed={value === option.value}
           onClick={() => onChange(option.value)}
-          className={`shrink-0 ${value === option.value ? 'shadow-sm' : ''}`}
+          className="shrink-0"
         >
           {option.label}
         </Button>

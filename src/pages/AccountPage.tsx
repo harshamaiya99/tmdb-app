@@ -126,15 +126,15 @@ export function AccountPage() {
           <h1 className="text-3xl font-bold tracking-tight">{pageTitle}</h1>
         </div>
         <div className="flex rounded-md border p-1" role="group" aria-label="Media type">
-          <Button type="button" size="sm" variant={mediaType === 'all' ? 'secondary' : 'ghost'} aria-pressed={mediaType === 'all'} onClick={() => handleMediaTypeChange('all')}>All</Button>
-          <Button type="button" size="sm" variant={mediaType === 'movie' ? 'secondary' : 'ghost'} aria-pressed={mediaType === 'movie'} onClick={() => handleMediaTypeChange('movie')}>Movies</Button>
-          <Button type="button" size="sm" variant={mediaType === 'tv' ? 'secondary' : 'ghost'} aria-pressed={mediaType === 'tv'} onClick={() => handleMediaTypeChange('tv')}>TV shows</Button>
+          <Button type="button" size="sm" variant={mediaType === 'all' ? 'selected' : 'ghost'} aria-pressed={mediaType === 'all'} onClick={() => handleMediaTypeChange('all')}>All</Button>
+          <Button type="button" size="sm" variant={mediaType === 'movie' ? 'selected' : 'ghost'} aria-pressed={mediaType === 'movie'} onClick={() => handleMediaTypeChange('movie')}>Movies</Button>
+          <Button type="button" size="sm" variant={mediaType === 'tv' ? 'selected' : 'ghost'} aria-pressed={mediaType === 'tv'} onClick={() => handleMediaTypeChange('tv')}>TV shows</Button>
         </div>
       </div>
 
       <nav aria-label="Account lists" className="flex flex-wrap gap-2 border-b pb-3">
         {accountSections.map(({ id, label }) => (
-          <Button key={id} asChild variant={section === id ? 'secondary' : 'ghost'} size="sm">
+          <Button key={id} asChild variant={section === id ? 'selected' : 'ghost'} size="sm">
             <Link to={mediaType === 'all' ? `/account/${id}` : `/account/${id}?type=${mediaType}`}>{label}</Link>
           </Button>
         ))}

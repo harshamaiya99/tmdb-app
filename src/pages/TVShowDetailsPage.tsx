@@ -361,7 +361,7 @@ export function TVShowDetailsPage() {
                   <div className="flex rounded-md border p-1" role="group" aria-label="Credits">
                     <Button
                       type="button"
-                      variant={activeCredits === 'cast' ? 'secondary' : 'ghost'}
+                      variant={activeCredits === 'cast' ? 'selected' : 'ghost'}
                       size="sm"
                       disabled={cast.length === 0}
                       onClick={() => setActiveCredits('cast')}
@@ -370,7 +370,7 @@ export function TVShowDetailsPage() {
                     </Button>
                     <Button
                       type="button"
-                      variant={activeCredits === 'crew' ? 'secondary' : 'ghost'}
+                      variant={activeCredits === 'crew' ? 'selected' : 'ghost'}
                       size="sm"
                       disabled={crew.length === 0}
                       onClick={() => setActiveCredits('crew')}
@@ -637,7 +637,7 @@ export function TVShowDetailsPage() {
                           <div className="flex rounded-md border p-1" role="group" aria-label="Episode credits">
                           <Button
                             type="button"
-                            variant={activeEpisodeCredits === 'guest_stars' ? 'secondary' : 'ghost'}
+                            variant={activeEpisodeCredits === 'guest_stars' ? 'selected' : 'ghost'}
                             size="sm"
                             disabled={episodeGuestStars.length === 0}
                             onClick={() => setActiveEpisodeCredits('guest_stars')}
@@ -646,7 +646,7 @@ export function TVShowDetailsPage() {
                           </Button>
                           <Button
                             type="button"
-                            variant={activeEpisodeCredits === 'crew' ? 'secondary' : 'ghost'}
+                            variant={activeEpisodeCredits === 'crew' ? 'selected' : 'ghost'}
                             size="sm"
                             disabled={episodeCrew.length === 0}
                             onClick={() => setActiveEpisodeCredits('crew')}
@@ -714,7 +714,7 @@ export function TVShowDetailsPage() {
                         <div className="flex rounded-md border p-1" role="group" aria-label="Episode media">
                           <Button
                             type="button"
-                            variant={activeEpisodeMedia === 'images' ? 'secondary' : 'ghost'}
+                            variant={activeEpisodeMedia === 'images' ? 'selected' : 'ghost'}
                             size="sm"
                             disabled={episodeImages.length === 0}
                             onClick={() => setActiveEpisodeMedia('images')}
@@ -723,7 +723,7 @@ export function TVShowDetailsPage() {
                           </Button>
                           <Button
                             type="button"
-                            variant={activeEpisodeMedia === 'videos' ? 'secondary' : 'ghost'}
+                            variant={activeEpisodeMedia === 'videos' ? 'selected' : 'ghost'}
                             size="sm"
                             disabled={episodeVideos.length === 0}
                             onClick={() => setActiveEpisodeMedia('videos')}

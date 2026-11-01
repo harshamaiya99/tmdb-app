@@ -157,7 +157,7 @@ export function AccountListsPage() {
 
         <nav aria-label="Account lists" className="flex flex-wrap gap-2 border-b pb-3">
           {accountNavigation.map(({ to, label }) => (
-            <Button key={to} asChild variant={to === '/account/lists' ? 'secondary' : 'ghost'} size="sm">
+            <Button key={to} asChild variant={to === '/account/lists' ? 'selected' : 'ghost'} size="sm">
               <Link to={to}>{label}</Link>
             </Button>
           ))}
@@ -215,7 +215,7 @@ export function AccountListsPage() {
       </div>
       <nav aria-label="Account lists" className="flex flex-wrap gap-2 border-b pb-3">
         {accountNavigation.map(({ to, label }) => (
-          <Button key={to} asChild variant={to === '/account/lists' ? 'secondary' : 'ghost'} size="sm">
+          <Button key={to} asChild variant={to === '/account/lists' ? 'selected' : 'ghost'} size="sm">
             <Link to={to}>{label}</Link>
           </Button>
         ))}

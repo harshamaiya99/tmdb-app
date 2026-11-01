@@ -130,7 +130,7 @@ export function AddToListButton({ mediaId, mediaTitle, mediaType }: AddToListBut
 
   return (
     <>
-      <Button type="button" variant={addedListIds.length > 0 ? 'secondary' : 'outline'} size="sm" className="gap-1.5" onClick={() => setIsOpen(true)}>
+      <Button type="button" variant={addedListIds.length > 0 ? 'selected' : 'outline'} size="sm" className="gap-1.5" onClick={() => setIsOpen(true)}>
         {membershipQuery.loading
           ? <Loader2 aria-hidden="true" className="h-4 w-4 animate-spin" />
           : addedListIds.length > 0
@@ -211,7 +211,7 @@ export function AddToListButton({ mediaId, mediaTitle, mediaType }: AddToListBut
                       <li key={list.id}>
                         <Button
                           type="button"
-                          variant={added ? 'secondary' : 'ghost'}
+                          variant={added ? 'selected' : 'ghost'}
                           className="h-auto min-h-10 w-full justify-between gap-3 px-3 py-2 text-left"
                           disabled={pendingListId !== null || !canToggleMembership}
                           aria-label={`${added ? 'Remove from' : 'Add to'} ${list.name}`}
