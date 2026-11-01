@@ -126,8 +126,8 @@ Non-search TV lists exclude shows tagged with TMDB's Talk genre (`10767`), inclu
 The service also supports category-based browsing for:
 
 - genre-based media lists
-- company-based movie lists
-- provider-based movie lists
+- company-based movie and TV lists
+- provider-based movie and TV lists
 - person credits by media type
 
 ## Error Handling

@@ -583,11 +583,25 @@ class TMDBService {
     return this.fetchFromTMDB<TrendingResponse<Movie>>(`${applySortParam(path, sortBy)}`, options);
   }
 
+  async getTVShowsByCompany(companyId: number, page: number = 1, options?: TMDBRequestOptions, language?: string, sortBy: string = 'popularity.desc'): Promise<TrendingResponse<TVShow>> {
+    const languageFilter = language ? `&with_original_language=${encodeURIComponent(language)}` : '';
+    const path = `/discover/tv?with_companies=${companyId}${languageFilter}&without_genres=${TV_TALK_GENRE_ID}&page=${page}`;
+    const data = await this.fetchFromTMDB<TrendingResponse<TVShow>>(`${applySortParam(path, sortBy)}`, options);
+    return { ...data, results: withoutTalkShows(data.results) };
+  }
+
   // Fetch movies by streaming provider (defaulting to US region)
   async getMoviesByProvider(providerId: number, page: number = 1, options?: TMDBRequestOptions, language?: string, sortBy: string = 'popularity.desc'): Promise<TrendingResponse<Movie>> {
     const languageFilter = language ? `&with_original_language=${encodeURIComponent(language)}` : '';
     const path = `/discover/movie?with_watch_providers=${providerId}&watch_region=US${languageFilter}&page=${page}`;
     return this.fetchFromTMDB<TrendingResponse<Movie>>(`${applySortParam(path, sortBy)}`, options);
+  }
+
+  async getTVShowsByProvider(providerId: number, page: number = 1, options?: TMDBRequestOptions, language?: string, sortBy: string = 'popularity.desc'): Promise<TrendingResponse<TVShow>> {
+    const languageFilter = language ? `&with_original_language=${encodeURIComponent(language)}` : '';
+    const path = `/discover/tv?with_watch_providers=${providerId}&watch_region=US${languageFilter}&without_genres=${TV_TALK_GENRE_ID}&page=${page}`;
+    const data = await this.fetchFromTMDB<TrendingResponse<TVShow>>(`${applySortParam(path, sortBy)}`, options);
+    return { ...data, results: withoutTalkShows(data.results) };
   }
 
   // --- PAGINATED CATEGORY ENDPOINT ---

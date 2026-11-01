@@ -164,10 +164,18 @@ export function MediaListPage() {
   const genreMatch = effectiveCategory?.match(/^genre-(movie|tv)-(\d+)$/);
   const companyMatch = effectiveCategory?.match(/^company-(\d+)$/); 
   const providerMatch = effectiveCategory?.match(/^provider-(\d+)$/); 
+  const isCompanyProviderCategory = Boolean(companyMatch || providerMatch);
+  const selectedMediaType = searchParams.get('media_type') === 'tv' ? 'tv' : 'movie';
   const selectedGenre = searchParams.get('genre') ?? (genreMatch ? genreMatch[2] : 'all');
   
   const personType = personMatch?.[2] === 'tv' ? 'tv' : 'movie';
-  const itemType = personMatch ? personType : genreMatch ? genreMatch[1] as 'movie' | 'tv' : effectiveCategory?.includes('tv') ? 'tv' : 'movie';
+  const itemType = personMatch
+    ? personType
+    : genreMatch
+      ? genreMatch[1] as 'movie' | 'tv'
+      : isCompanyProviderCategory
+        ? selectedMediaType
+        : effectiveCategory?.includes('tv') ? 'tv' : 'movie';
   const genreOptions = itemType === 'tv' ? GENRE_OPTIONS_BY_TYPE.tv : GENRE_OPTIONS_BY_TYPE.movie;
   const availableSortOptions = itemType === 'tv' ? SORT_OPTIONS_BY_TYPE.tv : SORT_OPTIONS_BY_TYPE.movie;
   
@@ -178,7 +186,7 @@ export function MediaListPage() {
   );
 
   const listQuery = useCachedQuery<TrendingResponse<Movie | TVShow | PersonCredit>>(
-    `list:${effectiveCategory ?? 'none'}:${page}:${selectedLanguage}:${selectedGenre}:${selectedSort}`,
+    `list:${effectiveCategory ?? 'none'}:${itemType}:${page}:${selectedLanguage}:${selectedGenre}:${selectedSort}`,
     async (signal) => {
       const currentPersonMatch = effectiveCategory?.match(/^person-(\d+)-(movies|tv)$/);
       const currentCompanyMatch = effectiveCategory?.match(/^company-(\d+)$/);
@@ -195,10 +203,14 @@ export function MediaListPage() {
         return tmdbService.getGenreMediaList(itemType, genreFilter, page, { signal }, languageFilter, sortFilter);
       }
       if (currentCompanyMatch?.[1]) {
-        return tmdbService.getMoviesByCompany(Number(currentCompanyMatch[1]), page, { signal }, languageFilter, sortFilter);
+        return itemType === 'tv'
+          ? tmdbService.getTVShowsByCompany(Number(currentCompanyMatch[1]), page, { signal }, languageFilter, sortFilter)
+          : tmdbService.getMoviesByCompany(Number(currentCompanyMatch[1]), page, { signal }, languageFilter, sortFilter);
       }
       if (currentProviderMatch?.[1]) {
-        return tmdbService.getMoviesByProvider(Number(currentProviderMatch[1]), page, { signal }, languageFilter, sortFilter);
+        return itemType === 'tv'
+          ? tmdbService.getTVShowsByProvider(Number(currentProviderMatch[1]), page, { signal }, languageFilter, sortFilter)
+          : tmdbService.getMoviesByProvider(Number(currentProviderMatch[1]), page, { signal }, languageFilter, sortFilter);
       }
       return tmdbService.getCategoryList(effectiveCategory ?? '', page, { signal }, languageFilter, sortFilter);
     },
@@ -217,9 +229,13 @@ export function MediaListPage() {
     const genreName = entityNameParam || GENRE_NAMES[genreMatch[2]] || 'Genre';
     pageTitle = `${genreName} ${itemType === 'tv' ? 'TV Shows' : 'Movies'}`;
   } else if (companyMatch) {
-    pageTitle = entityNameParam ? `Movies by ${entityNameParam}` : 'Production Movies';
+    pageTitle = itemType === 'tv'
+      ? entityNameParam ? `TV Shows by ${entityNameParam}` : 'Production TV Shows'
+      : entityNameParam ? `Movies by ${entityNameParam}` : 'Production Movies';
   } else if (providerMatch) {
-    pageTitle = entityNameParam ? `Streaming on ${entityNameParam}` : 'Platform Movies';
+    pageTitle = entityNameParam
+      ? `Streaming on ${entityNameParam} ${itemType === 'tv' ? 'TV Shows' : 'Movies'}`
+      : `Platform ${itemType === 'tv' ? 'TV Shows' : 'Movies'}`;
   }
 
   usePageTitle(pageTitle);
@@ -259,6 +275,18 @@ export function MediaListPage() {
       nextParams.set('sort', sort);
     }
     setPage(1);
+    setSearchParams(nextParams, { replace: true });
+  };
+
+  const updateMediaType = (mediaType: 'movie' | 'tv') => {
+    const nextParams = new URLSearchParams(searchParams);
+    nextParams.delete('page');
+    nextParams.delete('genre');
+    if (mediaType === 'movie') {
+      nextParams.delete('media_type');
+    } else {
+      nextParams.set('media_type', mediaType);
+    }
     setSearchParams(nextParams, { replace: true });
   };
 
@@ -355,7 +383,20 @@ export function MediaListPage() {
           </div>
         )}
         {!showMovieCategories && !showTVCategories && (
-          <div className="mb-4 flex justify-end">{filtersControl}</div>
+          <div className={`mb-4 flex items-center ${isCompanyProviderCategory ? 'justify-between gap-3' : 'justify-end'}`}>
+            {isCompanyProviderCategory && (
+              <MediaCategoryToggle
+                label="Media type"
+                options={[
+                  { value: 'movie', label: 'Movies' },
+                  { value: 'tv', label: 'TV Shows' },
+                ]}
+                value={itemType}
+                onChange={updateMediaType}
+              />
+            )}
+            {filtersControl}
+          </div>
         )}
         
         {loading ? (

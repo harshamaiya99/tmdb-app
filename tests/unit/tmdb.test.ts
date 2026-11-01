@@ -156,6 +156,47 @@ describe('TMDB Talk-show filtering', () => {
     expect(requestUrl.searchParams.get('without_genres')).toBe('10767');
   });
 
+  it('discovers TV shows by company and provider while excluding Talk shows', async () => {
+    const fetchMock = vi.mocked(fetch);
+    fetchMock
+      .mockResolvedValueOnce(responseWith({
+        page: 1,
+        results: [
+          { id: 1, name: 'Drama Series', genre_ids: [18] },
+          { id: 2, name: 'Talk Show', genre_ids: [10767] },
+        ],
+        total_pages: 1,
+        total_results: 2,
+      }))
+      .mockResolvedValueOnce(responseWith({
+        page: 1,
+        results: [{ id: 3, name: 'Another Series', genre_ids: [18] }],
+        total_pages: 1,
+        total_results: 1,
+      }));
+
+    await expect(tmdbService.getTVShowsByCompany(42, 2, undefined, 'en')).resolves.toMatchObject({
+      results: [{ id: 1, name: 'Drama Series' }],
+    });
+    await expect(tmdbService.getTVShowsByProvider(8, 3)).resolves.toMatchObject({
+      results: [{ id: 3, name: 'Another Series' }],
+    });
+
+    const companyUrl = new URL(String(fetchMock.mock.calls[0][0]));
+    expect(companyUrl.pathname).toBe('/3/discover/tv');
+    expect(companyUrl.searchParams.get('with_companies')).toBe('42');
+    expect(companyUrl.searchParams.get('with_original_language')).toBe('en');
+    expect(companyUrl.searchParams.get('without_genres')).toBe('10767');
+    expect(companyUrl.searchParams.get('page')).toBe('2');
+
+    const providerUrl = new URL(String(fetchMock.mock.calls[1][0]));
+    expect(providerUrl.pathname).toBe('/3/discover/tv');
+    expect(providerUrl.searchParams.get('with_watch_providers')).toBe('8');
+    expect(providerUrl.searchParams.get('watch_region')).toBe('US');
+    expect(providerUrl.searchParams.get('without_genres')).toBe('10767');
+    expect(providerUrl.searchParams.get('page')).toBe('3');
+  });
+
   it('keeps Talk shows in TV search results', async () => {
     vi.mocked(fetch).mockResolvedValue(responseWith({
       page: 1,
