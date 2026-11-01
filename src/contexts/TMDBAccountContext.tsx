@@ -7,6 +7,7 @@ const ACCOUNT_ID_STORAGE_KEY = 'tmdb_account_id';
 const ACCOUNT_NAME_STORAGE_KEY = 'tmdb_account_name';
 const ACCOUNT_USERNAME_STORAGE_KEY = 'tmdb_account_username';
 const ACCOUNT_AVATAR_PATH_STORAGE_KEY = 'tmdb_account_avatar_path';
+const LIST_APP_ACCESS_TOKEN_STORAGE_KEY = 'tmdb_v4_access_token';
 const REQUEST_TOKEN_STORAGE_KEY = 'tmdb_account_request_token';
 const LIST_ACCESS_TOKEN_STORAGE_KEY = 'tmdb_list_access_token';
 const LIST_ACCOUNT_ID_STORAGE_KEY = 'tmdb_list_account_id';
@@ -30,6 +31,7 @@ interface TMDBAccountContextValue {
   listAccountId: string;
   isListAccountConnected: boolean;
   canConnectLists: boolean;
+  configureV4AccessToken: (token: string) => void;
   connectAccount: () => Promise<void>;
   completeAuthorization: (requestToken: string) => Promise<void>;
   disconnectAccount: () => Promise<void>;
@@ -114,8 +116,18 @@ function clearSavedListSession() {
 export function TMDBAccountProvider({ children }: { children: ReactNode }) {
   const [session, setSession] = useState<AccountSession | null>(readSavedSession);
   const [listSession, setListSession] = useState<ListAccountSession | null>(readSavedListSession);
+  const [canConnectLists, setCanConnectLists] = useState(() => {
+    const savedToken = localStorage.getItem(LIST_APP_ACCESS_TOKEN_STORAGE_KEY) ?? '';
+    if (savedToken) tmdbService.setAccessToken(savedToken);
+    return tmdbService.hasV4AppAccessToken();
+  });
   const authorizationRequests = useRef(new Map<string, Promise<void>>());
   const listAuthorizationRequests = useRef(new Map<string, Promise<void>>());
+
+  const configureV4AccessToken = useCallback((token: string) => {
+    tmdbService.setAccessToken(token);
+    setCanConnectLists(tmdbService.hasV4AppAccessToken());
+  }, []);
 
   const connectAccount = useCallback(async () => {
     const requestToken = await tmdbService.createAccountRequestToken();
@@ -215,7 +227,8 @@ export function TMDBAccountProvider({ children }: { children: ReactNode }) {
     listAccessToken: listSession?.accessToken ?? '',
     listAccountId: listSession?.accountId ?? '',
     isListAccountConnected: Boolean(listSession),
-    canConnectLists: tmdbService.hasV4AppAccessToken(),
+    canConnectLists,
+    configureV4AccessToken,
     connectAccount,
     completeAuthorization,
     disconnectAccount,
@@ -225,6 +238,8 @@ export function TMDBAccountProvider({ children }: { children: ReactNode }) {
   }), [
     session,
     listSession,
+    canConnectLists,
+    configureV4AccessToken,
     connectAccount,
     completeAuthorization,
     disconnectAccount,

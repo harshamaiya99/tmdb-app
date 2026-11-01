@@ -23,14 +23,12 @@ function ProtectedRoute({ children }: { children: React.ReactNode }) {
 
   useEffect(() => {
     const apiKey = localStorage.getItem('tmdb_api_key');
-    const accessToken = localStorage.getItem('tmdb_v4_access_token') ?? '';
     if (apiKey) {
       tmdbService.setApiKey(apiKey);
       setIsAuthenticated(true);
     } else {
       setIsAuthenticated(false);
     }
-    tmdbService.setAccessToken(accessToken);
   }, []);
 
   if (isAuthenticated === null) {

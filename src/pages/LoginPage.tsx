@@ -5,10 +5,12 @@ import { Input } from '@/components/ui/input';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { tmdbService } from '@/lib/tmdb';
+import { useTMDBAccount } from '@/contexts/TMDBAccountContext';
 
 export function LoginPage() {
   const [apiKey, setApiKey] = useState('');
   const [accessToken, setAccessToken] = useState('');
+  const { configureV4AccessToken } = useTMDBAccount();
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
   const navigate = useNavigate();
@@ -29,7 +31,7 @@ export function LoginPage() {
       
       if (isValid) {
         tmdbService.setApiKey(apiKey);
-        tmdbService.setAccessToken(accessToken);
+        configureV4AccessToken(accessToken);
         localStorage.setItem('tmdb_api_key', apiKey);
         if (accessToken.trim()) {
           localStorage.setItem('tmdb_v4_access_token', accessToken.trim());

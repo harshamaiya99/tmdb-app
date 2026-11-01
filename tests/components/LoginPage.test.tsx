@@ -5,12 +5,20 @@ import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { LoginPage } from '@/pages/LoginPage';
 import { tmdbService } from '@/lib/tmdb';
 
+const accountMocks = {
+  configureV4AccessToken: vi.fn(),
+};
+
 vi.mock('@/lib/tmdb', () => ({
   tmdbService: {
     validateApiKey: vi.fn(),
     setApiKey: vi.fn(),
     setAccessToken: vi.fn(),
   },
+}));
+
+vi.mock('@/contexts/TMDBAccountContext', () => ({
+  useTMDBAccount: () => accountMocks,
 }));
 
 function CurrentPath() {
@@ -34,7 +42,7 @@ describe('LoginPage', () => {
   beforeEach(() => {
     vi.mocked(tmdbService.validateApiKey).mockReset();
     vi.mocked(tmdbService.setApiKey).mockReset();
-    vi.mocked(tmdbService.setAccessToken).mockReset();
+    accountMocks.configureV4AccessToken.mockReset();
   });
 
   it('requires an API key before validating', async () => {
@@ -60,7 +68,7 @@ describe('LoginPage', () => {
     });
     expect(tmdbService.setApiKey).toHaveBeenCalledWith('valid-key');
     expect(window.localStorage.getItem('tmdb_api_key')).toBe('valid-key');
-    expect(tmdbService.setAccessToken).toHaveBeenCalledWith('');
+    expect(accountMocks.configureV4AccessToken).toHaveBeenCalledWith('');
     expect(window.localStorage.getItem('tmdb_v4_access_token')).toBeNull();
   });
 
@@ -76,7 +84,7 @@ describe('LoginPage', () => {
     await waitFor(() => {
       expect(screen.getByLabelText('Current path')).toHaveTextContent('/');
     });
-    expect(tmdbService.setAccessToken).toHaveBeenCalledWith(' v4-token ');
+    expect(accountMocks.configureV4AccessToken).toHaveBeenCalledWith(' v4-token ');
     expect(window.localStorage.getItem('tmdb_v4_access_token')).toBe('v4-token');
   });
 
