@@ -1,6 +1,6 @@
-import { useState } from 'react';
+import { useEffect, useRef, useState, type KeyboardEvent } from 'react';
 import { Link } from 'react-router-dom';
-import { BookmarkCheck, BookmarkPlus, Heart } from 'lucide-react';
+import { BookmarkCheck, BookmarkPlus, Heart, ListPlus, UserRound, X } from 'lucide-react';
 import { AddToListButton } from '@/components/AddToListButton';
 import { Button } from '@/components/ui/button';
 import { ToastAction } from '@/components/ui/toast';
@@ -17,9 +17,11 @@ interface AccountMediaActionsProps {
 }
 
 export function AccountMediaActions({ mediaId, mediaType, mediaTitle }: AccountMediaActionsProps) {
-  const { account, isConnected, sessionId } = useTMDBAccount();
+  const { account, connectTMDBAccount, isConnected, sessionId } = useTMDBAccount();
   const { toast } = useToast();
   const [pendingAction, setPendingAction] = useState<'watchlist' | 'favorite' | null>(null);
+  const [isLoginPromptOpen, setIsLoginPromptOpen] = useState(false);
+  const closeLoginPromptButtonRef = useRef<HTMLButtonElement>(null);
   const accountStateKey = `account:${account?.id ?? 'none'}:state:${mediaType}:${mediaId}`;
   const accountStateQuery = useCachedQuery(
     accountStateKey,
@@ -34,17 +36,107 @@ export function AccountMediaActions({ mediaId, mediaType, mediaTitle }: AccountM
     ? stateOverride.value
     : accountStateQuery.data;
 
+  useEffect(() => {
+    if (isLoginPromptOpen) closeLoginPromptButtonRef.current?.focus();
+  }, [isLoginPromptOpen]);
+
   if (!isConnected || !account) {
+    const handleLoginPromptKeyDown = (event: KeyboardEvent<HTMLDivElement>) => {
+      if (event.key === 'Escape') setIsLoginPromptOpen(false);
+    };
+
+    const handleConnectAccount = () => {
+      void connectTMDBAccount().catch((error: unknown) => {
+        toast({
+          title: 'Could not connect your TMDB account',
+          description: error instanceof Error ? error.message : 'Please try again.',
+          variant: 'destructive',
+        });
+      });
+    };
+
     return (
-      <section aria-label="TMDB account actions" className="flex flex-wrap items-center gap-2">
-        <p className="text-xs text-muted-foreground">
-          <Link to="/account/watchlist" className="text-primary underline-offset-4 hover:underline">
-            Connect a TMDB account
-          </Link>
-          {' '}to manage your watchlist, favorites, and ratings.
-        </p>
-        <AddToListButton mediaId={mediaId} mediaTitle={mediaTitle} mediaType={mediaType} iconOnly />
-      </section>
+      <>
+        <section aria-label="TMDB account actions" className="grid min-w-0 grid-cols-3 gap-1">
+          <Button
+            type="button"
+            variant="outline"
+            size="sm"
+            className="h-9 w-full min-w-0 justify-center px-1"
+            aria-label="Add to watchlist"
+            title="Add to watchlist"
+            onClick={() => setIsLoginPromptOpen(true)}
+          >
+            <BookmarkPlus aria-hidden="true" className="h-4 w-4" />
+          </Button>
+          <Button
+            type="button"
+            variant="outline"
+            size="sm"
+            className="h-9 w-full min-w-0 justify-center px-1"
+            aria-label="Add to favorites"
+            title="Add to favorites"
+            onClick={() => setIsLoginPromptOpen(true)}
+          >
+            <Heart aria-hidden="true" className="h-4 w-4" />
+          </Button>
+          <Button
+            type="button"
+            variant="outline"
+            size="sm"
+            className="h-9 w-full min-w-0 justify-center px-1"
+            aria-label="Add to list"
+            title="Add to list"
+            onClick={() => setIsLoginPromptOpen(true)}
+          >
+            <ListPlus aria-hidden="true" className="h-4 w-4" />
+          </Button>
+        </section>
+        {isLoginPromptOpen && (
+          <div
+            className="fixed inset-0 z-[100] flex items-center justify-center bg-black/60 p-4"
+            onClick={(event) => {
+              if (event.target === event.currentTarget) setIsLoginPromptOpen(false);
+            }}
+            onKeyDown={handleLoginPromptKeyDown}
+          >
+            <section
+              role="dialog"
+              aria-modal="true"
+              aria-labelledby="tmdb-login-title"
+              className="w-full max-w-sm rounded-xl border bg-background p-5 shadow-xl sm:p-6"
+            >
+              <header className="mb-4 flex items-start justify-between gap-4">
+                <div>
+                  <h2 id="tmdb-login-title" className="text-lg font-semibold">Connect your TMDB account</h2>
+                  <p className="mt-2 text-sm text-muted-foreground">
+                    Log in to TMDB to manage your watchlist, favorites, ratings, and lists.
+                  </p>
+                </div>
+                <Button
+                  ref={closeLoginPromptButtonRef}
+                  type="button"
+                  variant="ghost"
+                  size="icon"
+                  aria-label="Close dialog"
+                  onClick={() => setIsLoginPromptOpen(false)}
+                >
+                  <X aria-hidden="true" className="h-4 w-4" />
+                </Button>
+              </header>
+              <div className="flex flex-col-reverse gap-2 sm:flex-row sm:justify-end">
+                <Button type="button" variant="outline" onClick={() => setIsLoginPromptOpen(false)}>
+                  Cancel
+                </Button>
+                <Button type="button" onClick={handleConnectAccount}>
+                  <UserRound aria-hidden="true" className="mr-2 h-4 w-4" />
+                  Log in to TMDB
+                </Button>
+              </div>
+            </section>
+          </div>
+        )}
+      </>
     );
   }
 
