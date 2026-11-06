@@ -5,9 +5,17 @@ const MOVIE_EMBED_STORAGE_KEY = 'tmdb_movie_embed_links';
 const TV_EMBED_STORAGE_KEY = 'tmdb_tv_embed_links';
 const LEGACY_MOVIE_EMBED_STORAGE_KEY = 'tmdb_movie_embed_url';
 const LEGACY_TV_EMBED_STORAGE_KEY = 'tmdb_tv_embed_url';
+const REGION_STORAGE_KEY = 'tmdb_content_region';
 
 function createEmbedLink(urlTemplate: string): EmbedLink {
   return { name: getEmbedLinkName(urlTemplate), urlTemplate };
+}
+
+function getDefaultRegion(): string {
+  const localeParts = Intl.DateTimeFormat().resolvedOptions().locale.split('-');
+  const region = localeParts.slice(1).find((part) => /^[A-Z]{2}$/i.test(part));
+  const normalizedRegion = region?.toUpperCase() ?? '';
+  return normalizedRegion || 'US';
 }
 
 export interface EmbedLink {
@@ -18,6 +26,7 @@ export interface EmbedLink {
 interface EmbedSettings {
   movieLinks: EmbedLink[];
   tvLinks: EmbedLink[];
+  region: string;
 }
 
 interface EmbedSettingsContextValue extends EmbedSettings {
@@ -32,6 +41,7 @@ const defaultSettings: EmbedSettings = {
   tvLinks: import.meta.env.VITE_TV_EMBED_URL
     ? [createEmbedLink(import.meta.env.VITE_TV_EMBED_URL)]
     : [],
+  region: getDefaultRegion(),
 };
 
 const EmbedSettingsContext = createContext<EmbedSettingsContextValue | null>(null);
@@ -61,9 +71,11 @@ function readLinks(storageKey: string, legacyStorageKey: string, defaults: Embed
 }
 
 function loadSettings(): EmbedSettings {
+  const savedRegion = localStorage.getItem(REGION_STORAGE_KEY)?.toUpperCase() ?? '';
   return {
     movieLinks: readLinks(MOVIE_EMBED_STORAGE_KEY, LEGACY_MOVIE_EMBED_STORAGE_KEY, defaultSettings.movieLinks),
     tvLinks: readLinks(TV_EMBED_STORAGE_KEY, LEGACY_TV_EMBED_STORAGE_KEY, defaultSettings.tvLinks),
+    region: /^[A-Z]{2}$/.test(savedRegion) ? savedRegion : defaultSettings.region,
   };
 }
 
@@ -71,12 +83,22 @@ export function EmbedSettingsProvider({ children }: { children: ReactNode }) {
   const [settings, setSettings] = useState(loadSettings);
 
   const saveSettings = (nextSettings: EmbedSettings) => {
+    const region = nextSettings.region.trim().toUpperCase();
+    if (region && !/^[A-Z]{2}$/.test(region)) {
+      throw new Error('Choose a valid country for regional TMDB content.');
+    }
     const normalizedSettings = {
       movieLinks: nextSettings.movieLinks.map((link) => createEmbedLink(link.urlTemplate.trim())),
       tvLinks: nextSettings.tvLinks.map((link) => createEmbedLink(link.urlTemplate.trim())),
+      region,
     };
     localStorage.setItem(MOVIE_EMBED_STORAGE_KEY, JSON.stringify(normalizedSettings.movieLinks));
     localStorage.setItem(TV_EMBED_STORAGE_KEY, JSON.stringify(normalizedSettings.tvLinks));
+    if (normalizedSettings.region) {
+      localStorage.setItem(REGION_STORAGE_KEY, normalizedSettings.region);
+    } else {
+      localStorage.removeItem(REGION_STORAGE_KEY);
+    }
     localStorage.removeItem(LEGACY_MOVIE_EMBED_STORAGE_KEY);
     localStorage.removeItem(LEGACY_TV_EMBED_STORAGE_KEY);
     setSettings(normalizedSettings);
@@ -87,6 +109,7 @@ export function EmbedSettingsProvider({ children }: { children: ReactNode }) {
     localStorage.removeItem(TV_EMBED_STORAGE_KEY);
     localStorage.removeItem(LEGACY_MOVIE_EMBED_STORAGE_KEY);
     localStorage.removeItem(LEGACY_TV_EMBED_STORAGE_KEY);
+    localStorage.removeItem(REGION_STORAGE_KEY);
     setSettings(defaultSettings);
   };
 

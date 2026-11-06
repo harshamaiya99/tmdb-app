@@ -26,7 +26,7 @@ export function MovieDetailsPage() {
   const detailsColumnRef = useRef<HTMLDivElement>(null);
   const rightColumnRef = useRef<HTMLDivElement>(null);
   const companyInfoRef = useRef<HTMLElement>(null);
-  const { movieLinks } = useEmbedSettings();
+  const { movieLinks, region } = useEmbedSettings();
   
   const navigate = useNavigate();
   usePageTitle('Movie Details');
@@ -46,7 +46,8 @@ export function MovieDetailsPage() {
   const loading = movieQuery.loading;
   const trailer = movie?.videos?.results.find((v) => v.type === 'Trailer' && v.site === 'YouTube');
   const hasCollection = collection && collection.parts.length > 1;
-  const hasStreamingProviders = Boolean(movie?.['watch/providers']?.results?.US?.flatrate?.length);
+  const regionProviders = region ? movie?.['watch/providers']?.results?.[region]?.flatrate ?? [] : [];
+  const hasStreamingProviders = regionProviders.length > 0;
   const hasProductionCompanies = Boolean(movie?.production_companies?.length);
   const hasRightColumn = Boolean(trailer || hasCollection);
 
@@ -116,6 +117,11 @@ export function MovieDetailsPage() {
 
   const releaseDate = formatDate(movie.release_date);
   const rating = movie.vote_average?.toFixed(1);
+  const regionalReleases = region
+    ? movie.release_dates?.results.find((release) => release.iso_3166_1 === region)?.release_dates ?? []
+    : [];
+  const certification = regionalReleases.find((release) => release.type === 3 && release.certification)
+    ?? regionalReleases.find((release) => release.certification);
   const similarMovies = (movie.recommendations?.results?.length ? movie.recommendations.results : movie.similar?.results) || [];
   
   // Sort Crew: Director First!
@@ -215,6 +221,11 @@ export function MovieDetailsPage() {
                     <span>({movie.vote_count.toLocaleString()})</span>
                   </div>
                 )}
+                {certification && (
+                  <Badge variant="outline" aria-label={`${region} certificate ${certification.certification}`}>
+                    {region} · {certification.certification}
+                  </Badge>
+                )}
               </div>
 
               {movie.genres && movie.genres.length > 0 && (
@@ -279,16 +290,16 @@ export function MovieDetailsPage() {
             )}
           </div>
 
-        {(movie['watch/providers']?.results?.US?.flatrate?.length || movie.production_companies?.length) && (
+        {(regionProviders.length || movie.production_companies?.length) && (
           <section
             ref={companyInfoRef}
             className={`mt-4 grid gap-6 border-t pt-6 min-[360px]:col-span-2 sm:grid-cols-2 md:col-span-2 md:mt-0 xl:col-start-1 xl:row-start-2${placeCompanyInfoBesideRightColumn ? ' xl:col-span-2' : hasRightColumn ? ' xl:col-span-3' : ' xl:col-span-2'}`}
           >
-            {movie['watch/providers']?.results?.US?.flatrate && movie['watch/providers'].results.US.flatrate.length > 0 && (
+            {regionProviders.length > 0 && (
               <div>
-                <h2 className="mb-3 text-xl font-semibold">Streaming On</h2>
+                <h2 className="mb-3 text-xl font-semibold">Streaming On in {region}</h2>
                 <div className="flex flex-wrap gap-3">
-                  {movie['watch/providers'].results.US.flatrate.map((provider) => (
+                  {regionProviders.map((provider) => (
                     <Link
                       key={provider.provider_id}
                       to={`/category/provider-${provider.provider_id}?name=${encodeURIComponent(provider.provider_name)}`}

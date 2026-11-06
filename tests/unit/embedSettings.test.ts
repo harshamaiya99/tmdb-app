@@ -6,20 +6,23 @@ import {
 } from '@/lib/embedSettings';
 
 describe('embed settings file', () => {
-  it('exports and imports movie and TV URL templates', () => {
+  it('exports and imports movie, TV, and country settings', () => {
     const contents = createEmbedSettingsFile(
       [{ name: 'movie.example', urlTemplate: 'https://movie.example/{TMDB_ID}' }],
       [{ name: 'tv.example', urlTemplate: 'https://tv.example/{TMDB_ID}/{SEASON}/{EPISODE}' }],
+      'IN',
     );
 
     expect(JSON.parse(contents)).toEqual({
       version: 1,
       movieLinks: ['https://movie.example/{TMDB_ID}'],
       tvLinks: ['https://tv.example/{TMDB_ID}/{SEASON}/{EPISODE}'],
+      region: 'IN',
     });
     expect(parseEmbedSettingsFile(contents)).toEqual({
       movieLinks: [{ name: 'movie.example', urlTemplate: 'https://movie.example/{TMDB_ID}' }],
       tvLinks: [{ name: 'tv.example', urlTemplate: 'https://tv.example/{TMDB_ID}/{SEASON}/{EPISODE}' }],
+      region: 'IN',
     });
   });
 

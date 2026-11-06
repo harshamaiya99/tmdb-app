@@ -5,6 +5,7 @@ interface EmbedSettingsFile {
   version: 1;
   movieLinks: string[];
   tvLinks: string[];
+  region?: string;
 }
 
 export function isValidEmbedUrlTemplate(template: string): boolean {
@@ -30,7 +31,7 @@ function toEmbedLinks(templates: string[]): EmbedLink[] {
   }));
 }
 
-export function parseEmbedSettingsFile(contents: string): { movieLinks: EmbedLink[]; tvLinks: EmbedLink[] } {
+export function parseEmbedSettingsFile(contents: string): { movieLinks: EmbedLink[]; tvLinks: EmbedLink[]; region?: string } {
   let parsed: unknown;
   try {
     parsed = JSON.parse(contents);
@@ -49,6 +50,8 @@ export function parseEmbedSettingsFile(contents: string): { movieLinks: EmbedLin
     || !('tvLinks' in parsed)
     || !Array.isArray(parsed.tvLinks)
     || !parsed.tvLinks.every((template): template is string => typeof template === 'string')
+    || ('region' in parsed && typeof parsed.region !== 'string')
+    || ('region' in parsed && typeof parsed.region === 'string' && !/^[A-Za-z]{2}$/.test(parsed.region))
   ) {
     throw new Error('This file is not a supported embed settings export.');
   }
@@ -56,14 +59,16 @@ export function parseEmbedSettingsFile(contents: string): { movieLinks: EmbedLin
   return {
     movieLinks: toEmbedLinks(parsed.movieLinks),
     tvLinks: toEmbedLinks(parsed.tvLinks),
+    ...('region' in parsed && typeof parsed.region === 'string' ? { region: parsed.region.toUpperCase() } : {}),
   };
 }
 
-export function createEmbedSettingsFile(movieLinks: EmbedLink[], tvLinks: EmbedLink[]): string {
+export function createEmbedSettingsFile(movieLinks: EmbedLink[], tvLinks: EmbedLink[], region?: string): string {
   const file: EmbedSettingsFile = {
     version: 1,
     movieLinks: movieLinks.map((link) => link.urlTemplate.trim()).filter(Boolean),
     tvLinks: tvLinks.map((link) => link.urlTemplate.trim()).filter(Boolean),
+    ...(region ? { region: region.toUpperCase() } : {}),
   };
 
   return JSON.stringify({

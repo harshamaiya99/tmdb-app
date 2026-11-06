@@ -10,6 +10,7 @@ import { MediaCategoryToggle, MOVIE_CATEGORIES, TV_CATEGORIES } from '@/componen
 import { tmdbService, type Movie, type TVShow, type PersonCredit, type TrendingResponse } from '@/lib/tmdb';
 import { useCachedQuery } from '@/hooks/useCachedQuery';
 import { usePagination } from '@/hooks/usePagination';
+import { useEmbedSettings } from '@/contexts/EmbedSettingsContext';
 import { usePageTitle } from '@/hooks/usePageTitle';
 
 const GENRE_NAMES: Record<string, string> = {
@@ -132,6 +133,7 @@ const SORT_OPTIONS_BY_TYPE = {
 
 export function MediaListPage() {
   const { category } = useParams<{ category: string }>();
+  const { region } = useEmbedSettings();
   const location = useLocation();
   const navigate = useNavigate();
   
@@ -186,7 +188,7 @@ export function MediaListPage() {
   );
 
   const listQuery = useCachedQuery<TrendingResponse<Movie | TVShow | PersonCredit>>(
-    `list:${effectiveCategory ?? 'none'}:${itemType}:${page}:${selectedLanguage}:${selectedGenre}:${selectedSort}`,
+    `list:${effectiveCategory ?? 'none'}:${itemType}:${page}:${selectedLanguage}:${selectedGenre}:${selectedSort}:${region}`,
     async (signal) => {
       const currentPersonMatch = effectiveCategory?.match(/^person-(\d+)-(movies|tv)$/);
       const currentCompanyMatch = effectiveCategory?.match(/^company-(\d+)$/);
@@ -209,10 +211,10 @@ export function MediaListPage() {
       }
       if (currentProviderMatch?.[1]) {
         return itemType === 'tv'
-          ? tmdbService.getTVShowsByProvider(Number(currentProviderMatch[1]), page, { signal }, languageFilter, sortFilter)
-          : tmdbService.getMoviesByProvider(Number(currentProviderMatch[1]), page, { signal }, languageFilter, sortFilter);
+          ? tmdbService.getTVShowsByProvider(Number(currentProviderMatch[1]), page, { signal }, languageFilter, sortFilter, region)
+          : tmdbService.getMoviesByProvider(Number(currentProviderMatch[1]), page, { signal }, languageFilter, sortFilter, region);
       }
-      return tmdbService.getCategoryList(effectiveCategory ?? '', page, { signal }, languageFilter, sortFilter);
+      return tmdbService.getCategoryList(effectiveCategory ?? '', page, { signal }, languageFilter, sortFilter, region);
     },
     { enabled: Boolean(effectiveCategory) },
   );

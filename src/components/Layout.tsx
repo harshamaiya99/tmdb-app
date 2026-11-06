@@ -7,7 +7,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { useTheme } from '@/hooks/useTheme';
 import { useTitle } from '@/contexts/TitleContext';
-import { tmdbService } from '@/lib/tmdb';
+import { tmdbService, type TMDBCountry } from '@/lib/tmdb';
 import { TMDBImage } from '@/components/TMDBImage';
 import { useCachedQuery } from '@/hooks/useCachedQuery';
 import { useDebouncedValue } from '@/hooks/useDebouncedValue';
@@ -121,7 +121,7 @@ export function Layout({ children }: LayoutProps) {
     isConnected: isTMDBAccountConnected,
     isListAccountConnected,
   } = useTMDBAccount();
-  const { movieLinks, tvLinks, saveSettings, resetSettings } = useEmbedSettings();
+  const { movieLinks, tvLinks, region, saveSettings, resetSettings } = useEmbedSettings();
   const location = useLocation();
   const [settingsOpen, setSettingsOpen] = useState(false);
   const importFileInputRef = useRef<HTMLInputElement>(null);
@@ -131,7 +131,13 @@ export function Layout({ children }: LayoutProps) {
   const [movieLinkInputs, setMovieLinkInputs] = useState<EmbedLink[]>(movieLinks.length ? movieLinks : [{ name: '', urlTemplate: '' }]);
   const [tvLinkInputs, setTvLinkInputs] = useState<EmbedLink[]>(tvLinks.length ? tvLinks : [{ name: '', urlTemplate: '' }]);
   const [settingsError, setSettingsError] = useState('');
+  const [regionInput, setRegionInput] = useState(region);
   const debouncedSearchQuery = useDebouncedValue(searchQuery.trim(), 120);
+  const countriesQuery = useCachedQuery<TMDBCountry[]>(
+    'tmdb:countries',
+    (signal) => tmdbService.getCountries({ signal }),
+    { enabled: settingsOpen, ttlMs: 24 * 60 * 60 * 1000 },
+  );
   const normalizedSearchQuery = searchQuery.trim();
   const showSuggestions = suggestionsOpen
     && normalizedSearchQuery.length >= 2;
@@ -233,6 +239,7 @@ export function Layout({ children }: LayoutProps) {
   const openEmbedSettings = () => {
     setMovieLinkInputs(movieLinks.length ? movieLinks : [{ name: '', urlTemplate: '' }]);
     setTvLinkInputs(tvLinks.length ? tvLinks : [{ name: '', urlTemplate: '' }]);
+    setRegionInput(region);
     setSettingsError('');
     setSettingsOpen(true);
   };
@@ -285,6 +292,7 @@ export function Layout({ children }: LayoutProps) {
       const importedSettings = parseEmbedSettingsFile(await file.text());
       setMovieLinkInputs(importedSettings.movieLinks.length ? importedSettings.movieLinks : [{ name: '', urlTemplate: '' }]);
       setTvLinkInputs(importedSettings.tvLinks.length ? importedSettings.tvLinks : [{ name: '', urlTemplate: '' }]);
+      if (importedSettings.region) setRegionInput(importedSettings.region);
       setSettingsError('');
     } catch (error) {
       setSettingsError(error instanceof Error ? error.message : 'Could not read the selected settings file.');
@@ -295,7 +303,7 @@ export function Layout({ children }: LayoutProps) {
     setSettingsError('');
     try {
       const file = new Blob(
-        [createEmbedSettingsFile(movieLinkInputs, tvLinkInputs)],
+        [createEmbedSettingsFile(movieLinkInputs, tvLinkInputs, regionInput)],
         { type: 'application/json' },
       );
       const url = URL.createObjectURL(file);
@@ -337,6 +345,7 @@ export function Layout({ children }: LayoutProps) {
       saveSettings({
         movieLinks: movieLinksToSave,
         tvLinks: tvLinksToSave,
+        region: regionInput,
       });
       setSettingsOpen(false);
       toast({
@@ -466,7 +475,7 @@ export function Layout({ children }: LayoutProps) {
           className="flex min-h-10 cursor-pointer select-none items-center gap-2 rounded-sm px-3 py-2 text-sm outline-none hover:bg-accent focus:bg-accent focus:text-accent-foreground"
         >
           <Settings2 className="h-4 w-4" />
-          Embed link settings
+          Settings
         </DropdownMenu.Item>
         <DropdownMenu.Item
           onSelect={toggleTheme}
@@ -766,9 +775,9 @@ export function Layout({ children }: LayoutProps) {
           >
             <div className="mb-5 flex shrink-0 items-start justify-between gap-4">
               <div>
-                <h2 id="embed-settings-title" className="text-lg font-semibold">Embed link settings</h2>
+                <h2 id="embed-settings-title" className="text-lg font-semibold">Settings</h2>
                 <p id="embed-settings-description" className="mt-1 text-sm leading-relaxed text-muted-foreground">
-                  Add movie and TV URLs. Each domain is used as the link name.
+                  Choose your country for regional TMDB results and add movie and TV URLs.
                 </p>
               </div>
               <Button
@@ -776,7 +785,7 @@ export function Layout({ children }: LayoutProps) {
                 variant="ghost"
                 size="icon"
                 onClick={() => setSettingsOpen(false)}
-                aria-label="Close embed settings"
+                aria-label="Close settings"
               >
                 <X className="h-4 w-4" />
               </Button>
@@ -802,6 +811,35 @@ export function Layout({ children }: LayoutProps) {
                   Export JSON
                 </Button>
               </div>
+              <section className="space-y-2 rounded-lg border border-border/60 bg-card p-3">
+                <label htmlFor="content-region" className="text-sm font-semibold">Content country</label>
+                <select
+                  id="content-region"
+                  aria-label="Content country"
+                  value={regionInput}
+                  onChange={(event) => setRegionInput(event.target.value)}
+                  disabled={countriesQuery.loading || Boolean(countriesQuery.error)}
+                  className="flex h-9 w-full rounded-md border border-input bg-background px-3 py-1 text-sm shadow-sm focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring disabled:cursor-not-allowed disabled:opacity-50"
+                >
+                  {regionInput && !countriesQuery.data?.some((country) => country.iso_3166_1 === regionInput) && (
+                    <option value={regionInput}>{regionInput}</option>
+                  )}
+                  {!regionInput && <option value="">Select a country</option>}
+                  {(countriesQuery.data ?? [])
+                    .slice()
+                    .sort((a, b) => a.english_name.localeCompare(b.english_name))
+                    .map((country) => (
+                      <option key={country.iso_3166_1} value={country.iso_3166_1}>
+                        {country.english_name}
+                      </option>
+                    ))}
+                </select>
+                <p className="text-xs leading-relaxed text-muted-foreground">
+                  Used for movie certifications, streaming availability, provider searches, and regional movie results.
+                </p>
+                {countriesQuery.loading && <p className="text-xs text-muted-foreground">Loading countries…</p>}
+                {countriesQuery.error && <p role="alert" className="text-xs text-destructive">{countriesQuery.error.message}</p>}
+              </section>
               {([
                 { mediaType: 'movie' as const, label: 'Movie', links: movieLinkInputs, placeholder: 'https://example.com/movie/{TMDB_ID}/{IMDB_ID}' },
                 { mediaType: 'tv' as const, label: 'TV', links: tvLinkInputs, placeholder: 'https://example.com/tv/{TMDB_ID}/{SEASON}/{EPISODE}' },

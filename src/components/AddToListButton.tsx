@@ -7,6 +7,7 @@ import { Input } from '@/components/ui/input';
 import { ToastAction } from '@/components/ui/toast';
 import { useToast } from '@/components/ui/use-toast';
 import { useTMDBAccount } from '@/contexts/TMDBAccountContext';
+import { useEmbedSettings } from '@/contexts/EmbedSettingsContext';
 import { useCachedQuery } from '@/hooks/useCachedQuery';
 import { clearRequestCache } from '@/lib/requestCache';
 import { tmdbService } from '@/lib/tmdb';
@@ -27,6 +28,7 @@ export function AddToListButton({ mediaId, mediaTitle, mediaType, className, ico
     listAccessToken,
     listAccountId,
   } = useTMDBAccount();
+  const { region } = useEmbedSettings();
   const { toast } = useToast();
   const [isOpen, setIsOpen] = useState(false);
   const [isCreateFormOpen, setIsCreateFormOpen] = useState(false);
@@ -118,7 +120,13 @@ export function AddToListButton({ mediaId, mediaTitle, mediaType, className, ico
     setIsSubmittingCreate(true);
     let createdListId: number | null = null;
     try {
-      const createdList = await tmdbService.createUserList(name, description.trim(), isPublic, listAccessToken);
+      const createdList = await tmdbService.createUserList(
+        name,
+        description.trim(),
+        isPublic,
+        listAccessToken,
+        region || 'US',
+      );
       createdListId = createdList.id;
       await tmdbService.addMediaToUserList(createdList.id, mediaType, mediaId, listAccessToken);
       clearRequestCache('account:');

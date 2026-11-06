@@ -2,6 +2,13 @@ const TMDB_BASE_URL = 'https://api.themoviedb.org';
 const TMDB_IMAGE_BASE_URL = 'https://image.tmdb.org/t/p';
 const TV_TALK_GENRE_ID = 10767;
 
+function addQueryParam(endpoint: string, key: string, value: string): string {
+  const [path, query = ''] = endpoint.split('?');
+  const params = new URLSearchParams(query);
+  params.set(key, value);
+  return `${path}?${params.toString()}`;
+}
+
 function isTalkShow(show: { genre_ids?: number[] } | null | undefined): boolean {
   return show?.genre_ids?.includes(TV_TALK_GENRE_ID) ?? false;
 }
@@ -104,6 +111,21 @@ export interface Movie {
   };
   production_companies?: ProductionCompany[]; 
   'watch/providers'?: WatchProviders;
+  release_dates?: {
+    results: {
+      iso_3166_1: string;
+      release_dates: {
+        certification: string;
+        type: number;
+      }[];
+    }[];
+  };
+}
+
+export interface TMDBCountry {
+  iso_3166_1: string;
+  english_name: string;
+  native_name: string;
 }
 
 export interface Creator {
@@ -496,12 +518,16 @@ class TMDBService {
     page: number,
     options?: TMDBRequestOptions,
     fallbackLimit = MAX_SEARCH_SPACING_CANDIDATES,
+    region?: string,
   ): Promise<TrendingResponse<T>> {
-    const search = (term: string) =>
-      this.fetchFromTMDB<TrendingResponse<T>>(
-        `${endpoint}?query=${encodeURIComponent(term)}&page=${page}`,
+    const search = (term: string) => {
+      const path = `${endpoint}?query=${encodeURIComponent(term)}&page=${page}`;
+      const regionalPath = region ? addQueryParam(path, 'region', region) : path;
+      return this.fetchFromTMDB<TrendingResponse<T>>(
+        regionalPath,
         options,
       );
+    };
 
     const results = await search(query);
     if (results.results.length > 0) return results;
@@ -520,8 +546,9 @@ class TMDBService {
     return data.results;
   }
 
-  async getNowPlayingMovies(options?: TMDBRequestOptions): Promise<Movie[]> {
-    const data = await this.fetchFromTMDB<TrendingResponse<Movie>>('/movie/now_playing', options);
+  async getNowPlayingMovies(options?: TMDBRequestOptions, region?: string): Promise<Movie[]> {
+    const endpoint = region ? `/movie/now_playing?region=${encodeURIComponent(region)}` : '/movie/now_playing';
+    const data = await this.fetchFromTMDB<TrendingResponse<Movie>>(endpoint, options);
     return data.results;
   }
 
@@ -530,8 +557,9 @@ class TMDBService {
     return data.results;
   }
 
-  async getUpcomingMovies(options?: TMDBRequestOptions): Promise<Movie[]> {
-    const data = await this.fetchFromTMDB<TrendingResponse<Movie>>('/movie/upcoming', options);
+  async getUpcomingMovies(options?: TMDBRequestOptions, region?: string): Promise<Movie[]> {
+    const endpoint = region ? `/movie/upcoming?region=${encodeURIComponent(region)}` : '/movie/upcoming';
+    const data = await this.fetchFromTMDB<TrendingResponse<Movie>>(endpoint, options);
     return data.results;
   }
 
@@ -558,8 +586,8 @@ class TMDBService {
     return this.fetchFromTMDB<TrendingResponse<PersonListResult>>(`/trending/person/day?page=${page}`, options);
   }
 
-  async getTrendingStreamingMovies(options?: TMDBRequestOptions): Promise<Movie[]> {
-    const data = await this.fetchFromTMDB<TrendingResponse<Movie>>('/discover/movie?watch_region=IN&with_watch_monetization_types=flatrate&sort_by=popularity.desc', options);
+  async getTrendingStreamingMovies(options?: TMDBRequestOptions, region = 'US'): Promise<Movie[]> {
+    const data = await this.fetchFromTMDB<TrendingResponse<Movie>>(`/discover/movie?watch_region=${encodeURIComponent(region)}&with_watch_monetization_types=flatrate&sort_by=popularity.desc`, options);
     return data.results;
   }
 
@@ -590,22 +618,22 @@ class TMDBService {
     return { ...data, results: withoutTalkShows(data.results) };
   }
 
-  // Fetch movies by streaming provider (defaulting to US region)
-  async getMoviesByProvider(providerId: number, page: number = 1, options?: TMDBRequestOptions, language?: string, sortBy: string = 'popularity.desc'): Promise<TrendingResponse<Movie>> {
+  // Fetch movies by streaming provider in the selected region.
+  async getMoviesByProvider(providerId: number, page: number = 1, options?: TMDBRequestOptions, language?: string, sortBy: string = 'popularity.desc', region = 'US'): Promise<TrendingResponse<Movie>> {
     const languageFilter = language ? `&with_original_language=${encodeURIComponent(language)}` : '';
-    const path = `/discover/movie?with_watch_providers=${providerId}&watch_region=US${languageFilter}&page=${page}`;
+    const path = `/discover/movie?with_watch_providers=${providerId}&watch_region=${encodeURIComponent(region || 'US')}${languageFilter}&page=${page}`;
     return this.fetchFromTMDB<TrendingResponse<Movie>>(`${applySortParam(path, sortBy)}`, options);
   }
 
-  async getTVShowsByProvider(providerId: number, page: number = 1, options?: TMDBRequestOptions, language?: string, sortBy: string = 'popularity.desc'): Promise<TrendingResponse<TVShow>> {
+  async getTVShowsByProvider(providerId: number, page: number = 1, options?: TMDBRequestOptions, language?: string, sortBy: string = 'popularity.desc', region = 'US'): Promise<TrendingResponse<TVShow>> {
     const languageFilter = language ? `&with_original_language=${encodeURIComponent(language)}` : '';
-    const path = `/discover/tv?with_watch_providers=${providerId}&watch_region=US${languageFilter}&without_genres=${TV_TALK_GENRE_ID}&page=${page}`;
+    const path = `/discover/tv?with_watch_providers=${providerId}&watch_region=${encodeURIComponent(region || 'US')}${languageFilter}&without_genres=${TV_TALK_GENRE_ID}&page=${page}`;
     const data = await this.fetchFromTMDB<TrendingResponse<TVShow>>(`${applySortParam(path, sortBy)}`, options);
     return { ...data, results: withoutTalkShows(data.results) };
   }
 
   // --- PAGINATED CATEGORY ENDPOINT ---
-  async getCategoryList(category: string, page: number = 1, options?: TMDBRequestOptions, language?: string, sortBy: string = 'popularity.desc'): Promise<TrendingResponse<Movie | TVShow>> {
+  async getCategoryList(category: string, page: number = 1, options?: TMDBRequestOptions, language?: string, sortBy: string = 'popularity.desc', region?: string): Promise<TrendingResponse<Movie | TVShow>> {
     if (category === 'trending-movies' || category === 'trending-tv') {
       const mediaType = category === 'trending-movies' ? 'movie' : 'tv';
       const data = await this.fetchFromTMDB<TrendingResponse<Movie | TVShow>>(
@@ -624,7 +652,7 @@ class TMDBService {
       'upcoming-movies': '/movie/upcoming',
       'popular-tv': '/tv/popular',
       'top-rated-tv': '/tv/top_rated',
-      'trending-streaming-movies': '/discover/movie?watch_region=IN&with_watch_monetization_types=flatrate&sort_by=popularity.desc',
+      'trending-streaming-movies': '/discover/movie?with_watch_monetization_types=flatrate&sort_by=popularity.desc',
       'imdb-top-rated-movies': '/discover/movie?sort_by=vote_average.desc&vote_count.gte=10000'
     };
     
@@ -638,7 +666,13 @@ class TMDBService {
       : '';
     const talkFilter = isTVCategory ? `without_genres=${TV_TALK_GENRE_ID}` : '';
     const queryParams = [languageFilter, talkFilter, `page=${page}`].filter(Boolean).join('&');
-    const path = `${endpoint}${endpoint.includes('?') ? '&' : '?'}${queryParams}`;
+    let path = `${endpoint}${endpoint.includes('?') ? '&' : '?'}${queryParams}`;
+    if (region && ['popular-movies', 'now-playing-movies', 'top-rated-movies', 'upcoming-movies', 'imdb-top-rated-movies'].includes(category)) {
+      path = addQueryParam(path, 'region', region);
+    }
+    if (category === 'trending-streaming-movies') {
+      path = addQueryParam(path, 'watch_region', region || 'US');
+    }
     const requestPath = isDiscoverEndpoint ? applySortParam(path, sortBy) : path;
     const data = await this.fetchFromTMDB<TrendingResponse<Movie | TVShow>>(requestPath, options);
     return isTVCategory
@@ -659,7 +693,11 @@ class TMDBService {
 
   // --- DETAILS ENDPOINTS ---
   async getMovieDetails(id: number, options?: TMDBRequestOptions): Promise<Movie> {
-    return this.fetchFromTMDB<Movie>(`/movie/${id}?append_to_response=credits,videos,recommendations,external_ids,reviews,watch/providers`, options);
+    return this.fetchFromTMDB<Movie>(`/movie/${id}?append_to_response=credits,videos,recommendations,external_ids,reviews,watch/providers,release_dates`, options);
+  }
+
+  async getCountries(options?: TMDBRequestOptions): Promise<TMDBCountry[]> {
+    return this.fetchFromTMDB<TMDBCountry[]>('/configuration/countries', options);
   }
 
   async getMovieReviews(id: number, page: number = 1, options?: TMDBRequestOptions): Promise<ReviewResponse> {
@@ -880,12 +918,13 @@ class TMDBService {
     description: string,
     isPublic: boolean,
     accessToken: string,
+    region = 'US',
   ): Promise<{ id: number; success: boolean }> {
     return this.fetchFromTMDB<{ id: number; success: boolean }>('/list', {
       apiVersion: '4',
       method: 'POST',
       accessToken,
-      body: { name, description, iso_3166_1: 'US', iso_639_1: 'en', public: isPublic },
+      body: { name, description, iso_3166_1: region, iso_639_1: 'en', public: isPublic },
     });
   }
 
@@ -1036,8 +1075,8 @@ class TMDBService {
   }
 
   // --- SEARCH ---
-  async searchMovies(query: string, page: number = 1, options?: TMDBRequestOptions): Promise<TrendingResponse<Movie>> {
-    return this.searchWithSpacingFallback<Movie>('/search/movie', query, page, options);
+  async searchMovies(query: string, page: number = 1, options?: TMDBRequestOptions, region?: string): Promise<TrendingResponse<Movie>> {
+    return this.searchWithSpacingFallback<Movie>('/search/movie', query, page, options, MAX_SEARCH_SPACING_CANDIDATES, region);
   }
 
   async searchTVShows(query: string, page: number = 1, options?: TMDBRequestOptions): Promise<TrendingResponse<TVShow>> {

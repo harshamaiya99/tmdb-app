@@ -30,6 +30,58 @@ describe('TMDB Talk-show filtering', () => {
     expect(requestUrl.searchParams.get('api_key')).toBe('test-api-key');
   });
 
+  it('loads country choices from TMDB configuration', async () => {
+    const fetchMock = vi.mocked(fetch);
+    fetchMock.mockResolvedValue(responseWith([
+      { iso_3166_1: 'IN', english_name: 'India', native_name: 'भारत' },
+    ]));
+
+    await expect(tmdbService.getCountries()).resolves.toEqual([
+      { iso_3166_1: 'IN', english_name: 'India', native_name: 'भारत' },
+    ]);
+    expect(new URL(String(fetchMock.mock.calls[0][0])).pathname).toBe('/3/configuration/countries');
+  });
+
+  it('includes release dates in movie details for certification display', async () => {
+    const fetchMock = vi.mocked(fetch);
+    fetchMock.mockResolvedValue(responseWith({
+      id: 200,
+      title: 'Example movie',
+      release_dates: {
+        results: [{
+          iso_3166_1: 'US',
+          release_dates: [{ certification: 'PG-13', type: 3 }],
+        }],
+      },
+    }));
+
+    await expect(tmdbService.getMovieDetails(200)).resolves.toMatchObject({
+      release_dates: {
+        results: [{ iso_3166_1: 'US', release_dates: [{ certification: 'PG-13', type: 3 }] }],
+      },
+    });
+
+    const requestUrl = new URL(String(fetchMock.mock.calls[0][0]));
+    expect(requestUrl.pathname).toBe('/3/movie/200');
+    expect(requestUrl.searchParams.get('append_to_response')).toContain('release_dates');
+  });
+
+  it('uses the selected region for movie searches', async () => {
+    const fetchMock = vi.mocked(fetch);
+    fetchMock.mockResolvedValue(responseWith({
+      page: 1,
+      results: [{ id: 200, title: 'Example movie' }],
+      total_pages: 1,
+      total_results: 1,
+    }));
+
+    await tmdbService.searchMovies('Example', 1, undefined, 'IN');
+
+    const requestUrl = new URL(String(fetchMock.mock.calls[0][0]));
+    expect(requestUrl.pathname).toBe('/3/search/movie');
+    expect(requestUrl.searchParams.get('region')).toBe('IN');
+  });
+
   it('filters Talk shows from trending TV results', async () => {
     vi.mocked(fetch).mockResolvedValue(responseWith({
       page: 1,
@@ -114,6 +166,8 @@ describe('TMDB Talk-show filtering', () => {
     };
     fetchMock
       .mockResolvedValueOnce(responseWith(response))
+      .mockResolvedValueOnce(responseWith(response))
+      .mockResolvedValueOnce(responseWith(response))
       .mockResolvedValueOnce(responseWith(response));
 
     await tmdbService.getCategoryList('popular-movies');
@@ -121,6 +175,12 @@ describe('TMDB Talk-show filtering', () => {
 
     await tmdbService.getCategoryList('now-playing-movies');
     expect(new URL(String(fetchMock.mock.calls[1][0])).pathname).toBe('/3/movie/now_playing');
+
+    await tmdbService.getCategoryList('now-playing-movies', 1, undefined, undefined, undefined, 'IN');
+    expect(new URL(String(fetchMock.mock.calls[2][0])).searchParams.get('region')).toBe('IN');
+
+    await tmdbService.getCategoryList('trending-streaming-movies', 1, undefined, undefined, undefined, 'IN');
+    expect(new URL(String(fetchMock.mock.calls[3][0])).searchParams.get('watch_region')).toBe('IN');
   });
 
   it('loads the popular TV endpoint and filters Talk shows', async () => {
@@ -178,7 +238,7 @@ describe('TMDB Talk-show filtering', () => {
     await expect(tmdbService.getTVShowsByCompany(42, 2, undefined, 'en')).resolves.toMatchObject({
       results: [{ id: 1, name: 'Drama Series' }],
     });
-    await expect(tmdbService.getTVShowsByProvider(8, 3)).resolves.toMatchObject({
+    await expect(tmdbService.getTVShowsByProvider(8, 3, undefined, undefined, undefined, 'IN')).resolves.toMatchObject({
       results: [{ id: 3, name: 'Another Series' }],
     });
 
@@ -192,7 +252,7 @@ describe('TMDB Talk-show filtering', () => {
     const providerUrl = new URL(String(fetchMock.mock.calls[1][0]));
     expect(providerUrl.pathname).toBe('/3/discover/tv');
     expect(providerUrl.searchParams.get('with_watch_providers')).toBe('8');
-    expect(providerUrl.searchParams.get('watch_region')).toBe('US');
+    expect(providerUrl.searchParams.get('watch_region')).toBe('IN');
     expect(providerUrl.searchParams.get('without_genres')).toBe('10767');
     expect(providerUrl.searchParams.get('page')).toBe('3');
   });
@@ -484,7 +544,7 @@ describe('TMDB Talk-show filtering', () => {
         .mockResolvedValueOnce(responseWith({ status_code: 13, status_message: 'The item/record was deleted successfully.' }));
 
       await tmdbService.getAccountLists('account-object-id', 1, 'user-access-token');
-      await tmdbService.createUserList('Favorites', 'A private list', false, 'user-access-token');
+      await tmdbService.createUserList('Favorites', 'A private list', false, 'user-access-token', 'IN');
       await tmdbService.addMediaToUserList(73, 'movie', 200, 'user-access-token');
       await tmdbService.addMediaToUserList(73, 'tv', 1399, 'user-access-token');
       await tmdbService.removeMediaFromUserList(73, 'tv', 1399, 'user-access-token');
@@ -499,7 +559,7 @@ describe('TMDB Talk-show filtering', () => {
       expect(JSON.parse(String(createRequest?.body))).toEqual({
         name: 'Favorites',
         description: 'A private list',
-        iso_3166_1: 'US',
+        iso_3166_1: 'IN',
         iso_639_1: 'en',
         public: false,
       });

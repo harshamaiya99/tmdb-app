@@ -7,6 +7,7 @@ import { tmdbService } from '@/lib/tmdb';
 import { useCachedQuery } from '@/hooks/useCachedQuery';
 import { useDebouncedValue } from '@/hooks/useDebouncedValue';
 import { usePageTitle } from '@/hooks/usePageTitle';
+import { useEmbedSettings } from '@/contexts/EmbedSettingsContext';
 
 function SearchMessage({ message, error = false }: { message: string; error?: boolean }) {
   return (
@@ -18,6 +19,7 @@ function SearchMessage({ message, error = false }: { message: string; error?: bo
 
 export function HomePage() {
   const [searchParams, setSearchParams] = useSearchParams();
+  const { region } = useEmbedSettings();
   const searchTerm = searchParams.get('query')?.trim() ?? '';
   const debouncedSearchTerm = useDebouncedValue(searchTerm, 350);
   const hasActiveSearch = Boolean(searchTerm);
@@ -30,13 +32,13 @@ export function HomePage() {
   usePageTitle('TMDB Explorer');
 
   const movieList = useCachedQuery(
-    `home:${movieCategory}`,
-    (signal) => tmdbService.getCategoryList(movieCategory, 1, { signal }),
+    `home:${movieCategory}:${region}`,
+    (signal) => tmdbService.getCategoryList(movieCategory, 1, { signal }, undefined, undefined, region),
     { enabled: !hasActiveSearch },
   );
   const tvList = useCachedQuery(
-    `home:${tvCategory}`,
-    (signal) => tmdbService.getCategoryList(tvCategory, 1, { signal }),
+    `home:${tvCategory}:${region}`,
+    (signal) => tmdbService.getCategoryList(tvCategory, 1, { signal }, undefined, undefined, region),
     { enabled: !hasActiveSearch },
   );
 
@@ -47,8 +49,8 @@ export function HomePage() {
   };
 
   const searchMovies = useCachedQuery(
-    `search:movies:${debouncedSearchTerm}:1`,
-    (signal) => tmdbService.searchMovies(debouncedSearchTerm, 1, { signal }),
+    `search:movies:${debouncedSearchTerm}:1:${region}`,
+    (signal) => tmdbService.searchMovies(debouncedSearchTerm, 1, { signal }, region),
     { enabled: searchReady },
   );
   const searchTV = useCachedQuery(

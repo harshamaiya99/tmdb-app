@@ -98,7 +98,7 @@ The People page provides Popular and daily Trending tabs, both with pagination.
 
 These fetch richer entity data:
 
-- movie details with credits, videos, similar titles, reviews, and watch providers
+- movie details with credits, videos, similar titles, reviews, watch providers, and release certification for the selected country
 - TV show details with aggregate series-wide cast credits, crew, videos, similar titles, reviews, production companies, and watch providers
 - TV season details with episodes and season-specific cast and crew credits
 - TV episode details with crew, guest stars, still images, and videos
@@ -122,6 +122,8 @@ TV search results are not filtered by genre, so Talk shows remain discoverable t
 Non-search TV lists exclude shows tagged with TMDB's Talk genre (`10767`), including trending and category lists, genre browsing, and related shows. Person TV credits also exclude Talk shows unless the credited role is Himself, Herself, Themselves, Themself, Self, or Host. Search results and directly opened TV show details are not excluded.
 
 ### Filtered lists
+
+The app's saved content-country setting is used for country-sensitive movie searches, release categories, and streaming-provider discovery. Movie and TV details filter TMDB's regional watch-provider and movie release-certification data using that country. The country list comes from TMDB configuration.
 
 The service also supports category-based browsing for:
 

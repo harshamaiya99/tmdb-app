@@ -3,12 +3,13 @@ import { beforeEach, describe, expect, it } from 'vitest';
 import { EmbedSettingsProvider, useEmbedSettings } from '@/contexts/EmbedSettingsContext';
 
 function SettingsProbe() {
-  const { movieLinks, tvLinks, saveSettings, resetSettings } = useEmbedSettings();
+  const { movieLinks, tvLinks, region, saveSettings, resetSettings } = useEmbedSettings();
 
   return (
     <div>
       <output data-testid="movie-links">{JSON.stringify(movieLinks)}</output>
       <output data-testid="tv-links">{JSON.stringify(tvLinks)}</output>
+      <output data-testid="region">{region}</output>
       <button
         type="button"
         onClick={() => saveSettings({
@@ -17,6 +18,7 @@ function SettingsProbe() {
             { name: 'Backup', urlTemplate: 'https://backup.example.com/movie/{TMDB_ID}' },
           ],
           tvLinks: [],
+          region: 'IN',
         })}
       >
         Save
@@ -59,6 +61,7 @@ describe('EmbedSettingsProvider', () => {
       (link: { name: string }) => link.name,
     )).toEqual(['example.com', 'backup.example.com']);
     expect(localStorage.getItem('tmdb_movie_embed_url')).toBeNull();
+    expect(localStorage.getItem('tmdb_content_region')).toBe('IN');
 
     fireEvent.click(screen.getByRole('button', { name: 'Reset' }));
 
@@ -72,5 +75,6 @@ describe('EmbedSettingsProvider', () => {
         : []),
     );
     expect(localStorage.getItem('tmdb_movie_embed_links')).toBeNull();
+    expect(localStorage.getItem('tmdb_content_region')).toBeNull();
   });
 });

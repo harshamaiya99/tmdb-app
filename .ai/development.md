@@ -74,7 +74,7 @@ New variables should be:
 - non-secret
 - documented when introduced
 
-Movie and TV embed URL templates can be overridden in the authenticated app's **Embed link settings**. These overrides are stored in the current browser; clearing an override falls back to its build-time environment value.
+Movie and TV embed URL templates can be overridden in the authenticated app's **Settings**. The selected content country is also saved in this browser and controls regional movie results, release certifications, and streaming availability. Embed overrides are stored in the current browser; clearing an override falls back to its build-time environment value.
 
 ## Working with the TMDB Flow
 

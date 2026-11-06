@@ -71,7 +71,7 @@ function EpisodeCard({ episode, tvShowName, onSelectEpisode }: EpisodeCardProps)
 }
 
 export function TVShowDetailsPage() {
-  const { tvLinks } = useEmbedSettings();
+  const { tvLinks, region } = useEmbedSettings();
   const { id } = useParams<{ id: string }>();
   const [searchParams, setSearchParams] = useSearchParams();
   const selectedSeason = parseInt(searchParams.get('season') || '0', 10);
@@ -88,6 +88,7 @@ export function TVShowDetailsPage() {
     { enabled: Boolean(id), ttlMs: 15 * 60 * 1000 },
   );
   const tvShow = tvShowQuery.data ?? null;
+  const regionProviders = region ? tvShow?.['watch/providers']?.results?.[region]?.flatrate ?? [] : [];
   const seasonQuery = useCachedQuery<TVSeasonDetails>(
     `tv-season:${id ?? 'none'}:${selectedSeason}`,
     (signal) => tmdbService.getTVSeasonDetails(Number(id), selectedSeason, { signal }),
@@ -355,13 +356,13 @@ export function TVShowDetailsPage() {
           </div>
         </div>
 
-        {(tvShow['watch/providers']?.results?.US?.flatrate?.length || tvShow.production_companies?.length) && (
+        {(regionProviders.length || tvShow.production_companies?.length) && (
           <section className="mt-8 grid gap-6 border-t pt-6 sm:grid-cols-2">
-            {tvShow['watch/providers']?.results?.US?.flatrate && tvShow['watch/providers'].results.US.flatrate.length > 0 && (
+            {regionProviders.length > 0 && (
               <div>
-                <h2 className="mb-3 text-xl font-semibold">Streaming On</h2>
+                <h2 className="mb-3 text-xl font-semibold">Streaming On in {region}</h2>
                 <div className="flex flex-wrap gap-3">
-                  {tvShow['watch/providers'].results.US.flatrate.map((provider) => {
+                  {regionProviders.map((provider) => {
                     return (
                       <Link
                         key={provider.provider_id}

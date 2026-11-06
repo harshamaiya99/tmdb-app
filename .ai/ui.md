@@ -80,6 +80,8 @@ Toasts use a muted surface, a subtle foreground ring, and a stronger shadow so t
 
 These components are built as thin abstractions over Tailwind classes and semantic structure, which keeps the codebase consistent and easy to extend.
 
+The app Settings dialog includes a country selector for regional movie results, release certifications, and streaming availability. Country options are loaded from TMDB configuration and the selected country is persisted in browser storage.
+
 ### Component conventions
 
 The shared UI components follow a few recurring patterns:
