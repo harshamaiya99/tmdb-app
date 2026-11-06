@@ -80,7 +80,7 @@ Toasts use a muted surface, a subtle foreground ring, and a stronger shadow so t
 
 These components are built as thin abstractions over Tailwind classes and semantic structure, which keeps the codebase consistent and easy to extend.
 
-The app Settings dialog includes a country selector for regional movie results, release certifications, and streaming availability. Country options are loaded from TMDB configuration and the selected country is persisted in browser storage.
+The authenticated `/settings` page keeps content country, embed links, and appearance in separate sections. Country options are loaded from TMDB configuration; the selected country and embed links are saved in browser storage. Theme selection updates the shared theme state immediately.
 
 ### Component conventions
 
@@ -168,7 +168,7 @@ This keeps the review section compact while still preserving rich formatting fro
 
 ### Layout and shell
 
-The shared shell in [src/components/Layout.tsx](src/components/Layout.tsx) provides the sticky header, navigation tabs, search bar, and a single settings menu for theme switching, embed-link settings, TMDB account navigation/connection, and logout. Account menu links open the watchlist, favorites, ratings, or custom lists. Embed-link settings allow multiple movie and TV URL templates and are saved in the current browser; source names are derived from URL hostnames. Settings can be imported and exported as versioned JSON. A single configured link opens directly; multiple links show a source menu. Reset restores build-time defaults. Search suggestions appear as the user types and link directly to movie, TV show, or person details; submitting the form opens the full results page. The main app chrome is intentionally restrained so the content can take the lead.
+The shared shell in [src/components/Layout.tsx](src/components/Layout.tsx) provides the sticky header, navigation tabs, search bar, TMDB account navigation/connection, a link to Settings, a theme shortcut, and logout. Account menu links open the watchlist, favorites, ratings, or custom lists. The authenticated [src/pages/SettingsPage.tsx](src/pages/SettingsPage.tsx) separates content-country, embed-link, and appearance preferences. Embed-link settings allow multiple movie and TV URL templates and are saved in the current browser; source names are derived from URL hostnames. Settings can be imported and exported as versioned JSON. A single configured link opens directly; multiple links show a source menu. Reset restores build-time defaults. Search suggestions appear as the user types and link directly to movie, TV show, or person details; submitting the form opens the full results page. The main app chrome is intentionally restrained so the content can take the lead.
 
 Movie and TV details expose icon-only watchlist, favorite, and Add to list actions in a single row directly below the poster on mobile and desktop. Each icon has an accessible label and tooltip. Movie and TV details provide an Add to list dialog to add a title to one or more existing lists or create a new list; membership is loaded from TMDB so the added state persists across refreshes, and each list can be added to or removed from in the dialog. Loading, success, and added states are visible, and new lists are private by default. Custom lists use a separate TMDB v4 user authorization; without it, the dialog explains the connection requirement and provides a connect action. Account pages show paginated movie and TV lists with an All filter selected by default; movies and TV shows can also be viewed separately. Favorites and watchlists use compact removal icons beside the year at the bottom of each card. Ratings can be managed from account pages. The Custom lists page lets users browse mixed movie/TV lists, remove items, and delete lists.
 
@@ -203,7 +203,7 @@ This keeps the reading experience comfortable while still feeling modern.
 
 ## Theme System
 
-The theme system is implemented through [src/hooks/useTheme.ts](src/hooks/useTheme.ts) and surfaced by [src/components/ThemeToggle.tsx](src/components/ThemeToggle.tsx).
+The shared theme context is implemented through [src/hooks/useTheme.tsx](src/hooks/useTheme.tsx) and provided at the app root. Theme controls are available on the Settings page and as a shortcut in the account menu.
 
 ### How it works
 
@@ -216,7 +216,7 @@ The theme system is implemented through [src/hooks/useTheme.ts](src/hooks/useThe
 The app supports:
 
 - a light theme by default
-- a dark theme toggle in the header
+- a dark theme selection on the Settings page
 - automatic adaptation of backgrounds, text, borders, and muted surfaces
 
 ## Date-format convention

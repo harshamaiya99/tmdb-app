@@ -1,23 +1,16 @@
 // src/components/Layout.tsx
 import { ReactNode, useEffect, useRef, useState, type ChangeEvent, type FormEvent, type KeyboardEvent } from 'react';
-import { LogOut, Search, ArrowLeft, Settings2, X, Moon, Sun, Bookmark, Heart, Star, UserRound, ListPlus, Info, Plus, Trash2, Upload, Download, Film, Tv, Users } from 'lucide-react';
+import { LogOut, Search, ArrowLeft, Settings2, Moon, Sun, Bookmark, Heart, Star, UserRound, ListPlus, Info, Film, Tv, Users } from 'lucide-react';
 import * as DropdownMenu from '@radix-ui/react-dropdown-menu';
 import { Link, NavLink, useNavigate, useSearchParams, useLocation } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { useTheme } from '@/hooks/useTheme';
 import { useTitle } from '@/contexts/TitleContext';
-import { tmdbService, type TMDBCountry } from '@/lib/tmdb';
+import { tmdbService } from '@/lib/tmdb';
 import { TMDBImage } from '@/components/TMDBImage';
 import { useCachedQuery } from '@/hooks/useCachedQuery';
 import { useDebouncedValue } from '@/hooks/useDebouncedValue';
-import { useEmbedSettings, type EmbedLink } from '@/contexts/EmbedSettingsContext';
-import { getEmbedLinkName } from '@/lib/utils';
-import {
-  createEmbedSettingsFile,
-  isValidEmbedUrlTemplate,
-  parseEmbedSettingsFile,
-} from '@/lib/embedSettings';
 import { useToast } from '@/components/ui/use-toast';
 import { useTMDBAccount } from '@/contexts/TMDBAccountContext';
 
@@ -121,23 +114,11 @@ export function Layout({ children }: LayoutProps) {
     isConnected: isTMDBAccountConnected,
     isListAccountConnected,
   } = useTMDBAccount();
-  const { movieLinks, tvLinks, region, saveSettings, resetSettings } = useEmbedSettings();
   const location = useLocation();
-  const [settingsOpen, setSettingsOpen] = useState(false);
-  const importFileInputRef = useRef<HTMLInputElement>(null);
   const mobileSearchInputRef = useRef<HTMLInputElement>(null);
   const mobileSearchButtonRef = useRef<HTMLButtonElement>(null);
   const mobileSearchWasOpenRef = useRef(false);
-  const [movieLinkInputs, setMovieLinkInputs] = useState<EmbedLink[]>(movieLinks.length ? movieLinks : [{ name: '', urlTemplate: '' }]);
-  const [tvLinkInputs, setTvLinkInputs] = useState<EmbedLink[]>(tvLinks.length ? tvLinks : [{ name: '', urlTemplate: '' }]);
-  const [settingsError, setSettingsError] = useState('');
-  const [regionInput, setRegionInput] = useState(region);
   const debouncedSearchQuery = useDebouncedValue(searchQuery.trim(), 120);
-  const countriesQuery = useCachedQuery<TMDBCountry[]>(
-    'tmdb:countries',
-    (signal) => tmdbService.getCountries({ signal }),
-    { enabled: settingsOpen, ttlMs: 24 * 60 * 60 * 1000 },
-  );
   const normalizedSearchQuery = searchQuery.trim();
   const showSuggestions = suggestionsOpen
     && normalizedSearchQuery.length >= 2;
@@ -234,141 +215,6 @@ export function Layout({ children }: LayoutProps) {
         variant: 'destructive',
       });
     });
-  };
-
-  const openEmbedSettings = () => {
-    setMovieLinkInputs(movieLinks.length ? movieLinks : [{ name: '', urlTemplate: '' }]);
-    setTvLinkInputs(tvLinks.length ? tvLinks : [{ name: '', urlTemplate: '' }]);
-    setRegionInput(region);
-    setSettingsError('');
-    setSettingsOpen(true);
-  };
-
-  const updateEmbedLink = (
-    mediaType: 'movie' | 'tv',
-    index: number,
-    value: string,
-  ) => {
-    const update = (links: EmbedLink[]) => links.map((link, linkIndex) => (
-      linkIndex === index ? { ...link, name: getEmbedLinkName(value), urlTemplate: value } : link
-    ));
-    if (mediaType === 'movie') {
-      setMovieLinkInputs(update);
-    } else {
-      setTvLinkInputs(update);
-    }
-  };
-
-  const addEmbedLink = (mediaType: 'movie' | 'tv') => {
-    const add = (links: EmbedLink[]) => [
-      ...links,
-      { name: '', urlTemplate: '' },
-    ];
-    if (mediaType === 'movie') {
-      setMovieLinkInputs(add);
-    } else {
-      setTvLinkInputs(add);
-    }
-  };
-
-  const removeEmbedLink = (mediaType: 'movie' | 'tv', index: number) => {
-    const remove = (links: EmbedLink[]) => {
-      const remaining = links.filter((_, linkIndex) => linkIndex !== index);
-      return remaining.length ? remaining : [{ name: '', urlTemplate: '' }];
-    };
-    if (mediaType === 'movie') {
-      setMovieLinkInputs(remove);
-    } else {
-      setTvLinkInputs(remove);
-    }
-  };
-
-  const handleEmbedSettingsImport = async (event: ChangeEvent<HTMLInputElement>) => {
-    const file = event.target.files?.[0];
-    event.target.value = '';
-    if (!file) return;
-
-    try {
-      const importedSettings = parseEmbedSettingsFile(await file.text());
-      setMovieLinkInputs(importedSettings.movieLinks.length ? importedSettings.movieLinks : [{ name: '', urlTemplate: '' }]);
-      setTvLinkInputs(importedSettings.tvLinks.length ? importedSettings.tvLinks : [{ name: '', urlTemplate: '' }]);
-      if (importedSettings.region) setRegionInput(importedSettings.region);
-      setSettingsError('');
-    } catch (error) {
-      setSettingsError(error instanceof Error ? error.message : 'Could not read the selected settings file.');
-    }
-  };
-
-  const handleEmbedSettingsExport = () => {
-    setSettingsError('');
-    try {
-      const file = new Blob(
-        [createEmbedSettingsFile(movieLinkInputs, tvLinkInputs, regionInput)],
-        { type: 'application/json' },
-      );
-      const url = URL.createObjectURL(file);
-      const downloadLink = document.createElement('a');
-      downloadLink.href = url;
-      downloadLink.download = 'tmdb-embed-settings.json';
-      downloadLink.click();
-      URL.revokeObjectURL(url);
-    } catch (error) {
-      setSettingsError(error instanceof Error ? error.message : 'Could not export embed settings.');
-    }
-  };
-
-  const handleEmbedSettingsSubmit = (event: FormEvent<HTMLFormElement>) => {
-    event.preventDefault();
-    setSettingsError('');
-
-    const movieLinksToSave = movieLinkInputs
-      .filter((link) => link.urlTemplate.trim())
-      .map((link) => ({
-        name: getEmbedLinkName(link.urlTemplate.trim()),
-        urlTemplate: link.urlTemplate.trim(),
-      }));
-    const tvLinksToSave = tvLinkInputs
-      .filter((link) => link.urlTemplate.trim())
-      .map((link) => ({
-        name: getEmbedLinkName(link.urlTemplate.trim()),
-        urlTemplate: link.urlTemplate.trim(),
-      }));
-    const hasInvalidLinks = [...movieLinksToSave, ...tvLinksToSave]
-      .some((link) => !isValidEmbedUrlTemplate(link.urlTemplate));
-
-    if (hasInvalidLinks) {
-      setSettingsError('Enter a valid http or https URL template for each link.');
-      return;
-    }
-
-    try {
-      saveSettings({
-        movieLinks: movieLinksToSave,
-        tvLinks: tvLinksToSave,
-        region: regionInput,
-      });
-      setSettingsOpen(false);
-      toast({
-        title: 'Settings saved',
-        description: 'Your embed URL settings have been saved in this browser.',
-      });
-    } catch {
-      setSettingsError('Could not save settings in this browser. Check that site storage is available and try again.');
-    }
-  };
-
-  const handleResetEmbedSettings = () => {
-    setSettingsError('');
-    try {
-      resetSettings();
-      setSettingsOpen(false);
-      toast({
-        title: 'Settings reset',
-        description: 'Embed URL settings are now using the build-time defaults.',
-      });
-    } catch {
-      setSettingsError('Could not clear saved settings in this browser. Check that site storage is available and try again.');
-    }
   };
 
   const handleBack = () => {
@@ -470,12 +316,14 @@ export function Layout({ children }: LayoutProps) {
         <DropdownMenu.Label className="px-3 py-2 text-xs font-medium text-muted-foreground">
           System
         </DropdownMenu.Label>
-        <DropdownMenu.Item
-          onSelect={openEmbedSettings}
-          className="flex min-h-10 cursor-pointer select-none items-center gap-2 rounded-sm px-3 py-2 text-sm outline-none hover:bg-accent focus:bg-accent focus:text-accent-foreground"
-        >
-          <Settings2 className="h-4 w-4" />
-          Settings
+        <DropdownMenu.Item asChild>
+          <Link
+            to="/settings"
+            className="flex min-h-10 cursor-pointer select-none items-center gap-2 rounded-sm px-3 py-2 text-sm outline-none hover:bg-accent focus:bg-accent focus:text-accent-foreground"
+          >
+            <Settings2 className="h-4 w-4" />
+            Settings
+          </Link>
         </DropdownMenu.Item>
         <DropdownMenu.Item
           onSelect={toggleTheme}
@@ -759,158 +607,6 @@ export function Layout({ children }: LayoutProps) {
       </nav>
       </DropdownMenu.Root>
       <main className="container py-6 pb-[calc(6rem+env(safe-area-inset-bottom))] md:pb-6">{children}</main>
-      {settingsOpen && (
-        <div
-          className="fixed inset-0 z-[100] flex items-center justify-center bg-black/60 p-4"
-          onMouseDown={(event) => {
-            if (event.target === event.currentTarget) setSettingsOpen(false);
-          }}
-        >
-          <section
-            role="dialog"
-            aria-modal="true"
-            aria-labelledby="embed-settings-title"
-            aria-describedby="embed-settings-description"
-            className="flex max-h-[calc(100vh-2rem)] w-full max-w-lg flex-col overflow-hidden rounded-lg border bg-background p-5 shadow-lg sm:p-6"
-          >
-            <div className="mb-5 flex shrink-0 items-start justify-between gap-4">
-              <div>
-                <h2 id="embed-settings-title" className="text-lg font-semibold">Settings</h2>
-                <p id="embed-settings-description" className="mt-1 text-sm leading-relaxed text-muted-foreground">
-                  Choose your country for regional TMDB results and add movie and TV URLs.
-                </p>
-              </div>
-              <Button
-                type="button"
-                variant="ghost"
-                size="icon"
-                onClick={() => setSettingsOpen(false)}
-                aria-label="Close settings"
-              >
-                <X className="h-4 w-4" />
-              </Button>
-            </div>
-
-            <form onSubmit={handleEmbedSettingsSubmit} className="flex min-h-0 flex-1 flex-col">
-              <div className="min-h-0 flex-1 space-y-5 overflow-y-auto pb-5">
-              <input
-                ref={importFileInputRef}
-                type="file"
-                accept="application/json,.json"
-                aria-label="Import embed settings JSON"
-                className="hidden"
-                onChange={(event) => void handleEmbedSettingsImport(event)}
-              />
-              <div className="flex gap-2 rounded-md border border-border/60 bg-muted/40 p-2">
-                <Button type="button" variant="ghost" size="sm" onClick={() => importFileInputRef.current?.click()} className="gap-2">
-                  <Upload className="h-4 w-4" />
-                  Import JSON
-                </Button>
-                <Button type="button" variant="ghost" size="sm" onClick={handleEmbedSettingsExport} className="gap-2">
-                  <Download className="h-4 w-4" />
-                  Export JSON
-                </Button>
-              </div>
-              <section className="space-y-2 rounded-lg border border-border/60 bg-card p-3">
-                <label htmlFor="content-region" className="text-sm font-semibold">Content country</label>
-                <select
-                  id="content-region"
-                  aria-label="Content country"
-                  value={regionInput}
-                  onChange={(event) => setRegionInput(event.target.value)}
-                  disabled={countriesQuery.loading || Boolean(countriesQuery.error)}
-                  className="flex h-9 w-full rounded-md border border-input bg-background px-3 py-1 text-sm shadow-sm focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring disabled:cursor-not-allowed disabled:opacity-50"
-                >
-                  {regionInput && !countriesQuery.data?.some((country) => country.iso_3166_1 === regionInput) && (
-                    <option value={regionInput}>{regionInput}</option>
-                  )}
-                  {!regionInput && <option value="">Select a country</option>}
-                  {(countriesQuery.data ?? [])
-                    .slice()
-                    .sort((a, b) => a.english_name.localeCompare(b.english_name))
-                    .map((country) => (
-                      <option key={country.iso_3166_1} value={country.iso_3166_1}>
-                        {country.english_name}
-                      </option>
-                    ))}
-                </select>
-                <p className="text-xs leading-relaxed text-muted-foreground">
-                  Used for movie certifications, streaming availability, provider searches, and regional movie results.
-                </p>
-                {countriesQuery.loading && <p className="text-xs text-muted-foreground">Loading countries…</p>}
-                {countriesQuery.error && <p role="alert" className="text-xs text-destructive">{countriesQuery.error.message}</p>}
-              </section>
-              {([
-                { mediaType: 'movie' as const, label: 'Movie', links: movieLinkInputs, placeholder: 'https://example.com/movie/{TMDB_ID}/{IMDB_ID}' },
-                { mediaType: 'tv' as const, label: 'TV', links: tvLinkInputs, placeholder: 'https://example.com/tv/{TMDB_ID}/{SEASON}/{EPISODE}' },
-              ]).map(({ mediaType, label, links, placeholder }) => (
-                <section key={mediaType} className="space-y-3 rounded-lg border border-border/60 bg-card p-3">
-                  <h3 className="text-sm font-semibold">{label} links</h3>
-                  {links.map((link, index) => (
-                    <div key={`${mediaType}-link-${index}`} className="flex min-w-0 items-center gap-2 rounded-md border border-border/60 bg-muted/40 p-1.5">
-                      <h4 className="w-20 shrink-0 truncate rounded bg-background px-2 py-1.5 text-xs font-medium text-muted-foreground sm:w-24">
-                          {getEmbedLinkName(link.urlTemplate) || `Link ${index + 1}`}
-                      </h4>
-                      <Input
-                        id={`${mediaType}-embed-template-${index}`}
-                        aria-label={`${label} link URL template ${index + 1}`}
-                        value={link.urlTemplate}
-                        onChange={(event) => updateEmbedLink(mediaType, index, event.target.value)}
-                        placeholder={placeholder}
-                        autoComplete="url"
-                        className="h-8 min-w-0 border-border/60 bg-background shadow-none"
-                      />
-                      <Button
-                        type="button"
-                        variant="ghost"
-                        size="icon"
-                        onClick={() => removeEmbedLink(mediaType, index)}
-                        aria-label={`Remove ${label.toLowerCase()} link ${index + 1}`}
-                        className="h-8 w-8 shrink-0 text-muted-foreground hover:bg-destructive/10 hover:text-destructive"
-                      >
-                        <Trash2 className="h-4 w-4" />
-                      </Button>
-                    </div>
-                  ))}
-                  <Button
-                    type="button"
-                    variant="outline"
-                    size="sm"
-                    onClick={() => addEmbedLink(mediaType)}
-                    className="gap-2 border-border bg-background text-foreground"
-                  >
-                    <Plus className="h-4 w-4" />
-                    Add {label.toLowerCase()} link
-                  </Button>
-                </section>
-              ))}
-              <div className="rounded-md border border-border/50 bg-muted/40 px-3 py-2.5 text-xs leading-relaxed text-muted-foreground">
-                Use {'{TMDB_ID}'} and {'{IMDB_ID}'} for movies. TV links also support {'{SEASON}'} and {'{EPISODE}'}. Removing all links disables that watch button; reset restores any build-time defaults.
-              </div>
-              {settingsError && (
-                <p role="alert" className="text-sm text-destructive">{settingsError}</p>
-              )}
-              </div>
-              <div className="flex shrink-0 flex-col gap-3 border-t bg-background pt-4 sm:flex-row sm:items-center sm:justify-between">
-                <Button
-                  type="button"
-                  variant="ghost"
-                  onClick={handleResetEmbedSettings}
-                  className="self-start px-2 text-muted-foreground"
-                >
-                  Reset defaults
-                </Button>
-                <div className="grid grid-cols-2 gap-2 sm:flex sm:justify-end">
-                  <Button type="button" variant="outline" onClick={() => setSettingsOpen(false)}>
-                    Cancel
-                  </Button>
-                  <Button type="submit">Save settings</Button>
-                </div>
-              </div>
-            </form>
-          </section>
-        </div>
-      )}
     </div>
   );
 }

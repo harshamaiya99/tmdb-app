@@ -46,6 +46,7 @@ Routing is defined in [src/App.tsx](src/App.tsx) with React Router's `HashRouter
 
 - `/login` — login screen
 - `/about` — application information and TMDB attribution
+- `/settings` — country, embed-link, and theme preferences
 - `/` — home page
 - `/movie/:id` — movie details
 - `/tv/:id` — TV show details
@@ -158,7 +159,7 @@ The app uses [src/contexts/TitleContext.tsx](src/contexts/TitleContext.tsx) to k
 
 That title state is now wrapped by a small hook abstraction in [src/hooks/usePageTitle.ts](src/hooks/usePageTitle.ts), which keeps page-level code simpler and more consistent.
 
-The embed URL templates are shared through [src/contexts/EmbedSettingsContext.tsx](src/contexts/EmbedSettingsContext.tsx). Browser-local links override the optional Vite build-time defaults and are editable from the authenticated app header. Link names are derived from URL hostnames, and older single-template browser settings are migrated.
+The embed URL templates and content country are shared through [src/contexts/EmbedSettingsContext.tsx](src/contexts/EmbedSettingsContext.tsx). Browser-local links override the optional Vite build-time defaults and are editable from the authenticated [Settings page](../src/pages/SettingsPage.tsx). Link names are derived from URL hostnames, older single-template browser settings are migrated, and country options are loaded from TMDB. Theme state is shared by the root-level `ThemeProvider` in [src/hooks/useTheme.tsx](src/hooks/useTheme.tsx).
 
 ## 7. Data Flow
 

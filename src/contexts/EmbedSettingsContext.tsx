@@ -31,7 +31,7 @@ interface EmbedSettings {
 
 interface EmbedSettingsContextValue extends EmbedSettings {
   saveSettings: (settings: EmbedSettings) => void;
-  resetSettings: () => void;
+  resetSettings: () => EmbedSettings;
 }
 
 const defaultSettings: EmbedSettings = {
@@ -111,6 +111,7 @@ export function EmbedSettingsProvider({ children }: { children: ReactNode }) {
     localStorage.removeItem(LEGACY_TV_EMBED_STORAGE_KEY);
     localStorage.removeItem(REGION_STORAGE_KEY);
     setSettings(defaultSettings);
+    return defaultSettings;
   };
 
   return (

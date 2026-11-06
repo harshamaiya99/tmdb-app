@@ -12,7 +12,7 @@ A clean, minimal web app for browsing movies, TV shows, and people with data fro
 - 🔍 Search movies, TV shows, and people
 - 🧭 Deep-dive detail pages for movies, TV shows, and people
 - 👤 Connect a TMDB account to manage movie/TV watchlists, favorites, ratings, and mixed movie/TV custom lists
-- 🌗 Light/dark theme toggle
+- ⚙️ Dedicated Settings page for content country, embed links, and light/dark theme
 - ℹ About page with TMDB attribution
 - 📲 Installable as a web app from supported browsers
 - ✨ Responsive, content-first UI with reusable cards, shared media sections, and skeleton states
@@ -67,7 +67,7 @@ VITE_MOVIE_EMBED_URL=https://example.com/embed/{TMDB_ID}/{IMDB_ID}
 VITE_TV_EMBED_URL=https://example.com/tv/{TMDB_ID}/{SEASON}/{EPISODE}
 ```
 
-On the deployed app, use **Embed link settings** in the header to add movie and TV URL templates. The source name is automatically taken from the URL's domain. A single link opens directly from the watch button; multiple links let you choose a source. Use **Import JSON** and **Export JSON** to move these templates between browsers or back them up; imported settings are applied after you choose **Save settings**. The build-time template is available as the default until browser links are saved, and **Reset to defaults** restores it. Removing all links disables that media type's watch button. Browser settings are not shared across browsers or devices.
+On the deployed app, open **Settings** from the profile menu to choose the content country, select a theme, and add movie and TV URL templates. The country is used for regional results, certifications, and streaming availability. Embed-link source names are automatically taken from each URL's domain. A single link opens directly from the watch button; multiple links let you choose a source. Use **Import JSON** and **Export JSON** to move these templates between browsers or back them up; imported settings are applied after you choose **Save content settings**. The build-time template is available as the default until browser links are saved, and **Reset content defaults** restores them. Removing all links disables that media type's watch button. Browser settings are not shared across browsers or devices.
 
 The optional TMDB v3 account session and v4 custom-list user access token are stored separately in the browser's local storage. Disconnect each from the **Settings** menu to revoke that credential and remove its local copy. The app-level `VITE_TMDB_ACCESS_TOKEN` is included in the client build and must not be treated as a server-side secret.
 
@@ -149,7 +149,7 @@ The site can be installed as an app from supported browsers when served over HTT
 │   │   ├── useLazyLoad.ts             # Starts work when a target nears the viewport
 │   │   ├── usePageTitle.ts            # Synchronizes page title with title context
 │   │   ├── usePagination.ts           # Shared pagination state and behavior
-│   │   └── useTheme.ts                # Reads and updates the selected theme
+│   │   └── useTheme.tsx               # Shares theme state and applies the selected theme
 │   ├── lib/
 │   │   ├── requestCache.ts            # In-memory request cache and deduplication
 │   │   ├── tmdb.ts                    # TMDB API client, requests, and domain types
