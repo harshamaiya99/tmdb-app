@@ -28,7 +28,7 @@ export function AccountListsPage() {
   const listId = Number.isSafeInteger(parsedListId) && parsedListId > 0 ? parsedListId : null;
   const {
     canConnectLists,
-    connectListsAccount,
+    connectTMDBAccount,
     isListAccountConnected,
     listAccessToken,
     listAccountId,
@@ -105,9 +105,9 @@ export function AccountListsPage() {
   };
 
   const handleConnectLists = () => {
-    void connectListsAccount().catch((error: unknown) => {
+    void connectTMDBAccount().catch((error: unknown) => {
       toast({
-        title: 'Could not start TMDB lists authorization',
+        title: 'Could not connect your TMDB account',
         description: error instanceof Error ? error.message : 'Please try again.',
         variant: 'destructive',
       });
@@ -119,12 +119,12 @@ export function AccountListsPage() {
       <main className="container py-8">
         <Card className="mx-auto max-w-xl">
           <CardContent className="space-y-4 p-6">
-            <h1 className="text-xl font-semibold">Connect TMDB custom lists</h1>
+            <h1 className="text-xl font-semibold">Connect your TMDB account</h1>
             <p className="text-sm leading-relaxed text-muted-foreground">
-              Approve custom-list access on TMDB to view and manage lists with movies and TV shows.
+              Connect your TMDB account to view and manage watchlists, favorites, ratings, and custom lists.
             </p>
             {canConnectLists ? (
-              <Button type="button" onClick={handleConnectLists}>Connect TMDB lists</Button>
+              <Button type="button" onClick={handleConnectLists}>Connect TMDB account</Button>
             ) : (
               <p role="alert" className="text-sm text-destructive">
                 Custom lists need the app-level v4 access token. Enter it on the login screen or configure VITE_TMDB_ACCESS_TOKEN at build time.

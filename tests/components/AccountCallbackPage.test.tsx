@@ -2,13 +2,18 @@ import { render, screen, waitFor } from '@testing-library/react';
 import { MemoryRouter, Route, Routes } from 'react-router-dom';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { AccountCallbackPage } from '@/pages/AccountCallbackPage';
+import { COMBINED_AUTH_STORAGE_KEY } from '@/contexts/TMDBAccountContext';
 
 const authorizationMocks = vi.hoisted(() => ({
   completeAuthorization: vi.fn(),
   completeListsAuthorization: vi.fn(),
+  connectListsAccount: vi.fn(),
+  canConnectLists: false,
+  isListAccountConnected: false,
 }));
 
 vi.mock('@/contexts/TMDBAccountContext', () => ({
+  COMBINED_AUTH_STORAGE_KEY: 'tmdb_combined_auth_pending',
   useTMDBAccount: () => authorizationMocks,
 }));
 
@@ -30,6 +35,9 @@ describe('AccountCallbackPage', () => {
     sessionStorage.clear();
     authorizationMocks.completeAuthorization.mockReset().mockResolvedValue(undefined);
     authorizationMocks.completeListsAuthorization.mockReset().mockResolvedValue(undefined);
+    authorizationMocks.connectListsAccount.mockReset().mockResolvedValue(undefined);
+    authorizationMocks.canConnectLists = false;
+    authorizationMocks.isListAccountConnected = false;
   });
 
   it('exchanges a v4 request token when TMDB omits the approved parameter', async () => {
@@ -73,5 +81,18 @@ describe('AccountCallbackPage', () => {
 
     expect(screen.getByText('TMDB account authorization was not approved.')).toBeInTheDocument();
     expect(authorizationMocks.completeAuthorization).not.toHaveBeenCalled();
+  });
+
+  it('starts v4 list authorization after the v3 step of a combined connection', async () => {
+    sessionStorage.setItem('tmdb_account_request_token', 'v3-request-token');
+    sessionStorage.setItem(COMBINED_AUTH_STORAGE_KEY, 'true');
+    authorizationMocks.canConnectLists = true;
+    renderCallback('/account/callback?request_token=v3-request-token&approved=true');
+
+    await waitFor(() => {
+      expect(authorizationMocks.completeAuthorization).toHaveBeenCalledWith('v3-request-token');
+      expect(authorizationMocks.connectListsAccount).toHaveBeenCalledOnce();
+    });
+    expect(sessionStorage.getItem(COMBINED_AUTH_STORAGE_KEY)).toBeNull();
   });
 });

@@ -3,12 +3,20 @@ import { Link, useNavigate, useSearchParams } from 'react-router-dom';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { useTMDBAccount } from '@/contexts/TMDBAccountContext';
+import { COMBINED_AUTH_STORAGE_KEY, useTMDBAccount } from '@/contexts/TMDBAccountContext';
+import { useToast } from '@/components/ui/use-toast';
 
 export function AccountCallbackPage() {
   const [searchParams] = useSearchParams();
   const navigate = useNavigate();
-  const { completeAuthorization, completeListsAuthorization } = useTMDBAccount();
+  const {
+    canConnectLists,
+    completeAuthorization,
+    completeListsAuthorization,
+    connectListsAccount,
+    isListAccountConnected,
+  } = useTMDBAccount();
+  const { toast } = useToast();
   const [error, setError] = useState('');
   const redirectParams = new URLSearchParams(window.location.search);
   const isListsFlow = (searchParams.get('flow') ?? redirectParams.get('flow')) === 'lists';
@@ -23,15 +31,18 @@ export function AccountCallbackPage() {
   useEffect(() => {
     if (approvalStatus === 'false') {
       sessionStorage.removeItem(isListsFlow ? 'tmdb_list_request_token' : 'tmdb_account_request_token');
+      if (!isListsFlow) sessionStorage.removeItem(COMBINED_AUTH_STORAGE_KEY);
       setError('TMDB account authorization was not approved.');
       return;
     }
     if (!requestToken) {
+      if (!isListsFlow) sessionStorage.removeItem(COMBINED_AUTH_STORAGE_KEY);
       setError('TMDB did not return an authorization token. Please try connecting again.');
       return;
     }
     if (!approved) {
       sessionStorage.removeItem(isListsFlow ? 'tmdb_list_request_token' : 'tmdb_account_request_token');
+      if (!isListsFlow) sessionStorage.removeItem(COMBINED_AUTH_STORAGE_KEY);
       setError('TMDB account authorization was not approved.');
       return;
     }
@@ -39,11 +50,32 @@ export function AccountCallbackPage() {
     let active = true;
     const complete = isListsFlow ? completeListsAuthorization : completeAuthorization;
     void complete(requestToken)
-      .then(() => {
-        if (active) navigate(isListsFlow ? '/account/lists' : '/account/watchlist', { replace: true });
+      .then(async () => {
+        if (!active) return;
+        if (isListsFlow) {
+          navigate('/account/lists', { replace: true });
+          return;
+        }
+
+        const continueCombinedAuthorization = sessionStorage.getItem(COMBINED_AUTH_STORAGE_KEY) === 'true';
+        if (continueCombinedAuthorization) {
+          sessionStorage.removeItem(COMBINED_AUTH_STORAGE_KEY);
+          if (canConnectLists && !isListAccountConnected) {
+            await connectListsAccount();
+            return;
+          }
+          if (!canConnectLists && !isListAccountConnected) {
+            toast({
+              title: 'TMDB account connected',
+              description: 'Custom lists also require a v4 access token. Add it on the login screen to enable them.',
+            });
+          }
+        }
+        navigate('/account/watchlist', { replace: true });
       })
       .catch((authorizationError: unknown) => {
         if (active) {
+          if (!isListsFlow) sessionStorage.removeItem(COMBINED_AUTH_STORAGE_KEY);
           setError(authorizationError instanceof Error
             ? authorizationError.message
             : 'Could not connect your TMDB account.');
@@ -53,7 +85,19 @@ export function AccountCallbackPage() {
     return () => {
       active = false;
     };
-  }, [approvalStatus, approved, completeAuthorization, completeListsAuthorization, isListsFlow, navigate, requestToken]);
+  }, [
+    approvalStatus,
+    approved,
+    canConnectLists,
+    completeAuthorization,
+    completeListsAuthorization,
+    connectListsAccount,
+    isListAccountConnected,
+    isListsFlow,
+    navigate,
+    requestToken,
+    toast,
+  ]);
 
   return (
     <main className="container flex min-h-screen items-center justify-center py-8">

@@ -12,6 +12,7 @@ const REQUEST_TOKEN_STORAGE_KEY = 'tmdb_account_request_token';
 const LIST_ACCESS_TOKEN_STORAGE_KEY = 'tmdb_list_access_token';
 const LIST_ACCOUNT_ID_STORAGE_KEY = 'tmdb_list_account_id';
 const LIST_REQUEST_TOKEN_STORAGE_KEY = 'tmdb_list_request_token';
+export const COMBINED_AUTH_STORAGE_KEY = 'tmdb_combined_auth_pending';
 
 interface AccountSession {
   sessionId: string;
@@ -32,8 +33,10 @@ interface TMDBAccountContextValue {
   isListAccountConnected: boolean;
   canConnectLists: boolean;
   configureV4AccessToken: (token: string) => void;
+  connectTMDBAccount: () => Promise<void>;
   connectAccount: () => Promise<void>;
   completeAuthorization: (requestToken: string) => Promise<void>;
+  disconnectTMDBAccount: () => Promise<void>;
   disconnectAccount: () => Promise<void>;
   connectListsAccount: () => Promise<void>;
   completeListsAuthorization: (requestToken: string) => Promise<void>;
@@ -185,6 +188,26 @@ export function TMDBAccountProvider({ children }: { children: ReactNode }) {
     window.location.assign(authorizationUrl.toString());
   }, []);
 
+  const connectTMDBAccount = useCallback(async () => {
+    if (!session) {
+      sessionStorage.setItem(COMBINED_AUTH_STORAGE_KEY, 'true');
+      try {
+        await connectAccount();
+      } catch (error) {
+        sessionStorage.removeItem(COMBINED_AUTH_STORAGE_KEY);
+        throw error;
+      }
+      return;
+    }
+
+    if (!listSession) {
+      if (!canConnectLists) {
+        throw new Error('Custom lists need a v4 access token. Add it on the login screen, then try again.');
+      }
+      await connectListsAccount();
+    }
+  }, [session, listSession, canConnectLists, connectAccount, connectListsAccount]);
+
   const completeListsAuthorization = useCallback((requestToken: string) => {
     const existingRequest = listAuthorizationRequests.current.get(requestToken);
     if (existingRequest) return existingRequest;
@@ -220,6 +243,20 @@ export function TMDBAccountProvider({ children }: { children: ReactNode }) {
     }
   }, [listSession]);
 
+  const disconnectTMDBAccount = useCallback(async () => {
+    const results = await Promise.allSettled([
+      disconnectAccount(),
+      disconnectListsAccount(),
+    ]);
+    const failures = results
+      .filter((result): result is PromiseRejectedResult => result.status === 'rejected')
+      .map((result) => result.reason instanceof Error ? result.reason.message : 'Could not revoke a TMDB credential remotely.');
+
+    if (failures.length > 0) {
+      throw new Error(failures.join(' '));
+    }
+  }, [disconnectAccount, disconnectListsAccount]);
+
   const value = useMemo<TMDBAccountContextValue>(() => ({
     sessionId: session?.sessionId ?? '',
     account: session?.account ?? null,
@@ -229,8 +266,10 @@ export function TMDBAccountProvider({ children }: { children: ReactNode }) {
     isListAccountConnected: Boolean(listSession),
     canConnectLists,
     configureV4AccessToken,
+    connectTMDBAccount,
     connectAccount,
     completeAuthorization,
+    disconnectTMDBAccount,
     disconnectAccount,
     connectListsAccount,
     completeListsAuthorization,
@@ -240,8 +279,10 @@ export function TMDBAccountProvider({ children }: { children: ReactNode }) {
     listSession,
     canConnectLists,
     configureV4AccessToken,
+    connectTMDBAccount,
     connectAccount,
     completeAuthorization,
+    disconnectTMDBAccount,
     disconnectAccount,
     connectListsAccount,
     completeListsAuthorization,

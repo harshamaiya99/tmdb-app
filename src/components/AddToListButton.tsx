@@ -22,7 +22,7 @@ interface AddToListButtonProps {
 export function AddToListButton({ mediaId, mediaTitle, mediaType, className, iconOnly = false }: AddToListButtonProps) {
   const {
     canConnectLists,
-    connectListsAccount,
+    connectTMDBAccount,
     isListAccountConnected,
     listAccessToken,
     listAccountId,
@@ -146,9 +146,9 @@ export function AddToListButton({ mediaId, mediaTitle, mediaType, className, ico
   };
 
   const handleConnectLists = () => {
-    void connectListsAccount().catch((error: unknown) => {
+    void connectTMDBAccount().catch((error: unknown) => {
       toast({
-        title: 'Could not start TMDB lists authorization',
+        title: 'Could not connect your TMDB account',
         description: error instanceof Error ? error.message : 'Please try again.',
         variant: 'destructive',
       });
@@ -208,10 +208,10 @@ export function AddToListButton({ mediaId, mediaTitle, mediaType, className, ico
             {!isListAccountConnected ? (
               <div className="space-y-3">
                 <p className="text-sm text-muted-foreground">
-                  Connect TMDB custom lists to save movies and TV shows in mixed lists.
+                  Approve account access on TMDB to save movies and TV shows to your custom lists.
                 </p>
                 {canConnectLists ? (
-                  <Button type="button" className="w-full" onClick={handleConnectLists}>Connect TMDB lists</Button>
+                  <Button type="button" className="w-full" onClick={handleConnectLists}>Connect TMDB account</Button>
                 ) : (
                   <Alert variant="destructive">
                     <AlertDescription>

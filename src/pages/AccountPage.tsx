@@ -26,7 +26,7 @@ function isAccountSection(value: string | undefined): value is TMDBAccountSectio
 export function AccountPage() {
   const { section: sectionParam } = useParams<{ section: string }>();
   const section = isAccountSection(sectionParam) ? sectionParam : 'watchlist';
-  const { account, isConnected, sessionId, connectAccount } = useTMDBAccount();
+  const { account, isConnected, sessionId, connectTMDBAccount } = useTMDBAccount();
   const { toast } = useToast();
   const [searchParams, setSearchParams] = useSearchParams();
   const { page, setPage } = usePagination();
@@ -94,7 +94,7 @@ export function AccountPage() {
   };
 
   const handleConnect = () => {
-    void connectAccount().catch((error: unknown) => {
+    void connectTMDBAccount().catch((error: unknown) => {
       toast({
         title: 'Could not start TMDB account connection',
         description: error instanceof Error ? error.message : 'Please try again.',
