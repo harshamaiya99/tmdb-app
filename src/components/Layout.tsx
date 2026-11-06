@@ -244,31 +244,62 @@ export function Layout({ children }: LayoutProps) {
         collisionPadding={8}
         className="z-[60] max-h-[calc(100vh-2rem)] min-w-60 max-w-[calc(100vw-2rem)] overflow-y-auto rounded-md border bg-popover p-1 text-popover-foreground shadow-md"
       >
-        <DropdownMenu.Label className="flex items-center gap-3 px-3 py-3">
-          {account?.avatar?.tmdb?.avatar_path ? (
-            <TMDBImage
-              path={account.avatar.tmdb.avatar_path}
-              alt=""
-              width={40}
-              height={40}
-              className="h-10 w-10 shrink-0 rounded-full object-cover"
-            />
-          ) : (
-            <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-muted">
-              <UserRound className="h-5 w-5 text-muted-foreground" />
-            </span>
+        <div className="flex items-center gap-2 px-2 py-2">
+          <div className="flex min-w-0 flex-1 items-center gap-3">
+            {account?.avatar?.tmdb?.avatar_path ? (
+              <TMDBImage
+                path={account.avatar.tmdb.avatar_path}
+                alt=""
+                width={40}
+                height={40}
+                className="h-10 w-10 shrink-0 rounded-full object-cover"
+              />
+            ) : (
+              <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-muted">
+                <UserRound className="h-5 w-5 text-muted-foreground" />
+              </span>
+            )}
+            <div className="min-w-0">
+              {isTMDBAccountConnected ? (
+                <DropdownMenu.Label className="block truncate text-sm font-medium text-foreground">
+                  {account?.username}
+                </DropdownMenu.Label>
+              ) : (
+                <DropdownMenu.Item
+                  onSelect={handleConnectTMDBAccount}
+                  className="block cursor-pointer truncate rounded-sm text-sm font-medium text-foreground outline-none hover:text-primary focus:text-primary"
+                >
+                  Login to TMDB
+                </DropdownMenu.Item>
+              )}
+              <span className="block truncate text-xs font-normal text-muted-foreground">
+                {isTMDBAccountConnected
+                  ? account?.name || 'Connected'
+                  : isListAccountConnected ? 'Custom lists connected' : 'Not connected'}
+              </span>
+            </div>
+          </div>
+          {isTMDBAccountConnected && canConnectLists && !isListAccountConnected && (
+            <DropdownMenu.Item
+              onSelect={handleConnectTMDBAccount}
+              title="Finish TMDB account connection"
+              className="flex min-h-9 shrink-0 cursor-pointer select-none items-center gap-1 rounded-md border border-input px-2 text-xs font-medium outline-none hover:bg-accent focus:bg-accent focus:text-accent-foreground"
+            >
+              <UserRound aria-hidden="true" className="h-3.5 w-3.5" />
+              Finish
+            </DropdownMenu.Item>
           )}
-          <span className="min-w-0">
-            <span className="block truncate text-sm font-medium text-foreground">
-              {isTMDBAccountConnected ? account?.username : 'TMDB account'}
-            </span>
-            <span className="block truncate text-xs font-normal text-muted-foreground">
-              {isTMDBAccountConnected
-                ? account?.name || 'Connected'
-                : isListAccountConnected ? 'Custom lists connected' : 'Not connected'}
-            </span>
-          </span>
-        </DropdownMenu.Label>
+          {(isTMDBAccountConnected || isListAccountConnected) && (
+            <DropdownMenu.Item
+              onSelect={handleDisconnectTMDBAccount}
+              aria-label="Disconnect TMDB account"
+              title="Disconnect TMDB account"
+              className="flex h-9 w-9 shrink-0 cursor-pointer select-none items-center justify-center rounded-md text-muted-foreground outline-none hover:bg-accent hover:text-foreground focus:bg-accent focus:text-foreground"
+            >
+              <LogOut aria-hidden="true" className="h-4 w-4" />
+            </DropdownMenu.Item>
+          )}
+        </div>
         {[
           { to: '/account/watchlist', label: 'Watchlist', icon: Bookmark },
           { to: '/account/favorites', label: 'Favorites', icon: Heart },
@@ -285,15 +316,6 @@ export function Layout({ children }: LayoutProps) {
             </Link>
           </DropdownMenu.Item>
         ))}
-        {(!isTMDBAccountConnected || (canConnectLists && !isListAccountConnected)) && (
-          <DropdownMenu.Item
-            onSelect={handleConnectTMDBAccount}
-            className="flex min-h-10 cursor-pointer select-none items-center gap-2 rounded-sm px-3 py-2 text-sm outline-none hover:bg-accent focus:bg-accent focus:text-accent-foreground"
-          >
-            <UserRound className="h-4 w-4" />
-            {isTMDBAccountConnected || isListAccountConnected ? 'Finish TMDB connection' : 'Connect TMDB account'}
-          </DropdownMenu.Item>
-        )}
         {!canConnectLists && isTMDBAccountConnected && !isListAccountConnected && (
           <DropdownMenu.Item
             disabled
@@ -301,15 +323,6 @@ export function Layout({ children }: LayoutProps) {
           >
             <ListPlus className="h-4 w-4" />
             Configure v4 token for custom lists
-          </DropdownMenu.Item>
-        )}
-        {(isTMDBAccountConnected || isListAccountConnected) && (
-          <DropdownMenu.Item
-            onSelect={handleDisconnectTMDBAccount}
-            className="flex min-h-10 cursor-pointer select-none items-center gap-2 rounded-sm px-3 py-2 text-sm outline-none hover:bg-accent focus:bg-accent focus:text-accent-foreground"
-          >
-            <UserRound className="h-4 w-4" />
-            Disconnect TMDB account
           </DropdownMenu.Item>
         )}
         <DropdownMenu.Separator className="my-1 h-px bg-border" />
