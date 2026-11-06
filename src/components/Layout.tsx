@@ -1,11 +1,10 @@
 // src/components/Layout.tsx
 import { ReactNode, useEffect, useRef, useState, type ChangeEvent, type FormEvent, type KeyboardEvent } from 'react';
-import { LogOut, Search, ArrowLeft, Settings2, Moon, Sun, Bookmark, Heart, Star, UserRound, ListPlus, Info, Film, Tv, Users } from 'lucide-react';
+import { LogOut, Search, ArrowLeft, Settings2, Bookmark, Heart, Star, UserRound, ListPlus, Info, Film, Tv, Users } from 'lucide-react';
 import * as DropdownMenu from '@radix-ui/react-dropdown-menu';
 import { Link, NavLink, useNavigate, useSearchParams, useLocation } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { useTheme } from '@/hooks/useTheme';
 import { useTitle } from '@/contexts/TitleContext';
 import { tmdbService } from '@/lib/tmdb';
 import { TMDBImage } from '@/components/TMDBImage';
@@ -105,7 +104,6 @@ export function Layout({ children }: LayoutProps) {
   const [suggestionsOpen, setSuggestionsOpen] = useState(false);
   const { title } = useTitle();
   const { toast } = useToast();
-  const { theme, toggleTheme } = useTheme();
   const {
     account,
     canConnectLists,
@@ -337,13 +335,6 @@ export function Layout({ children }: LayoutProps) {
             <Settings2 className="h-4 w-4" />
             Settings
           </Link>
-        </DropdownMenu.Item>
-        <DropdownMenu.Item
-          onSelect={toggleTheme}
-          className="flex min-h-10 cursor-pointer select-none items-center gap-2 rounded-sm px-3 py-2 text-sm outline-none hover:bg-accent focus:bg-accent focus:text-accent-foreground"
-        >
-          {theme === 'dark' ? <Sun className="h-4 w-4" /> : <Moon className="h-4 w-4" />}
-          Switch to {theme === 'dark' ? 'light' : 'dark'} theme
         </DropdownMenu.Item>
         <DropdownMenu.Item asChild>
           <Link
