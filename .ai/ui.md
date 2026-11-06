@@ -74,6 +74,10 @@ The UI layer includes reusable wrappers for:
 - toasts
 - skeletons
 
+Successful watchlist, favorite, and custom-list additions can provide an in-app destination using `ToastAction` with a router `Link`. Link to the corresponding account section, or to the specific custom list.
+
+Toasts use a muted surface, a subtle foreground ring, and a stronger shadow so they remain distinct from the page background in both themes.
+
 These components are built as thin abstractions over Tailwind classes and semantic structure, which keeps the codebase consistent and easy to extend.
 
 ### Component conventions

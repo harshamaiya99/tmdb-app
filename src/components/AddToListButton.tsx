@@ -1,8 +1,10 @@
 import { useEffect, useRef, useState, type FormEvent, type KeyboardEvent } from 'react';
+import { Link } from 'react-router-dom';
 import { Check, ListPlus, Loader2, Plus, X } from 'lucide-react';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
+import { ToastAction } from '@/components/ui/toast';
 import { useToast } from '@/components/ui/use-toast';
 import { useTMDBAccount } from '@/contexts/TMDBAccountContext';
 import { useCachedQuery } from '@/hooks/useCachedQuery';
@@ -88,7 +90,16 @@ export function AddToListButton({ mediaId, mediaTitle, mediaType, className, ico
       clearRequestCache('account:');
       setMembershipRevision((revision) => revision + 1);
       const listName = lists.find((list) => list.id === listId)?.name ?? 'list';
-      toast({ title: isAdded ? `Removed from ${listName}` : `Added to ${listName}` });
+      toast({
+        title: isAdded ? `Removed from ${listName}` : `Added to ${listName}`,
+        ...(!isAdded && {
+          action: (
+            <ToastAction altText={`Go to ${listName}`} asChild>
+              <Link to={`/account/lists/${listId}`}>Go to list</Link>
+            </ToastAction>
+          ),
+        }),
+      });
     } catch (error) {
       toast({
         title: isAdded ? 'Could not remove title from list' : 'Could not add title to list',
@@ -112,7 +123,14 @@ export function AddToListButton({ mediaId, mediaTitle, mediaType, className, ico
       await tmdbService.addMediaToUserList(createdList.id, mediaType, mediaId, listAccessToken);
       clearRequestCache('account:');
       setMembershipRevision((revision) => revision + 1);
-      toast({ title: `Created ${name} and added title` });
+      toast({
+        title: `Created ${name} and added title`,
+        action: (
+          <ToastAction altText={`Go to ${name}`} asChild>
+            <Link to={`/account/lists/${createdList.id}`}>Go to list</Link>
+          </ToastAction>
+        ),
+      });
       closeDialog();
     } catch (error) {
       clearRequestCache('account:');

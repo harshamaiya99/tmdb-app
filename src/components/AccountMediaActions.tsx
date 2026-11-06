@@ -3,6 +3,7 @@ import { Link } from 'react-router-dom';
 import { BookmarkCheck, BookmarkPlus, Heart } from 'lucide-react';
 import { AddToListButton } from '@/components/AddToListButton';
 import { Button } from '@/components/ui/button';
+import { ToastAction } from '@/components/ui/toast';
 import { useToast } from '@/components/ui/use-toast';
 import { useTMDBAccount } from '@/contexts/TMDBAccountContext';
 import { useCachedQuery } from '@/hooks/useCachedQuery';
@@ -66,6 +67,18 @@ export function AccountMediaActions({ mediaId, mediaType, mediaTitle }: AccountM
         title: action === 'watchlist'
           ? enabled ? 'Added to watchlist' : 'Removed from watchlist'
           : enabled ? 'Added to favorites' : 'Removed from favorites',
+        ...(enabled && {
+          action: (
+            <ToastAction
+              altText={`Go to ${action === 'watchlist' ? 'watchlist' : 'favorites'}`}
+              asChild
+            >
+              <Link to={`/account/${action === 'watchlist' ? 'watchlist' : 'favorites'}`}>
+                Go to {action === 'watchlist' ? 'watchlist' : 'favorites'}
+              </Link>
+            </ToastAction>
+          ),
+        }),
       });
     } catch (error) {
       toast({
