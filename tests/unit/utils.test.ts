@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { buildEmbedUrl, formatDate, getEmbedLinkName } from '@/lib/utils';
+import { buildEmbedUrl, formatDate, formatLanguage, getEmbedLinkName } from '@/lib/utils';
 
 describe('formatDate', () => {
   it('formats valid dates using the shared display format', () => {
@@ -11,6 +11,18 @@ describe('formatDate', () => {
     expect(formatDate(null)).toBe('');
     expect(formatDate(undefined)).toBe('');
     expect(formatDate('not-a-date')).toBe('');
+  });
+});
+
+describe('formatLanguage', () => {
+  it('formats TMDB language codes as English display names', () => {
+    expect(formatLanguage('en')).toBe('English');
+    expect(formatLanguage('ja')).toBe('Japanese');
+  });
+
+  it('returns an uppercase code for missing display names', () => {
+    expect(formatLanguage('')).toBe('');
+    expect(formatLanguage('xx')).toBe('XX');
   });
 });
 

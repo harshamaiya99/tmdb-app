@@ -8,7 +8,7 @@ import { Skeleton } from '@/components/ui/skeleton';
 import { MediaCard } from '@/components/MediaCard';
 import { CreditsCarousel } from '@/components/CreditsCarousel';
 import { tmdbService, type Episode, type TVShow, type TVEpisodeDetails, type TVSeasonDetails } from '@/lib/tmdb';
-import { buildEmbedUrl, formatDate } from '@/lib/utils';
+import { buildEmbedUrl, formatDate, formatLanguage } from '@/lib/utils';
 import { usePageTitle } from '@/hooks/usePageTitle';
 import { useCachedQuery } from '@/hooks/useCachedQuery';
 import { ReviewSection } from '../components/ReviewSection';
@@ -306,6 +306,11 @@ export function TVShowDetailsPage() {
               {contentRating && (
                 <Badge variant="outline" aria-label={`${region} content rating ${contentRating.rating}`}>
                   {region} · {contentRating.rating}
+                </Badge>
+              )}
+              {tvShow.original_language && (
+                <Badge variant="outline" aria-label={`Original language: ${formatLanguage(tvShow.original_language)}`}>
+                  {formatLanguage(tvShow.original_language)}
                 </Badge>
               )}
             </div>

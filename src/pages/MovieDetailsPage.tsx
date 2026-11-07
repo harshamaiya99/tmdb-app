@@ -8,7 +8,7 @@ import { Skeleton } from '@/components/ui/skeleton';
 import { MediaCard } from '@/components/MediaCard';
 import { CreditsCarousel } from '@/components/CreditsCarousel';
 import { tmdbService, type Movie, type Collection } from '@/lib/tmdb';
-import { buildEmbedUrl, formatDate } from '@/lib/utils';
+import { buildEmbedUrl, formatDate, formatLanguage } from '@/lib/utils';
 import { usePageTitle } from '@/hooks/usePageTitle';
 import { useCachedQuery } from '@/hooks/useCachedQuery';
 import { ReviewSection } from '../components/ReviewSection';
@@ -266,6 +266,11 @@ export function MovieDetailsPage() {
                 {certification && (
                   <Badge variant="outline" aria-label={`${region} certificate ${certification.certification}`}>
                     {region} · {certification.certification}
+                  </Badge>
+                )}
+                {movie.original_language && (
+                  <Badge variant="outline" aria-label={`Original language: ${formatLanguage(movie.original_language)}`}>
+                    {formatLanguage(movie.original_language)}
                   </Badge>
                 )}
               </div>

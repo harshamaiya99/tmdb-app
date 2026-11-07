@@ -25,6 +25,19 @@ export function formatDate(dateString: string | undefined | null): string {
   return `${day} ${month} ${year}`;
 }
 
+export function formatLanguage(languageCode: string | undefined | null): string {
+  if (!languageCode) return '';
+
+  try {
+    const languageName = new Intl.DisplayNames(['en'], { type: 'language' }).of(languageCode);
+    return languageName && languageName.toLowerCase() !== languageCode.toLowerCase()
+      ? languageName
+      : languageCode.toUpperCase();
+  } catch {
+    return languageCode.toUpperCase();
+  }
+}
+
 export function getEmbedLinkName(template: string): string {
   try {
     const url = new URL(template.trim().replace(/\{(TMDB_ID|IMDB_ID|SEASON|EPISODE)\}/g, '1'));
