@@ -1,9 +1,13 @@
-import { useSearchParams } from 'react-router-dom';
+import { useEffect, useMemo, useRef, useState } from 'react';
+import { Link, useSearchParams } from 'react-router-dom';
+import { Play, Star } from 'lucide-react';
 import { Alert, AlertDescription } from '@/components/ui/alert';
+import { AccountMediaActions } from '@/components/AccountMediaActions';
+import { Button } from '@/components/ui/button';
 import { MediaGridSkeleton } from '@/components/MediaGridSkeleton';
 import { MediaSection } from '@/components/MediaSection';
 import { MediaCategoryToggle, MOVIE_CATEGORIES, TV_CATEGORIES } from '@/components/MediaCategoryToggle';
-import { tmdbService } from '@/lib/tmdb';
+import { tmdbService, type Movie, type TVShow } from '@/lib/tmdb';
 import { useCachedQuery } from '@/hooks/useCachedQuery';
 import { useDebouncedValue } from '@/hooks/useDebouncedValue';
 import { usePageTitle } from '@/hooks/usePageTitle';
@@ -17,8 +21,22 @@ function SearchMessage({ message, error = false }: { message: string; error?: bo
   );
 }
 
+type FeaturedMedia = { mediaType: 'movie'; item: Movie } | { mediaType: 'tv'; item: TVShow };
+
+function shuffleFeaturedItems(items: FeaturedMedia[]): FeaturedMedia[] {
+  const shuffled = [...items];
+  for (let index = shuffled.length - 1; index > 0; index -= 1) {
+    const swapIndex = Math.floor(Math.random() * (index + 1));
+    [shuffled[index], shuffled[swapIndex]] = [shuffled[swapIndex], shuffled[index]];
+  }
+  return shuffled;
+}
+
 export function HomePage() {
   const [searchParams, setSearchParams] = useSearchParams();
+  const [featuredIndex, setFeaturedIndex] = useState(0);
+  const [previousBackdropPath, setPreviousBackdropPath] = useState<string | null>(null);
+  const currentBackdropPathRef = useRef<string | null>(null);
   const { region } = useEmbedSettings();
   const searchTerm = searchParams.get('query')?.trim() ?? '';
   const debouncedSearchTerm = useDebouncedValue(searchTerm, 350);
@@ -41,6 +59,74 @@ export function HomePage() {
     (signal) => tmdbService.getCategoryList(tvCategory, 1, { signal }, undefined, undefined, region),
     { enabled: !hasActiveSearch },
   );
+  const trendingMovies = useCachedQuery(
+    'home:featured-trending-movies',
+    (signal) => tmdbService.getTrendingMovies({ signal }),
+    { enabled: !hasActiveSearch },
+  );
+  const trendingTV = useCachedQuery(
+    'home:featured-trending-tv',
+    (signal) => tmdbService.getTrendingTVShows({ signal }),
+    { enabled: !hasActiveSearch },
+  );
+  const featuredItems = useMemo(() => shuffleFeaturedItems([
+    ...(trendingMovies.data?.map((item) => ({ mediaType: 'movie' as const, item })) ?? []),
+    ...(trendingTV.data?.map((item) => ({ mediaType: 'tv' as const, item })) ?? []),
+  ]), [trendingMovies.data, trendingTV.data]);
+  const activeFeatured = featuredItems.length > 0
+    ? featuredItems[featuredIndex % featuredItems.length]
+    : undefined;
+  const featuredDetails = useCachedQuery<Movie | TVShow>(
+    `home:featured:${activeFeatured?.mediaType ?? 'none'}:${activeFeatured?.item.id ?? 'none'}`,
+    (signal) => {
+      if (!activeFeatured) throw new Error('No featured title is available.');
+      return activeFeatured.mediaType === 'movie'
+        ? tmdbService.getMovieDetails(activeFeatured.item.id, { signal })
+        : tmdbService.getTVShowDetails(activeFeatured.item.id, { signal });
+    },
+    { enabled: !hasActiveSearch && Boolean(activeFeatured) },
+  );
+  const featuredItem = activeFeatured
+    && featuredDetails.data?.id === activeFeatured.item.id
+    && (activeFeatured.mediaType === 'movie'
+      ? 'title' in featuredDetails.data
+      : 'name' in featuredDetails.data)
+    ? featuredDetails.data
+    : activeFeatured?.item;
+  const featuredTrailer = featuredItem?.videos?.results.find(
+    (video) => video.site === 'YouTube' && video.type === 'Trailer',
+  );
+  const featuredTitle = featuredItem && ('title' in featuredItem ? featuredItem.title : featuredItem.name);
+  const featuredMediaType = activeFeatured?.mediaType;
+  const featuredYear = featuredItem && ('release_date' in featuredItem
+    ? featuredItem.release_date?.slice(0, 4)
+    : featuredItem.first_air_date?.slice(0, 4));
+  const featuredSeasons = featuredItem && 'number_of_seasons' in featuredItem
+    ? featuredItem.number_of_seasons
+    : undefined;
+
+  useEffect(() => {
+    const nextBackdropPath = activeFeatured?.item.backdrop_path ?? null;
+    const previousBackdropPath = currentBackdropPathRef.current;
+    currentBackdropPathRef.current = nextBackdropPath;
+
+    if (!previousBackdropPath || previousBackdropPath === nextBackdropPath) {
+      setPreviousBackdropPath(null);
+      return;
+    }
+
+    setPreviousBackdropPath(previousBackdropPath);
+    const timer = window.setTimeout(() => setPreviousBackdropPath(null), 900);
+    return () => window.clearTimeout(timer);
+  }, [activeFeatured?.mediaType, activeFeatured?.item.id]);
+
+  useEffect(() => {
+    if (featuredItems.length < 2 || hasActiveSearch) return;
+    const timer = window.setInterval(() => {
+      setFeaturedIndex((index) => (index + 1) % featuredItems.length);
+    }, 7000);
+    return () => window.clearInterval(timer);
+  }, [featuredItems.length, hasActiveSearch]);
 
   const updateCategory = (key: 'movie_category' | 'tv_category', value: string) => {
     const nextParams = new URLSearchParams(searchParams);
@@ -64,9 +150,11 @@ export function HomePage() {
     { enabled: searchReady },
   );
 
-  const primaryLoading = !hasActiveSearch && (movieList.loading || tvList.loading);
+  const primaryLoading = !hasActiveSearch && (
+    movieList.loading || tvList.loading || trendingMovies.loading || trendingTV.loading
+  );
   const searchLoading = hasActiveSearch && (!searchReady || searchMovies.loading || searchTV.loading || searchPeople.loading);
-  const primaryError = movieList.error || tvList.error;
+  const primaryError = movieList.error || tvList.error || trendingMovies.error || trendingTV.error;
 
   return (
     <main className="container py-6">
@@ -114,6 +202,108 @@ export function HomePage() {
         </div>
       ) : (
         <div className="space-y-12 pb-12">
+          {featuredItem && activeFeatured && (
+            <section
+              aria-label="Trending movies and TV shows"
+              aria-roledescription="carousel"
+              className="group relative isolate h-[32rem] overflow-hidden rounded-2xl bg-background sm:h-[26rem] lg:h-[25rem]"
+            >
+              {previousBackdropPath && previousBackdropPath !== featuredItem.backdrop_path && (
+                <img
+                  src={tmdbService.getImageUrl(previousBackdropPath, 'w780')}
+                  alt=""
+                  aria-hidden="true"
+                  className="absolute inset-0 -z-20 h-full w-full object-cover object-center"
+                />
+              )}
+              {featuredItem.backdrop_path && (
+                <img
+                  key={`${activeFeatured.mediaType}-${featuredItem.id}`}
+                  src={tmdbService.getImageUrl(featuredItem.backdrop_path, 'w780')}
+                  alt=""
+                  aria-hidden="true"
+                  className="hero-backdrop-enter absolute inset-0 -z-20 h-full w-full object-cover object-center"
+                />
+              )}
+              <div className="absolute inset-0 -z-10 bg-gradient-to-r from-background via-background/95 to-background/50 sm:via-background/85 sm:to-background/10" />
+              <div className="absolute inset-0 -z-10 bg-gradient-to-t from-background/80 via-transparent to-background/10" />
+              <Link
+                to={`/${featuredMediaType}/${featuredItem.id}`}
+                aria-label={`View details for ${featuredTitle}`}
+                className="absolute inset-0 z-0 rounded-2xl focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-ring"
+              />
+              <div
+                key={`${activeFeatured.mediaType}-${featuredItem.id}`}
+                role="group"
+                aria-roledescription="slide"
+                aria-label={`${featuredIndex + 1} of ${featuredItems.length}: ${featuredTitle}`}
+                aria-live="off"
+                className="hero-slide-enter pointer-events-none relative z-10 flex h-full max-w-2xl flex-col justify-start gap-3 pt-8 pl-0 pr-5 sm:pt-10 sm:pr-8 lg:pt-12 lg:pr-10"
+              >
+                <div>
+                  <h1 className="text-4xl font-extrabold tracking-tight sm:text-5xl">
+                    {featuredTitle}
+                  </h1>
+                  <div className="mt-3 flex flex-wrap items-center gap-x-3 gap-y-2 text-sm text-muted-foreground">
+                    {typeof featuredItem.vote_average === 'number' && featuredItem.vote_average > 0 && (
+                      <span className="inline-flex items-center gap-1 rounded-md border bg-background/80 px-2 py-1 font-semibold text-foreground">
+                        <Star aria-hidden="true" className="h-4 w-4 fill-amber-400 text-amber-400" />
+                        {featuredItem.vote_average.toFixed(1)}
+                      </span>
+                    )}
+                    {featuredSeasons !== undefined && (
+                      <span>{featuredSeasons} {featuredSeasons === 1 ? 'Season' : 'Seasons'}</span>
+                    )}
+                    {featuredYear && <span>{featuredYear}</span>}
+                  </div>
+                </div>
+                {featuredItem.genres && featuredItem.genres.length > 0 && (
+                  <p className="text-sm font-medium">{featuredItem.genres.map((genre) => genre.name).join('  /  ')}</p>
+                )}
+                <div className="pointer-events-auto flex flex-wrap items-center gap-3">
+                  {featuredTrailer && (
+                    <Button asChild className="min-h-11">
+                      <a
+                        href={`https://www.youtube.com/watch?v=${encodeURIComponent(featuredTrailer.key)}`}
+                        target="_blank"
+                        rel="noreferrer"
+                      >
+                        <Play aria-hidden="true" className="mr-2 h-4 w-4 fill-current" />
+                        Watch Trailer
+                      </a>
+                    </Button>
+                  )}
+                  <div className="w-fit max-w-full">
+                    <AccountMediaActions
+                      mediaId={featuredItem.id}
+                      mediaType={activeFeatured.mediaType}
+                      mediaTitle={featuredTitle ?? ''}
+                      showAddToList={false}
+                      squareButtons
+                    />
+                  </div>
+                </div>
+                {featuredItem.overview && (
+                  <p
+                    className="max-w-xl shrink-0 text-sm leading-6 text-muted-foreground sm:text-base"
+                    style={{
+                      display: '-webkit-box',
+                      WebkitBoxOrient: 'vertical',
+                      WebkitLineClamp: 5,
+                      overflow: 'hidden',
+                    }}
+                  >
+                    {featuredItem.overview}
+                  </p>
+                )}
+                {featuredDetails.error && (
+                  <p role="alert" className="text-sm text-destructive">
+                    Additional featured-title details could not be loaded: {featuredDetails.error.message}
+                  </p>
+                )}
+              </div>
+            </section>
+          )}
           <MediaSection
             title="Movies"
             titleClassName="text-3xl"

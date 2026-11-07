@@ -4,6 +4,41 @@
 @tailwind components;
 @tailwind utilities;
 
+@keyframes hero-backdrop-enter {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+@keyframes hero-slide-enter {
+  from {
+    opacity: 0;
+    transform: translateY(0.5rem);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.hero-backdrop-enter {
+  animation: hero-backdrop-enter 900ms ease-out both;
+}
+
+.hero-slide-enter {
+  animation: hero-slide-enter 450ms ease-out both;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .hero-backdrop-enter,
+  .hero-slide-enter {
+    animation: none;
+  }
+}
+
 @layer base {
   :root {
     --background: 0 0% 100%;

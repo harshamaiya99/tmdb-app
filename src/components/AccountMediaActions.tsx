@@ -14,9 +14,17 @@ interface AccountMediaActionsProps {
   mediaId: number;
   mediaType: 'movie' | 'tv';
   mediaTitle: string;
+  showAddToList?: boolean;
+  squareButtons?: boolean;
 }
 
-export function AccountMediaActions({ mediaId, mediaType, mediaTitle }: AccountMediaActionsProps) {
+export function AccountMediaActions({
+  mediaId,
+  mediaType,
+  mediaTitle,
+  showAddToList = true,
+  squareButtons = false,
+}: AccountMediaActionsProps) {
   const { account, connectTMDBAccount, isConnected, sessionId } = useTMDBAccount();
   const { toast } = useToast();
   const [pendingAction, setPendingAction] = useState<'watchlist' | 'favorite' | null>(null);
@@ -57,12 +65,12 @@ export function AccountMediaActions({ mediaId, mediaType, mediaTitle }: AccountM
 
     return (
       <>
-        <section aria-label="TMDB account actions" className="grid min-w-0 grid-cols-3 gap-1">
+        <section aria-label="TMDB account actions" className={squareButtons ? 'grid w-fit grid-cols-2 gap-2' : 'grid min-w-0 grid-cols-3 gap-1'}>
           <Button
             type="button"
             variant="outline"
             size="sm"
-            className="h-9 w-full min-w-0 justify-center px-1"
+            className={squareButtons ? 'h-9 w-9 p-0' : 'h-9 w-full min-w-0 justify-center px-1'}
             aria-label="Add to watchlist"
             title="Add to watchlist"
             onClick={() => setIsLoginPromptOpen(true)}
@@ -80,17 +88,19 @@ export function AccountMediaActions({ mediaId, mediaType, mediaTitle }: AccountM
           >
             <Heart aria-hidden="true" className="h-4 w-4" />
           </Button>
-          <Button
-            type="button"
-            variant="outline"
-            size="sm"
-            className="h-9 w-full min-w-0 justify-center px-1"
-            aria-label="Add to list"
-            title="Add to list"
-            onClick={() => setIsLoginPromptOpen(true)}
-          >
-            <ListPlus aria-hidden="true" className="h-4 w-4" />
-          </Button>
+          {showAddToList && (
+            <Button
+              type="button"
+              variant="outline"
+              size="sm"
+              className="h-9 w-full min-w-0 justify-center px-1"
+              aria-label="Add to list"
+              title="Add to list"
+              onClick={() => setIsLoginPromptOpen(true)}
+            >
+              <ListPlus aria-hidden="true" className="h-4 w-4" />
+            </Button>
+          )}
         </section>
         {isLoginPromptOpen && (
           <div
@@ -184,12 +194,12 @@ export function AccountMediaActions({ mediaId, mediaType, mediaTitle }: AccountM
   };
 
   return (
-    <section aria-label="TMDB account actions" className="grid min-w-0 grid-cols-3 gap-1">
+    <section aria-label="TMDB account actions" className={squareButtons ? 'grid w-fit grid-cols-2 gap-2' : 'grid min-w-0 grid-cols-3 gap-1'}>
         <Button
           type="button"
           variant={accountState?.watchlist ? 'selected' : 'outline'}
           size="sm"
-          className="h-9 w-full min-w-0 justify-center px-1"
+          className={squareButtons ? 'h-9 w-9 p-0' : 'h-9 w-full min-w-0 justify-center px-1'}
           aria-label={accountState?.watchlist ? 'Remove from watchlist' : 'Add to watchlist'}
           title={accountState?.watchlist ? 'Remove from watchlist' : 'Add to watchlist'}
           aria-pressed={accountState?.watchlist ?? false}
@@ -205,7 +215,7 @@ export function AccountMediaActions({ mediaId, mediaType, mediaTitle }: AccountM
           type="button"
           variant={accountState?.favorite ? 'selected' : 'outline'}
           size="sm"
-          className={`h-9 w-full min-w-0 justify-center px-1${accountState?.favorite ? ' text-rose-600 dark:text-rose-400' : ''}`}
+          className={`${squareButtons ? 'h-9 w-9 p-0' : 'h-9 w-full min-w-0 justify-center px-1'}${accountState?.favorite ? ' text-rose-600 dark:text-rose-400' : ''}`}
           aria-label={accountState?.favorite ? 'Remove from favorites' : 'Add to favorites'}
           title={accountState?.favorite ? 'Remove from favorites' : 'Add to favorites'}
           aria-pressed={accountState?.favorite ?? false}
@@ -215,15 +225,17 @@ export function AccountMediaActions({ mediaId, mediaType, mediaTitle }: AccountM
           <Heart aria-hidden="true" className={`h-4 w-4${accountState?.favorite ? ' fill-current' : ''}`} />
           <span className="sr-only">{accountState?.favorite ? 'Favorited' : 'Favorite'}</span>
         </Button>
-        <AddToListButton
-          mediaId={mediaId}
-          mediaTitle={mediaTitle}
-          mediaType={mediaType}
-          iconOnly
-          className="h-9 w-full min-w-0 justify-center px-1"
-        />
+        {showAddToList && (
+          <AddToListButton
+            mediaId={mediaId}
+            mediaTitle={mediaTitle}
+            mediaType={mediaType}
+            iconOnly
+            className="h-9 w-full min-w-0 justify-center px-1"
+          />
+        )}
       {accountStateQuery.error && (
-        <span role="alert" className="col-span-3 text-xs text-destructive">Account status unavailable.</span>
+        <span role="alert" className="col-span-full text-xs text-destructive">Account status unavailable.</span>
       )}
     </section>
   );
