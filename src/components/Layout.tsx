@@ -348,7 +348,7 @@ export function Layout({ children }: LayoutProps) {
         <DropdownMenu.Separator className="my-1 h-px bg-border" />
         <DropdownMenu.Item
           onSelect={handleLogout}
-          className="flex min-h-10 cursor-pointer select-none items-center gap-2 rounded-sm px-3 py-2 text-sm text-destructive outline-none hover:bg-accent focus:bg-accent focus:text-destructive"
+          className="flex min-h-10 cursor-pointer select-none items-center gap-2 rounded-sm bg-destructive px-3 py-2 text-sm text-destructive-foreground outline-none hover:bg-destructive/90 focus:bg-destructive/90 focus:text-destructive-foreground"
         >
           <LogOut className="h-4 w-4" />
           Log out
