@@ -372,7 +372,6 @@ export function HomePage() {
               </div>
             </section>
           )}
-          <MovieReleaseCalendar region={region} />
           <MediaSection
             title="Movies"
             titleClassName="text-3xl"
@@ -409,6 +408,7 @@ export function HomePage() {
             horizontalScroll
             limit={20}
           />
+          <MovieReleaseCalendar region={region} />
         </div>
       )}
     </main>
