@@ -66,6 +66,27 @@ describe('TMDB Talk-show filtering', () => {
     expect(requestUrl.searchParams.get('append_to_response')).toContain('release_dates');
   });
 
+  it('includes content ratings in TV details for certification display', async () => {
+    const fetchMock = vi.mocked(fetch);
+    fetchMock.mockResolvedValue(responseWith({
+      id: 1399,
+      name: 'Example show',
+      content_ratings: {
+        results: [{ iso_3166_1: 'US', rating: 'TV-MA' }],
+      },
+    }));
+
+    await expect(tmdbService.getTVShowDetails(1399)).resolves.toMatchObject({
+      content_ratings: {
+        results: [{ iso_3166_1: 'US', rating: 'TV-MA' }],
+      },
+    });
+
+    const requestUrl = new URL(String(fetchMock.mock.calls[0][0]));
+    expect(requestUrl.pathname).toBe('/3/tv/1399');
+    expect(requestUrl.searchParams.get('append_to_response')).toContain('content_ratings');
+  });
+
   it('uses the selected region for movie searches', async () => {
     const fetchMock = vi.mocked(fetch);
     fetchMock.mockResolvedValue(responseWith({

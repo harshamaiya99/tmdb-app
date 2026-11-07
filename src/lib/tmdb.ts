@@ -162,6 +162,12 @@ export interface TVShow {
   aggregate_credits?: { cast: AggregateCast[]; crew: Crew[] };
   production_companies?: ProductionCompany[];
   'watch/providers'?: WatchProviders;
+  content_ratings?: {
+    results: {
+      iso_3166_1: string;
+      rating: string;
+    }[];
+  };
 }
 
 export interface Crew {
@@ -705,7 +711,7 @@ class TMDBService {
   }
 
   async getTVShowDetails(id: number, options?: TMDBRequestOptions): Promise<TVShow> {
-    const show = await this.fetchFromTMDB<TVShow>(`/tv/${id}?append_to_response=credits,aggregate_credits,videos,recommendations,external_ids,reviews,watch/providers`, options);
+    const show = await this.fetchFromTMDB<TVShow>(`/tv/${id}?append_to_response=credits,aggregate_credits,videos,recommendations,external_ids,reviews,watch/providers,content_ratings`, options);
     return {
       ...show,
       recommendations: show.recommendations
