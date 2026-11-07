@@ -68,7 +68,7 @@ export function MovieReleaseCalendar({ region }: { region: string }) {
       </div>
 
       <Card className="p-3 sm:p-5">
-        <div className="grid gap-5 lg:grid-cols-[minmax(0,2fr)_minmax(0,3fr)]">
+        <div className="grid gap-5 lg:grid-cols-[minmax(0,1fr)_minmax(0,3fr)]">
           <div>
             <div className="mb-4 flex min-h-11 items-center justify-between gap-2">
               <Button
@@ -158,9 +158,9 @@ export function MovieReleaseCalendar({ region }: { region: string }) {
                 items={selectedMovies}
                 type="movie"
                 hideSeeMore
-                limit={6}
+                limit={7}
                 horizontalScroll
-                horizontalColumns={6}
+                horizontalColumns={7}
                 className="space-y-0"
               />
             ) : (

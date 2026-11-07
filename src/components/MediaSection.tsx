@@ -20,7 +20,7 @@ interface MediaSectionProps {
   className?: string;
   gridClassName?: string;
   horizontalScroll?: boolean;
-  horizontalColumns?: 6 | 8 | 10;
+  horizontalColumns?: 6 | 7 | 8 | 10;
 }
 
 export function MediaSection({ title, items, type, category, titleAction, titleClassName, hideSeeMore = false, actionLabel = 'See More', limit = 10, className, gridClassName, horizontalScroll = false, horizontalColumns = 10 }: MediaSectionProps) {
@@ -119,6 +119,8 @@ export function MediaSection({ title, items, type, category, titleAction, titleC
             ref={scrollContainerRef}
             className={`grid min-w-0 grid-flow-col auto-cols-[calc((100%_-_0.75rem)/2)] gap-3 overflow-x-auto pb-4 pr-8 snap-x snap-mandatory min-[360px]:auto-cols-[calc((100%_-_1.5rem)/3)] sm:gap-4 sm:auto-cols-[calc((100%_-_2rem)/3)] md:auto-cols-[calc((100%_-_3rem)/4)] ${horizontalColumns === 6
               ? 'lg:auto-cols-[calc((100%_-_5rem)/6)] xl:auto-cols-[calc((100%_-_5rem)/6)] 2xl:auto-cols-[calc((100%_-_5rem)/6)]'
+              : horizontalColumns === 7
+                ? 'lg:auto-cols-[calc((100%_-_5rem)/6)] xl:auto-cols-[calc((100%_-_6rem)/7)] 2xl:auto-cols-[calc((100%_-_6rem)/7)]'
               : `lg:auto-cols-[calc((100%_-_5rem)/6)] xl:auto-cols-[calc((100%_-_7rem)/8)] ${horizontalColumns === 10 ? 'xl:auto-cols-[calc((100%_-_9rem)/10)] 2xl:auto-cols-[calc((100%_-_9rem)/10)]' : '2xl:auto-cols-[calc((100%_-_7rem)/8)]'}`
             } [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2`}
             tabIndex={0}
