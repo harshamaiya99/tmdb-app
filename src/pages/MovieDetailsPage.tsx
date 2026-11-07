@@ -249,7 +249,7 @@ export function MovieDetailsPage() {
                 </p>
               )}
               {financials.length > 0 && (
-                <dl className="grid grid-cols-1 gap-3 text-sm min-[480px]:grid-cols-2">
+                <dl className="grid w-fit grid-cols-[max-content_max-content] gap-x-8 gap-y-3 text-sm">
                   {financials.map(({ label, amount }) => (
                     <div key={label}>
                       <dt className="text-muted-foreground">{label}</dt>
@@ -257,7 +257,8 @@ export function MovieDetailsPage() {
                         {new Intl.NumberFormat('en-US', {
                           style: 'currency',
                           currency: 'USD',
-                          maximumFractionDigits: 0,
+                          notation: 'compact',
+                          maximumFractionDigits: 2,
                         }).format(amount)}
                       </dd>
                     </div>
