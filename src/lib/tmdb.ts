@@ -579,6 +579,23 @@ class TMDBService {
     return data.results;
   }
 
+  async getMoviesByReleaseDateRange(
+    startDate: string,
+    endDate: string,
+    page: number = 1,
+    options?: TMDBRequestOptions,
+    region?: string,
+  ): Promise<TrendingResponse<Movie>> {
+    const params = new URLSearchParams({
+      'primary_release_date.gte': startDate,
+      'primary_release_date.lte': endDate,
+      sort_by: 'popularity.desc',
+      page: String(page),
+    });
+    if (region) params.set('region', region);
+    return this.fetchFromTMDB<TrendingResponse<Movie>>(`/discover/movie?${params.toString()}`, options);
+  }
+
   async getTrendingTVShows(options?: TMDBRequestOptions): Promise<TVShow[]> {
     const data = await this.fetchFromTMDB<TrendingResponse<TVShow>>('/trending/tv/day', options);
     return withoutTalkShows(data.results);

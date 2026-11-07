@@ -20,6 +20,7 @@ import { EmbedSettingsProvider } from '@/contexts/EmbedSettingsContext';
 import { TMDBAccountProvider } from '@/contexts/TMDBAccountContext';
 import { ThemeProvider } from '@/hooks/useTheme';
 import { SettingsPage } from '@/pages/SettingsPage';
+import { ReleaseDateMoviesPage } from '@/pages/ReleaseDateMoviesPage';
 
 function ProtectedRoute({ children }: { children: React.ReactNode }) {
   const [isAuthenticated, setIsAuthenticated] = useState<boolean | null>(null);
@@ -66,6 +67,7 @@ function App() {
                 <Route path="/tv/:id" element={<ProtectedRoute><Layout><TVShowDetailsPage /></Layout></ProtectedRoute>} />
                 <Route path="/person/:id" element={<ProtectedRoute><Layout><PersonDetailsPage /></Layout></ProtectedRoute>} />
                 <Route path="/category/:category" element={<ProtectedRoute><Layout><MediaListPage /></Layout></ProtectedRoute>} />
+                <Route path="/releases/:date" element={<ProtectedRoute><Layout><ReleaseDateMoviesPage /></Layout></ProtectedRoute>} />
                 {/* NEW: Map the tab routes to the MediaListPage */}
                 <Route path="/movie" element={<ProtectedRoute><Layout><MediaListPage /></Layout></ProtectedRoute>} />
                 <Route path="/tv" element={<ProtectedRoute><Layout><MediaListPage /></Layout></ProtectedRoute>} />

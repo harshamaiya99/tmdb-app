@@ -20,7 +20,7 @@ interface MediaSectionProps {
   className?: string;
   gridClassName?: string;
   horizontalScroll?: boolean;
-  horizontalColumns?: 8 | 10;
+  horizontalColumns?: 6 | 8 | 10;
 }
 
 export function MediaSection({ title, items, type, category, titleAction, titleClassName, hideSeeMore = false, actionLabel = 'See More', limit = 10, className, gridClassName, horizontalScroll = false, horizontalColumns = 10 }: MediaSectionProps) {
@@ -117,7 +117,10 @@ export function MediaSection({ title, items, type, category, titleAction, titleC
         <div className={`relative min-w-0 ${canScrollLeft ? 'before:pointer-events-none before:absolute before:inset-y-0 before:left-0 before:z-[1] before:w-8 before:bg-gradient-to-r before:from-background before:to-transparent' : ''} ${canScrollRight ? 'after:pointer-events-none after:absolute after:inset-y-0 after:right-0 after:z-[1] after:w-8 after:bg-gradient-to-l after:from-background after:to-transparent' : ''}`}>
           <div
             ref={scrollContainerRef}
-            className={`grid min-w-0 grid-flow-col auto-cols-[calc((100%_-_0.75rem)/2)] gap-3 overflow-x-auto pb-4 pr-8 snap-x snap-mandatory min-[360px]:auto-cols-[calc((100%_-_1.5rem)/3)] sm:gap-4 sm:auto-cols-[calc((100%_-_2rem)/3)] md:auto-cols-[calc((100%_-_3rem)/4)] lg:auto-cols-[calc((100%_-_5rem)/6)] xl:auto-cols-[calc((100%_-_7rem)/8)] ${horizontalColumns === 10 ? 'xl:auto-cols-[calc((100%_-_9rem)/10)] 2xl:auto-cols-[calc((100%_-_9rem)/10)]' : '2xl:auto-cols-[calc((100%_-_7rem)/8)]'} [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2`}
+            className={`grid min-w-0 grid-flow-col auto-cols-[calc((100%_-_0.75rem)/2)] gap-3 overflow-x-auto pb-4 pr-8 snap-x snap-mandatory min-[360px]:auto-cols-[calc((100%_-_1.5rem)/3)] sm:gap-4 sm:auto-cols-[calc((100%_-_2rem)/3)] md:auto-cols-[calc((100%_-_3rem)/4)] ${horizontalColumns === 6
+              ? 'lg:auto-cols-[calc((100%_-_5rem)/6)] xl:auto-cols-[calc((100%_-_5rem)/6)] 2xl:auto-cols-[calc((100%_-_5rem)/6)]'
+              : `lg:auto-cols-[calc((100%_-_5rem)/6)] xl:auto-cols-[calc((100%_-_7rem)/8)] ${horizontalColumns === 10 ? 'xl:auto-cols-[calc((100%_-_9rem)/10)] 2xl:auto-cols-[calc((100%_-_9rem)/10)]' : '2xl:auto-cols-[calc((100%_-_7rem)/8)]'}`
+            } [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2`}
             tabIndex={0}
             role="region"
             aria-label={`${title || (type === 'person' ? 'People' : type === 'movie' ? 'Movies' : 'TV shows')} results`}

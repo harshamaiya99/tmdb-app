@@ -4,6 +4,7 @@ import { Play, Star } from 'lucide-react';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { AccountMediaActions } from '@/components/AccountMediaActions';
 import { Button } from '@/components/ui/button';
+import { MovieReleaseCalendar } from '@/components/MovieReleaseCalendar';
 import { MediaGridSkeleton } from '@/components/MediaGridSkeleton';
 import { MediaSection } from '@/components/MediaSection';
 import { MediaCategoryToggle, MOVIE_CATEGORIES, TV_CATEGORIES } from '@/components/MediaCategoryToggle';
@@ -371,6 +372,7 @@ export function HomePage() {
               </div>
             </section>
           )}
+          <MovieReleaseCalendar region={region} />
           <MediaSection
             title="Movies"
             titleClassName="text-3xl"

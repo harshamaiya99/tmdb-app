@@ -4,6 +4,7 @@ import { buildEmbedUrl, formatDate, getEmbedLinkName } from '@/lib/utils';
 describe('formatDate', () => {
   it('formats valid dates using the shared display format', () => {
     expect(formatDate('2024-09-27T12:00:00')).toBe('27 Sep 2024');
+    expect(formatDate('2024-09-27')).toBe('27 Sep 2024');
   });
 
   it('returns an empty string for missing or invalid dates', () => {

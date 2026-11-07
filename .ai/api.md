@@ -80,6 +80,7 @@ The API service exposes methods for several categories of requests:
 ### Home and discovery
 
 The home page provides separate movie and TV category selectors. Movie options include trending, popular, streaming, in theaters, and top rated; TV options include trending, popular, and top rated. Each selector's paginated view uses the same category as its home carousel.
+The home page also includes a movie release calendar. It queries `/discover/movie` for the selected primary release date only, applies the saved content region, and sorts by popularity; results are cached and the home view shows up to six movies. The selected day's See More page queries that exact release date and provides standard movie-list pagination.
 The People page provides Popular and daily Trending tabs, both with pagination.
 
 - trending movies

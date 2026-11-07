@@ -104,6 +104,27 @@ describe('TMDB Talk-show filtering', () => {
     expect(requestUrl.searchParams.get('region')).toBe('IN');
   });
 
+  it('fetches paginated movie releases within a date range and region', async () => {
+    const fetchMock = vi.mocked(fetch);
+    fetchMock.mockResolvedValue(responseWith({
+      page: 2,
+      results: [{ id: 200, title: 'Example movie', release_date: '2026-11-07' }],
+      total_pages: 3,
+      total_results: 45,
+    }));
+
+    await expect(tmdbService.getMoviesByReleaseDateRange('2026-11-01', '2026-11-30', 2, undefined, 'IN'))
+      .resolves.toMatchObject({ page: 2, total_pages: 3, total_results: 45 });
+
+    const requestUrl = new URL(String(fetchMock.mock.calls[0][0]));
+    expect(requestUrl.pathname).toBe('/3/discover/movie');
+    expect(requestUrl.searchParams.get('primary_release_date.gte')).toBe('2026-11-01');
+    expect(requestUrl.searchParams.get('primary_release_date.lte')).toBe('2026-11-30');
+    expect(requestUrl.searchParams.get('sort_by')).toBe('popularity.desc');
+    expect(requestUrl.searchParams.get('page')).toBe('2');
+    expect(requestUrl.searchParams.get('region')).toBe('IN');
+  });
+
   it('filters Talk shows from trending TV results', async () => {
     vi.mocked(fetch).mockResolvedValue(responseWith({
       page: 1,
