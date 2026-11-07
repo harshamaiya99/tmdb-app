@@ -78,8 +78,6 @@ export function MovieDetailsPage() {
     const observer = new ResizeObserver(updatePlacement);
     observer.observe(posterColumn);
     observer.observe(detailsColumn);
-    observer.observe(rightColumn);
-    observer.observe(companyInfo);
     window.addEventListener('resize', updatePlacement);
 
     return () => {
@@ -117,6 +115,12 @@ export function MovieDetailsPage() {
 
   const releaseDate = formatDate(movie.release_date);
   const rating = movie.vote_average?.toFixed(1);
+  const financials = [
+    { label: 'Budget', amount: movie.budget },
+    { label: 'Revenue', amount: movie.revenue },
+  ].filter((item): item is { label: string; amount: number } => (
+    typeof item.amount === 'number' && item.amount > 0
+  ));
   const regionalReleases = region
     ? movie.release_dates?.results.find((release) => release.iso_3166_1 === region)?.release_dates ?? []
     : [];
@@ -243,6 +247,22 @@ export function MovieDetailsPage() {
                   <span className="text-muted-foreground">Status: </span>
                   <span className="font-medium">{movie.status}</span>
                 </p>
+              )}
+              {financials.length > 0 && (
+                <dl className="grid grid-cols-1 gap-3 text-sm min-[480px]:grid-cols-2">
+                  {financials.map(({ label, amount }) => (
+                    <div key={label}>
+                      <dt className="text-muted-foreground">{label}</dt>
+                      <dd className="font-medium">
+                        {new Intl.NumberFormat('en-US', {
+                          style: 'currency',
+                          currency: 'USD',
+                          maximumFractionDigits: 0,
+                        }).format(amount)}
+                      </dd>
+                    </div>
+                  ))}
+                </dl>
               )}
             </div>
 

@@ -85,6 +85,8 @@ export interface TVSeasonDetails extends Season {
 export interface Movie {
   id: number;
   title: string;
+  budget?: number;
+  revenue?: number;
   poster_path: string | null;
   backdrop_path: string | null;
   overview: string;
