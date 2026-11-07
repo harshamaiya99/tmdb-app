@@ -447,7 +447,7 @@ export function TVShowDetailsPage() {
           <div className="mt-12 grid gap-6 border-t pt-8 lg:grid-cols-5">
             {hasCredits && (
               <section className="min-w-0 lg:col-span-3">
-                <div className="mb-4 flex items-center justify-between gap-4">
+                <div className="mb-4 flex items-start justify-between gap-4">
                   <h2 className="text-xl font-semibold">{activeCredits === 'cast' ? 'Cast' : 'Crew'}</h2>
                   <div className="flex rounded-md border p-1" role="group" aria-label="Credits">
                     <Button
