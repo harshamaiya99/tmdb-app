@@ -653,6 +653,44 @@ describe('TMDB Talk-show filtering', () => {
       expect(new Headers(fetchMock.mock.calls[0][1]?.headers).get('Authorization')).toBe('Bearer user-access-token');
     });
 
+    it('loads every page of custom list items for media type filtering', async () => {
+      const fetchMock = vi.mocked(fetch);
+      fetchMock
+        .mockResolvedValueOnce(responseWith({
+          id: 73,
+          name: 'Favorites',
+          description: '',
+          item_count: 21,
+          favorite_count: 0,
+          poster_path: null,
+          iso_639_1: 'en',
+          page: 1,
+          total_pages: 2,
+          total_results: 21,
+          results: [{ id: 200, media_type: 'movie', title: 'Example movie' }],
+        }))
+        .mockResolvedValueOnce(responseWith({
+          id: 73,
+          name: 'Favorites',
+          description: '',
+          item_count: 21,
+          favorite_count: 0,
+          poster_path: null,
+          iso_639_1: 'en',
+          page: 2,
+          total_pages: 2,
+          total_results: 21,
+          results: [{ id: 1399, media_type: 'tv', name: 'Example show' }],
+        }));
+
+      await expect(tmdbService.getAllUserListItems(73, 'user-access-token')).resolves.toEqual([
+        { id: 200, media_type: 'movie', title: 'Example movie' },
+        { id: 1399, media_type: 'tv', name: 'Example show' },
+      ]);
+      expect(fetchMock).toHaveBeenCalledTimes(2);
+      expect(new URL(String(fetchMock.mock.calls[1][0])).searchParams.get('page')).toBe('2');
+    });
+
     it('loads a media title account state for favorite, watchlist, and rating feedback', async () => {
       const fetchMock = vi.mocked(fetch);
       fetchMock.mockResolvedValue(responseWith({

@@ -5,6 +5,7 @@ import { Alert, AlertDescription } from '@/components/ui/alert';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import { MediaCard } from '@/components/MediaCard';
+import { MediaCategoryToggle, MEDIA_TYPE_OPTIONS } from '@/components/MediaCategoryToggle';
 import { MediaGridSkeleton } from '@/components/MediaGridSkeleton';
 import { useTMDBAccount } from '@/contexts/TMDBAccountContext';
 import { useCachedQuery } from '@/hooks/useCachedQuery';
@@ -14,6 +15,8 @@ import { clearRequestCache } from '@/lib/requestCache';
 import { tmdbService, type TMDBUserListItem } from '@/lib/tmdb';
 import { useToast } from '@/components/ui/use-toast';
 import { TMDBImage } from '@/components/TMDBImage';
+
+const USER_LIST_PAGE_SIZE = 20;
 
 const accountNavigation = [
   { to: '/account/watchlist', label: 'Watchlist' },
@@ -35,10 +38,12 @@ export function AccountListsPage() {
   } = useTMDBAccount();
   const { toast } = useToast();
   const navigate = useNavigate();
-  const { page, setPage } = usePagination();
+  const { page, setPage, searchParams, setSearchParams } = usePagination();
   const [revision, setRevision] = useState(0);
   const [pendingMediaKey, setPendingMediaKey] = useState<string | null>(null);
   const [isDeleting, setIsDeleting] = useState(false);
+  const selectedMediaType = searchParams.get('type');
+  const mediaType = selectedMediaType === 'movie' || selectedMediaType === 'tv' ? selectedMediaType : 'all';
 
   const listsQuery = useCachedQuery(
     `account:${listAccountId || 'none'}:lists:${page}:${revision}`,
@@ -58,12 +63,25 @@ export function AccountListsPage() {
     },
   );
   const detailQuery = useCachedQuery(
-    `account:${listAccountId || 'none'}:list:${listId ?? 'none'}:${page}:${revision}`,
-    (signal) => tmdbService.getUserList(listId ?? 0, listAccessToken, page, signal),
+    `account:${listAccountId || 'none'}:list:${listId ?? 'none'}:${mediaType === 'all' ? page : 1}:${revision}`,
+    (signal) => tmdbService.getUserList(listId ?? 0, listAccessToken, mediaType === 'all' ? page : 1, signal),
     { enabled: isListAccountConnected && Boolean(listId) },
+  );
+  const filteredItemsQuery = useCachedQuery(
+    `account:${listAccountId || 'none'}:list-items:${listId ?? 'none'}:${revision}`,
+    (signal) => tmdbService.getAllUserListItems(listId ?? 0, listAccessToken, signal),
+    { enabled: isListAccountConnected && Boolean(listId) && mediaType !== 'all' },
   );
   const list = detailQuery.data;
   usePageTitle(list ? list.name : 'Your Lists');
+
+  const handleMediaTypeChange = (nextType: 'all' | 'movie' | 'tv') => {
+    const nextParams = new URLSearchParams(searchParams);
+    if (nextType === 'all') nextParams.delete('type');
+    else nextParams.set('type', nextType);
+    nextParams.delete('page');
+    setSearchParams(nextParams);
+  };
 
   const handleRemoveItem = async (mediaType: 'movie' | 'tv', mediaId: number) => {
     if (!listId) return;
@@ -137,10 +155,23 @@ export function AccountListsPage() {
   }
 
   if (listId) {
-    const items = list?.results ?? [];
+    const listItems = mediaType === 'all'
+      ? list?.results ?? []
+      : (filteredItemsQuery.data ?? []).filter((item) => item.media_type === mediaType);
+    const totalPages = mediaType === 'all'
+      ? list?.total_pages ?? 1
+      : Math.max(1, Math.ceil(listItems.length / USER_LIST_PAGE_SIZE));
+    const currentPage = mediaType !== 'all' && filteredItemsQuery.data
+      ? Math.min(page, totalPages)
+      : page;
+    const items = mediaType === 'all'
+      ? listItems
+      : listItems.slice((currentPage - 1) * USER_LIST_PAGE_SIZE, currentPage * USER_LIST_PAGE_SIZE);
+    const loading = detailQuery.loading || (mediaType !== 'all' && filteredItemsQuery.loading);
+    const error = detailQuery.error ?? (mediaType !== 'all' ? filteredItemsQuery.error : null);
     return (
       <main className="container space-y-6 py-6">
-        <div className="flex flex-wrap items-end justify-between gap-4">
+        <div className="flex flex-wrap items-center justify-between gap-4">
           <div className="min-w-0">
             <h1 className="flex flex-wrap items-baseline gap-x-2 break-words text-3xl font-bold tracking-tight">
               <Link to="/account/lists" className="text-muted-foreground hover:text-foreground">Your Lists</Link>
@@ -149,10 +180,18 @@ export function AccountListsPage() {
             </h1>
             {list?.description && <p className="mt-2 max-w-2xl text-sm text-muted-foreground">{list.description}</p>}
           </div>
-          <Button type="button" variant="outline" className="gap-2 text-destructive" disabled={isDeleting} onClick={() => void handleDeleteList()}>
-            <Trash2 aria-hidden="true" className="h-4 w-4" />
-            Delete list
-          </Button>
+          <div className="flex flex-wrap items-center gap-2">
+            <Button type="button" variant="destructive" className="gap-2" disabled={isDeleting} onClick={() => void handleDeleteList()}>
+              <Trash2 aria-hidden="true" className="h-4 w-4" />
+              Delete list
+            </Button>
+            <MediaCategoryToggle
+              label="Media type"
+              options={MEDIA_TYPE_OPTIONS}
+              value={mediaType}
+              onChange={handleMediaTypeChange}
+            />
+          </div>
         </div>
 
         <nav aria-label="Account lists" className="flex flex-wrap gap-2 border-b pb-3">
@@ -163,12 +202,16 @@ export function AccountListsPage() {
           ))}
         </nav>
 
-        {detailQuery.loading ? (
+        {loading ? (
           <MediaGridSkeleton />
-        ) : detailQuery.error ? (
-          <Alert variant="destructive"><AlertDescription>{detailQuery.error.message}</AlertDescription></Alert>
+        ) : error ? (
+          <Alert variant="destructive"><AlertDescription>{error.message}</AlertDescription></Alert>
         ) : items.length === 0 ? (
-          <div className="rounded-xl border border-dashed p-8 text-center text-sm text-muted-foreground">This list is empty.</div>
+          <div className="rounded-xl border border-dashed p-8 text-center text-sm text-muted-foreground">
+            {mediaType === 'all'
+              ? 'This list is empty.'
+              : `No ${mediaType === 'movie' ? 'movies' : 'TV shows'} in this list.`}
+          </div>
         ) : (
           <div className="grid grid-cols-2 gap-3 min-[360px]:grid-cols-3 sm:gap-4 sm:grid-cols-4 md:grid-cols-5 lg:grid-cols-6 xl:grid-cols-8 2xl:grid-cols-10">
             {items.map((item) => (
@@ -194,11 +237,11 @@ export function AccountListsPage() {
             ))}
           </div>
         )}
-        {list && list.total_pages > 1 && (
+        {list && totalPages > 1 && (
           <div className="flex items-center justify-center gap-6 border-t pt-6">
-            <Button variant="outline" onClick={() => setPage(Math.max(1, page - 1))} disabled={page === 1}>Previous</Button>
-            <span className="text-sm font-medium text-muted-foreground">Page {page} of {list.total_pages}</span>
-            <Button variant="outline" onClick={() => setPage(Math.min(list.total_pages, page + 1))} disabled={page === list.total_pages}>Next</Button>
+            <Button variant="outline" onClick={() => setPage(Math.max(1, currentPage - 1))} disabled={currentPage === 1}>Previous</Button>
+            <span className="text-sm font-medium text-muted-foreground">Page {currentPage} of {totalPages}</span>
+            <Button variant="outline" onClick={() => setPage(Math.min(totalPages, currentPage + 1))} disabled={currentPage === totalPages}>Next</Button>
           </div>
         )}
 

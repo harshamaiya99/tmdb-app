@@ -1,6 +1,12 @@
 import { Button } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
 
+export const MEDIA_TYPE_OPTIONS = [
+  { value: 'all', label: 'All' },
+  { value: 'movie', label: 'Movies' },
+  { value: 'tv', label: 'TV shows' },
+] as const;
+
 export const MOVIE_CATEGORIES = [
   { value: 'trending-movies', label: 'Trending' },
   { value: 'popular-movies', label: 'Popular' },

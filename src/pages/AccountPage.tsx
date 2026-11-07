@@ -6,6 +6,7 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import { MediaCard } from '@/components/MediaCard';
 import { MediaGridSkeleton } from '@/components/MediaGridSkeleton';
+import { MediaCategoryToggle, MEDIA_TYPE_OPTIONS } from '@/components/MediaCategoryToggle';
 import { useTMDBAccount } from '@/contexts/TMDBAccountContext';
 import { useCachedQuery } from '@/hooks/useCachedQuery';
 import { usePageTitle } from '@/hooks/usePageTitle';
@@ -125,11 +126,12 @@ export function AccountPage() {
         <div>
           <h1 className="text-3xl font-bold tracking-tight">{pageTitle}</h1>
         </div>
-        <div className="flex rounded-md border p-1" role="group" aria-label="Media type">
-          <Button type="button" size="sm" variant={mediaType === 'all' ? 'selected' : 'ghost'} aria-pressed={mediaType === 'all'} onClick={() => handleMediaTypeChange('all')}>All</Button>
-          <Button type="button" size="sm" variant={mediaType === 'movie' ? 'selected' : 'ghost'} aria-pressed={mediaType === 'movie'} onClick={() => handleMediaTypeChange('movie')}>Movies</Button>
-          <Button type="button" size="sm" variant={mediaType === 'tv' ? 'selected' : 'ghost'} aria-pressed={mediaType === 'tv'} onClick={() => handleMediaTypeChange('tv')}>TV shows</Button>
-        </div>
+        <MediaCategoryToggle
+          label="Media type"
+          options={MEDIA_TYPE_OPTIONS}
+          value={mediaType}
+          onChange={handleMediaTypeChange}
+        />
       </div>
 
       <nav aria-label="Account lists" className="flex flex-wrap gap-2 border-b pb-3">

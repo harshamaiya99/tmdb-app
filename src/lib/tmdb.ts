@@ -929,6 +929,24 @@ class TMDBService {
     });
   }
 
+  async getAllUserListItems(
+    listId: number,
+    accessToken: string,
+    signal?: AbortSignal,
+  ): Promise<TMDBUserListItem[]> {
+    const firstPage = await this.getUserList(listId, accessToken, 1, signal);
+    const items = [...firstPage.results];
+    let totalPages = Math.min(firstPage.total_pages, 500);
+
+    for (let page = 2; page <= totalPages; page += 1) {
+      const pageDetails = await this.getUserList(listId, accessToken, page, signal);
+      items.push(...pageDetails.results);
+      totalPages = Math.min(pageDetails.total_pages, 500);
+    }
+
+    return items;
+  }
+
   async createUserList(
     name: string,
     description: string,
