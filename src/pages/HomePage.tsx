@@ -263,7 +263,7 @@ export function HomePage() {
             <section
               aria-label="Trending movies and TV shows"
               aria-roledescription="carousel"
-              className="group relative isolate h-auto overflow-hidden rounded-2xl bg-background lg:h-[25rem]"
+              className="group relative isolate h-[25rem] overflow-hidden rounded-2xl bg-background sm:h-[26rem] lg:h-[25rem]"
             >
               {previousBackdropPath && previousBackdropPath !== featuredItem.backdrop_path && (
                 <img
@@ -295,13 +295,21 @@ export function HomePage() {
                 aria-roledescription="slide"
                 aria-label={`${displayedFeatured.index + 1} of ${trailerCandidates.length}: ${featuredTitle}`}
                 aria-live="off"
-                className="hero-slide-enter pointer-events-none relative z-10 flex h-auto max-w-2xl flex-col justify-start gap-3 pt-8 pb-8 pl-0 pr-5 sm:pt-10 sm:pr-8 lg:h-full lg:pt-12 lg:pb-4 lg:pr-10"
+                className="hero-slide-enter pointer-events-none relative z-10 flex h-full max-w-2xl flex-col justify-start gap-3 pt-5 pb-5 pl-0 pr-5 sm:pt-10 sm:pb-8 sm:pr-8 lg:pt-12 lg:pb-4 lg:pr-10"
               >
                 <div>
-                  <h1 className="text-4xl font-extrabold tracking-tight sm:text-5xl">
+                  <h1
+                    className="min-h-[5rem] text-4xl font-extrabold leading-10 tracking-tight sm:min-h-0 sm:text-5xl"
+                    style={{
+                      display: '-webkit-box',
+                      WebkitBoxOrient: 'vertical',
+                      WebkitLineClamp: 2,
+                      overflow: 'hidden',
+                    }}
+                  >
                     {featuredTitle}
                   </h1>
-                  <div className="mt-3 flex flex-wrap items-center gap-x-3 gap-y-2 text-sm text-muted-foreground">
+                  <div className="mt-3 flex flex-nowrap items-center gap-x-3 overflow-hidden whitespace-nowrap text-sm text-muted-foreground">
                     {typeof featuredItem.vote_average === 'number' && featuredItem.vote_average > 0 && (
                       <span className="inline-flex items-center gap-1 rounded-md border bg-background/80 px-2 py-1 font-semibold text-foreground">
                         <Star aria-hidden="true" className="h-4 w-4 fill-amber-400 text-amber-400" />
@@ -315,9 +323,11 @@ export function HomePage() {
                   </div>
                 </div>
                 {featuredItem.genres && featuredItem.genres.length > 0 && (
-                  <p className="text-sm font-medium">{featuredItem.genres.map((genre) => genre.name).join('  /  ')}</p>
+                  <p className="overflow-hidden text-ellipsis whitespace-nowrap text-sm font-medium">
+                    {featuredItem.genres.map((genre) => genre.name).join('  /  ')}
+                  </p>
                 )}
-                <div className="pointer-events-auto flex flex-wrap items-center gap-3">
+                <div className="pointer-events-auto flex flex-nowrap items-center gap-3">
                   {featuredTrailer && (
                     <Button asChild className="min-h-11">
                       <a
