@@ -166,11 +166,7 @@ The cache is intentionally memory-only and is cleared on a full page reload.
 
 ### Practical implication
 
-If the app grows, the main opportunities for performance improvements would be:
-
-- caching repeated list requests by endpoint and page
-- storing recently viewed details locally
-- preventing duplicate in-flight requests for the same data
+Potential future improvements include bounding memory use during long browsing sessions, strengthening invalidation when data changes, and optionally persisting selected public responses across reloads. Persistent caching would need expiry and versioning, and personalized account responses should remain isolated from public data.
 
 ## Data Types and Shape
 
@@ -203,4 +199,5 @@ The TMDB integration is compact and direct:
 - one centralized service handles all requests
 - API keys are stored in local storage and attached to requests
 - responses are typed and returned to components
-- there is currently no built-in caching layer, so fresh network requests are made as needed
+- selected request results are cached in memory with TTLs and concurrent identical requests are deduplicated
+- the response cache is cleared on full page reload; TMDB API content is not cached by the service worker
