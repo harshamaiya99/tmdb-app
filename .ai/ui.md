@@ -179,6 +179,8 @@ TV show details place cast and crew beside the season ratings heatmap in a 3:2 d
 
 Movie and TV show details keep the title and tagline together above a side-by-side poster and metadata layout on mobile screens from 360px wide. Status and TV season counts sit below the genre badges in the metadata column. Movie budget and revenue appear in a compact financials block after status, with unavailable values omitted. Icon-only watchlist, favorite, and list actions sit directly below the poster on both mobile and desktop. Movie watch controls stay below the poster. Movie and TV streaming providers and production companies appear together in a separate responsive section below the overview. On wide desktop screens, the movie section fills space below the poster and details columns when it fits alongside the trailer/collection column; otherwise it sits below the full details grid. On mobile the sections follow the overview. The overview uses the full page width on mobile and appears below the metadata in the desktop column. On desktop, trailers appear in a separate right-hand column beside the metadata.
 
+Movie details include a media section below reviews when TMDB provides movie images or videos. Images and videos are switchable with labeled tabs, and image/video rows scroll horizontally on narrow screens. Movie images open in an in-page viewer with previous/next navigation and Escape-to-close support.
+
 Company and streaming-provider category pages include a Movies/TV Shows toggle. Switching media type keeps the selected company or provider and its display name, resets pagination, and loads the matching discover results.
 
 ## Spacing and Typography Conventions

@@ -46,6 +46,13 @@ export interface Video {
   type: string;
 }
 
+export interface MediaImage {
+  file_path: string;
+  aspect_ratio: number;
+  height: number;
+  width: number;
+}
+
 export interface Episode {
   id: number;
   name: string;
@@ -101,6 +108,7 @@ export interface Movie {
   tagline?: string;
   credits?: { cast: Cast[]; crew: Crew[] };
   videos?: { results: Video[] };
+  images?: { backdrops: MediaImage[]; posters: MediaImage[]; logos?: MediaImage[] };
   recommendations?: { results: Movie[] };
   similar?: { results: Movie[] };
   external_ids?: { imdb_id: string | null };
@@ -701,7 +709,7 @@ class TMDBService {
 
   // --- DETAILS ENDPOINTS ---
   async getMovieDetails(id: number, options?: TMDBRequestOptions): Promise<Movie> {
-    return this.fetchFromTMDB<Movie>(`/movie/${id}?append_to_response=credits,videos,recommendations,external_ids,reviews,watch/providers,release_dates`, options);
+    return this.fetchFromTMDB<Movie>(`/movie/${id}?append_to_response=credits,videos,images,recommendations,external_ids,reviews,watch/providers,release_dates`, options);
   }
 
   async getCountries(options?: TMDBRequestOptions): Promise<TMDBCountry[]> {

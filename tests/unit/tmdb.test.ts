@@ -64,6 +64,7 @@ describe('TMDB Talk-show filtering', () => {
     const requestUrl = new URL(String(fetchMock.mock.calls[0][0]));
     expect(requestUrl.pathname).toBe('/3/movie/200');
     expect(requestUrl.searchParams.get('append_to_response')).toContain('release_dates');
+    expect(requestUrl.searchParams.get('append_to_response')).toContain('images');
   });
 
   it('includes content ratings in TV details for certification display', async () => {

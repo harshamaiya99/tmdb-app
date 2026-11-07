@@ -1,7 +1,7 @@
 // src/pages/MovieDetailsPage.tsx
-import { useLayoutEffect, useRef, useState } from 'react';
+import { useEffect, useLayoutEffect, useRef, useState } from 'react';
 import { useParams, useNavigate, Link } from 'react-router-dom';
-import { Calendar, Clock, Star } from 'lucide-react';
+import { ArrowLeft, ArrowRight, Calendar, Clock, Star, X } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Skeleton } from '@/components/ui/skeleton';
@@ -21,7 +21,11 @@ import { WatchLinkButton } from '@/components/WatchLinkButton';
 export function MovieDetailsPage() {
   const { id } = useParams<{ id: string }>();
   const [activeCredits, setActiveCredits] = useState<'cast' | 'crew'>('cast');
+  const [activeMovieMedia, setActiveMovieMedia] = useState<'images' | 'videos'>('images');
+  const [selectedMovieImageIndex, setSelectedMovieImageIndex] = useState<number | null>(null);
   const [placeCompanyInfoBesideRightColumn, setPlaceCompanyInfoBesideRightColumn] = useState(false);
+  const mediaDialogRef = useRef<HTMLDivElement>(null);
+  const imageTriggerRef = useRef<HTMLButtonElement | null>(null);
   const posterColumnRef = useRef<HTMLDivElement>(null);
   const detailsColumnRef = useRef<HTMLDivElement>(null);
   const rightColumnRef = useRef<HTMLDivElement>(null);
@@ -45,11 +49,45 @@ export function MovieDetailsPage() {
   const collection = collectionQuery.data ?? null;
   const loading = movieQuery.loading;
   const trailer = movie?.videos?.results.find((v) => v.type === 'Trailer' && v.site === 'YouTube');
+  const movieImages = [
+    ...(movie?.images?.backdrops ?? []),
+    ...(movie?.images?.posters ?? []),
+  ];
+  const movieVideos = movie?.videos?.results ?? [];
   const hasCollection = collection && collection.parts.length > 1;
   const regionProviders = region ? movie?.['watch/providers']?.results?.[region]?.flatrate ?? [] : [];
   const hasStreamingProviders = regionProviders.length > 0;
   const hasProductionCompanies = Boolean(movie?.production_companies?.length);
   const hasRightColumn = Boolean(trailer || hasCollection);
+
+  useEffect(() => {
+    setActiveMovieMedia(movieImages.length > 0 ? 'images' : 'videos');
+  }, [movie?.id, movieImages.length, movieVideos.length]);
+
+  useEffect(() => {
+    if (selectedMovieImageIndex !== null) {
+      mediaDialogRef.current?.focus();
+    } else {
+      imageTriggerRef.current?.focus();
+    }
+  }, [selectedMovieImageIndex]);
+
+  useEffect(() => {
+    if (selectedMovieImageIndex === null) return;
+
+    const handleKeyDown = (event: KeyboardEvent) => {
+      if (event.key === 'ArrowRight') {
+        setSelectedMovieImageIndex((index) => index === null ? null : (index + 1) % movieImages.length);
+      } else if (event.key === 'ArrowLeft') {
+        setSelectedMovieImageIndex((index) => index === null ? null : (index - 1 + movieImages.length) % movieImages.length);
+      } else if (event.key === 'Escape') {
+        setSelectedMovieImageIndex(null);
+      }
+    };
+
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [selectedMovieImageIndex, movieImages.length]);
 
   useLayoutEffect(() => {
     const posterColumn = posterColumnRef.current;
@@ -459,6 +497,195 @@ export function MovieDetailsPage() {
               totalPages={movie.reviews.total_pages}
             />
           </LazySection>
+        )}
+
+        {(movieImages.length > 0 || movieVideos.length > 0) && (
+          <LazySection>
+            <section aria-labelledby="movie-media-title" className="mt-12 border-t pt-8">
+              <div className="mb-6 flex flex-wrap items-center justify-between gap-3">
+                <h2 id="movie-media-title" className="text-2xl font-semibold">Media</h2>
+                <div className="flex rounded-md border p-1" role="group" aria-label="Movie media">
+                  <Button
+                    type="button"
+                    variant={activeMovieMedia === 'images' ? 'selected' : 'ghost'}
+                    size="sm"
+                    disabled={movieImages.length === 0}
+                    onClick={() => setActiveMovieMedia('images')}
+                  >
+                    Images ({movieImages.length})
+                  </Button>
+                  <Button
+                    type="button"
+                    variant={activeMovieMedia === 'videos' ? 'selected' : 'ghost'}
+                    size="sm"
+                    disabled={movieVideos.length === 0}
+                    onClick={() => setActiveMovieMedia('videos')}
+                  >
+                    Videos ({movieVideos.length})
+                  </Button>
+                </div>
+              </div>
+
+              {activeMovieMedia === 'images' && movieImages.length > 0 && (
+                <div className="flex items-start gap-3 overflow-x-auto pb-2">
+                  {movieImages.map((image, index) => {
+                    const isPoster = index >= (movie?.images?.backdrops.length ?? 0);
+                    return (
+                      <button
+                        type="button"
+                        key={`${image.file_path}:${index}`}
+                        onClick={() => {
+                          imageTriggerRef.current = document.activeElement instanceof HTMLButtonElement
+                            ? document.activeElement
+                            : null;
+                          setSelectedMovieImageIndex(index);
+                        }}
+                        aria-label={`View movie image ${index + 1}`}
+                        className="block h-32 shrink-0 overflow-hidden rounded-lg border bg-muted p-0"
+                        style={{ width: `${image.aspect_ratio * 8}rem` }}
+                      >
+                        <TMDBImage
+                          path={image.file_path}
+                          alt={`${movie.title}, ${isPoster ? 'poster' : 'backdrop'} ${isPoster ? index - (movie?.images?.backdrops.length ?? 0) + 1 : index + 1}`}
+                          width={image.width}
+                          height={image.height}
+                          sizes={`${Math.ceil(image.aspect_ratio * 128)}px`}
+                          className="block h-full w-full object-contain transition-transform hover:scale-105"
+                        />
+                      </button>
+                    );
+                  })}
+                </div>
+              )}
+
+              {activeMovieMedia === 'videos' && movieVideos.length > 0 && (
+                <div className="flex gap-3 overflow-x-auto pb-2">
+                  {movieVideos.map((video) => {
+                    const videoUrl = video.site === 'YouTube'
+                      ? `https://www.youtube.com/watch?v=${encodeURIComponent(video.key)}`
+                      : null;
+                    const videoCard = (
+                      <>
+                        <div className="relative h-32 overflow-hidden bg-gradient-to-br from-muted via-muted/70 to-primary/20">
+                          {video.site === 'YouTube' && (
+                            <img
+                              src={`https://img.youtube.com/vi/${encodeURIComponent(video.key)}/hqdefault.jpg`}
+                              alt=""
+                              loading="lazy"
+                              className="absolute inset-0 h-full w-full object-cover transition-transform duration-300 group-hover:scale-105"
+                              onError={(event) => {
+                                event.currentTarget.style.display = 'none';
+                              }}
+                            />
+                          )}
+                          <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-black/10 to-transparent" />
+                          <span className="absolute left-2 top-2 rounded bg-black/65 px-2 py-1 text-[11px] font-medium text-white backdrop-blur-sm">
+                            {video.type}
+                          </span>
+                          <span className="absolute right-2 top-2 rounded bg-black/65 px-2 py-1 text-[11px] font-medium text-white backdrop-blur-sm">
+                            {video.site}
+                          </span>
+                          <div className="absolute inset-x-0 bottom-0 bg-gradient-to-t from-black/90 via-black/60 to-transparent px-3 pb-2 pt-8">
+                            <p className="truncate text-sm font-medium leading-5 text-white group-hover:overflow-visible group-hover:whitespace-normal group-hover:text-clip group-focus-within:overflow-visible group-focus-within:whitespace-normal group-focus-within:text-clip">
+                              {video.name}
+                            </p>
+                          </div>
+                        </div>
+                      </>
+                    );
+
+                    return videoUrl ? (
+                      <a
+                        key={video.id}
+                        href={videoUrl}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="group w-56 shrink-0 overflow-hidden rounded-xl border bg-card text-card-foreground shadow-sm transition-all hover:-translate-y-0.5 hover:border-primary/50 hover:shadow-md focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+                      >
+                        {videoCard}
+                      </a>
+                    ) : (
+                      <div key={video.id} className="group w-56 shrink-0 overflow-hidden rounded-xl border bg-card text-card-foreground shadow-sm">
+                        {videoCard}
+                      </div>
+                    );
+                  })}
+                </div>
+              )}
+            </section>
+          </LazySection>
+        )}
+
+        {selectedMovieImageIndex !== null && movieImages[selectedMovieImageIndex] && (
+          <div
+            className="fixed inset-0 z-[60] flex items-center justify-center bg-black/95 px-3 py-4 backdrop-blur-sm sm:px-6"
+            onClick={() => setSelectedMovieImageIndex(null)}
+            role="presentation"
+          >
+            <div
+              ref={mediaDialogRef}
+              className="relative flex w-full max-w-7xl flex-col rounded-2xl p-2 outline-none"
+              role="dialog"
+              aria-modal="true"
+              aria-labelledby="movie-gallery-dialog-title"
+              tabIndex={-1}
+              onClick={(event) => event.stopPropagation()}
+            >
+              <div className="mb-3 flex items-center justify-between">
+                <p id="movie-gallery-dialog-title" className="text-sm font-medium text-white/70">
+                  {`Image ${selectedMovieImageIndex + 1} / ${movieImages.length}`}
+                </p>
+                <Button
+                  type="button"
+                  variant="ghost"
+                  size="icon"
+                  onClick={() => setSelectedMovieImageIndex(null)}
+                  aria-label="Close image viewer"
+                  title="Close image viewer"
+                  className="rounded-full border border-white/10 bg-black/50 text-white shadow-lg backdrop-blur-md hover:bg-white/10"
+                >
+                  <X className="h-5 w-5" />
+                </Button>
+              </div>
+              <div className="flex items-center justify-between gap-2 sm:gap-4">
+                <Button
+                  type="button"
+                  variant="outline"
+                  size="icon"
+                  onClick={() => setSelectedMovieImageIndex((index) => index === null
+                    ? null
+                    : (index === 0 ? movieImages.length - 1 : index - 1))}
+                  aria-label="Previous movie image"
+                  title="Previous movie image"
+                  className="h-10 w-10 shrink-0 rounded-full border-white/20 bg-black/50 text-white hover:bg-white/10 hover:text-white"
+                >
+                  <ArrowLeft className="h-5 w-5" />
+                </Button>
+                <TMDBImage
+                  path={movieImages[selectedMovieImageIndex].file_path}
+                  alt={`${movie.title} image ${selectedMovieImageIndex + 1}`}
+                  width={movieImages[selectedMovieImageIndex].width}
+                  height={movieImages[selectedMovieImageIndex].height}
+                  sizes="min(90vw, 1200px)"
+                  loading="eager"
+                  className="max-h-[85vh] w-full rounded-xl object-contain shadow-2xl"
+                />
+                <Button
+                  type="button"
+                  variant="outline"
+                  size="icon"
+                  onClick={() => setSelectedMovieImageIndex((index) => index === null
+                    ? null
+                    : (index + 1) % movieImages.length)}
+                  aria-label="Next movie image"
+                  title="Next movie image"
+                  className="h-10 w-10 shrink-0 rounded-full border-white/20 bg-black/50 text-white hover:bg-white/10 hover:text-white"
+                >
+                  <ArrowRight className="h-5 w-5" />
+                </Button>
+              </div>
+            </div>
+          </div>
         )}
 
         {similarMovies.length > 0 && (
