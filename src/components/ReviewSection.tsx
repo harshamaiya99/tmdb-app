@@ -2,7 +2,7 @@ import { useEffect, useLayoutEffect, useRef, useState } from 'react';
 import { flushSync } from 'react-dom';
 import ReactMarkdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
-import { Star, ChevronDown, FilterX } from 'lucide-react';
+import { Star, ChevronDown } from 'lucide-react';
 import { Button } from './ui/button';
 import { Review, tmdbService } from '../lib/tmdb';
 import { formatDate } from '../lib/utils';
@@ -14,13 +14,21 @@ interface ReviewSectionProps {
   totalPages: number;
 }
 
+type ReviewSortOrder = 'newest' | 'oldest' | 'highest-rated' | 'lowest-rated';
+
+function isReviewSortOrder(value: string): value is ReviewSortOrder {
+  return value === 'newest'
+    || value === 'oldest'
+    || value === 'highest-rated'
+    || value === 'lowest-rated';
+}
+
 export function ReviewSection({ reviews: initialReviews, mediaId, mediaType, totalPages }: ReviewSectionProps) {
   const [reviews, setReviews] = useState(initialReviews);
+  const [sortOrder, setSortOrder] = useState<ReviewSortOrder>('newest');
   const [visibleCount, setVisibleCount] = useState(5); 
   const [expandedReviewId, setExpandedReviewId] = useState<string | null>(null);
   const [selectedReviewId, setSelectedReviewId] = useState<string | null>(null);
-  // Track the currently active rating filter (1-10)
-  const [ratingFilter, setRatingFilter] = useState<number | null>(null);
   const [currentPage, setCurrentPage] = useState(1);
   const [loadingMore, setLoadingMore] = useState(false);
   const [loadError, setLoadError] = useState<string | null>(null);
@@ -39,10 +47,10 @@ export function ReviewSection({ reviews: initialReviews, mediaId, mediaType, tot
   useEffect(() => {
     requestController.current?.abort();
     setReviews(initialReviews);
+    setSortOrder('newest');
     setVisibleCount(5);
     setExpandedReviewId(null);
     setSelectedReviewId(null);
-    setRatingFilter(null);
     setCurrentPage(1);
     setLoadError(null);
   }, [initialReviews, mediaId, mediaType]);
@@ -51,26 +59,21 @@ export function ReviewSection({ reviews: initialReviews, mediaId, mediaType, tot
 
   if (!reviews || reviews.length === 0) return null;
 
-  const totalReviews = reviews.length;
-  const distribution: Record<number, number> = { 10: 0, 9: 0, 8: 0, 7: 0, 6: 0, 5: 0, 4: 0, 3: 0, 2: 0, 1: 0 };
-  let ratedReviewsCount = 0;
-
-  // Calculate distribution based on ALL reviews (unfiltered)
-  reviews.forEach((r) => {
-    const rating = r.author_details?.rating;
-    if (rating) {
-      ratedReviewsCount++;
-      const roundedRating = Math.round(rating);
-      if (roundedRating >= 1 && roundedRating <= 10) {
-        distribution[roundedRating]++;
-      }
+  const sortedReviews = [...reviews].sort((a, b) => {
+    if (sortOrder === 'newest' || sortOrder === 'oldest') {
+      const dateDifference = Date.parse(a.created_at) - Date.parse(b.created_at);
+      return sortOrder === 'newest' ? -dateDifference : dateDifference;
     }
-  });
 
-  // Filter reviews based on the active selection
-  const filteredReviews = ratingFilter 
-    ? reviews.filter((r) => r.author_details?.rating && Math.round(r.author_details.rating) === ratingFilter)
-    : reviews;
+    const aRating = a.author_details?.rating;
+    const bRating = b.author_details?.rating;
+    if (aRating == null && bRating != null) return 1;
+    if (aRating != null && bRating == null) return -1;
+    if (aRating != null && bRating != null && aRating !== bRating) {
+      return sortOrder === 'highest-rated' ? bRating - aRating : aRating - bRating;
+    }
+    return Date.parse(b.created_at) - Date.parse(a.created_at);
+  });
 
   const toggleExpand = (id: string, card: HTMLDivElement) => {
     const isDesktop = typeof window.matchMedia === 'function'
@@ -112,31 +115,10 @@ export function ReviewSection({ reviews: initialReviews, mediaId, mediaType, tot
     setSelectedReviewId((previous) => (previous === id ? null : id));
   };
 
-  const toggleFilter = (star: number) => {
-    // Prevent filtering if there are no reviews for that star rating
-    if (distribution[star] === 0) return;
-
-    if (document.startViewTransition) {
-      document.startViewTransition(() => {
-        flushSync(() => {
-          setRatingFilter((prev) => (prev === star ? null : star));
-          setVisibleCount(5); // Reset visible count when filter changes
-          setExpandedReviewId(null); // Close any expanded review
-          setSelectedReviewId(null);
-        });
-      });
-    } else {
-      setRatingFilter((prev) => (prev === star ? null : star));
-      setVisibleCount(5);
-      setExpandedReviewId(null);
-      setSelectedReviewId(null);
-    }
-  };
-
   const loadMoreReviews = async () => {
     if (loadingMore) return;
 
-    if (visibleCount < filteredReviews.length) {
+    if (visibleCount < reviews.length) {
       setVisibleCount((prev) => prev + 6);
       return;
     }
@@ -188,81 +170,25 @@ export function ReviewSection({ reviews: initialReviews, mediaId, mediaType, tot
 
   return (
     <div className="mt-12 mb-12">
-      <div className="flex items-center justify-between mb-6">
+      <div className="mb-6 flex flex-wrap items-center justify-between gap-3">
         <h2 className="text-2xl font-bold">Reviews</h2>
-        {/* Quick clear filter button shown only when a filter is active */}
-        {ratingFilter && (
-          <Button 
-            variant="ghost" 
-            size="sm" 
-            onClick={() => toggleFilter(ratingFilter)}
-            className="text-muted-foreground hover:text-foreground"
-          >
-            <FilterX className="w-4 h-4 mr-2" />
-            Clear Filter
-          </Button>
-        )}
+        <select
+          aria-label="Sort reviews"
+          value={sortOrder}
+          onChange={(event) => {
+            if (isReviewSortOrder(event.target.value)) setSortOrder(event.target.value);
+          }}
+          className="h-10 w-[170px] rounded-md border border-input bg-background px-3 py-2 text-sm shadow-sm focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring"
+        >
+          <option value="newest">Newest first</option>
+          <option value="oldest">Oldest first</option>
+          <option value="highest-rated">Highest rated</option>
+          <option value="lowest-rated">Lowest rated</option>
+        </select>
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 grid-flow-row-dense auto-rows-[minmax(240px,auto)] md:auto-rows-[240px]">
-        
-        {/* Rating Chart */}
-        <div className="p-5 rounded-xl border bg-card text-card-foreground shadow-sm flex items-center gap-4 col-span-1 row-span-1">
-          <div className="flex flex-col items-center justify-center min-w-[70px]">
-            <div className="text-4xl font-bold text-primary">{totalReviews}</div>
-            <div className="text-xs text-muted-foreground mt-1 text-center">Total<br/>Reviews</div>
-          </div>
-          
-          {/* Removed space-y gaps to shrink it vertically so it fits the 240px box perfectly */}
-          <div className="flex-1 w-full flex flex-col justify-center space-y-0">
-            {[10, 9, 8, 7, 6, 5, 4, 3, 2, 1].map((star) => {
-              const count = distribution[star];
-              const percentage = ratedReviewsCount > 0 ? (count / ratedReviewsCount) * 100 : 0;
-              const isSelectable = count > 0;
-              const isActive = ratingFilter === star;
-              const isDimmed = ratingFilter !== null && !isActive;
-
-              return (
-                <button
-                  type="button"
-                  key={star} 
-                  onClick={() => toggleFilter(star)}
-                  disabled={!isSelectable}
-                  aria-label={`${count} reviews rated ${star} out of 10`}
-                  aria-pressed={isActive}
-                  className={`flex items-center gap-2 text-[11px] px-2 py-0.5 -mx-2 rounded-md transition-all duration-200
-                    ${isSelectable ? 'cursor-pointer hover:bg-muted/80' : 'cursor-default opacity-40'}
-                    ${isActive ? 'bg-muted ring-1 ring-border shadow-sm' : ''}
-                    ${isDimmed ? 'opacity-30' : ''}
-                  `}
-                >
-                  <div className="w-6 flex items-center justify-end gap-1 text-muted-foreground font-medium shrink-0">
-                    {star} <Star className="w-2.5 h-2.5 fill-current" />
-                  </div>
-                  <div className="flex-1 h-1.5 bg-muted rounded-full overflow-hidden">
-                    <div
-                      className="h-full bg-primary transition-all duration-500"
-                      style={{ width: `${percentage}%` }}
-                    />
-                  </div>
-                  <div className="w-4 text-right text-muted-foreground font-medium shrink-0">
-                    {count}
-                  </div>
-                </button>
-              );
-            })}
-          </div>
-        </div>
-
-        {/* Empty State when a filter yields no results (edge case, but good to have) */}
-        {filteredReviews.length === 0 && (
-          <div className="p-5 rounded-xl border border-dashed flex items-center justify-center col-span-1 md:col-span-2 text-muted-foreground text-sm">
-            No reviews found for {ratingFilter} stars.
-          </div>
-        )}
-
-        {/* Reviews - Now looping over filteredReviews */}
-        {filteredReviews.slice(0, visibleCount).map((review) => {
+        {sortedReviews.slice(0, visibleCount).map((review) => {
           const isExpanded = expandedReviewId === review.id;
           
           const isLong = review.content.length > 200; 
@@ -380,7 +306,7 @@ export function ReviewSection({ reviews: initialReviews, mediaId, mediaType, tot
       </div>
 
       {/* View More Button */}
-      {(visibleCount < filteredReviews.length || currentPage < totalPages) && (
+      {(visibleCount < reviews.length || currentPage < totalPages) && (
         <div className="flex justify-center mt-8">
           <Button 
             variant="outline" 

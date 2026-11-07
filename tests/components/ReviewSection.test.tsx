@@ -28,6 +28,46 @@ function renderReviewSection(reviews: Review[] = [longReview]) {
 }
 
 describe('ReviewSection', () => {
+  it('sorts reviews by rating and date', () => {
+    const reviews: Review[] = [
+      longReview,
+      {
+        ...longReview,
+        id: 'review-high',
+        author: 'High Rated',
+        created_at: '2023-01-01T00:00:00.000Z',
+        author_details: { ...longReview.author_details!, rating: 10 },
+      },
+      {
+        ...longReview,
+        id: 'review-low',
+        author: 'Low Rated',
+        created_at: '2025-01-01T00:00:00.000Z',
+        author_details: { ...longReview.author_details!, rating: 2 },
+      },
+    ];
+    const { container } = renderReviewSection(reviews);
+    const getCardOrder = () => Array.from(
+      container.querySelectorAll<HTMLElement>('[id^="review-card-"]'),
+      (card) => card.id,
+    );
+    const sortSelect = screen.getByRole('combobox', { name: 'Sort reviews' });
+
+    fireEvent.change(sortSelect, { target: { value: 'highest-rated' } });
+    expect(getCardOrder()).toEqual(['review-card-review-high', 'review-card-review-1', 'review-card-review-low']);
+
+    fireEvent.change(sortSelect, { target: { value: 'newest' } });
+    expect(getCardOrder()).toEqual(['review-card-review-low', 'review-card-review-1', 'review-card-review-high']);
+  });
+
+  it('renders reviews without the review count and rating distribution card', () => {
+    renderReviewSection();
+
+    expect(screen.queryByText('Total')).not.toBeInTheDocument();
+    expect(screen.queryByRole('button', { name: /reviews rated \d+ out of 10/ })).not.toBeInTheDocument();
+    expect(screen.getByRole('button', { name: /A Reviewer/ })).toBeInTheDocument();
+  });
+
   it('expands long review content vertically on mobile and collapses it again', () => {
     const { container } = renderReviewSection();
     const card = screen.getByRole('button', { name: /A Reviewer/ });

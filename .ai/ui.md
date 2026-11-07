@@ -162,6 +162,7 @@ Current conventions:
 - expanded review cards use a subtle primary-tinted background and border, returning to the default surface when collapsed
 - short reviews toggle a persistent primary-tinted background and border when tapped; tapping again restores the default surface
 - the review date sits beside the rating badge in the header, not beneath the author name
+- reviews can be sorted by date or rating; reviews without ratings appear last when sorting by rating
 - the canonical date format is `dd MMM yyyy` via the shared `formatDate` helper
 
 This keeps the review section compact while still preserving rich formatting from TMDB review entries.
