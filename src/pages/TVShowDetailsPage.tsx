@@ -367,9 +367,9 @@ export function TVShowDetailsPage() {
         </div>
 
         {(regionProviders.length || tvShow.production_companies?.length) && (
-          <section className="mt-8 grid gap-6 border-t pt-6 sm:grid-cols-2">
+          <section className="mt-8 flex flex-wrap items-start gap-x-6 gap-y-6 border-t pt-6">
             {regionProviders.length > 0 && (
-              <div>
+              <div className="w-fit max-w-full shrink-0">
                 <h2 className="mb-3 text-xl font-semibold">Streaming On in {region}</h2>
                 <div className="flex flex-wrap gap-3">
                   {regionProviders.map((provider) => {
@@ -395,7 +395,7 @@ export function TVShowDetailsPage() {
               </div>
             )}
             {tvShow.production_companies && tvShow.production_companies.length > 0 && (
-              <div>
+              <div className="min-w-[min(100%,16rem)] flex-1">
                 <h2 className="mb-3 text-xl font-semibold">Production</h2>
                 <div className="flex flex-wrap items-center gap-6">
                   {tvShow.production_companies.map((company) => (

@@ -352,10 +352,10 @@ export function MovieDetailsPage() {
         {(regionProviders.length || movie.production_companies?.length) && (
           <section
             ref={companyInfoRef}
-            className={`mt-4 grid gap-6 border-t pt-6 min-[360px]:col-span-2 sm:grid-cols-2 md:col-span-2 md:mt-0 xl:col-start-1 xl:row-start-2${placeCompanyInfoBesideRightColumn ? ' xl:col-span-2' : hasRightColumn ? ' xl:col-span-3' : ' xl:col-span-2'}`}
+            className={`mt-4 flex flex-wrap items-start gap-x-6 gap-y-6 border-t pt-6 min-[360px]:col-span-2 md:col-span-2 md:mt-0 xl:col-start-1 xl:row-start-2${placeCompanyInfoBesideRightColumn ? ' xl:col-span-2' : hasRightColumn ? ' xl:col-span-3' : ' xl:col-span-2'}`}
           >
             {regionProviders.length > 0 && (
-              <div>
+              <div className="w-fit max-w-full shrink-0">
                 <h2 className="mb-3 text-xl font-semibold">Streaming On in {region}</h2>
                 <div className="flex flex-wrap gap-3">
                   {regionProviders.map((provider) => (
@@ -379,7 +379,7 @@ export function MovieDetailsPage() {
               </div>
             )}
             {movie.production_companies && movie.production_companies.length > 0 && (
-              <div>
+              <div className="min-w-[min(100%,16rem)] flex-1">
                 <h2 className="mb-3 text-xl font-semibold">Production</h2>
                 <div className="flex flex-wrap items-center gap-6">
                   {movie.production_companies.map((company) => (
