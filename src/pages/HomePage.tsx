@@ -35,6 +35,7 @@ function shuffleFeaturedItems(items: FeaturedMedia[]): FeaturedMedia[] {
 export function HomePage() {
   const [searchParams, setSearchParams] = useSearchParams();
   const [featuredIndex, setFeaturedIndex] = useState(0);
+  const [titlesWithoutTrailers, setTitlesWithoutTrailers] = useState<Set<string>>(() => new Set());
   const [previousBackdropPath, setPreviousBackdropPath] = useState<string | null>(null);
   const currentBackdropPathRef = useRef<string | null>(null);
   const { region } = useEmbedSettings();
@@ -73,8 +74,11 @@ export function HomePage() {
     ...(trendingMovies.data?.map((item) => ({ mediaType: 'movie' as const, item })) ?? []),
     ...(trendingTV.data?.map((item) => ({ mediaType: 'tv' as const, item })) ?? []),
   ]), [trendingMovies.data, trendingTV.data]);
-  const activeFeatured = featuredItems.length > 0
-    ? featuredItems[featuredIndex % featuredItems.length]
+  const trailerCandidates = featuredItems.filter(
+    ({ mediaType, item }) => !titlesWithoutTrailers.has(`${mediaType}:${item.id}`),
+  );
+  const activeFeatured = trailerCandidates.length > 0
+    ? trailerCandidates[featuredIndex % trailerCandidates.length]
     : undefined;
   const featuredDetails = useCachedQuery<Movie | TVShow>(
     `home:featured:${activeFeatured?.mediaType ?? 'none'}:${activeFeatured?.item.id ?? 'none'}`,
@@ -121,12 +125,31 @@ export function HomePage() {
   }, [activeFeatured?.mediaType, activeFeatured?.item.id]);
 
   useEffect(() => {
-    if (featuredItems.length < 2 || hasActiveSearch) return;
+    if (
+      !activeFeatured
+      || featuredDetails.loading
+      || featuredDetails.data?.id !== activeFeatured.item.id
+      || featuredTrailer
+    ) return;
+
+    const currentKey = `${activeFeatured.mediaType}:${activeFeatured.item.id}`;
+    setTitlesWithoutTrailers((current) => new Set(current).add(currentKey));
+    setFeaturedIndex(0);
+  }, [
+    activeFeatured?.mediaType,
+    activeFeatured?.item.id,
+    featuredDetails.data,
+    featuredDetails.loading,
+    featuredTrailer,
+  ]);
+
+  useEffect(() => {
+    if (trailerCandidates.length < 2 || hasActiveSearch) return;
     const timer = window.setInterval(() => {
-      setFeaturedIndex((index) => (index + 1) % featuredItems.length);
+      setFeaturedIndex((index) => (index + 1) % trailerCandidates.length);
     }, 7000);
     return () => window.clearInterval(timer);
-  }, [featuredItems.length, hasActiveSearch]);
+  }, [trailerCandidates.length, hasActiveSearch]);
 
   const updateCategory = (key: 'movie_category' | 'tv_category', value: string) => {
     const nextParams = new URLSearchParams(searchParams);
@@ -154,7 +177,7 @@ export function HomePage() {
     movieList.loading || tvList.loading || trendingMovies.loading || trendingTV.loading
   );
   const searchLoading = hasActiveSearch && (!searchReady || searchMovies.loading || searchTV.loading || searchPeople.loading);
-  const primaryError = movieList.error || tvList.error || trendingMovies.error || trendingTV.error;
+  const primaryError = movieList.error || tvList.error || trendingMovies.error || trendingTV.error || featuredDetails.error;
 
   return (
     <main className="container py-6">
@@ -202,11 +225,11 @@ export function HomePage() {
         </div>
       ) : (
         <div className="space-y-12 pb-12">
-          {featuredItem && activeFeatured && (
+          {featuredItem && activeFeatured && featuredTrailer && (
             <section
               aria-label="Trending movies and TV shows"
               aria-roledescription="carousel"
-              className="group relative isolate h-[32rem] overflow-hidden rounded-2xl bg-background sm:h-[26rem] lg:h-[25rem]"
+              className="group relative isolate h-auto overflow-hidden rounded-2xl bg-background lg:h-[25rem]"
             >
               {previousBackdropPath && previousBackdropPath !== featuredItem.backdrop_path && (
                 <img
@@ -225,8 +248,8 @@ export function HomePage() {
                   className="hero-backdrop-enter absolute inset-0 -z-20 h-full w-full object-cover object-center"
                 />
               )}
-              <div className="absolute inset-0 -z-10 bg-gradient-to-r from-background via-background/95 to-background/50 sm:via-background/85 sm:to-background/10" />
-              <div className="absolute inset-0 -z-10 bg-gradient-to-t from-background/80 via-transparent to-background/10" />
+              <div className="absolute inset-0 -z-10 bg-gradient-to-r from-background via-background/80 to-background/25 sm:via-background/65 sm:to-transparent" />
+              <div className="absolute inset-0 -z-10 bg-gradient-to-t from-background/45 via-transparent to-background/5" />
               <Link
                 to={`/${featuredMediaType}/${featuredItem.id}`}
                 aria-label={`View details for ${featuredTitle}`}
@@ -236,9 +259,9 @@ export function HomePage() {
                 key={`${activeFeatured.mediaType}-${featuredItem.id}`}
                 role="group"
                 aria-roledescription="slide"
-                aria-label={`${featuredIndex + 1} of ${featuredItems.length}: ${featuredTitle}`}
+                aria-label={`${featuredIndex + 1} of ${trailerCandidates.length}: ${featuredTitle}`}
                 aria-live="off"
-                className="hero-slide-enter pointer-events-none relative z-10 flex h-full max-w-2xl flex-col justify-start gap-3 pt-8 pl-0 pr-5 sm:pt-10 sm:pr-8 lg:pt-12 lg:pr-10"
+                className="hero-slide-enter pointer-events-none relative z-10 flex h-auto max-w-2xl flex-col justify-start gap-3 pt-8 pb-8 pl-0 pr-5 sm:pt-10 sm:pr-8 lg:h-full lg:pt-12 lg:pb-4 lg:pr-10"
               >
                 <div>
                   <h1 className="text-4xl font-extrabold tracking-tight sm:text-5xl">
@@ -289,7 +312,7 @@ export function HomePage() {
                     style={{
                       display: '-webkit-box',
                       WebkitBoxOrient: 'vertical',
-                      WebkitLineClamp: 5,
+                      WebkitLineClamp: 3,
                       overflow: 'hidden',
                     }}
                   >
