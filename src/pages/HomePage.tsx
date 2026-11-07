@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useRef, useState } from 'react';
+import { useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react';
 import { Link, useSearchParams } from 'react-router-dom';
 import { Play, Star } from 'lucide-react';
 import { Alert, AlertDescription } from '@/components/ui/alert';
@@ -22,6 +22,7 @@ function SearchMessage({ message, error = false }: { message: string; error?: bo
 }
 
 type FeaturedMedia = { mediaType: 'movie'; item: Movie } | { mediaType: 'tv'; item: TVShow };
+type DisplayedFeatured = FeaturedMedia & { index: number };
 
 function shuffleFeaturedItems(items: FeaturedMedia[]): FeaturedMedia[] {
   const shuffled = [...items];
@@ -35,6 +36,7 @@ function shuffleFeaturedItems(items: FeaturedMedia[]): FeaturedMedia[] {
 export function HomePage() {
   const [searchParams, setSearchParams] = useSearchParams();
   const [featuredIndex, setFeaturedIndex] = useState(0);
+  const [displayedFeatured, setDisplayedFeatured] = useState<DisplayedFeatured | null>(null);
   const [titlesWithoutTrailers, setTitlesWithoutTrailers] = useState<Set<string>>(() => new Set());
   const [previousBackdropPath, setPreviousBackdropPath] = useState<string | null>(null);
   const currentBackdropPathRef = useRef<string | null>(null);
@@ -90,18 +92,22 @@ export function HomePage() {
     },
     { enabled: !hasActiveSearch && Boolean(activeFeatured) },
   );
-  const featuredItem = activeFeatured
+  const selectedItem = activeFeatured
     && featuredDetails.data?.id === activeFeatured.item.id
     && (activeFeatured.mediaType === 'movie'
       ? 'title' in featuredDetails.data
       : 'name' in featuredDetails.data)
     ? featuredDetails.data
     : activeFeatured?.item;
+  const selectedTrailer = selectedItem?.videos?.results.find(
+    (video) => video.site === 'YouTube' && video.type === 'Trailer',
+  );
+  const featuredItem = displayedFeatured?.item;
+  const featuredMediaType = displayedFeatured?.mediaType;
   const featuredTrailer = featuredItem?.videos?.results.find(
     (video) => video.site === 'YouTube' && video.type === 'Trailer',
   );
   const featuredTitle = featuredItem && ('title' in featuredItem ? featuredItem.title : featuredItem.name);
-  const featuredMediaType = activeFeatured?.mediaType;
   const featuredYear = featuredItem && ('release_date' in featuredItem
     ? featuredItem.release_date?.slice(0, 4)
     : featuredItem.first_air_date?.slice(0, 4));
@@ -109,8 +115,8 @@ export function HomePage() {
     ? featuredItem.number_of_seasons
     : undefined;
 
-  useEffect(() => {
-    const nextBackdropPath = activeFeatured?.item.backdrop_path ?? null;
+  useLayoutEffect(() => {
+    const nextBackdropPath = displayedFeatured?.item.backdrop_path ?? null;
     const previousBackdropPath = currentBackdropPathRef.current;
     currentBackdropPathRef.current = nextBackdropPath;
 
@@ -120,16 +126,40 @@ export function HomePage() {
     }
 
     setPreviousBackdropPath(previousBackdropPath);
-    const timer = window.setTimeout(() => setPreviousBackdropPath(null), 900);
+    const timer = window.setTimeout(() => setPreviousBackdropPath(null), 1400);
     return () => window.clearTimeout(timer);
-  }, [activeFeatured?.mediaType, activeFeatured?.item.id]);
+  }, [displayedFeatured?.mediaType, displayedFeatured?.item.id]);
+
+  useLayoutEffect(() => {
+    if (
+      !activeFeatured
+      || !selectedItem
+      || !selectedTrailer
+      || featuredDetails.data?.id !== activeFeatured.item.id
+    ) return;
+
+    if (activeFeatured.mediaType === 'movie' && 'title' in selectedItem) {
+      setDisplayedFeatured({ mediaType: 'movie', item: selectedItem, index: featuredIndex });
+    } else if (activeFeatured.mediaType === 'tv' && 'name' in selectedItem) {
+      setDisplayedFeatured({ mediaType: 'tv', item: selectedItem, index: featuredIndex });
+    }
+  }, [activeFeatured?.mediaType, activeFeatured?.item.id, featuredIndex, selectedItem, selectedTrailer]);
+
+  useEffect(() => {
+    if (trailerCandidates.length < 2) return;
+    const nextItem = trailerCandidates[(featuredIndex + 1) % trailerCandidates.length].item;
+    if (!nextItem.backdrop_path) return;
+
+    const image = new Image();
+    image.src = tmdbService.getImageUrl(nextItem.backdrop_path, 'w780');
+  }, [featuredIndex, trailerCandidates]);
 
   useEffect(() => {
     if (
       !activeFeatured
       || featuredDetails.loading
       || featuredDetails.data?.id !== activeFeatured.item.id
-      || featuredTrailer
+      || selectedTrailer
     ) return;
 
     const currentKey = `${activeFeatured.mediaType}:${activeFeatured.item.id}`;
@@ -140,7 +170,7 @@ export function HomePage() {
     activeFeatured?.item.id,
     featuredDetails.data,
     featuredDetails.loading,
-    featuredTrailer,
+    selectedTrailer,
   ]);
 
   useEffect(() => {
@@ -174,7 +204,11 @@ export function HomePage() {
   );
 
   const primaryLoading = !hasActiveSearch && (
-    movieList.loading || tvList.loading || trendingMovies.loading || trendingTV.loading
+    movieList.loading
+    || tvList.loading
+    || trendingMovies.loading
+    || trendingTV.loading
+    || (!displayedFeatured && Boolean(activeFeatured) && featuredDetails.loading)
   );
   const searchLoading = hasActiveSearch && (!searchReady || searchMovies.loading || searchTV.loading || searchPeople.loading);
   const primaryError = movieList.error || tvList.error || trendingMovies.error || trendingTV.error || featuredDetails.error;
@@ -225,7 +259,7 @@ export function HomePage() {
         </div>
       ) : (
         <div className="space-y-12 pb-12">
-          {featuredItem && activeFeatured && featuredTrailer && (
+          {featuredItem && displayedFeatured && featuredTrailer && (
             <section
               aria-label="Trending movies and TV shows"
               aria-roledescription="carousel"
@@ -241,7 +275,7 @@ export function HomePage() {
               )}
               {featuredItem.backdrop_path && (
                 <img
-                  key={`${activeFeatured.mediaType}-${featuredItem.id}`}
+                  key={`${displayedFeatured.mediaType}-${featuredItem.id}`}
                   src={tmdbService.getImageUrl(featuredItem.backdrop_path, 'w780')}
                   alt=""
                   aria-hidden="true"
@@ -256,10 +290,10 @@ export function HomePage() {
                 className="absolute inset-0 z-0 rounded-2xl focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-ring"
               />
               <div
-                key={`${activeFeatured.mediaType}-${featuredItem.id}`}
+                key={`${displayedFeatured.mediaType}-${featuredItem.id}`}
                 role="group"
                 aria-roledescription="slide"
-                aria-label={`${featuredIndex + 1} of ${trailerCandidates.length}: ${featuredTitle}`}
+                aria-label={`${displayedFeatured.index + 1} of ${trailerCandidates.length}: ${featuredTitle}`}
                 aria-live="off"
                 className="hero-slide-enter pointer-events-none relative z-10 flex h-auto max-w-2xl flex-col justify-start gap-3 pt-8 pb-8 pl-0 pr-5 sm:pt-10 sm:pr-8 lg:h-full lg:pt-12 lg:pb-4 lg:pr-10"
               >
@@ -299,7 +333,7 @@ export function HomePage() {
                   <div className="w-fit max-w-full">
                     <AccountMediaActions
                       mediaId={featuredItem.id}
-                      mediaType={activeFeatured.mediaType}
+                      mediaType={displayedFeatured.mediaType}
                       mediaTitle={featuredTitle ?? ''}
                       showAddToList={false}
                       squareButtons

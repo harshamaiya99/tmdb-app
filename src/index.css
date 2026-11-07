@@ -25,11 +25,11 @@
 }
 
 .hero-backdrop-enter {
-  animation: hero-backdrop-enter 900ms ease-out both;
+  animation: hero-backdrop-enter 1400ms cubic-bezier(0.22, 1, 0.36, 1) both;
 }
 
 .hero-slide-enter {
-  animation: hero-slide-enter 450ms ease-out both;
+  animation: hero-slide-enter 650ms cubic-bezier(0.22, 1, 0.36, 1) both;
 }
 
 @media (prefers-reduced-motion: reduce) {
