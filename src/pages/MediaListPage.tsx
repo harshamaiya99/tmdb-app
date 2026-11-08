@@ -12,6 +12,7 @@ import { useCachedQuery } from '@/hooks/useCachedQuery';
 import { usePagination } from '@/hooks/usePagination';
 import { useEmbedSettings } from '@/contexts/EmbedSettingsContext';
 import { usePageTitle } from '@/hooks/usePageTitle';
+import { formatLanguage } from '@/lib/utils';
 
 const GENRE_NAMES: Record<string, string> = {
   '28': 'Action', '12': 'Adventure', '16': 'Animation', '35': 'Comedy', '80': 'Crime',
@@ -164,6 +165,7 @@ export function MediaListPage() {
 
   const personMatch = effectiveCategory?.match(/^person-(\d+)-(movies|tv)$/);
   const genreMatch = effectiveCategory?.match(/^genre-(movie|tv)-(\d+)$/);
+  const languageMatch = effectiveCategory?.match(/^language-(movie|tv)-([a-z]{2,3})$/i);
   const companyMatch = effectiveCategory?.match(/^company-(\d+)$/); 
   const providerMatch = effectiveCategory?.match(/^provider-(\d+)$/); 
   const isCompanyProviderCategory = Boolean(companyMatch || providerMatch);
@@ -175,9 +177,11 @@ export function MediaListPage() {
     ? personType
     : genreMatch
       ? genreMatch[1] as 'movie' | 'tv'
-      : isCompanyProviderCategory
-        ? selectedMediaType
-        : effectiveCategory?.includes('tv') ? 'tv' : 'movie';
+      : languageMatch
+        ? languageMatch[1] as 'movie' | 'tv'
+        : isCompanyProviderCategory
+          ? selectedMediaType
+          : effectiveCategory?.includes('tv') ? 'tv' : 'movie';
   const genreOptions = itemType === 'tv' ? GENRE_OPTIONS_BY_TYPE.tv : GENRE_OPTIONS_BY_TYPE.movie;
   const availableSortOptions = itemType === 'tv' ? SORT_OPTIONS_BY_TYPE.tv : SORT_OPTIONS_BY_TYPE.movie;
   
@@ -202,7 +206,10 @@ export function MediaListPage() {
         return tmdbService.getPersonCredits(Number(currentPersonMatch[1]), currentItemType, page, { signal });
       }
       if (genreFilter !== undefined) {
-        return tmdbService.getGenreMediaList(itemType, genreFilter, page, { signal }, languageFilter, sortFilter);
+        return tmdbService.getGenreMediaList(itemType, genreFilter, page, { signal }, languageMatch?.[2] ?? languageFilter, sortFilter);
+      }
+      if (languageMatch) {
+        return tmdbService.getMediaByOriginalLanguage(itemType, languageMatch[2].toLowerCase(), page, { signal }, sortFilter);
       }
       if (currentCompanyMatch?.[1]) {
         return itemType === 'tv'
@@ -230,6 +237,8 @@ export function MediaListPage() {
   } else if (genreMatch?.[2]) {
     const genreName = entityNameParam || GENRE_NAMES[genreMatch[2]] || 'Genre';
     pageTitle = `${genreName} ${itemType === 'tv' ? 'TV Shows' : 'Movies'}`;
+  } else if (languageMatch) {
+    pageTitle = `${formatLanguage(languageMatch[2])} ${itemType === 'tv' ? 'TV Shows' : 'Movies'}`;
   } else if (companyMatch) {
     pageTitle = itemType === 'tv'
       ? entityNameParam ? `TV Shows by ${entityNameParam}` : 'Production TV Shows'
@@ -321,19 +330,21 @@ export function MediaListPage() {
           aria-label="Media filters"
           className="z-50 w-64 space-y-4 rounded-md border bg-popover p-4 text-popover-foreground shadow-md"
         >
-          <div className="space-y-2">
-            <label htmlFor="media-language-filter" className="text-sm font-medium">Language</label>
-            <select
-              id="media-language-filter"
-              value={selectedLanguage}
-              onChange={(event) => updateLanguageFilter(event.target.value)}
-              className="h-9 w-full rounded-md border border-input bg-background px-3 py-1 text-sm focus:outline-none focus:ring-2 focus:ring-ring"
-            >
-              {LANGUAGE_OPTIONS.map((language) => (
-                <option key={language.value} value={language.value}>{language.label}</option>
-              ))}
-            </select>
-          </div>
+          {!languageMatch && (
+            <div className="space-y-2">
+              <label htmlFor="media-language-filter" className="text-sm font-medium">Language</label>
+              <select
+                id="media-language-filter"
+                value={selectedLanguage}
+                onChange={(event) => updateLanguageFilter(event.target.value)}
+                className="h-9 w-full rounded-md border border-input bg-background px-3 py-1 text-sm focus:outline-none focus:ring-2 focus:ring-ring"
+              >
+                {LANGUAGE_OPTIONS.map((language) => (
+                  <option key={language.value} value={language.value}>{language.label}</option>
+                ))}
+              </select>
+            </div>
+          )}
 
           <div className="space-y-2">
             <label htmlFor="media-genre-filter" className="text-sm font-medium">Genre</label>

@@ -180,6 +180,47 @@ describe('TMDB Talk-show filtering', () => {
     expect(requestUrl.searchParams.get('page')).toBe('2');
   });
 
+  it('discovers paginated movies by original language', async () => {
+    const fetchMock = vi.mocked(fetch);
+    fetchMock.mockResolvedValue(responseWith({
+      page: 2,
+      results: [{ id: 1, title: 'French Movie' }],
+      total_pages: 3,
+      total_results: 45,
+    }));
+
+    await expect(tmdbService.getMediaByOriginalLanguage('movie', 'fr', 2, undefined, 'vote_average.desc'))
+      .resolves.toMatchObject({ page: 2, total_pages: 3, total_results: 45 });
+
+    const requestUrl = new URL(String(fetchMock.mock.calls[0][0]));
+    expect(requestUrl.pathname).toBe('/3/discover/movie');
+    expect(requestUrl.searchParams.get('with_original_language')).toBe('fr');
+    expect(requestUrl.searchParams.get('sort_by')).toBe('vote_average.desc');
+    expect(requestUrl.searchParams.get('page')).toBe('2');
+  });
+
+  it('excludes Talk shows from TV results discovered by original language', async () => {
+    const fetchMock = vi.mocked(fetch);
+    fetchMock.mockResolvedValue(responseWith({
+      page: 1,
+      results: [
+        { id: 1, name: 'French Series', genre_ids: [18] },
+        { id: 2, name: 'French Talk Show', genre_ids: [10767] },
+      ],
+      total_pages: 1,
+      total_results: 2,
+    }));
+
+    await expect(tmdbService.getMediaByOriginalLanguage('tv', 'fr')).resolves.toMatchObject({
+      results: [{ id: 1, name: 'French Series', genre_ids: [18] }],
+    });
+
+    const requestUrl = new URL(String(fetchMock.mock.calls[0][0]));
+    expect(requestUrl.pathname).toBe('/3/discover/tv');
+    expect(requestUrl.searchParams.get('with_original_language')).toBe('fr');
+    expect(requestUrl.searchParams.get('without_genres')).toBe('10767');
+  });
+
   it('loads paginated daily trending people', async () => {
     const fetchMock = vi.mocked(fetch);
     fetchMock.mockResolvedValue(responseWith({

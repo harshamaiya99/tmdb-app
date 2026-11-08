@@ -129,6 +129,7 @@ The app's saved content-country setting is used for country-sensitive movie sear
 The service also supports category-based browsing for:
 
 - genre-based media lists
+- original-language movie and TV lists
 - company-based movie and TV lists
 - provider-based movie and TV lists
 - person credits by media type

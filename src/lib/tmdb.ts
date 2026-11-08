@@ -724,6 +724,16 @@ class TMDBService {
       : data;
   }
 
+  async getMediaByOriginalLanguage(mediaType: 'movie' | 'tv', language: string, page: number = 1, options?: TMDBRequestOptions, sortBy: string = 'popularity.desc'): Promise<TrendingResponse<Movie | TVShow>> {
+    const endpoint = mediaType === 'movie' ? '/discover/movie' : '/discover/tv';
+    const talkFilter = mediaType === 'tv' ? `&without_genres=${TV_TALK_GENRE_ID}` : '';
+    const path = `${endpoint}?with_original_language=${encodeURIComponent(language)}${talkFilter}`;
+    const data = await this.fetchFromTMDB<TrendingResponse<Movie | TVShow>>(`${applySortParam(path, sortBy)}&page=${page}`, options);
+    return mediaType === 'tv'
+      ? { ...data, results: withoutTalkShows(data.results) }
+      : data;
+  }
+
   // --- DETAILS ENDPOINTS ---
   async getMovieDetails(id: number, options?: TMDBRequestOptions): Promise<Movie> {
     return this.fetchFromTMDB<Movie>(`/movie/${id}?append_to_response=credits,videos,images,recommendations,external_ids,reviews,watch/providers,release_dates`, options);

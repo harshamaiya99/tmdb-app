@@ -309,9 +309,11 @@ export function TVShowDetailsPage() {
                 </Badge>
               )}
               {tvShow.original_language && (
-                <Badge variant="outline" aria-label={`Original language: ${formatLanguage(tvShow.original_language)}`}>
-                  {formatLanguage(tvShow.original_language)}
-                </Badge>
+                <Link to={`/category/language-tv-${tvShow.original_language}`} className="inline-flex">
+                  <Badge variant="secondary" aria-label={`Original language: ${formatLanguage(tvShow.original_language)}`}>
+                    {formatLanguage(tvShow.original_language)}
+                  </Badge>
+                </Link>
               )}
             </div>
 

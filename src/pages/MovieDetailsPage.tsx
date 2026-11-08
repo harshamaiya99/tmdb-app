@@ -269,9 +269,11 @@ export function MovieDetailsPage() {
                   </Badge>
                 )}
                 {movie.original_language && (
-                  <Badge variant="outline" aria-label={`Original language: ${formatLanguage(movie.original_language)}`}>
-                    {formatLanguage(movie.original_language)}
-                  </Badge>
+                  <Link to={`/category/language-movie-${movie.original_language}`} className="inline-flex">
+                    <Badge variant="secondary" aria-label={`Original language: ${formatLanguage(movie.original_language)}`}>
+                      {formatLanguage(movie.original_language)}
+                    </Badge>
+                  </Link>
                 )}
               </div>
 
