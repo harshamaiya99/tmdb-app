@@ -22,6 +22,31 @@ describe('SettingsPage', () => {
     vi.restoreAllMocks();
   });
 
+  it('saves the selected country without saving draft embed links', async () => {
+    const user = userEvent.setup();
+    render(
+      <ThemeProvider>
+        <TitleProvider>
+          <MemoryRouter>
+            <EmbedSettingsProvider>
+              <SettingsPage />
+              <Toaster />
+            </EmbedSettingsProvider>
+          </MemoryRouter>
+        </TitleProvider>
+      </ThemeProvider>,
+    );
+
+    await user.selectOptions(await screen.findByRole('combobox', { name: 'Content country' }), 'IN');
+    await user.clear(screen.getByRole('textbox', { name: 'Movie link URL template 1' }));
+    await user.type(screen.getByRole('textbox', { name: 'Movie link URL template 1' }), 'not a valid template');
+    await user.click(screen.getByRole('button', { name: 'Save' }));
+
+    expect(localStorage.getItem('tmdb_content_region')).toBe('IN');
+    expect(localStorage.getItem('tmdb_movie_embed_links')).toBeNull();
+    expect(await screen.findByText('Country saved')).toBeInTheDocument();
+  });
+
   it('saves regional and embed preferences and applies theme changes globally', async () => {
     const user = userEvent.setup();
     render(

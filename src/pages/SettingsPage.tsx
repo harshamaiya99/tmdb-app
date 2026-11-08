@@ -18,7 +18,7 @@ function createDraftLinks(links: EmbedLink[]): EmbedLink[] {
 }
 
 export function SettingsPage() {
-  const { movieLinks, tvLinks, region, saveSettings, resetSettings } = useEmbedSettings();
+  const { movieLinks, tvLinks, region, saveRegion, saveSettings, resetSettings } = useEmbedSettings();
   const { theme, setTheme } = useTheme();
   const { toast } = useToast();
   const [movieLinkInputs, setMovieLinkInputs] = useState(() => createDraftLinks(movieLinks));
@@ -118,6 +118,16 @@ export function SettingsPage() {
     }
   };
 
+  const handleSaveCountry = () => {
+    setSettingsError('');
+    try {
+      saveRegion(regionInput);
+      toast({ title: 'Country saved', description: 'Your content country is saved in this browser.' });
+    } catch (error) {
+      setSettingsError(error instanceof Error ? error.message : 'Could not save country. Check browser storage and try again.');
+    }
+  };
+
   const handleReset = () => {
     setSettingsError('');
     try {
@@ -158,23 +168,33 @@ export function SettingsPage() {
             )}
             {countriesQuery.loading && <p className="text-sm text-muted-foreground">Loading countries...</p>}
             <label htmlFor="content-region" className="text-sm font-medium">Country</label>
-            <select
-              id="content-region"
-              aria-label="Content country"
-              value={regionInput}
-              onChange={(event) => setRegionInput(event.target.value)}
-              disabled={countriesQuery.loading || Boolean(countriesQuery.error)}
-              className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm shadow-sm focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring disabled:cursor-not-allowed disabled:opacity-50"
-            >
-              {regionInput && !sortedCountries.some((country) => country.iso_3166_1 === regionInput) && (
-                <option value={regionInput}>{regionInput}</option>
-              )}
-              {sortedCountries.map((country) => (
-                <option key={country.iso_3166_1} value={country.iso_3166_1}>
-                  {country.english_name}
-                </option>
-              ))}
-            </select>
+            <div className="flex min-w-0 items-center gap-2">
+              <select
+                id="content-region"
+                aria-label="Content country"
+                value={regionInput}
+                onChange={(event) => setRegionInput(event.target.value)}
+                disabled={countriesQuery.loading || Boolean(countriesQuery.error)}
+                className="flex h-10 min-w-0 flex-1 rounded-md border border-input bg-background px-3 py-2 text-sm shadow-sm focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring disabled:cursor-not-allowed disabled:opacity-50"
+              >
+                {regionInput && !sortedCountries.some((country) => country.iso_3166_1 === regionInput) && (
+                  <option value={regionInput}>{regionInput}</option>
+                )}
+                {sortedCountries.map((country) => (
+                  <option key={country.iso_3166_1} value={country.iso_3166_1}>
+                    {country.english_name}
+                  </option>
+                ))}
+              </select>
+              <Button
+                type="button"
+                onClick={handleSaveCountry}
+                disabled={countriesQuery.loading || Boolean(countriesQuery.error)}
+                className="shrink-0"
+              >
+                Save
+              </Button>
+            </div>
           </CardContent>
         </Card>
 

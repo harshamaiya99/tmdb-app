@@ -30,6 +30,7 @@ interface EmbedSettings {
 }
 
 interface EmbedSettingsContextValue extends EmbedSettings {
+  saveRegion: (region: string) => void;
   saveSettings: (settings: EmbedSettings) => void;
   resetSettings: () => EmbedSettings;
 }
@@ -45,6 +46,14 @@ const defaultSettings: EmbedSettings = {
 };
 
 const EmbedSettingsContext = createContext<EmbedSettingsContextValue | null>(null);
+
+function normalizeRegion(region: string): string {
+  const normalizedRegion = region.trim().toUpperCase();
+  if (normalizedRegion && !/^[A-Z]{2}$/.test(normalizedRegion)) {
+    throw new Error('Choose a valid country for regional TMDB content.');
+  }
+  return normalizedRegion;
+}
 
 function readLinks(storageKey: string, legacyStorageKey: string, defaults: EmbedLink[]): EmbedLink[] {
   const savedLinks = localStorage.getItem(storageKey);
@@ -82,11 +91,18 @@ function loadSettings(): EmbedSettings {
 export function EmbedSettingsProvider({ children }: { children: ReactNode }) {
   const [settings, setSettings] = useState(loadSettings);
 
-  const saveSettings = (nextSettings: EmbedSettings) => {
-    const region = nextSettings.region.trim().toUpperCase();
-    if (region && !/^[A-Z]{2}$/.test(region)) {
-      throw new Error('Choose a valid country for regional TMDB content.');
+  const saveRegion = (nextRegion: string) => {
+    const region = normalizeRegion(nextRegion);
+    if (region) {
+      localStorage.setItem(REGION_STORAGE_KEY, region);
+    } else {
+      localStorage.removeItem(REGION_STORAGE_KEY);
     }
+    setSettings((currentSettings) => ({ ...currentSettings, region }));
+  };
+
+  const saveSettings = (nextSettings: EmbedSettings) => {
+    const region = normalizeRegion(nextSettings.region);
     const normalizedSettings = {
       movieLinks: nextSettings.movieLinks.map((link) => createEmbedLink(link.urlTemplate.trim())),
       tvLinks: nextSettings.tvLinks.map((link) => createEmbedLink(link.urlTemplate.trim())),
@@ -115,7 +131,7 @@ export function EmbedSettingsProvider({ children }: { children: ReactNode }) {
   };
 
   return (
-    <EmbedSettingsContext.Provider value={{ ...settings, saveSettings, resetSettings }}>
+    <EmbedSettingsContext.Provider value={{ ...settings, saveRegion, saveSettings, resetSettings }}>
       {children}
     </EmbedSettingsContext.Provider>
   );
