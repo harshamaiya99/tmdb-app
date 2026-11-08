@@ -5,6 +5,7 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { COMBINED_AUTH_STORAGE_KEY, useTMDBAccount } from '@/contexts/TMDBAccountContext';
 import { useToast } from '@/components/ui/use-toast';
+import { Footer } from '@/components/Footer';
 
 export function AccountCallbackPage() {
   const [searchParams] = useSearchParams();
@@ -100,28 +101,31 @@ export function AccountCallbackPage() {
   ]);
 
   return (
-    <main className="container flex min-h-screen items-center justify-center py-8">
-      <Card className="w-full max-w-md">
-        <CardHeader>
-          <CardTitle>{error ? 'Could not connect account' : isListsFlow ? 'Connecting your TMDB lists' : 'Connecting your TMDB account'}</CardTitle>
-        </CardHeader>
-        <CardContent className="space-y-4">
-          {error ? (
-            <>
-              <Alert variant="destructive">
-                <AlertDescription>{error}</AlertDescription>
-              </Alert>
-              <Button asChild>
-                <Link to="/account/watchlist">Continue to account</Link>
-              </Button>
-            </>
-          ) : (
-            <p className="text-sm text-muted-foreground" role="status">
-              Finishing the secure TMDB authorization...
-            </p>
-          )}
-        </CardContent>
-      </Card>
-    </main>
+    <div className="flex min-h-screen flex-col bg-background">
+      <main className="container flex flex-1 items-center justify-center py-8">
+        <Card className="w-full max-w-md">
+          <CardHeader>
+            <CardTitle>{error ? 'Could not connect account' : isListsFlow ? 'Connecting your TMDB lists' : 'Connecting your TMDB account'}</CardTitle>
+          </CardHeader>
+          <CardContent className="space-y-4">
+            {error ? (
+              <>
+                <Alert variant="destructive">
+                  <AlertDescription>{error}</AlertDescription>
+                </Alert>
+                <Button asChild>
+                  <Link to="/account/watchlist">Continue to account</Link>
+                </Button>
+              </>
+            ) : (
+              <p className="text-sm text-muted-foreground" role="status">
+                Finishing the secure TMDB authorization...
+              </p>
+            )}
+          </CardContent>
+        </Card>
+      </main>
+      <Footer />
+    </div>
   );
 }

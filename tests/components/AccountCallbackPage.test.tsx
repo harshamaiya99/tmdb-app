@@ -73,6 +73,8 @@ describe('AccountCallbackPage', () => {
     renderCallback('/account/callback?flow=lists&request_token=v4-request-token&approved=false');
 
     expect(screen.getByText('TMDB account authorization was not approved.')).toBeInTheDocument();
+    expect(screen.getByText('This product uses the TMDB API but is not endorsed or certified by TMDB.'))
+      .toBeInTheDocument();
     expect(authorizationMocks.completeListsAuthorization).not.toHaveBeenCalled();
   });
 

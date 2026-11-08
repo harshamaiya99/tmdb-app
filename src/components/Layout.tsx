@@ -12,6 +12,7 @@ import { useCachedQuery } from '@/hooks/useCachedQuery';
 import { useDebouncedValue } from '@/hooks/useDebouncedValue';
 import { useToast } from '@/components/ui/use-toast';
 import { useTMDBAccount } from '@/contexts/TMDBAccountContext';
+import { Footer } from '@/components/Footer';
 
 interface LayoutProps {
   children: ReactNode;
@@ -358,7 +359,7 @@ export function Layout({ children }: LayoutProps) {
   );
 
   return (
-    <div className="min-h-screen bg-background">
+    <div className="flex min-h-screen flex-col bg-background">
       <header className="sticky top-0 z-50 border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
         <div className="container flex min-h-14 flex-wrap items-center justify-between gap-x-3 gap-y-2 py-2 md:h-14 md:flex-nowrap md:py-0">
           <div className="flex min-w-0 flex-1 items-center gap-2 md:flex-none">
@@ -610,7 +611,8 @@ export function Layout({ children }: LayoutProps) {
         </div>
       </nav>
       </DropdownMenu.Root>
-      <main className="container py-6 pb-[calc(6rem+env(safe-area-inset-bottom))] md:pb-6">{children}</main>
+      <main className="container flex-1 py-6">{children}</main>
+      <Footer />
     </div>
   );
 }
