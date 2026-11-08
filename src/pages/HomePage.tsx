@@ -347,6 +347,7 @@ export function HomePage() {
                       mediaType={displayedFeatured.mediaType}
                       mediaTitle={featuredTitle ?? ''}
                       showAddToList={false}
+                      showRatings={false}
                       squareButtons
                     />
                   </div>

@@ -15,6 +15,7 @@ interface AccountMediaActionsProps {
   mediaType: 'movie' | 'tv';
   mediaTitle: string;
   showAddToList?: boolean;
+  showRatings?: boolean;
   squareButtons?: boolean;
 }
 
@@ -23,6 +24,7 @@ export function AccountMediaActions({
   mediaType,
   mediaTitle,
   showAddToList = true,
+  showRatings = true,
   squareButtons = false,
 }: AccountMediaActionsProps) {
   const { account, connectTMDBAccount, isConnected, sessionId } = useTMDBAccount();
@@ -323,22 +325,24 @@ export function AccountMediaActions({
             className="h-9 w-full min-w-0 justify-center px-1"
           />
         )}
-        <Button
-          type="button"
-          variant={currentRating !== null ? 'selected' : 'outline'}
-          size="sm"
-          className={squareButtons ? 'h-9 w-9 p-0' : 'h-9 w-full min-w-0 justify-center px-1'}
-          aria-label={ratingButtonLabel}
-          title={ratingButtonTitle}
-          disabled={pendingAction !== null || !accountState || pendingRating !== null}
-          onClick={() => setIsRatingOpen(true)}
-        >
-          {displayRating !== null ? (
-            <span className="text-sm font-semibold leading-none">{displayRating}</span>
-          ) : (
-            <Star aria-hidden="true" className="h-4 w-4" />
-          )}
-        </Button>
+        {showRatings && (
+          <Button
+            type="button"
+            variant={currentRating !== null ? 'selected' : 'outline'}
+            size="sm"
+            className={squareButtons ? 'h-9 w-9 p-0' : 'h-9 w-full min-w-0 justify-center px-1'}
+            aria-label={ratingButtonLabel}
+            title={ratingButtonTitle}
+            disabled={pendingAction !== null || !accountState || pendingRating !== null}
+            onClick={() => setIsRatingOpen(true)}
+          >
+            {displayRating !== null ? (
+              <span className="text-sm font-semibold leading-none">{displayRating}</span>
+            ) : (
+              <Star aria-hidden="true" className="h-4 w-4" />
+            )}
+          </Button>
+        )}
       </section>
 
       {accountStateQuery.error && (
