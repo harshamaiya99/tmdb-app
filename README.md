@@ -6,16 +6,16 @@ A clean, minimal web app for browsing movies, TV shows, and people with data fro
 
 ## Features
 
-- 🔐 User-entered TMDB API key authentication
-- 🎬 Browse trending, now-playing, top-rated, upcoming, and streaming-focused movies
-- 📺 Explore popular and top-rated TV shows
-- 🔍 Search movies, TV shows, and people
-- 🧭 Deep-dive detail pages for movies, TV shows, and people
-- 👤 Connect a TMDB account to manage movie/TV watchlists, favorites, ratings, and mixed movie/TV custom lists
-- ⚙️ Dedicated Settings page for content country, embed links, and light/dark theme
-- ℹ About page with TMDB attribution
-- 📲 Installable as a web app from supported browsers
-- ✨ Responsive, content-first UI with reusable cards, shared media sections, and skeleton states
+- User-entered TMDB API key authentication
+- Browse trending, now-playing, top-rated, upcoming, and streaming-focused movies
+- Explore popular and top-rated TV shows
+- Search movies, TV shows, and people
+- Deep-dive detail pages for movies, TV shows, and people
+- Connect a TMDB account to manage movie/TV watchlists, favorites, ratings, and mixed movie/TV custom lists
+- Dedicated Settings page for content country, embed links, and light/dark theme
+- About page with TMDB attribution
+- Installable as a web app from supported browsers
+- Responsive, content-first UI with reusable cards, shared media sections, and skeleton states
 
 ## TMDB Attribution
 
@@ -104,6 +104,7 @@ The site can be installed as an app from supported browsers when served over HTT
 │   ├── api.md                          # TMDB integration, authentication, and API behavior
 │   ├── architecture.md                # Application structure, routing, and data flow
 │   ├── development.md                 # Local development and GitHub Pages workflow
+│   ├── roadmap.md                      # Planned project improvements
 │   └── ui.md                           # UI conventions, design tokens, and component patterns
 ├── .github/
 │   └── workflows/
@@ -114,7 +115,8 @@ The site can be installed as an app from supported browsers when served over HTT
 │   ├── icon-192.png                   # Installable app icon
 │   ├── icon-512.png                   # High-resolution installable app icon
 │   ├── manifest.webmanifest           # PWA name, display, theme, and icon settings
-│   └── sw.js                          # Service worker for caching the app shell
+│   ├── sw.js                          # Service worker for caching the app shell
+│   └── tmdb-logo.svg                  # TMDB logo used for attribution
 ├── src/
 │   ├── App.tsx                        # Routes, providers, and protected-page access
 │   ├── main.tsx                       # React application entry point
@@ -125,14 +127,18 @@ The site can be installed as an app from supported browsers when served over HTT
 │   │   ├── EpisodesRatingOverview.tsx # Episode rating visualization
 │   │   ├── AccountMediaActions.tsx    # TMDB account actions on media detail pages
 │   │   ├── AddToListButton.tsx        # Add movies and TV shows to TMDB custom lists
+│   │   ├── Footer.tsx                 # Shared site footer
 │   │   ├── Layout.tsx                 # App header, navigation, search, and settings menu
 │   │   ├── LazySection.tsx            # Defers section rendering until near the viewport
 │   │   ├── MediaCard.tsx              # Reusable movie, TV, and person card
+│   │   ├── MediaCategoryToggle.tsx    # Movie/TV category selector
 │   │   ├── MediaGridSkeleton.tsx      # Loading placeholders for media grids
 │   │   ├── MediaSection.tsx           # Shared heading and grid/carousel composition
+│   │   ├── MovieReleaseCalendar.tsx   # Upcoming movie release calendar
 │   │   ├── ReviewSection.tsx          # Review cards with Markdown rendering
 │   │   ├── ThemeToggle.tsx            # Light/dark theme control
 │   │   ├── TMDBImage.tsx              # Responsive TMDB image rendering and fallback
+│   │   ├── WatchLinkButton.tsx        # Opens configured media watch links
 │   │   └── ui/
 │   │       ├── alert.tsx              # Alert primitive
 │   │       ├── badge.tsx              # Badge primitive
@@ -153,13 +159,16 @@ The site can be installed as an app from supported browsers when served over HTT
 │   │   ├── useLazyLoad.ts             # Starts work when a target nears the viewport
 │   │   ├── usePageTitle.ts            # Synchronizes page title with title context
 │   │   ├── usePagination.ts           # Shared pagination state and behavior
+│   │   ├── useTheme.ts                # Theme hook
 │   │   └── useTheme.tsx               # Shares theme state and applies the selected theme
 │   ├── lib/
+│   │   ├── embedSettings.ts           # Embed URL settings helpers
 │   │   ├── requestCache.ts            # In-memory request cache and deduplication
 │   │   ├── tmdb.ts                    # TMDB API client, requests, and domain types
 │   │   ├── utils.ts                   # Shared styling, date, and embed URL helpers
 │   │   └── wikimedia.ts               # Wikimedia image lookup helpers
 │   └── pages/
+│       ├── AboutPage.tsx              # App information and TMDB attribution
 │       ├── AccountCallbackPage.tsx    # TMDB user authorization callback
 │       ├── AccountListsPage.tsx       # Browse, view, and manage custom lists
 │       ├── AccountPage.tsx            # Watchlists, favorites, and ratings
@@ -169,20 +178,32 @@ The site can be installed as an app from supported browsers when served over HTT
 │       ├── MovieDetailsPage.tsx       # Movie details, credits, reviews, and watch link
 │       ├── PeopleListPage.tsx         # Paginated people listing
 │       ├── PersonDetailsPage.tsx      # Person biography and filmography
+│       ├── ReleaseDateMoviesPage.tsx  # Movies grouped by release date
+│       ├── SettingsPage.tsx           # Content, embed link, and theme settings
 │       └── TVShowDetailsPage.tsx      # TV details, seasons, episodes, and watch links
 ├── tests/
 │   ├── components/
+│   │   ├── AccountCallbackPage.test.tsx # Account authorization callback behavior
+│   │   ├── Footer.test.tsx            # Footer rendering behavior
 │   │   ├── LoginPage.test.tsx         # Login and API key validation behavior
 │   │   ├── MediaCard.test.tsx         # Media card rendering behavior
-│   │   └── ReviewSection.test.tsx     # Review rendering and interaction behavior
+│   │   ├── ReviewSection.test.tsx     # Review rendering and interaction behavior
+│   │   └── WatchLinkButton.test.tsx   # Watch link behavior
+│   ├── pages/
+│   │   ├── AboutPage.test.tsx         # About page and attribution behavior
+│   │   └── SettingsPage.test.tsx      # Settings page behavior
 │   ├── unit/
+│   │   ├── EmbedSettingsContext.test.tsx # Embed settings context behavior
+│   │   ├── embedSettings.test.ts      # Embed settings helper behavior
 │   │   ├── requestCache.test.ts       # Request cache behavior
+│   │   ├── tmdb.test.ts               # TMDB service behavior
 │   │   └── utils.test.ts              # Shared utility behavior
 │   └── setup.ts                       # Vitest and Testing Library setup
 ├── .gitignore                         # Excludes dependencies, builds, local env, and editor files
-├── .env                                # Local-only Vite settings; ignored by Git and should not be committed
 ├── AGENTS.md                          # Repository guidance for contributors and coding agents
 ├── index.html                         # Vite HTML document and React mount element
+├── LICENSE                            # MIT License
+├── README.md                          # Project overview, setup, and documentation
 ├── package.json                       # Project scripts and dependency manifest
 ├── package-lock.json                  # Locked npm dependency versions
 ├── postcss.config.js                  # PostCSS plugin configuration
