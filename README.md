@@ -23,6 +23,10 @@ This application uses TMDB and the TMDB APIs but is not endorsed, certified, or 
 
 The app displays the TMDB logo and attribution on its **About** page, available from the profile menu. See the [TMDB API Terms of Use](https://www.themoviedb.org/api-terms-of-use) and [logo and attribution guidelines](https://www.themoviedb.org/about/logos-attribution).
 
+## License
+
+This project is licensed under the [MIT License](LICENSE).
+
 ## Tech Stack
 
 - React 18
