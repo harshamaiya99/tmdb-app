@@ -216,7 +216,6 @@ export function PersonDetailsPage() {
   );
   const allMovieCredits = credits.filter((credit) => credit.media_type === 'movie');
   const allTvCredits = credits.filter((credit) => credit.media_type === 'tv');
-  const creditLimit = creditsFullWidth ? 10 : 8;
   const movieCredits = allMovieCredits;
   const tvCredits = allTvCredits;
   const movieCreditsSection = movieCredits.length > 0 && (
@@ -227,10 +226,10 @@ export function PersonDetailsPage() {
       className="space-y-4"
       horizontalScroll
       horizontalColumns={creditsFullWidth ? 10 : 8}
-      limit={movieCredits.length}
+      limit={20}
       actionLabel="See All"
       category={`person-${person.id}-movies`}
-      hideSeeMore={allMovieCredits.length <= creditLimit}
+      hideSeeMore={allMovieCredits.length <= 20}
     />
   );
   const tvCreditsSection = tvCredits.length > 0 && (
@@ -241,10 +240,10 @@ export function PersonDetailsPage() {
       className="space-y-4"
       horizontalScroll
       horizontalColumns={10}
-      limit={tvCredits.length}
+      limit={20}
       actionLabel="See All"
       category={`person-${person.id}-tv`}
-      hideSeeMore={allTvCredits.length <= 10}
+      hideSeeMore={allTvCredits.length <= 20}
     />
   );
   const selectedImage = selectedImageIndex === null ? null : galleryImages[selectedImageIndex] ?? null;
