@@ -1,8 +1,8 @@
 import { useParams } from 'react-router-dom';
 import { Alert, AlertDescription } from '@/components/ui/alert';
-import { Button } from '@/components/ui/button';
 import { MediaCard } from '@/components/MediaCard';
 import { MediaGridSkeleton } from '@/components/MediaGridSkeleton';
+import { PaginationControls } from '@/components/PaginationControls';
 import { useEmbedSettings } from '@/contexts/EmbedSettingsContext';
 import { useCachedQuery } from '@/hooks/useCachedQuery';
 import { usePageTitle } from '@/hooks/usePageTitle';
@@ -64,29 +64,12 @@ export function ReleaseDateMoviesPage() {
           <div className="grid grid-cols-2 gap-3 min-[360px]:grid-cols-3 sm:gap-4 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-8 2xl:grid-cols-10">
             {releases.data.results.map((movie) => <MediaCard key={movie.id} item={movie} type="movie" />)}
           </div>
-          {totalPages > 1 && (
-            <div className="mt-12 flex items-center justify-center gap-6 border-t pt-8">
-              <Button
-                type="button"
-                variant="outline"
-                onClick={() => changePage(Math.max(1, page - 1))}
-                disabled={page === 1}
-              >
-                Previous
-              </Button>
-              <span className="text-sm font-medium text-muted-foreground">
-                Page {page} of {totalPages}
-              </span>
-              <Button
-                type="button"
-                variant="outline"
-                onClick={() => changePage(Math.min(totalPages, page + 1))}
-                disabled={page === totalPages}
-              >
-                Next
-              </Button>
-            </div>
-          )}
+          <PaginationControls
+            page={page}
+            totalPages={totalPages}
+            onPageChange={changePage}
+            className="mt-12 pt-8"
+          />
         </div>
       )}
     </main>

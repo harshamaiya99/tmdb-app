@@ -3,6 +3,7 @@ import { Link } from 'react-router-dom';
 import { Check, ListPlus, Loader2, Plus, X } from 'lucide-react';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { Button } from '@/components/ui/button';
+import { PaginationControls } from '@/components/PaginationControls';
 import { Input } from '@/components/ui/input';
 import { ToastAction } from '@/components/ui/toast';
 import { useToast } from '@/components/ui/use-toast';
@@ -282,13 +283,15 @@ export function AddToListButton({ mediaId, mediaTitle, mediaType, className, ico
               <p className="py-4 text-sm text-muted-foreground">You don’t have any lists yet.</p>
             )}
 
-            {(listsQuery.data?.total_pages ?? 1) > 1 && (
-              <div className="mt-2 flex items-center justify-between text-xs text-muted-foreground">
-                <Button type="button" variant="ghost" size="sm" disabled={listPage <= 1} onClick={() => setListPage((current) => current - 1)}>Previous</Button>
-                <span>Page {listPage} of {listsQuery.data?.total_pages}</span>
-                <Button type="button" variant="ghost" size="sm" disabled={listPage >= (listsQuery.data?.total_pages ?? 1)} onClick={() => setListPage((current) => current + 1)}>Next</Button>
-              </div>
-            )}
+            <PaginationControls
+              page={listPage}
+              totalPages={listsQuery.data?.total_pages ?? 1}
+              onPageChange={setListPage}
+              className="mt-2 justify-between border-0 pt-0 text-xs text-muted-foreground"
+              buttonVariant="ghost"
+              buttonSize="sm"
+              pageLabelClassName="text-xs"
+            />
 
             {isListAccountConnected && !isCreateFormOpen ? (
               <Button type="button" variant="outline" className="mt-4 w-full" disabled={pendingListId !== null} onClick={() => setIsCreateFormOpen(true)}>

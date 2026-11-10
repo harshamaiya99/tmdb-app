@@ -1,6 +1,6 @@
-import { Button } from '@/components/ui/button';
 import { Skeleton } from '@/components/ui/skeleton';
 import { MediaCard } from '@/components/MediaCard';
+import { PaginationControls } from '@/components/PaginationControls';
 import { tmdbService } from '@/lib/tmdb';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { useCachedQuery } from '@/hooks/useCachedQuery';
@@ -89,28 +89,12 @@ export function PeopleListPage() {
             </div>
           )}
           
-          {/* Pagination Controls */}
-          {totalPages > 1 && (
-            <div className="flex items-center justify-center gap-6 mt-12 pt-8 border-t">
-              <Button 
-                variant="outline" 
-                onClick={() => handlePageChange(Math.max(1, page - 1))}
-                disabled={page === 1}
-              >
-                Previous
-              </Button>
-              <span className="text-sm font-medium text-muted-foreground">
-                Page {page} of {totalPages}
-              </span>
-              <Button 
-                variant="outline" 
-                onClick={() => handlePageChange(Math.min(totalPages, page + 1))}
-                disabled={page === totalPages}
-              >
-                Next
-              </Button>
-            </div>
-          )}
+          <PaginationControls
+            page={page}
+            totalPages={totalPages}
+            onPageChange={handlePageChange}
+            className="mt-12 pt-8"
+          />
         </div>
       )}
     </main>

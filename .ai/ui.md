@@ -109,6 +109,8 @@ This helps maintain a consistent button language across the app.
 
 Use in-app accessible dialogs for confirmations, alerts, and prompts. Do not use native browser dialogs such as `window.confirm`, `window.alert`, or `window.prompt`.
 
+Paginated views use the shared [PaginationControls](../src/components/PaginationControls.tsx) component for consistent previous/next controls and page status. Call sites retain responsibility for page state, routing, and any page-specific scroll behavior through its `onPageChange` callback.
+
 ### Cards
 
 Cards are implemented in [src/components/ui/card.tsx](src/components/ui/card.tsx). They provide a standard surface for content blocks, media previews, onboarding content, and detail sections.

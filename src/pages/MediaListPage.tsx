@@ -5,6 +5,7 @@ import * as DropdownMenu from '@radix-ui/react-dropdown-menu';
 import { Button } from '@/components/ui/button';
 import { MediaCard } from '@/components/MediaCard';
 import { MediaGridSkeleton } from '@/components/MediaGridSkeleton';
+import { PaginationControls } from '@/components/PaginationControls';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { MediaCategoryToggle, MOVIE_CATEGORIES, TV_CATEGORIES } from '@/components/MediaCategoryToggle';
 import { tmdbService, filterPersonCredits, sortPersonCredits, type Movie, type TVShow, type PersonCredit, type TrendingResponse } from '@/lib/tmdb';
@@ -529,28 +530,12 @@ export function MediaListPage() {
               </div>
             )}
             
-            {/* Pagination Controls */}
-            {totalPages > 1 && (
-              <div className="flex items-center justify-center gap-6 mt-12 pt-8 border-t">
-                <Button 
-                  variant="outline" 
-                  onClick={() => handlePageChange(Math.max(1, page - 1))}
-                  disabled={page === 1}
-                >
-                  Previous
-                </Button>
-                <span className="text-sm font-medium text-muted-foreground">
-                  Page {page} of {totalPages}
-                </span>
-                <Button 
-                  variant="outline" 
-                  onClick={() => handlePageChange(Math.min(totalPages, page + 1))}
-                  disabled={page === totalPages}
-                >
-                  Next
-                </Button>
-              </div>
-            )}
+            <PaginationControls
+              page={page}
+              totalPages={totalPages}
+              onPageChange={handlePageChange}
+              className="mt-12 pt-8"
+            />
           </div>
         )}
     </main>

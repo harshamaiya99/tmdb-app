@@ -6,6 +6,7 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { MediaCard } from '@/components/MediaCard';
+import { PaginationControls } from '@/components/PaginationControls';
 import { MediaCategoryToggle, MEDIA_TYPE_OPTIONS } from '@/components/MediaCategoryToggle';
 import { MediaGridSkeleton } from '@/components/MediaGridSkeleton';
 import { useTMDBAccount } from '@/contexts/TMDBAccountContext';
@@ -385,12 +386,8 @@ export function AccountListsPage() {
             ))}
           </div>
         )}
-        {list && totalPages > 1 && (
-          <div className="flex items-center justify-center gap-6 border-t pt-6">
-            <Button variant="outline" onClick={() => setPage(Math.max(1, currentPage - 1))} disabled={currentPage === 1}>Previous</Button>
-            <span className="text-sm font-medium text-muted-foreground">Page {currentPage} of {totalPages}</span>
-            <Button variant="outline" onClick={() => setPage(Math.min(totalPages, currentPage + 1))} disabled={currentPage === totalPages}>Next</Button>
-          </div>
+        {list && (
+          <PaginationControls page={currentPage} totalPages={totalPages} onPageChange={setPage} />
         )}
 
       </main>
@@ -459,13 +456,7 @@ export function AccountListsPage() {
           <AlertDescription>Could not load custom-list title counts: {listPreviewsQuery.error.message}</AlertDescription>
         </Alert>
       )}
-      {totalPages > 1 && (
-        <div className="flex items-center justify-center gap-6 border-t pt-6">
-          <Button variant="outline" onClick={() => setPage(Math.max(1, page - 1))} disabled={page === 1}>Previous</Button>
-          <span className="text-sm font-medium text-muted-foreground">Page {page} of {totalPages}</span>
-          <Button variant="outline" onClick={() => setPage(Math.min(totalPages, page + 1))} disabled={page === totalPages}>Next</Button>
-        </div>
-      )}
+      <PaginationControls page={page} totalPages={totalPages} onPageChange={setPage} />
     </main>
   );
 }
