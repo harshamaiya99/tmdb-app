@@ -101,8 +101,9 @@ The People page provides Popular and daily Trending tabs, both with pagination.
 
 These fetch richer entity data:
 
-- movie details with credits, videos, backdrops and posters, similar titles, reviews, watch providers, release certification for the selected country, budget, and revenue
-- TV show details with aggregate series-wide cast credits, crew, videos, images, similar titles, reviews, production companies, watch providers, and regional content ratings
+- movie details with credits, videos, backdrops and posters, first-page recommendations and similar titles, reviews, watch providers, release certification for the selected country, budget, and revenue
+- TV show details with aggregate series-wide cast credits, crew, videos, images, first-page recommendations and similar titles, reviews, production companies, watch providers, and regional content ratings
+- paginated movie and TV recommendation or similar-title endpoints for the detail-page See More lists
 - TV season details with episodes and season-specific cast and crew credits
 - TV episode details with crew, guest stars, still images, and videos
 - person details with cast and crew credits, external IDs, and images. Movie and TV credit lists include both cast and crew roles, prioritizing the person's known-for department.

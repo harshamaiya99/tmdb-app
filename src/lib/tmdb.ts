@@ -110,8 +110,8 @@ export interface Movie {
   credits?: { cast: Cast[]; crew: Crew[] };
   videos?: { results: Video[] };
   images?: { backdrops: MediaImage[]; posters: MediaImage[]; logos?: MediaImage[] };
-  recommendations?: { results: Movie[] };
-  similar?: { results: Movie[] };
+  recommendations?: MediaResults<Movie>;
+  similar?: MediaResults<Movie>;
   external_ids?: { imdb_id: string | null };
   reviews?: ReviewResponse;
   belongs_to_collection?: {
@@ -171,8 +171,8 @@ export interface TVShow {
     posters: MediaImage[];
     logos?: MediaImage[];
   };
-  recommendations?: { results: TVShow[] };
-  similar?: { results: TVShow[] };
+  recommendations?: MediaResults<TVShow>;
+  similar?: MediaResults<TVShow>;
   external_ids?: { imdb_id: string | null };
   reviews?: ReviewResponse;
   aggregate_credits?: { cast: AggregateCast[]; crew: Crew[] };
@@ -405,6 +405,12 @@ export interface TrendingResponse<T> {
   results: T[];
   total_pages: number;
   total_results: number;
+}
+
+interface MediaResults<T> {
+  results: T[];
+  total_pages?: number;
+  total_results?: number;
 }
 
 export interface MediaListDiscoveryFilters {
@@ -861,7 +867,15 @@ class TMDBService {
 
   // --- DETAILS ENDPOINTS ---
   async getMovieDetails(id: number, options?: TMDBRequestOptions): Promise<Movie> {
-    return this.fetchFromTMDB<Movie>(`/movie/${id}?append_to_response=credits,videos,images,recommendations,external_ids,reviews,watch/providers,release_dates`, options);
+    return this.fetchFromTMDB<Movie>(`/movie/${id}?append_to_response=credits,videos,images,recommendations,similar,external_ids,reviews,watch/providers,release_dates`, options);
+  }
+
+  async getMovieRecommendations(id: number, page: number = 1, options?: TMDBRequestOptions): Promise<TrendingResponse<Movie>> {
+    return this.fetchFromTMDB<TrendingResponse<Movie>>(`/movie/${id}/recommendations?page=${page}`, options);
+  }
+
+  async getSimilarMovies(id: number, page: number = 1, options?: TMDBRequestOptions): Promise<TrendingResponse<Movie>> {
+    return this.fetchFromTMDB<TrendingResponse<Movie>>(`/movie/${id}/similar?page=${page}`, options);
   }
 
   async getCountries(options?: TMDBRequestOptions): Promise<TMDBCountry[]> {
@@ -873,7 +887,7 @@ class TMDBService {
   }
 
   async getTVShowDetails(id: number, options?: TMDBRequestOptions): Promise<TVShow> {
-    const show = await this.fetchFromTMDB<TVShow>(`/tv/${id}?append_to_response=credits,aggregate_credits,videos,images,recommendations,external_ids,reviews,watch/providers,content_ratings`, options);
+    const show = await this.fetchFromTMDB<TVShow>(`/tv/${id}?append_to_response=credits,aggregate_credits,videos,images,recommendations,similar,external_ids,reviews,watch/providers,content_ratings`, options);
     return {
       ...show,
       recommendations: show.recommendations
@@ -883,6 +897,16 @@ class TMDBService {
         ? { ...show.similar, results: withoutTalkShows(show.similar.results) }
         : undefined,
     };
+  }
+
+  async getTVShowRecommendations(id: number, page: number = 1, options?: TMDBRequestOptions): Promise<TrendingResponse<TVShow>> {
+    const data = await this.fetchFromTMDB<TrendingResponse<TVShow>>(`/tv/${id}/recommendations?page=${page}`, options);
+    return { ...data, results: withoutTalkShows(data.results) };
+  }
+
+  async getSimilarTVShows(id: number, page: number = 1, options?: TMDBRequestOptions): Promise<TrendingResponse<TVShow>> {
+    const data = await this.fetchFromTMDB<TrendingResponse<TVShow>>(`/tv/${id}/similar?page=${page}`, options);
+    return { ...data, results: withoutTalkShows(data.results) };
   }
 
   async getTVShowReviews(id: number, page: number = 1, options?: TMDBRequestOptions): Promise<ReviewResponse> {

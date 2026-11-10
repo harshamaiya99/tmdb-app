@@ -488,6 +488,59 @@ describe('TMDB Talk-show filtering', () => {
     expect(requestUrl.searchParams.has('without_genres')).toBe(false);
   });
 
+  it('loads paginated movie recommendations and similar titles', async () => {
+    const fetchMock = vi.mocked(fetch);
+    fetchMock.mockImplementation(async () => responseWith({
+      page: 2,
+      results: [{ id: 20, title: 'Related Movie' }],
+      total_pages: 4,
+      total_results: 80,
+    }));
+
+    await expect(tmdbService.getMovieRecommendations(10, 2)).resolves.toMatchObject({
+      page: 2,
+      total_pages: 4,
+      total_results: 80,
+      results: [{ id: 20, title: 'Related Movie' }],
+    });
+    await tmdbService.getSimilarMovies(10, 3);
+
+    const recommendationsUrl = new URL(String(fetchMock.mock.calls[0][0]));
+    expect(recommendationsUrl.pathname).toBe('/3/movie/10/recommendations');
+    expect(recommendationsUrl.searchParams.get('page')).toBe('2');
+    const similarUrl = new URL(String(fetchMock.mock.calls[1][0]));
+    expect(similarUrl.pathname).toBe('/3/movie/10/similar');
+    expect(similarUrl.searchParams.get('page')).toBe('3');
+  });
+
+  it('loads paginated TV recommendations and similar titles without Talk shows', async () => {
+    const fetchMock = vi.mocked(fetch);
+    fetchMock.mockImplementation(async () => responseWith({
+      page: 2,
+      results: [
+        { id: 20, name: 'Drama Series', genre_ids: [18] },
+        { id: 21, name: 'Talk Show', genre_ids: [10767] },
+      ],
+      total_pages: 4,
+      total_results: 80,
+    }));
+
+    await expect(tmdbService.getTVShowRecommendations(10, 2)).resolves.toMatchObject({
+      page: 2,
+      total_pages: 4,
+      total_results: 80,
+      results: [{ id: 20, name: 'Drama Series' }],
+    });
+    await tmdbService.getSimilarTVShows(10, 3);
+
+    const recommendationsUrl = new URL(String(fetchMock.mock.calls[0][0]));
+    expect(recommendationsUrl.pathname).toBe('/3/tv/10/recommendations');
+    expect(recommendationsUrl.searchParams.get('page')).toBe('2');
+    const similarUrl = new URL(String(fetchMock.mock.calls[1][0]));
+    expect(similarUrl.pathname).toBe('/3/tv/10/similar');
+    expect(similarUrl.searchParams.get('page')).toBe('3');
+  });
+
   it('filters Talk shows from person TV credits without filtering movie credits', async () => {
     vi.mocked(fetch).mockResolvedValue(responseWith({
       page: 1,
@@ -1133,5 +1186,6 @@ describe('TMDB Talk-show filtering', () => {
     });
     const requestUrl = new URL(String(vi.mocked(fetch).mock.calls[0][0]));
     expect(requestUrl.searchParams.get('append_to_response')).toContain('watch/providers');
+    expect(requestUrl.searchParams.get('append_to_response')).toContain('similar');
   });
 });

@@ -237,7 +237,10 @@ export function TVShowDetailsPage() {
       contentRating.iso_3166_1 === region && contentRating.rating,
     )
     : undefined;
-  const similarShows = (tvShow.recommendations?.results?.length ? tvShow.recommendations.results : tvShow.similar?.results) || [];
+  const tvRelated = tvShow.recommendations?.results?.length ? tvShow.recommendations : tvShow.similar;
+  const similarShows = tvRelated?.results ?? [];
+  const tvRelatedType = tvShow.recommendations?.results?.length ? 'recommendations' : 'similar';
+  const hasMoreRelatedShows = (tvRelated?.total_pages ?? (similarShows.length >= 20 ? 2 : 1)) > 1;
   const selectedSeasonDetails = tvShow.seasons?.find((season) => season.season_number === selectedSeason);
 
   // Sort Crew: Creators & Executive Producers First!
@@ -755,7 +758,9 @@ export function TVShowDetailsPage() {
               title="Similar TV Shows"
               items={similarShows}
               type="tv"
-              hideSeeMore
+              actionLabel="See More"
+              category={`tv-${tvRelatedType}-${tvShow.id}`}
+              hideSeeMore={!hasMoreRelatedShows}
               limit={20}
               horizontalScroll
               className="mt-12 border-t pt-8"

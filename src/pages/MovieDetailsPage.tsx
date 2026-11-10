@@ -165,7 +165,10 @@ export function MovieDetailsPage() {
     : [];
   const certification = regionalReleases.find((release) => release.type === 3 && release.certification)
     ?? regionalReleases.find((release) => release.certification);
-  const similarMovies = (movie.recommendations?.results?.length ? movie.recommendations.results : movie.similar?.results) || [];
+  const movieRelated = movie.recommendations?.results?.length ? movie.recommendations : movie.similar;
+  const similarMovies = movieRelated?.results ?? [];
+  const movieRelatedType = movie.recommendations?.results?.length ? 'recommendations' : 'similar';
+  const hasMoreRelatedMovies = (movieRelated?.total_pages ?? (similarMovies.length >= 20 ? 2 : 1)) > 1;
   
   // Sort Crew: Director First!
   const cast = movie.credits?.cast || [];
@@ -725,7 +728,9 @@ export function MovieDetailsPage() {
               title="Similar Movies"
               items={similarMovies}
               type="movie"
-              hideSeeMore
+              actionLabel="See More"
+              category={`movie-${movieRelatedType}-${movie.id}`}
+              hideSeeMore={!hasMoreRelatedMovies}
               limit={20}
               horizontalScroll
               className="mt-12 border-t pt-8"

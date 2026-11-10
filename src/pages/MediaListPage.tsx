@@ -177,6 +177,7 @@ export function MediaListPage() {
   }
 
   const personMatch = effectiveCategory?.match(/^person-(\d+)-(movies|tv)$/);
+  const recommendationsMatch = effectiveCategory?.match(/^(movie|tv)-(recommendations|similar)-(\d+)$/);
   const genreMatch = effectiveCategory?.match(/^genre-(movie|tv)-(\d+)$/);
   const languageMatch = effectiveCategory?.match(/^language-(movie|tv)-([a-z]{2,3})$/i);
   const selectedLanguage = searchParams.get('language') ?? languageMatch?.[2].toLowerCase() ?? 'all';
@@ -189,6 +190,8 @@ export function MediaListPage() {
   const personType = personMatch?.[2] === 'tv' ? 'tv' : 'movie';
   const itemType = personMatch
     ? personType
+    : recommendationsMatch
+      ? recommendationsMatch[1] as 'movie' | 'tv'
     : genreMatch
       ? genreMatch[1] as 'movie' | 'tv'
       : languageMatch
@@ -211,6 +214,7 @@ export function MediaListPage() {
     `list:${effectiveCategory ?? 'none'}:${itemType}:${personMatch ? 'all' : page}:${personMatch ? 'all' : selectedLanguage}:${personMatch ? 'all' : selectedGenre}:${personMatch ? 'default' : selectedSort}:${region}`,
     async (signal) => {
       const currentPersonMatch = effectiveCategory?.match(/^person-(\d+)-(movies|tv)$/);
+      const currentRecommendationsMatch = effectiveCategory?.match(/^(movie|tv)-(recommendations|similar)-(\d+)$/);
       const currentCompanyMatch = effectiveCategory?.match(/^company-(\d+)$/);
       const currentProviderMatch = effectiveCategory?.match(/^provider-(\d+)$/);
       const currentGenreMatch = effectiveCategory?.match(/^genre-(movie|tv)-(\d+)$/);
@@ -222,6 +226,18 @@ export function MediaListPage() {
 
       if (currentPersonMatch && currentPersonMatch[1]) {
         return tmdbService.getPersonCredits(Number(currentPersonMatch[1]), currentItemType, { signal });
+      }
+
+      if (currentRecommendationsMatch) {
+        const [mediaType, relatedType, id] = currentRecommendationsMatch.slice(1);
+        if (mediaType === 'tv') {
+          return relatedType === 'similar'
+            ? tmdbService.getSimilarTVShows(Number(id), page, { signal })
+            : tmdbService.getTVShowRecommendations(Number(id), page, { signal });
+        }
+        return relatedType === 'similar'
+          ? tmdbService.getSimilarMovies(Number(id), page, { signal })
+          : tmdbService.getMovieRecommendations(Number(id), page, { signal });
       }
 
       const effectiveLanguage = languageFilter;
@@ -278,6 +294,9 @@ export function MediaListPage() {
   let pageTitle = CATEGORY_TITLES[effectiveCategory ?? ''] ?? 'Media List';
   if (personMatch && personName) {
     pageTitle = personType === 'tv' ? `${personName}'s TV Shows` : `${personName}'s Movies`;
+  } else if (recommendationsMatch) {
+    const relatedTitle = recommendationsMatch[2] === 'similar' ? 'Similar' : 'Recommended';
+    pageTitle = recommendationsMatch[1] === 'tv' ? `${relatedTitle} TV Shows` : `${relatedTitle} Movies`;
   } else if (genreMatch?.[2]) {
     const activeGenre = selectedGenre === 'all' ? undefined : GENRE_NAMES[selectedGenre];
     pageTitle = activeGenre
@@ -480,7 +499,7 @@ export function MediaListPage() {
             <div className="col-start-2 row-start-1 shrink-0 sm:ml-auto">{filtersControl}</div>
           </div>
         )}
-        {!showMovieCategories && !showTVCategories && (
+        {!showMovieCategories && !showTVCategories && !recommendationsMatch && (
           <div className={`mb-4 flex flex-wrap items-center gap-3 ${personMatch || isCompanyProviderCategory ? 'justify-between' : 'justify-end'}`}>
             {personMatch && (
               <MediaCategoryToggle
@@ -504,6 +523,9 @@ export function MediaListPage() {
             )}
             {filtersControl}
           </div>
+        )}
+        {recommendationsMatch && (
+          <h1 className="mb-6 text-3xl font-bold tracking-tight">{pageTitle}</h1>
         )}
         
         {loading ? (
