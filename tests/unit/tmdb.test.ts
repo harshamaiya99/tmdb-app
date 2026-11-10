@@ -86,6 +86,7 @@ describe('TMDB Talk-show filtering', () => {
     const requestUrl = new URL(String(fetchMock.mock.calls[0][0]));
     expect(requestUrl.pathname).toBe('/3/tv/1399');
     expect(requestUrl.searchParams.get('append_to_response')).toContain('content_ratings');
+    expect(requestUrl.searchParams.get('append_to_response')).toContain('images');
   });
 
   it('uses the selected region for movie searches', async () => {
@@ -912,6 +913,11 @@ describe('TMDB Talk-show filtering', () => {
       first_air_date: '',
       vote_count: 0,
       production_companies: [{ id: 5, name: 'Studio', logo_path: '/studio.png', origin_country: 'US' }],
+      images: {
+        backdrops: [{ file_path: '/backdrop.jpg', aspect_ratio: 1.78, height: 1080, width: 1920 }],
+        posters: [{ file_path: '/poster.jpg', aspect_ratio: 0.67, height: 1500, width: 1000 }],
+        logos: [{ file_path: '/logo.png', aspect_ratio: 2, height: 500, width: 1000 }],
+      },
       'watch/providers': {
         results: {
           US: {
@@ -933,6 +939,11 @@ describe('TMDB Talk-show filtering', () => {
 
     await expect(tmdbService.getTVShowDetails(10)).resolves.toMatchObject({
       production_companies: [{ id: 5, name: 'Studio' }],
+      images: {
+        backdrops: [{ file_path: '/backdrop.jpg' }],
+        posters: [{ file_path: '/poster.jpg' }],
+        logos: [{ file_path: '/logo.png' }],
+      },
       'watch/providers': {
         results: { US: { flatrate: [{ provider_id: 8, provider_name: 'Stream' }] } },
       },

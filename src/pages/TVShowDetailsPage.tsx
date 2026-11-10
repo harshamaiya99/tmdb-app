@@ -1,7 +1,7 @@
 // src/pages/TVShowDetailsPage.tsx
 import { useEffect, useRef, useState } from 'react';
 import { useParams, useNavigate, Link, useSearchParams } from 'react-router-dom';
-import { Calendar, Clock, Star, PlayCircle, X, Users } from 'lucide-react';
+import { ArrowLeft, ArrowRight, Calendar, Clock, Star, PlayCircle, X, Users } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Skeleton } from '@/components/ui/skeleton';
@@ -78,8 +78,12 @@ export function TVShowDetailsPage() {
   const [activeCredits, setActiveCredits] = useState<'cast' | 'crew'>('cast');
   const [activeEpisodeCredits, setActiveEpisodeCredits] = useState<'guest_stars' | 'crew'>('guest_stars');
   const [activeEpisodeMedia, setActiveEpisodeMedia] = useState<'images' | 'videos'>('images');
+  const [activeShowMedia, setActiveShowMedia] = useState<'images' | 'videos'>('images');
   const [selectedEpisode, setSelectedEpisode] = useState<{ episode: Episode } | null>(null);
+  const [selectedShowImageIndex, setSelectedShowImageIndex] = useState<number | null>(null);
   const episodeDialogCloseRef = useRef<HTMLButtonElement>(null);
+  const showImageDialogRef = useRef<HTMLDivElement>(null);
+  const showImageTriggerRef = useRef<HTMLButtonElement | null>(null);
 
   const navigate = useNavigate();
   const tvShowQuery = useCachedQuery<TVShow>(
@@ -115,6 +119,11 @@ export function TVShowDetailsPage() {
   );
   const episodeImages = episodeDetails?.images?.stills ?? [];
   const episodeVideos = episodeDetails?.videos?.results ?? [];
+  const showImages = [
+    ...(tvShow?.images?.backdrops ?? []).map((image) => ({ ...image, type: 'backdrop' as const })),
+    ...(tvShow?.images?.posters ?? []).map((image) => ({ ...image, type: 'poster' as const })),
+    ...(tvShow?.images?.logos ?? []).map((image) => ({ ...image, type: 'logo' as const })),
+  ].filter((image) => image.file_path);
   const episodes = seasonQuery.data?.episodes ?? [];
   const seasonCast = seasonQuery.data?.credits?.cast ?? null;
   const seasonCrew = seasonQuery.data?.credits?.crew ?? null;
@@ -140,6 +149,35 @@ export function TVShowDetailsPage() {
     setActiveEpisodeCredits(episodeGuestStars.length > 0 ? 'guest_stars' : 'crew');
     setActiveEpisodeMedia(episodeImages.length > 0 ? 'images' : 'videos');
   }, [episodeDetails, episodeGuestStars.length, episodeImages.length]);
+
+  useEffect(() => {
+    setActiveShowMedia(showImages.length > 0 ? 'images' : 'videos');
+  }, [tvShow?.id, showImages.length, tvShow?.videos?.results.length]);
+
+  useEffect(() => {
+    if (selectedShowImageIndex !== null) {
+      showImageDialogRef.current?.focus();
+    } else {
+      showImageTriggerRef.current?.focus();
+    }
+  }, [selectedShowImageIndex]);
+
+  useEffect(() => {
+    if (selectedShowImageIndex === null) return;
+
+    const handleKeyDown = (event: KeyboardEvent) => {
+      if (event.key === 'ArrowRight') {
+        setSelectedShowImageIndex((index) => index === null ? null : (index + 1) % showImages.length);
+      } else if (event.key === 'ArrowLeft') {
+        setSelectedShowImageIndex((index) => index === null ? null : (index - 1 + showImages.length) % showImages.length);
+      } else if (event.key === 'Escape') {
+        setSelectedShowImageIndex(null);
+      }
+    };
+
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [selectedShowImageIndex, showImages.length]);
 
   useEffect(() => {
     if (!selectedEpisode) return;
@@ -574,6 +612,118 @@ export function TVShowDetailsPage() {
             />
           </LazySection>
         )}
+
+        {(showImages.length > 0 || (tvShow.videos?.results.length ?? 0) > 0) && (
+          <LazySection>
+            <section aria-labelledby="tv-media-title" className="mt-12 border-t pt-8">
+              <div className="mb-6 flex flex-wrap items-center justify-between gap-3">
+                <h2 id="tv-media-title" className="text-2xl font-semibold">Media</h2>
+                <div className="flex rounded-md border p-1" role="group" aria-label="TV show media">
+                  <Button
+                    type="button"
+                    variant={activeShowMedia === 'images' ? 'selected' : 'ghost'}
+                    size="sm"
+                    disabled={showImages.length === 0}
+                    onClick={() => setActiveShowMedia('images')}
+                  >
+                    Images ({showImages.length})
+                  </Button>
+                  <Button
+                    type="button"
+                    variant={activeShowMedia === 'videos' ? 'selected' : 'ghost'}
+                    size="sm"
+                    disabled={!tvShow.videos?.results.length}
+                    onClick={() => setActiveShowMedia('videos')}
+                  >
+                    Videos ({tvShow.videos?.results.length ?? 0})
+                  </Button>
+                </div>
+              </div>
+
+              {activeShowMedia === 'images' && showImages.length > 0 && (
+                <div className="flex items-start gap-3 overflow-x-auto pb-2">
+                  {showImages.map((image, index) => (
+                    <button
+                      type="button"
+                      key={`${image.file_path}:${image.type}:${index}`}
+                      onClick={() => {
+                        showImageTriggerRef.current = document.activeElement instanceof HTMLButtonElement
+                          ? document.activeElement
+                          : null;
+                        setSelectedShowImageIndex(index);
+                      }}
+                      aria-label={`View TV show ${image.type} ${index + 1}`}
+                      className="block h-32 shrink-0 overflow-hidden rounded-lg border bg-muted p-0"
+                      style={{ width: `${image.aspect_ratio * 8}rem` }}
+                    >
+                      <TMDBImage
+                        path={image.file_path}
+                        alt={`${tvShow.name} ${image.type} ${index + 1}`}
+                        width={image.width}
+                        height={image.height}
+                        sizes={`${Math.ceil(image.aspect_ratio * 128)}px`}
+                        className="block h-full w-full object-contain transition-transform hover:scale-105"
+                      />
+                    </button>
+                  ))}
+                </div>
+              )}
+
+              {activeShowMedia === 'videos' && tvShow.videos?.results.length ? (
+                <div className="flex gap-3 overflow-x-auto pb-2">
+                  {tvShow.videos.results.map((video) => {
+                    const videoUrl = video.site === 'YouTube'
+                      ? `https://www.youtube.com/watch?v=${encodeURIComponent(video.key)}`
+                      : null;
+                    const videoCard = (
+                      <div className="relative h-32 overflow-hidden bg-gradient-to-br from-muted via-muted/70 to-primary/20">
+                        {video.site === 'YouTube' && (
+                          <img
+                            src={`https://img.youtube.com/vi/${encodeURIComponent(video.key)}/hqdefault.jpg`}
+                            alt=""
+                            loading="lazy"
+                            className="absolute inset-0 h-full w-full object-cover transition-transform duration-300 group-hover:scale-105"
+                            onError={(event) => {
+                              event.currentTarget.style.display = 'none';
+                            }}
+                          />
+                        )}
+                        <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-black/10 to-transparent" />
+                        <span className="absolute left-2 top-2 rounded bg-black/65 px-2 py-1 text-[11px] font-medium text-white backdrop-blur-sm">
+                          {video.type}
+                        </span>
+                        <span className="absolute right-2 top-2 rounded bg-black/65 px-2 py-1 text-[11px] font-medium text-white backdrop-blur-sm">
+                          {video.site}
+                        </span>
+                        <div className="absolute inset-x-0 bottom-0 bg-gradient-to-t from-black/90 via-black/60 to-transparent px-3 pb-2 pt-8">
+                          <p className="truncate text-sm font-medium leading-5 text-white group-hover:overflow-visible group-hover:whitespace-normal group-hover:text-clip group-focus-within:overflow-visible group-focus-within:whitespace-normal group-focus-within:text-clip">
+                            {video.name}
+                          </p>
+                        </div>
+                      </div>
+                    );
+
+                    return videoUrl ? (
+                      <a
+                        key={video.id}
+                        href={videoUrl}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="group w-56 shrink-0 overflow-hidden rounded-xl border bg-card text-card-foreground shadow-sm transition-all hover:-translate-y-0.5 hover:border-primary/50 hover:shadow-md focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+                      >
+                        {videoCard}
+                      </a>
+                    ) : (
+                      <div key={video.id} className="group w-56 shrink-0 overflow-hidden rounded-xl border bg-card text-card-foreground shadow-sm">
+                        {videoCard}
+                      </div>
+                    );
+                  })}
+                </div>
+              ) : null}
+            </section>
+          </LazySection>
+        )}
         
         {similarShows.length > 0 && (
           <LazySection>
@@ -588,6 +738,77 @@ export function TVShowDetailsPage() {
           </LazySection>
         )}
       </div>
+      {selectedShowImageIndex !== null && showImages[selectedShowImageIndex] && (
+        <div
+          className="fixed inset-0 z-[60] flex items-center justify-center bg-black/95 px-3 py-4 backdrop-blur-sm sm:px-6"
+          onClick={() => setSelectedShowImageIndex(null)}
+          role="presentation"
+        >
+          <div
+            ref={showImageDialogRef}
+            className="relative flex w-full max-w-7xl flex-col rounded-2xl p-2 outline-none"
+            role="dialog"
+            aria-modal="true"
+            aria-labelledby="tv-gallery-dialog-title"
+            tabIndex={-1}
+            onClick={(event) => event.stopPropagation()}
+          >
+            <div className="mb-3 flex items-center justify-between">
+              <p id="tv-gallery-dialog-title" className="text-sm font-medium text-white/70">
+                {`Image ${selectedShowImageIndex + 1} / ${showImages.length}`}
+              </p>
+              <Button
+                type="button"
+                variant="ghost"
+                size="icon"
+                onClick={() => setSelectedShowImageIndex(null)}
+                aria-label="Close image viewer"
+                title="Close image viewer"
+                className="rounded-full border border-white/10 bg-black/50 text-white shadow-lg backdrop-blur-md hover:bg-white/10"
+              >
+                <X className="h-5 w-5" />
+              </Button>
+            </div>
+            <div className="flex items-center justify-between gap-2 sm:gap-4">
+              <Button
+                type="button"
+                variant="outline"
+                size="icon"
+                onClick={() => setSelectedShowImageIndex((index) => index === null
+                  ? null
+                  : (index === 0 ? showImages.length - 1 : index - 1))}
+                aria-label="Previous TV show image"
+                title="Previous TV show image"
+                className="h-10 w-10 shrink-0 rounded-full border-white/20 bg-black/50 text-white hover:bg-white/10 hover:text-white"
+              >
+                <ArrowLeft className="h-5 w-5" />
+              </Button>
+              <TMDBImage
+                path={showImages[selectedShowImageIndex].file_path}
+                alt={`${tvShow.name} ${showImages[selectedShowImageIndex].type} ${selectedShowImageIndex + 1}`}
+                width={showImages[selectedShowImageIndex].width}
+                height={showImages[selectedShowImageIndex].height}
+                sizes="min(90vw, 1200px)"
+                loading="eager"
+                className="max-h-[85vh] w-full rounded-xl object-contain shadow-2xl"
+              />
+              <Button
+                type="button"
+                variant="outline"
+                size="icon"
+                onClick={() => setSelectedShowImageIndex((index) => index === null
+                  ? null
+                  : (index + 1) % showImages.length)}
+                aria-label="Next TV show image"
+                title="Next TV show image"
+                className="h-10 w-10 shrink-0 rounded-full border-white/20 bg-black/50 text-white hover:bg-white/10 hover:text-white"
+              >
+                <ArrowRight className="h-5 w-5" />
+              </Button>
+            </div>
+          </div>
+        </div>
+      )}
       {selectedEpisode && (
         <div
           className="fixed inset-0 z-[100] flex items-center justify-center bg-black/70 p-4 backdrop-blur-sm"

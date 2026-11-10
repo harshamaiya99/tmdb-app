@@ -147,6 +147,7 @@ On the main Movies and TV Shows pages, keep the category selector grouped on the
 Person credit list pages keep a Movies/TV Shows toggle on the left and Filters on the right; switching media types resets pagination. Genre and original-language filters apply to the person's credits, and sort choices order credits within the Known For cast/crew priority groups.
 
 TV show details distinguish the series overview from the selected season overview and individual episode overviews. The selected season summary is shown with its episode list.
+TV show detail pages include a lazy-loaded Media section with show backdrops, posters, logos, and videos. Images open in a viewer that supports keyboard navigation, matching the movie media experience.
 
 Episode cards open an in-app details dialog with a compact still, rating and vote count, air date, runtime, production code, director credit above the overview, and overview text. Guest stars and remaining crew share a toggle, and episode images and videos share a separate toggle; show each group only when TMDB returns content. Keep episode cards at a stable size on hover and focus; the watch action stays visible in a pinned dialog footer and uses the configured TV embed URL templates.
 
