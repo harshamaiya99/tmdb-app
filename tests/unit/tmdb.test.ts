@@ -1,5 +1,13 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
-import { filterPersonCredits, sortPersonCredits, tmdbService, type PersonCredit } from '@/lib/tmdb';
+import {
+  filterPersonCredits,
+  interleaveAccountMedia,
+  sortPersonCredits,
+  tmdbService,
+  type Movie,
+  type PersonCredit,
+  type TVShow,
+} from '@/lib/tmdb';
 
 function responseWith(payload: unknown): Response {
   return new Response(JSON.stringify(payload), {
@@ -28,6 +36,29 @@ describe('TMDB Talk-show filtering', () => {
     const requestUrl = new URL(String(fetchMock.mock.calls[0][0]));
     expect(requestUrl.pathname).toBe('/3/configuration');
     expect(requestUrl.searchParams.get('api_key')).toBe('test-api-key');
+  });
+
+  it('interleaves separately newest-first account media results', () => {
+    const movies = [
+      { id: 1, title: 'Movie 1', poster_path: null, backdrop_path: null, overview: '', release_date: '', vote_count: 0 },
+      { id: 2, title: 'Movie 2', poster_path: null, backdrop_path: null, overview: '', release_date: '', vote_count: 0 },
+      { id: 3, title: 'Movie 3', poster_path: null, backdrop_path: null, overview: '', release_date: '', vote_count: 0 },
+    ] satisfies Movie[];
+    const shows = [
+      { id: 10, name: 'Show 1', poster_path: null, backdrop_path: null, overview: '', first_air_date: '', vote_count: 0 },
+      { id: 20, name: 'Show 2', poster_path: null, backdrop_path: null, overview: '', first_air_date: '', vote_count: 0 },
+    ] satisfies TVShow[];
+
+    expect(interleaveAccountMedia(movies, shows).map(({ item, mediaType }) => [
+      item.id,
+      mediaType,
+    ])).toEqual([
+      [1, 'movie'],
+      [10, 'tv'],
+      [2, 'movie'],
+      [20, 'tv'],
+      [3, 'movie'],
+    ]);
   });
 
   it('loads country choices from TMDB configuration', async () => {
@@ -663,6 +694,7 @@ describe('TMDB Talk-show filtering', () => {
       fetchMock
         .mockResolvedValueOnce(responseWith({
           id: 73,
+          public: true,
           total_results: 3,
           results: [
             { id: 1, media_type: 'movie', poster_path: '/movie.jpg' },
@@ -673,6 +705,7 @@ describe('TMDB Talk-show filtering', () => {
         }))
         .mockResolvedValueOnce(responseWith({
           id: 74,
+          public: false,
           total_results: 0,
           results: [],
         }));
@@ -683,13 +716,14 @@ describe('TMDB Talk-show filtering', () => {
       )).resolves.toEqual({
         73: {
           count: 3,
+          isPublic: true,
           items: [
             { id: 1, media_type: 'movie', poster_path: '/movie.jpg' },
             { id: 2, media_type: 'tv', poster_path: '/show.jpg' },
             { id: 3, media_type: 'movie', poster_path: '/third.jpg' },
           ],
         },
-        74: { count: 0, items: [] },
+        74: { count: 0, isPublic: false, items: [] },
       });
 
       const requestUrls = fetchMock.mock.calls.map(([url]) => new URL(String(url)));
@@ -783,7 +817,8 @@ describe('TMDB Talk-show filtering', () => {
           success: true,
           results: [{ media_type: 'tv', media_id: 1399, success: true }],
         }))
-        .mockResolvedValueOnce(responseWith({ status_code: 13, status_message: 'The item/record was deleted successfully.' }));
+        .mockResolvedValueOnce(responseWith({ status_code: 13, status_message: 'The item/record was deleted successfully.' }))
+        .mockResolvedValueOnce(responseWith({ success: true }));
 
       await tmdbService.getAccountLists('account-object-id', 1, 'user-access-token');
       await tmdbService.createUserList('Favorites', 'A private list', false, 'user-access-token', 'IN');
@@ -791,6 +826,7 @@ describe('TMDB Talk-show filtering', () => {
       await tmdbService.addMediaToUserList(73, 'tv', 1399, 'user-access-token');
       await tmdbService.removeMediaFromUserList(73, 'tv', 1399, 'user-access-token');
       await tmdbService.deleteUserList(73, 'user-access-token');
+      await tmdbService.updateUserList(73, 'Updated list', 'New description', true, 'user-access-token', 'fr');
 
       const listUrl = new URL(String(fetchMock.mock.calls[0][0]));
       expect(listUrl.pathname).toBe('/4/account/account-object-id/lists');
@@ -819,8 +855,16 @@ describe('TMDB Talk-show filtering', () => {
       expect(JSON.parse(String(fetchMock.mock.calls[4][1]?.body))).toEqual({
         items: [{ media_type: 'tv', media_id: 1399 }],
       });
-      expect(new URL(String(fetchMock.mock.calls[5][0])).pathname).toBe('/4/73');
+      expect(new URL(String(fetchMock.mock.calls[5][0])).pathname).toBe('/4/list/73');
       expect(fetchMock.mock.calls[5][1]?.method).toBe('DELETE');
+      expect(new URL(String(fetchMock.mock.calls[6][0])).pathname).toBe('/4/list/73');
+      expect(fetchMock.mock.calls[6][1]?.method).toBe('PUT');
+      expect(JSON.parse(String(fetchMock.mock.calls[6][1]?.body))).toEqual({
+        name: 'Updated list',
+        description: 'New description',
+        iso_639_1: 'fr',
+        public: true,
+      });
     });
 
     it('loads custom list details with mixed movie and TV results', async () => {

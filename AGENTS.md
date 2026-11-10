@@ -232,6 +232,7 @@ The AI should behave like a senior software engineer performing design review be
 - For every UI change or new feature, consider the smartphone experience from the start and verify narrow-screen behavior (including layout, navigation, touch targets, and horizontal overflow) alongside desktop behavior.
 - If the change touches structure, data fetching, or UI patterns, consult the relevant document in [.ai](.ai) first.
 - Any page with a Filters button must have functional, composable filter behavior connected to its results, reset pagination when filters change, and provide a clearly visible text-labeled Clear filters action that restores defaults without changing the current page/category. Add tests for filter behavior and clearing.
+- Never use native browser dialogs (`window.alert`, `window.confirm`, or `window.prompt`); use an in-app modal/dialog that follows the existing accessible dialog patterns.
 - Verify the project still builds after meaningful changes.
 
 ## Documentation Maintenance Workflow

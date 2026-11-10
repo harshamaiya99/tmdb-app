@@ -1,9 +1,10 @@
-import { useState } from 'react';
+import { useEffect, useRef, useState, type FormEvent, type KeyboardEvent } from 'react';
 import { Link, useNavigate, useParams } from 'react-router-dom';
-import { ListPlus, Trash2 } from 'lucide-react';
+import { ListPlus, Pencil, Trash2 } from 'lucide-react';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
+import { Badge } from '@/components/ui/badge';
 import { MediaCard } from '@/components/MediaCard';
 import { MediaCategoryToggle, MEDIA_TYPE_OPTIONS } from '@/components/MediaCategoryToggle';
 import { MediaGridSkeleton } from '@/components/MediaGridSkeleton';
@@ -15,6 +16,7 @@ import { clearRequestCache } from '@/lib/requestCache';
 import { tmdbService, type TMDBUserListItem } from '@/lib/tmdb';
 import { useToast } from '@/components/ui/use-toast';
 import { TMDBImage } from '@/components/TMDBImage';
+import { Input } from '@/components/ui/input';
 
 const USER_LIST_PAGE_SIZE = 20;
 
@@ -42,6 +44,13 @@ export function AccountListsPage() {
   const [revision, setRevision] = useState(0);
   const [pendingMediaKey, setPendingMediaKey] = useState<string | null>(null);
   const [isDeleting, setIsDeleting] = useState(false);
+  const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
+  const deleteCancelButtonRef = useRef<HTMLButtonElement>(null);
+  const [isEditing, setIsEditing] = useState(false);
+  const [isSavingEdit, setIsSavingEdit] = useState(false);
+  const [editName, setEditName] = useState('');
+  const [editDescription, setEditDescription] = useState('');
+  const [editIsPublic, setEditIsPublic] = useState(false);
   const selectedMediaType = searchParams.get('type');
   const mediaType = selectedMediaType === 'movie' || selectedMediaType === 'tv' ? selectedMediaType : 'all';
 
@@ -104,12 +113,13 @@ export function AccountListsPage() {
   };
 
   const handleDeleteList = async () => {
-    if (!listId || !window.confirm(`Delete "${list?.name ?? 'this list'}"? This cannot be undone.`)) return;
+    if (!listId) return;
     setIsDeleting(true);
     try {
       await tmdbService.deleteUserList(listId, listAccessToken);
       clearRequestCache('account:');
       toast({ title: 'List deleted' });
+      setIsDeleteDialogOpen(false);
       navigate('/account/lists');
     } catch (error) {
       toast({
@@ -119,6 +129,52 @@ export function AccountListsPage() {
       });
     } finally {
       setIsDeleting(false);
+    }
+  };
+
+  useEffect(() => {
+    if (isDeleteDialogOpen) deleteCancelButtonRef.current?.focus();
+  }, [isDeleteDialogOpen]);
+
+  const handleDeleteDialogKeyDown = (event: KeyboardEvent<HTMLDivElement>) => {
+    if (event.key === 'Escape' && !isDeleting) setIsDeleteDialogOpen(false);
+  };
+
+  const startEditingList = () => {
+    if (!list) return;
+    setEditName(list.name);
+    setEditDescription(list.description ?? '');
+    setEditIsPublic(list.public ?? false);
+    setIsEditing(true);
+  };
+
+  const handleUpdateList = async (event: FormEvent<HTMLFormElement>) => {
+    event.preventDefault();
+    if (!listId || !list) return;
+    const name = editName.trim();
+    if (!name) return;
+    setIsSavingEdit(true);
+    try {
+      await tmdbService.updateUserList(
+        listId,
+        name,
+        editDescription.trim(),
+        editIsPublic,
+        listAccessToken,
+        list.iso_639_1 || 'en',
+      );
+      clearRequestCache('account:');
+      setRevision((value) => value + 1);
+      setIsEditing(false);
+      toast({ title: 'List updated' });
+    } catch (error) {
+      toast({
+        title: 'Could not update list',
+        description: error instanceof Error ? error.message : 'Please try again.',
+        variant: 'destructive',
+      });
+    } finally {
+      setIsSavingEdit(false);
     }
   };
 
@@ -177,11 +233,20 @@ export function AccountListsPage() {
               <Link to="/account/lists" className="text-muted-foreground hover:text-foreground">Your Lists</Link>
               <span aria-hidden="true" className="text-muted-foreground">&gt;</span>
               <span>{list?.name ?? 'List'}</span>
+              {typeof list?.public === 'boolean' && (
+                <Badge variant="outline" className="text-xs font-normal">
+                  {list.public ? 'Public' : 'Private'}
+                </Badge>
+              )}
             </h1>
             {list?.description && <p className="mt-2 max-w-2xl text-sm text-muted-foreground">{list.description}</p>}
           </div>
           <div className="flex flex-wrap items-center gap-2">
-            <Button type="button" variant="destructive" className="gap-2" disabled={isDeleting} onClick={() => void handleDeleteList()}>
+            <Button type="button" variant="outline" className="gap-2" disabled={!list} onClick={startEditingList}>
+              <Pencil aria-hidden="true" className="h-4 w-4" />
+              Edit list
+            </Button>
+            <Button type="button" variant="destructive" className="gap-2" onClick={() => setIsDeleteDialogOpen(true)}>
               <Trash2 aria-hidden="true" className="h-4 w-4" />
               Delete list
             </Button>
@@ -201,6 +266,89 @@ export function AccountListsPage() {
             </Button>
           ))}
         </nav>
+
+        {isEditing && (
+          <form onSubmit={(event) => void handleUpdateList(event)} className="max-w-xl space-y-3 rounded-lg border p-4">
+            <h2 className="font-semibold">Edit list details</h2>
+            <label className="sr-only" htmlFor={`edit-list-name-${listId}`}>List name</label>
+            <Input
+              id={`edit-list-name-${listId}`}
+              value={editName}
+              maxLength={100}
+              required
+              placeholder="List name"
+              onChange={(event) => setEditName(event.currentTarget.value)}
+            />
+            <label className="sr-only" htmlFor={`edit-list-description-${listId}`}>Description</label>
+            <textarea
+              id={`edit-list-description-${listId}`}
+              value={editDescription}
+              maxLength={500}
+              rows={3}
+              placeholder="Description (optional)"
+              className="w-full rounded-md border border-input bg-background px-3 py-2 text-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+              onChange={(event) => setEditDescription(event.currentTarget.value)}
+            />
+            <label className="flex items-center gap-2 text-sm">
+              <input
+                type="checkbox"
+                checked={editIsPublic}
+                onChange={(event) => setEditIsPublic(event.currentTarget.checked)}
+              />
+              Make this list public
+            </label>
+            <div className="flex justify-end gap-2">
+              <Button type="button" variant="ghost" disabled={isSavingEdit} onClick={() => setIsEditing(false)}>
+                Cancel
+              </Button>
+              <Button type="submit" disabled={isSavingEdit || !editName.trim()}>
+                {isSavingEdit ? 'Saving…' : 'Save changes'}
+              </Button>
+            </div>
+          </form>
+        )}
+
+        {isDeleteDialogOpen && (
+          <div
+            className="fixed inset-0 z-[100] flex items-center justify-center bg-black/60 p-4"
+            onClick={(event) => {
+              if (event.target === event.currentTarget && !isDeleting) setIsDeleteDialogOpen(false);
+            }}
+            onKeyDown={handleDeleteDialogKeyDown}
+          >
+            <section
+              role="alertdialog"
+              aria-modal="true"
+              aria-labelledby="delete-list-title"
+              aria-describedby="delete-list-description"
+              className="w-full max-w-md rounded-xl border bg-background p-5 shadow-xl sm:p-6"
+            >
+              <h2 id="delete-list-title" className="text-lg font-semibold">Delete list?</h2>
+              <p id="delete-list-description" className="mt-2 text-sm text-muted-foreground">
+                Delete “{list?.name ?? 'this list'}”? This cannot be undone.
+              </p>
+              <div className="mt-6 flex justify-end gap-2">
+                <Button
+                  ref={deleteCancelButtonRef}
+                  type="button"
+                  variant="outline"
+                  disabled={isDeleting}
+                  onClick={() => setIsDeleteDialogOpen(false)}
+                >
+                  Cancel
+                </Button>
+                <Button
+                  type="button"
+                  variant="destructive"
+                  disabled={isDeleting}
+                  onClick={() => void handleDeleteList()}
+                >
+                  {isDeleting ? 'Deleting…' : 'Delete list'}
+                </Button>
+              </div>
+            </section>
+          </div>
+        )}
 
         {loading ? (
           <MediaGridSkeleton />
@@ -281,7 +429,14 @@ export function AccountListsPage() {
                 <Card className="h-full overflow-hidden transition-colors hover:bg-accent/50">
                   <CardContent className="flex min-h-32 items-center justify-between gap-3 p-4">
                     <div className="min-w-0 flex-1 space-y-2">
-                      <h2 className="line-clamp-2 font-semibold">{userList.name}</h2>
+                      <div className="flex flex-wrap items-center gap-2">
+                        <h2 className="line-clamp-2 font-semibold">{userList.name}</h2>
+                        {typeof preview?.isPublic === 'boolean' && (
+                          <Badge variant="outline" className="shrink-0">
+                            {preview.isPublic ? 'Public' : 'Private'}
+                          </Badge>
+                        )}
+                      </div>
                       {userList.description && <p className="line-clamp-2 text-sm text-muted-foreground">{userList.description}</p>}
                       <p className="text-xs text-muted-foreground">
                         {preview === undefined

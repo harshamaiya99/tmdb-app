@@ -113,6 +113,8 @@ When making changes:
 
 Treat a Filters button as a behavior contract: every control must update the query or local result set, and the active selections must match the results shown. Combine filters so they work together, preserve the page's category constraints, and reset pagination after a filter change. Include a clearly visible text-labeled **Clear filters** action that resets filters to their defaults while retaining the current page/category. Add focused tests for the applied constraints and clearing behavior; for paginated lists, verify the page resets as well.
 
+Use the app's in-page accessible dialog patterns for confirmation, alert, or prompt interactions. Do not call native browser dialog APIs (`window.confirm`, `window.alert`, or `window.prompt`).
+
 ### Before implementing a change
 
 Before writing code, take a short design-review pass:

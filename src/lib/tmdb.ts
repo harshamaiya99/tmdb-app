@@ -478,6 +478,24 @@ export interface TMDBAccount {
 
 export type TMDBAccountSection = 'watchlist' | 'favorites' | 'ratings';
 export type TMDBAccountMedia = (Movie | TVShow) & { rating?: number };
+export type TMDBAccountMediaEntry = {
+  item: TMDBAccountMedia;
+  mediaType: 'movie' | 'tv';
+};
+
+export function interleaveAccountMedia(
+  movies: TMDBAccountMedia[],
+  tvShows: TMDBAccountMedia[],
+): TMDBAccountMediaEntry[] {
+  const entries: TMDBAccountMediaEntry[] = [];
+  const itemCount = Math.max(movies.length, tvShows.length);
+  for (let index = 0; index < itemCount; index += 1) {
+    if (movies[index]) entries.push({ item: movies[index], mediaType: 'movie' });
+    if (tvShows[index]) entries.push({ item: tvShows[index], mediaType: 'tv' });
+  }
+  return entries;
+}
+
 export interface TMDBUserList {
   id: number;
   name: string;
@@ -486,6 +504,7 @@ export interface TMDBUserList {
   favorite_count: number;
   poster_path: string | null;
   iso_639_1: string;
+  public?: boolean;
   total_results?: number;
 }
 
@@ -1035,8 +1054,8 @@ class TMDBService {
     lists: Array<Pick<TMDBUserList, 'id'>>,
     accessToken: string,
     signal?: AbortSignal,
-  ): Promise<Record<number, { count: number; items: TMDBUserListItem[] }>> {
-    const previews: Record<number, { count: number; items: TMDBUserListItem[] }> = {};
+  ): Promise<Record<number, { count: number; items: TMDBUserListItem[]; isPublic?: boolean }>> {
+    const previews: Record<number, { count: number; items: TMDBUserListItem[]; isPublic?: boolean }> = {};
 
     for (let index = 0; index < lists.length; index += 5) {
       const batch = lists.slice(index, index + 5);
@@ -1045,6 +1064,7 @@ class TMDBService {
         return [id, {
           count: details.total_results ?? details.results.length,
           items: details.results.slice(0, 3),
+          ...(typeof details.public === 'boolean' ? { isPublic: details.public } : {}),
         }] as const;
       }));
       batchPreviews.forEach(([id, preview]) => {
@@ -1198,7 +1218,29 @@ class TMDBService {
   }
 
   async deleteUserList(listId: number, accessToken: string): Promise<void> {
-    await this.fetchFromTMDB(`/${listId}`, { apiVersion: '4', method: 'DELETE', accessToken });
+    await this.fetchFromTMDB(`/list/${listId}`, { apiVersion: '4', method: 'DELETE', accessToken });
+  }
+
+  async updateUserList(
+    listId: number,
+    name: string,
+    description: string,
+    isPublic: boolean,
+    accessToken: string,
+    language = 'en',
+  ): Promise<void> {
+    const response = await this.fetchFromTMDB<{ success: boolean; status_message?: string }>(
+      `/list/${listId}`,
+      {
+        apiVersion: '4',
+        method: 'PUT',
+        accessToken,
+        body: { name, description, iso_639_1: language, public: isPublic },
+      },
+    );
+    if (!response.success) {
+      throw new TMDBError(response.status_message ?? 'TMDB could not update this list.', 'API_ERROR');
+    }
   }
 
   async getMediaAccountState(

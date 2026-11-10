@@ -11,7 +11,7 @@ import { useTMDBAccount } from '@/contexts/TMDBAccountContext';
 import { useCachedQuery } from '@/hooks/useCachedQuery';
 import { usePageTitle } from '@/hooks/usePageTitle';
 import { usePagination } from '@/hooks/usePagination';
-import { tmdbService, type TMDBAccountSection, type TMDBAccountMedia } from '@/lib/tmdb';
+import { interleaveAccountMedia, tmdbService, type TMDBAccountSection, type TMDBAccountMedia } from '@/lib/tmdb';
 import { useToast } from '@/components/ui/use-toast';
 
 const accountSections: { id: TMDBAccountSection; label: string }[] = [
@@ -35,32 +35,38 @@ export function AccountPage() {
   const [pendingMediaKey, setPendingMediaKey] = useState<string | null>(null);
   const selectedMediaType = searchParams.get('type');
   const mediaType = selectedMediaType === 'movie' || selectedMediaType === 'tv' ? selectedMediaType : 'all';
+  const allItemsOffset = (page - 1) * 10;
+  const apiPage = mediaType === 'all' ? Math.floor(allItemsOffset / 20) + 1 : page;
   const pageTitle = section === 'watchlist' ? 'Your Watchlist' : section === 'favorites' ? 'Your Favorites' : 'Your Ratings';
   usePageTitle(pageTitle);
 
   const movieQuery = useCachedQuery(
-    `account:${account?.id ?? 'none'}:${section}:movie:${page}:${revision}`,
-    (signal) => tmdbService.getAccountList(account?.id ?? 0, section, 'movie', page, sessionId, signal),
+    `account:${account?.id ?? 'none'}:${section}:movie:${apiPage}:${revision}`,
+    (signal) => tmdbService.getAccountList(account?.id ?? 0, section, 'movie', apiPage, sessionId, signal),
     { enabled: isConnected && Boolean(account) && mediaType !== 'tv' },
   );
   const tvQuery = useCachedQuery(
-    `account:${account?.id ?? 'none'}:${section}:tv:${page}:${revision}`,
-    (signal) => tmdbService.getAccountList(account?.id ?? 0, section, 'tv', page, sessionId, signal),
+    `account:${account?.id ?? 'none'}:${section}:tv:${apiPage}:${revision}`,
+    (signal) => tmdbService.getAccountList(account?.id ?? 0, section, 'tv', apiPage, sessionId, signal),
     { enabled: isConnected && Boolean(account) && mediaType !== 'movie' },
   );
   const loading = movieQuery.loading || tvQuery.loading;
   const error = movieQuery.error ?? tvQuery.error;
-  const items = [
-    ...(mediaType !== 'tv' ? (movieQuery.data?.results ?? []).map((item) => ({ item, mediaType: 'movie' as const })) : []),
-    ...(mediaType !== 'movie' ? (tvQuery.data?.results ?? []).map((item) => ({ item, mediaType: 'tv' as const })) : []),
-  ];
-  const totalPages = Math.min(
-    Math.max(
-      mediaType !== 'tv' ? movieQuery.data?.total_pages ?? 1 : 1,
-      mediaType !== 'movie' ? tvQuery.data?.total_pages ?? 1 : 1,
-    ),
-    500,
-  );
+  const movieItems = movieQuery.data?.results ?? [];
+  const tvItems = tvQuery.data?.results ?? [];
+  const items = mediaType === 'all'
+    ? interleaveAccountMedia(
+        movieItems.slice(allItemsOffset % 20, (allItemsOffset % 20) + 10),
+        tvItems.slice(allItemsOffset % 20, (allItemsOffset % 20) + 10),
+      )
+    : mediaType === 'movie'
+      ? movieItems.map((item) => ({ item, mediaType: 'movie' as const }))
+      : tvItems.map((item) => ({ item, mediaType: 'tv' as const }));
+  const totalPages = Math.min(mediaType === 'all'
+    ? Math.max(1, Math.ceil(((movieQuery.data?.total_results ?? 0) + (tvQuery.data?.total_results ?? 0)) / 20))
+    : mediaType === 'movie'
+      ? movieQuery.data?.total_pages ?? 1
+      : tvQuery.data?.total_pages ?? 1, 500);
 
   const handleMediaTypeChange = (nextType: 'all' | 'movie' | 'tv') => {
     const nextParams = new URLSearchParams(searchParams);
