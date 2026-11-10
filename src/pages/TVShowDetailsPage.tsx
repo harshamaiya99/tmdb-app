@@ -17,6 +17,7 @@ import { LazySection } from '@/components/LazySection';
 import { TMDBImage } from '@/components/TMDBImage';
 import { useEmbedSettings } from '@/contexts/EmbedSettingsContext';
 import { AccountMediaActions } from '@/components/AccountMediaActions';
+import { TVEpisodeRatingAction } from '@/components/TVEpisodeRatingAction';
 import { WatchLinkButton } from '@/components/WatchLinkButton';
 
 interface EpisodeCardProps {
@@ -874,6 +875,12 @@ export function TVShowDetailsPage() {
                       {episodeDetails?.vote_count ? ` (${episodeDetails.vote_count.toLocaleString()})` : ''}
                     </span>
                   )}
+                  <TVEpisodeRatingAction
+                    tvId={Number(id)}
+                    seasonNumber={selectedEpisode.episode.season_number}
+                    episodeNumber={selectedEpisode.episode.episode_number}
+                    episodeName={selectedEpisode.episode.name}
+                  />
                   {(episodeDetails?.air_date || selectedEpisode.episode.air_date) && (
                     <span className="inline-flex items-center gap-1">
                       <Calendar className="h-4 w-4" />

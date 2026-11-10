@@ -1306,6 +1306,47 @@ class TMDBService {
     });
   }
 
+  async getTVEpisodeAccountState(
+    tvId: number,
+    seasonNumber: number,
+    episodeNumber: number,
+    sessionId: string,
+    signal?: AbortSignal,
+  ): Promise<TMDBMediaAccountState> {
+    return this.fetchFromTMDB<TMDBMediaAccountState>(
+      `/tv/${tvId}/season/${seasonNumber}/episode/${episodeNumber}/account_states`,
+      { sessionId, signal },
+    );
+  }
+
+  async rateTVEpisode(
+    tvId: number,
+    seasonNumber: number,
+    episodeNumber: number,
+    rating: number,
+    sessionId: string,
+  ): Promise<void> {
+    if (!Number.isFinite(rating) || rating < 0.5 || rating > 10 || rating * 2 % 1 !== 0) {
+      throw new RangeError('TMDB ratings must be between 0.5 and 10 in half-point increments.');
+    }
+    await this.fetchFromTMDB(
+      `/tv/${tvId}/season/${seasonNumber}/episode/${episodeNumber}/rating`,
+      { method: 'POST', sessionId, body: { value: rating } },
+    );
+  }
+
+  async deleteTVEpisodeRating(
+    tvId: number,
+    seasonNumber: number,
+    episodeNumber: number,
+    sessionId: string,
+  ): Promise<void> {
+    await this.fetchFromTMDB(
+      `/tv/${tvId}/season/${seasonNumber}/episode/${episodeNumber}/rating`,
+      { method: 'DELETE', sessionId },
+    );
+  }
+
   async getPersonDetails(id: number, options?: TMDBRequestOptions): Promise<Person> {
     const person = await this.fetchFromTMDB<Person>(`/person/${id}?append_to_response=combined_credits,images,external_ids`, options);
     return {

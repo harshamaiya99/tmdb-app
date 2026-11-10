@@ -974,6 +974,45 @@ describe('TMDB Talk-show filtering', () => {
       expect(requestUrl.searchParams.get('session_id')).toBe('session-id');
     });
 
+    it('loads TV episode account state and adds or removes episode ratings', async () => {
+      const fetchMock = vi.mocked(fetch);
+      fetchMock
+        .mockResolvedValueOnce(responseWith({
+          id: 401,
+          favorite: false,
+          watchlist: false,
+          rated: { value: 8.5 },
+        }))
+        .mockResolvedValueOnce(responseWith({ status_code: 12, status_message: 'Updated' }))
+        .mockResolvedValueOnce(responseWith({ status_code: 13, status_message: 'Deleted' }));
+
+      await expect(tmdbService.getTVEpisodeAccountState(1399, 2, 3, 'session-id')).resolves.toEqual({
+        id: 401,
+        favorite: false,
+        watchlist: false,
+        rated: { value: 8.5 },
+      });
+      await tmdbService.rateTVEpisode(1399, 2, 3, 7.5, 'session-id');
+      await tmdbService.deleteTVEpisodeRating(1399, 2, 3, 'session-id');
+
+      const urls = fetchMock.mock.calls.map(([url]) => new URL(String(url)));
+      expect(urls.map(({ pathname }) => pathname)).toEqual([
+        '/3/tv/1399/season/2/episode/3/account_states',
+        '/3/tv/1399/season/2/episode/3/rating',
+        '/3/tv/1399/season/2/episode/3/rating',
+      ]);
+      expect(urls[0].searchParams.get('session_id')).toBe('session-id');
+      expect(fetchMock.mock.calls[1][1]?.method).toBe('POST');
+      expect(JSON.parse(String(fetchMock.mock.calls[1][1]?.body))).toEqual({ value: 7.5 });
+      expect(fetchMock.mock.calls[2][1]?.method).toBe('DELETE');
+    });
+
+    it('rejects invalid TV episode ratings before making a request', async () => {
+      const fetchMock = vi.mocked(fetch);
+      await expect(tmdbService.rateTVEpisode(1399, 2, 3, 7.25, 'session-id')).rejects.toThrow(RangeError);
+      expect(fetchMock).not.toHaveBeenCalled();
+    });
+
     it('sends favorite and rating changes through TMDB account endpoints', async () => {
       const fetchMock = vi.mocked(fetch);
       fetchMock
