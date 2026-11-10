@@ -62,6 +62,14 @@ export function MovieDetailsPage() {
   const hasRightColumn = Boolean(trailer || hasCollection);
 
   useEffect(() => {
+    if (!movie) return;
+
+    const castCount = movie.credits?.cast.length ?? 0;
+    const crewCount = movie.credits?.crew.length ?? 0;
+    setActiveCredits(castCount === 0 && crewCount > 0 ? 'crew' : 'cast');
+  }, [movie?.id, movie?.credits?.cast.length, movie?.credits?.crew.length]);
+
+  useEffect(() => {
     setActiveMovieMedia(movieImages.length > 0 ? 'images' : 'videos');
   }, [movie?.id, movieImages.length, movieVideos.length]);
 

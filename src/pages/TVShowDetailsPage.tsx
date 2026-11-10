@@ -142,8 +142,22 @@ export function TVShowDetailsPage() {
   }, [tvShow, searchParams, setSearchParams]);
 
   useEffect(() => {
-    setActiveCredits('cast');
-  }, [selectedSeason]);
+    if (selectedSeason > 0 && (seasonCast === null || seasonCrew === null)) return;
+
+    const castCount = selectedSeason > 0
+      ? seasonCast?.length ?? 0
+      : tvShow?.credits?.cast.length ?? 0;
+    const crewCount = selectedSeason > 0
+      ? seasonCrew?.length ?? 0
+      : tvShow?.credits?.crew.length ?? 0;
+    setActiveCredits(castCount === 0 && crewCount > 0 ? 'crew' : 'cast');
+  }, [
+    selectedSeason,
+    seasonCast,
+    seasonCrew,
+    tvShow?.credits?.cast.length,
+    tvShow?.credits?.crew.length,
+  ]);
 
   useEffect(() => {
     if (!episodeDetails) return;
