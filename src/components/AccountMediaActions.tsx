@@ -1,12 +1,14 @@
-import { useEffect, useRef, useState, type KeyboardEvent, type MouseEvent as ReactMouseEvent } from 'react';
+import { useEffect, useRef, useState, type KeyboardEvent } from 'react';
 import { Link } from 'react-router-dom';
 import { BookmarkCheck, BookmarkPlus, Heart, ListPlus, Star, UserRound, X } from 'lucide-react';
 import { AddToListButton } from '@/components/AddToListButton';
+import { RatingDialog } from '@/components/RatingDialog';
 import { Button } from '@/components/ui/button';
 import { ToastAction } from '@/components/ui/toast';
 import { useToast } from '@/components/ui/use-toast';
 import { useTMDBAccount } from '@/contexts/TMDBAccountContext';
 import { useCachedQuery } from '@/hooks/useCachedQuery';
+import { useRatingDialog } from '@/hooks/useRatingDialog';
 import { clearRequestCache } from '@/lib/requestCache';
 import { tmdbService, type TMDBMediaAccountState } from '@/lib/tmdb';
 
@@ -30,12 +32,9 @@ export function AccountMediaActions({
   const { account, connectTMDBAccount, isConnected, sessionId } = useTMDBAccount();
   const { toast } = useToast();
   const [pendingAction, setPendingAction] = useState<'watchlist' | 'favorite' | null>(null);
-  const [pendingRating, setPendingRating] = useState<number | null>(null);
+  const ratingDialog = useRatingDialog();
   const [isLoginPromptOpen, setIsLoginPromptOpen] = useState(false);
-  const [isRatingOpen, setIsRatingOpen] = useState(false);
-  const [hoveredRating, setHoveredRating] = useState<number | null>(null);
   const closeLoginPromptButtonRef = useRef<HTMLButtonElement>(null);
-  const closeRatingDialogButtonRef = useRef<HTMLButtonElement>(null);
   const accountStateKey = `account:${account?.id ?? 'none'}:state:${mediaType}:${mediaId}`;
   const accountStateQuery = useCachedQuery(
     accountStateKey,
@@ -55,69 +54,45 @@ export function AccountMediaActions({
     if (isLoginPromptOpen) closeLoginPromptButtonRef.current?.focus();
   }, [isLoginPromptOpen]);
 
-  useEffect(() => {
-    if (isRatingOpen) closeRatingDialogButtonRef.current?.focus();
-  }, [isRatingOpen]);
-
-  const closeRatingDialog = () => {
-    setIsRatingOpen(false);
-    setHoveredRating(null);
-  };
-
-  const handleRatingKeyDown = (event: KeyboardEvent<HTMLDivElement>) => {
-    if (event.key === 'Escape' && pendingRating === null) closeRatingDialog();
-  };
-
-  const getRatingFromPointer = (event: ReactMouseEvent<HTMLButtonElement>, starValue: number) => {
-    const rect = event.currentTarget.getBoundingClientRect();
-    const isLeftHalf = event.clientX - rect.left < rect.width / 2;
-    const nextRating = isLeftHalf ? starValue - 0.5 : starValue;
-    return Math.min(10, Math.max(0.5, nextRating));
-  };
-
   const handleRateSelection = async (rating: number) => {
     if (!accountState || !account) return;
-    setPendingRating(rating);
     try {
-      await tmdbService.rateMedia(mediaType, mediaId, rating, sessionId);
-      clearRequestCache('account:');
-      setStateOverride({
-        key: accountStateKey,
-        value: { ...accountState, rated: { value: rating } },
+      await ratingDialog.runAction(rating, async () => {
+        await tmdbService.rateMedia(mediaType, mediaId, rating, sessionId);
+        clearRequestCache('account:');
+        setStateOverride({
+          key: accountStateKey,
+          value: { ...accountState, rated: { value: rating } },
+        });
+        toast({ title: `Rated ${rating.toFixed(1)}` });
       });
-      toast({ title: `Rated ${rating.toFixed(1)}` });
-      closeRatingDialog();
     } catch (error) {
       toast({
         title: 'Could not save your rating',
         description: error instanceof Error ? error.message : 'Please try again.',
         variant: 'destructive',
       });
-    } finally {
-      setPendingRating(null);
     }
   };
 
   const handleRemoveRating = async () => {
     if (!account || !accountState || accountState.rated === false) return;
-    setPendingRating(-1);
     try {
-      await tmdbService.deleteMediaRating(mediaType, mediaId, sessionId);
-      clearRequestCache('account:');
-      setStateOverride({
-        key: accountStateKey,
-        value: { ...accountState, rated: false },
+      await ratingDialog.runAction(-1, async () => {
+        await tmdbService.deleteMediaRating(mediaType, mediaId, sessionId);
+        clearRequestCache('account:');
+        setStateOverride({
+          key: accountStateKey,
+          value: { ...accountState, rated: false },
+        });
+        toast({ title: 'Rating removed' });
       });
-      toast({ title: 'Rating removed' });
-      closeRatingDialog();
     } catch (error) {
       toast({
         title: 'Could not remove your rating',
         description: error instanceof Error ? error.message : 'Please try again.',
         variant: 'destructive',
       });
-    } finally {
-      setPendingRating(null);
     }
   };
 
@@ -277,6 +252,7 @@ export function AccountMediaActions({
     }
   };
 
+  const { pendingRating } = ratingDialog;
   const displayRating = currentRating !== null ? currentRating.toFixed(1) : null;
 
   const ratingDialogTitle = mediaType === 'movie' ? 'Rate this movie' : 'Rate this TV show';
@@ -334,7 +310,7 @@ export function AccountMediaActions({
             aria-label={ratingButtonLabel}
             title={ratingButtonTitle}
             disabled={pendingAction !== null || !accountState || pendingRating !== null}
-            onClick={() => setIsRatingOpen(true)}
+            onClick={ratingDialog.openDialog}
           >
             {displayRating !== null ? (
               <span className="text-sm font-semibold leading-none">{displayRating}</span>
@@ -349,92 +325,19 @@ export function AccountMediaActions({
         <span role="alert" className="col-span-full text-xs text-destructive">Account status unavailable.</span>
       )}
 
-      {isRatingOpen && (
-        <div
-          className="fixed inset-0 z-[100] flex items-center justify-center bg-black/60 p-4"
-          onClick={(event) => {
-            if (event.target === event.currentTarget && pendingRating === null) closeRatingDialog();
-          }}
-          onKeyDown={handleRatingKeyDown}
-        >
-          <section
-            role="dialog"
-            aria-modal="true"
-            aria-labelledby="rate-title"
-            className="w-full max-w-md rounded-xl border bg-background p-5 shadow-xl sm:p-6"
-          >
-            <header className="mb-4 flex items-start justify-between gap-4">
-              <div>
-                <h2 id="rate-title" className="text-lg font-semibold">{ratingDialogTitle}</h2>
-                <p className="mt-1 text-sm text-muted-foreground">{mediaTitle}</p>
-              </div>
-              <Button
-                ref={closeRatingDialogButtonRef}
-                type="button"
-                variant="ghost"
-                size="icon"
-                aria-label="Close rating dialog"
-                disabled={pendingRating !== null}
-                onClick={closeRatingDialog}
-              >
-                <X aria-hidden="true" className="h-4 w-4" />
-              </Button>
-            </header>
-
-            <div className="space-y-4">
-              <div className="flex items-center justify-center gap-1 rounded-lg border bg-muted/30 px-3 py-3" aria-live="polite">
-                {Array.from({ length: 10 }, (_, index) => {
-                  const starNumber = index + 1;
-                  const activeRating = hoveredRating ?? currentRating ?? 0;
-                  const fill = Math.max(0, Math.min(1, activeRating - (starNumber - 1)));
-
-                  return (
-                    <button
-                      key={starNumber}
-                      type="button"
-                      className="group relative h-8 w-8 rounded-sm text-amber-400 transition-transform hover:scale-110 focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring"
-                      aria-label={`${starNumber} star${starNumber === 1 ? '' : 's'}`}
-                      onMouseEnter={(event) => {
-                        const rect = event.currentTarget.getBoundingClientRect();
-                        const shouldHalf = event.clientX - rect.left < rect.width / 2;
-                        setHoveredRating(shouldHalf ? starNumber - 0.5 : starNumber);
-                      }}
-                      onMouseMove={(event) => {
-                        const rect = event.currentTarget.getBoundingClientRect();
-                        const shouldHalf = event.clientX - rect.left < rect.width / 2;
-                        setHoveredRating(shouldHalf ? starNumber - 0.5 : starNumber);
-                      }}
-                      onMouseLeave={() => setHoveredRating(null)}
-                      onFocus={() => setHoveredRating(starNumber)}
-                      onClick={(event) => {
-                        const nextRating = getRatingFromPointer(event, starNumber);
-                        void handleRateSelection(nextRating);
-                      }}
-                    >
-                      <Star aria-hidden="true" className="absolute inset-0 h-full w-full fill-muted-foreground/20 text-muted-foreground/30" />
-                      <span className="absolute inset-0 overflow-hidden" style={{ width: `${fill * 100}%` }}>
-                        <Star aria-hidden="true" className="h-full w-full fill-current text-amber-400" />
-                      </span>
-                    </button>
-                  );
-                })}
-              </div>
-
-              <div className="flex items-center justify-between gap-2 text-sm text-muted-foreground">
-                <span>{(hoveredRating ?? currentRating ?? 0).toFixed(1)} / 10</span>
-                <Button
-                  type="button"
-                  variant="ghost"
-                  size="sm"
-                  disabled={currentRating === null || pendingRating !== null}
-                  onClick={() => void handleRemoveRating()}
-                >
-                  Remove rating
-                </Button>
-              </div>
-            </div>
-          </section>
-        </div>
+      {showRatings && (
+        <RatingDialog
+          open={ratingDialog.isOpen}
+          title={ratingDialogTitle}
+          subtitle={mediaTitle}
+          currentRating={currentRating}
+          hoveredRating={ratingDialog.hoveredRating}
+          pendingRating={pendingRating}
+          setHoveredRating={ratingDialog.setHoveredRating}
+          onClose={ratingDialog.closeDialog}
+          onRate={(rating) => void handleRateSelection(rating)}
+          onRemove={() => void handleRemoveRating()}
+        />
       )}
     </>
   );
