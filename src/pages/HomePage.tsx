@@ -358,7 +358,7 @@ export function HomePage() {
                     style={{
                       display: '-webkit-box',
                       WebkitBoxOrient: 'vertical',
-                      WebkitLineClamp: 3,
+                      WebkitLineClamp: 5,
                       overflow: 'hidden',
                     }}
                   >
