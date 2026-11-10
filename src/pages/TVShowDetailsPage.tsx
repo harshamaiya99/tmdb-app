@@ -5,7 +5,7 @@ import { ArrowLeft, ArrowRight, Calendar, Clock, ExternalLink, Star, PlayCircle,
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Skeleton } from '@/components/ui/skeleton';
-import { MediaCard } from '@/components/MediaCard';
+import { MediaSection } from '@/components/MediaSection';
 import { CreditsCarousel } from '@/components/CreditsCarousel';
 import { tmdbService, type Episode, type TVShow, type TVEpisodeDetails, type TVSeasonDetails } from '@/lib/tmdb';
 import { buildEmbedUrl, formatDate, formatLanguage } from '@/lib/utils';
@@ -751,14 +751,16 @@ export function TVShowDetailsPage() {
         
         {similarShows.length > 0 && (
           <LazySection>
-            <div className="mt-12 border-t pt-8">
-              <h2 className="mb-6 text-2xl font-semibold">Similar TV Shows</h2>
-              <div className="grid grid-cols-2 gap-3 min-[360px]:grid-cols-3 sm:gap-4 sm:grid-cols-3 md:grid-cols-5 lg:grid-cols-6 xl:grid-cols-8 2xl:grid-cols-10">
-                {similarShows.slice(0, 10).map((similar) => (
-                  <MediaCard key={similar.id} item={similar} type="tv" />
-                ))}
-              </div>
-            </div>
+            <MediaSection
+              title="Similar TV Shows"
+              items={similarShows}
+              type="tv"
+              hideSeeMore
+              limit={20}
+              horizontalScroll
+              className="mt-12 border-t pt-8"
+              titleClassName="text-2xl font-semibold tracking-normal"
+            />
           </LazySection>
         )}
       </div>
