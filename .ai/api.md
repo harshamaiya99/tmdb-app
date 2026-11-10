@@ -166,6 +166,8 @@ The shared image component also builds responsive `srcSet` candidates from the a
 
 The app uses an in-memory request cache with TTLs and in-flight request deduplication for home lists, searches, paginated lists, detail pages, collections, and TV seasons.
 
+Account query keys and account-cache invalidation are centralized in [src/lib/accountCache.ts](../src/lib/accountCache.ts). Account mutations and authorization changes invalidate the account-scoped cache without clearing public TMDB responses.
+
 Page queries also use abort signals and viewport-aware loading. TV season requests begin when the episodes region approaches the viewport rather than during the initial detail render.
 
 The cache is intentionally memory-only and is cleared on a full page reload.

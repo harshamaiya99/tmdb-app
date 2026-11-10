@@ -6,7 +6,7 @@ import { useToast } from '@/components/ui/use-toast';
 import { useTMDBAccount } from '@/contexts/TMDBAccountContext';
 import { useCachedQuery } from '@/hooks/useCachedQuery';
 import { useRatingDialog } from '@/hooks/useRatingDialog';
-import { clearRequestCache } from '@/lib/requestCache';
+import { accountQueryKeys, invalidateAccountCache } from '@/lib/accountCache';
 import { tmdbService } from '@/lib/tmdb';
 
 interface TVEpisodeRatingActionProps {
@@ -28,7 +28,7 @@ export function TVEpisodeRatingAction({
   const ratingDialog = useRatingDialog();
   const [ratingOverride, setRatingOverride] = useState<{ key: string; value: number | null } | null>(null);
   const closeLoginButtonRef = useRef<HTMLButtonElement>(null);
-  const accountStateKey = `account:${account?.id ?? 'none'}:episode-state:${tvId}:${seasonNumber}:${episodeNumber}`;
+  const accountStateKey = accountQueryKeys.episodeState(account?.id, tvId, seasonNumber, episodeNumber);
   const accountStateQuery = useCachedQuery(
     accountStateKey,
     (signal) => tmdbService.getTVEpisodeAccountState(tvId, seasonNumber, episodeNumber, sessionId, signal),
@@ -49,7 +49,7 @@ export function TVEpisodeRatingAction({
     try {
       await ratingDialog.runAction(rating, async () => {
         await tmdbService.rateTVEpisode(tvId, seasonNumber, episodeNumber, rating, sessionId);
-        clearRequestCache('account:');
+        invalidateAccountCache();
         setRatingOverride({ key: accountStateKey, value: rating });
         toast({ title: `Episode rated ${rating.toFixed(1)}` });
       });
@@ -66,7 +66,7 @@ export function TVEpisodeRatingAction({
     try {
       await ratingDialog.runAction(-1, async () => {
         await tmdbService.deleteTVEpisodeRating(tvId, seasonNumber, episodeNumber, sessionId);
-        clearRequestCache('account:');
+        invalidateAccountCache();
         setRatingOverride({ key: accountStateKey, value: null });
         toast({ title: 'Episode rating removed' });
       });

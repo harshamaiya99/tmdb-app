@@ -1,5 +1,5 @@
 import { createContext, useCallback, useContext, useMemo, useRef, useState, type ReactNode } from 'react';
-import { clearRequestCache } from '@/lib/requestCache';
+import { invalidateAccountCache } from '@/lib/accountCache';
 import { tmdbService, type TMDBAccount } from '@/lib/tmdb';
 
 const SESSION_STORAGE_KEY = 'tmdb_account_session_id';
@@ -158,7 +158,7 @@ export function TMDBAccountProvider({ children }: { children: ReactNode }) {
       saveSession(nextSession);
       sessionStorage.removeItem(REQUEST_TOKEN_STORAGE_KEY);
       setSession(nextSession);
-      clearRequestCache('account:');
+      invalidateAccountCache();
     })();
 
     authorizationRequests.current.set(requestToken, request);
@@ -174,7 +174,7 @@ export function TMDBAccountProvider({ children }: { children: ReactNode }) {
       clearSavedSession();
       sessionStorage.removeItem(REQUEST_TOKEN_STORAGE_KEY);
       setSession(null);
-      clearRequestCache('account:');
+      invalidateAccountCache();
     }
   }, [session]);
 
@@ -223,7 +223,7 @@ export function TMDBAccountProvider({ children }: { children: ReactNode }) {
       saveListSession(nextSession);
       sessionStorage.removeItem(LIST_REQUEST_TOKEN_STORAGE_KEY);
       setListSession(nextSession);
-      clearRequestCache('account:');
+      invalidateAccountCache();
     })();
 
     listAuthorizationRequests.current.set(requestToken, request);
@@ -239,7 +239,7 @@ export function TMDBAccountProvider({ children }: { children: ReactNode }) {
       clearSavedListSession();
       sessionStorage.removeItem(LIST_REQUEST_TOKEN_STORAGE_KEY);
       setListSession(null);
-      clearRequestCache('account:');
+      invalidateAccountCache();
     }
   }, [listSession]);
 

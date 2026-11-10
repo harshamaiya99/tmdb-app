@@ -13,7 +13,7 @@ import { useTMDBAccount } from '@/contexts/TMDBAccountContext';
 import { useCachedQuery } from '@/hooks/useCachedQuery';
 import { usePageTitle } from '@/hooks/usePageTitle';
 import { usePagination } from '@/hooks/usePagination';
-import { clearRequestCache } from '@/lib/requestCache';
+import { accountQueryKeys, invalidateAccountCache } from '@/lib/accountCache';
 import { tmdbService, type TMDBUserListItem } from '@/lib/tmdb';
 import { useToast } from '@/components/ui/use-toast';
 import { TMDBImage } from '@/components/TMDBImage';
@@ -56,13 +56,13 @@ export function AccountListsPage() {
   const mediaType = selectedMediaType === 'movie' || selectedMediaType === 'tv' ? selectedMediaType : 'all';
 
   const listsQuery = useCachedQuery(
-    `account:${listAccountId || 'none'}:lists:${page}:${revision}`,
+    accountQueryKeys.accountLists(listAccountId, page, revision),
     (signal) => tmdbService.getAccountLists(listAccountId, page, listAccessToken, signal),
     { enabled: isListAccountConnected && !listId },
   );
   const listSummaries = listsQuery.data?.results ?? [];
   const listPreviewsQuery = useCachedQuery(
-    `account:${listAccountId || 'none'}:list-previews:${page}:${revision}`,
+    accountQueryKeys.listPreviews(listAccountId, page, revision),
     (signal) => tmdbService.getAccountListPreviews(listSummaries, listAccessToken, signal),
     {
       enabled: isListAccountConnected
@@ -73,12 +73,12 @@ export function AccountListsPage() {
     },
   );
   const detailQuery = useCachedQuery(
-    `account:${listAccountId || 'none'}:list:${listId ?? 'none'}:${mediaType === 'all' ? page : 1}:${revision}`,
+    accountQueryKeys.userList(listAccountId, listId, mediaType === 'all' ? page : 1, revision),
     (signal) => tmdbService.getUserList(listId ?? 0, listAccessToken, mediaType === 'all' ? page : 1, signal),
     { enabled: isListAccountConnected && Boolean(listId) },
   );
   const filteredItemsQuery = useCachedQuery(
-    `account:${listAccountId || 'none'}:list-items:${listId ?? 'none'}:${revision}`,
+    accountQueryKeys.userListItems(listAccountId, listId, revision),
     (signal) => tmdbService.getAllUserListItems(listId ?? 0, listAccessToken, signal),
     { enabled: isListAccountConnected && Boolean(listId) && mediaType !== 'all' },
   );
@@ -99,7 +99,7 @@ export function AccountListsPage() {
     setPendingMediaKey(mediaKey);
     try {
       await tmdbService.removeMediaFromUserList(listId, mediaType, mediaId, listAccessToken);
-      clearRequestCache('account:');
+      invalidateAccountCache();
       setRevision((value) => value + 1);
       toast({ title: 'Title removed from list' });
     } catch (error) {
@@ -118,7 +118,7 @@ export function AccountListsPage() {
     setIsDeleting(true);
     try {
       await tmdbService.deleteUserList(listId, listAccessToken);
-      clearRequestCache('account:');
+      invalidateAccountCache();
       toast({ title: 'List deleted' });
       setIsDeleteDialogOpen(false);
       navigate('/account/lists');
@@ -164,7 +164,7 @@ export function AccountListsPage() {
         listAccessToken,
         list.iso_639_1 || 'en',
       );
-      clearRequestCache('account:');
+      invalidateAccountCache();
       setRevision((value) => value + 1);
       setIsEditing(false);
       toast({ title: 'List updated' });

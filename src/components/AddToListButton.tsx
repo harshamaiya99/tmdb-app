@@ -10,7 +10,7 @@ import { useToast } from '@/components/ui/use-toast';
 import { useTMDBAccount } from '@/contexts/TMDBAccountContext';
 import { useEmbedSettings } from '@/contexts/EmbedSettingsContext';
 import { useCachedQuery } from '@/hooks/useCachedQuery';
-import { clearRequestCache } from '@/lib/requestCache';
+import { accountQueryKeys, invalidateAccountCache } from '@/lib/accountCache';
 import { tmdbService } from '@/lib/tmdb';
 
 interface AddToListButtonProps {
@@ -42,12 +42,12 @@ export function AddToListButton({ mediaId, mediaTitle, mediaType, className, ico
   const [listPage, setListPage] = useState(1);
   const closeButtonRef = useRef<HTMLButtonElement>(null);
   const membershipQuery = useCachedQuery(
-    `account:${listAccountId || 'none'}:user-list-memberships:${membershipRevision}`,
+    accountQueryKeys.userListMemberships(listAccountId, membershipRevision),
     (signal) => tmdbService.getAccountUserListMemberships(listAccountId, listAccessToken, signal),
     { enabled: isListAccountConnected },
   );
   const listsQuery = useCachedQuery(
-    `account:${listAccountId || 'none'}:user-lists:${listPage}:${membershipRevision}`,
+    accountQueryKeys.userLists(listAccountId, listPage, membershipRevision),
     (signal) => tmdbService.getAccountLists(listAccountId, listPage, listAccessToken, signal),
     { enabled: isOpen && isListAccountConnected },
   );
@@ -90,7 +90,7 @@ export function AddToListButton({ mediaId, mediaTitle, mediaType, className, ico
       } else {
         await tmdbService.addMediaToUserList(listId, mediaType, mediaId, listAccessToken);
       }
-      clearRequestCache('account:');
+      invalidateAccountCache();
       setMembershipRevision((revision) => revision + 1);
       const listName = lists.find((list) => list.id === listId)?.name ?? 'list';
       toast({
@@ -130,7 +130,7 @@ export function AddToListButton({ mediaId, mediaTitle, mediaType, className, ico
       );
       createdListId = createdList.id;
       await tmdbService.addMediaToUserList(createdList.id, mediaType, mediaId, listAccessToken);
-      clearRequestCache('account:');
+      invalidateAccountCache();
       setMembershipRevision((revision) => revision + 1);
       toast({
         title: `Created ${name} and added title`,
@@ -142,7 +142,7 @@ export function AddToListButton({ mediaId, mediaTitle, mediaType, className, ico
       });
       closeDialog();
     } catch (error) {
-      clearRequestCache('account:');
+      invalidateAccountCache();
       if (createdListId !== null) setMembershipRevision((revision) => revision + 1);
       toast({
         title: createdListId ? 'List created, but could not add title' : 'Could not create list',

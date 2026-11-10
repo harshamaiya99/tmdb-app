@@ -9,7 +9,7 @@ import { useToast } from '@/components/ui/use-toast';
 import { useTMDBAccount } from '@/contexts/TMDBAccountContext';
 import { useCachedQuery } from '@/hooks/useCachedQuery';
 import { useRatingDialog } from '@/hooks/useRatingDialog';
-import { clearRequestCache } from '@/lib/requestCache';
+import { accountQueryKeys, invalidateAccountCache } from '@/lib/accountCache';
 import { tmdbService, type TMDBMediaAccountState } from '@/lib/tmdb';
 
 interface AccountMediaActionsProps {
@@ -35,7 +35,7 @@ export function AccountMediaActions({
   const ratingDialog = useRatingDialog();
   const [isLoginPromptOpen, setIsLoginPromptOpen] = useState(false);
   const closeLoginPromptButtonRef = useRef<HTMLButtonElement>(null);
-  const accountStateKey = `account:${account?.id ?? 'none'}:state:${mediaType}:${mediaId}`;
+  const accountStateKey = accountQueryKeys.mediaState(account?.id, mediaType, mediaId);
   const accountStateQuery = useCachedQuery(
     accountStateKey,
     (signal) => tmdbService.getMediaAccountState(mediaType, mediaId, sessionId, signal),
@@ -59,7 +59,7 @@ export function AccountMediaActions({
     try {
       await ratingDialog.runAction(rating, async () => {
         await tmdbService.rateMedia(mediaType, mediaId, rating, sessionId);
-        clearRequestCache('account:');
+        invalidateAccountCache();
         setStateOverride({
           key: accountStateKey,
           value: { ...accountState, rated: { value: rating } },
@@ -80,7 +80,7 @@ export function AccountMediaActions({
     try {
       await ratingDialog.runAction(-1, async () => {
         await tmdbService.deleteMediaRating(mediaType, mediaId, sessionId);
-        clearRequestCache('account:');
+        invalidateAccountCache();
         setStateOverride({
           key: accountStateKey,
           value: { ...accountState, rated: false },
@@ -219,7 +219,7 @@ export function AccountMediaActions({
       } else {
         await tmdbService.setAccountFavorite(account.id, mediaType, mediaId, enabled, sessionId);
       }
-      clearRequestCache('account:');
+      invalidateAccountCache();
       setStateOverride({
         key: accountStateKey,
         value: { ...accountState, [action]: enabled },

@@ -12,6 +12,7 @@ import { useTMDBAccount } from '@/contexts/TMDBAccountContext';
 import { useCachedQuery } from '@/hooks/useCachedQuery';
 import { usePageTitle } from '@/hooks/usePageTitle';
 import { usePagination } from '@/hooks/usePagination';
+import { accountQueryKeys } from '@/lib/accountCache';
 import { interleaveAccountMedia, tmdbService, type TMDBAccountSection, type TMDBAccountMedia } from '@/lib/tmdb';
 import { useToast } from '@/components/ui/use-toast';
 
@@ -42,12 +43,12 @@ export function AccountPage() {
   usePageTitle(pageTitle);
 
   const movieQuery = useCachedQuery(
-    `account:${account?.id ?? 'none'}:${section}:movie:${apiPage}:${revision}`,
+    accountQueryKeys.mediaList(account?.id, section, 'movie', apiPage, revision),
     (signal) => tmdbService.getAccountList(account?.id ?? 0, section, 'movie', apiPage, sessionId, signal),
     { enabled: isConnected && Boolean(account) && mediaType !== 'tv' },
   );
   const tvQuery = useCachedQuery(
-    `account:${account?.id ?? 'none'}:${section}:tv:${apiPage}:${revision}`,
+    accountQueryKeys.mediaList(account?.id, section, 'tv', apiPage, revision),
     (signal) => tmdbService.getAccountList(account?.id ?? 0, section, 'tv', apiPage, sessionId, signal),
     { enabled: isConnected && Boolean(account) && mediaType !== 'movie' },
   );
