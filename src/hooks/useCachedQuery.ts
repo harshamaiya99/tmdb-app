@@ -23,7 +23,9 @@ export function useCachedQuery<T>(
   const queryRef = useRef(query);
   queryRef.current = query;
   const cached = enabled ? getCached<T>(key) : undefined;
-  const [state, setState] = useState<CachedQueryState<T>>({
+  const [state, setState] = useState<CachedQueryState<T> & { key: string; enabled: boolean }>({
+    key,
+    enabled,
     data: cached,
     error: null,
     loading: enabled && cached === undefined,
@@ -31,7 +33,7 @@ export function useCachedQuery<T>(
 
   useEffect(() => {
     if (!enabled) {
-      setState({ data: undefined, error: null, loading: false });
+      setState({ key, enabled, data: undefined, error: null, loading: false });
       return;
     }
 
@@ -39,26 +41,40 @@ export function useCachedQuery<T>(
     const cachedValue = getCached<T>(key);
 
     if (cachedValue !== undefined) {
-      setState({ data: cachedValue, error: null, loading: false });
+      setState({ key, enabled, data: cachedValue, error: null, loading: false });
       return () => controller.abort();
     }
 
-    setState((current) => ({ ...current, error: null, loading: true }));
+    setState({ key, enabled, data: undefined, error: null, loading: true });
 
     fetchCached(key, (signal) => queryRef.current(signal), ttlMs, controller.signal)
       .then((data) => {
         if (!controller.signal.aborted) {
-          setState({ data, error: null, loading: false });
+          setState({ key, enabled, data, error: null, loading: false });
         }
       })
       .catch((error: unknown) => {
         if (!controller.signal.aborted) {
-          setState({ data: undefined, error: error instanceof Error ? error : new Error('Request failed'), loading: false });
+          setState({
+            key,
+            enabled,
+            data: undefined,
+            error: error instanceof Error ? error : new Error('Request failed'),
+            loading: false,
+          });
         }
       });
 
     return () => controller.abort();
   }, [enabled, key, ttlMs]);
 
-  return state;
+  if (state.key === key && state.enabled === enabled) {
+    return state;
+  }
+
+  return {
+    data: cached,
+    error: null,
+    loading: enabled && cached === undefined,
+  };
 }
