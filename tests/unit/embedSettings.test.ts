@@ -1,9 +1,40 @@
 import { describe, expect, it } from 'vitest';
 import {
+  createEmbedLink,
   createEmbedSettingsFile,
+  isValidRegion,
   isValidEmbedUrlTemplate,
+  normalizeEmbedLinks,
+  normalizeRegion,
   parseEmbedSettingsFile,
 } from '@/lib/embedSettings';
+
+describe('embed settings normalization', () => {
+  it('trims templates and derives their names consistently', () => {
+    const links = normalizeEmbedLinks([
+      { name: 'Old name', urlTemplate: ' https://www.example.com/{TMDB_ID} ' },
+      { name: 'Draft', urlTemplate: '  ' },
+    ]);
+
+    expect(links).toEqual([
+      { name: 'example.com', urlTemplate: 'https://www.example.com/{TMDB_ID}' },
+      { name: '', urlTemplate: '' },
+    ]);
+    expect(normalizeEmbedLinks(links, { omitEmpty: true })).toEqual([links[0]]);
+    expect(createEmbedLink('https://example.com/{TMDB_ID}')).toEqual({
+      name: 'example.com',
+      urlTemplate: 'https://example.com/{TMDB_ID}',
+    });
+  });
+
+  it('normalizes valid regions and rejects invalid ones', () => {
+    expect(normalizeRegion(' in ')).toBe('IN');
+    expect(normalizeRegion('')).toBe('');
+    expect(isValidRegion('US')).toBe(true);
+    expect(isValidRegion('usa')).toBe(false);
+    expect(() => normalizeRegion('usa')).toThrow('Choose a valid country');
+  });
+});
 
 describe('embed settings file', () => {
   it('exports and imports movie, TV, and country settings', () => {

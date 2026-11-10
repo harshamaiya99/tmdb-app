@@ -1,11 +1,40 @@
-import type { EmbedLink } from '@/contexts/EmbedSettingsContext';
 import { getEmbedLinkName } from '@/lib/utils';
+
+export interface EmbedLink {
+  name: string;
+  urlTemplate: string;
+}
 
 interface EmbedSettingsFile {
   version: 1;
   movieLinks: string[];
   tvLinks: string[];
   region?: string;
+}
+
+export function createEmbedLink(urlTemplate: string): EmbedLink {
+  return { name: getEmbedLinkName(urlTemplate), urlTemplate };
+}
+
+export function normalizeEmbedLinks(
+  links: readonly EmbedLink[],
+  options: { omitEmpty?: boolean } = {},
+): EmbedLink[] {
+  return links
+    .map((link) => createEmbedLink(link.urlTemplate.trim()))
+    .filter((link) => !options.omitEmpty || Boolean(link.urlTemplate));
+}
+
+export function isValidRegion(region: string): boolean {
+  return /^[A-Z]{2}$/i.test(region);
+}
+
+export function normalizeRegion(region: string): string {
+  const normalizedRegion = region.trim().toUpperCase();
+  if (normalizedRegion && !isValidRegion(normalizedRegion)) {
+    throw new Error('Choose a valid country for regional TMDB content.');
+  }
+  return normalizedRegion;
 }
 
 export function isValidEmbedUrlTemplate(template: string): boolean {
@@ -20,15 +49,18 @@ export function isValidEmbedUrlTemplate(template: string): boolean {
 }
 
 function toEmbedLinks(templates: string[]): EmbedLink[] {
-  const trimmedTemplates = templates.map((template) => template.trim());
-  if (!trimmedTemplates.every((template) => template && isValidEmbedUrlTemplate(template))) {
+  const links = normalizeEmbedLinks(
+    templates.map((urlTemplate) => ({ name: '', urlTemplate })),
+    { omitEmpty: true },
+  );
+  if (
+    links.length !== templates.length
+    || !links.every((link) => isValidEmbedUrlTemplate(link.urlTemplate))
+  ) {
     throw new Error('The JSON contains an invalid URL template.');
   }
 
-  return trimmedTemplates.map((urlTemplate) => ({
-    name: getEmbedLinkName(urlTemplate),
-    urlTemplate,
-  }));
+  return links;
 }
 
 export function parseEmbedSettingsFile(contents: string): { movieLinks: EmbedLink[]; tvLinks: EmbedLink[]; region?: string } {
@@ -51,7 +83,7 @@ export function parseEmbedSettingsFile(contents: string): { movieLinks: EmbedLin
     || !Array.isArray(parsed.tvLinks)
     || !parsed.tvLinks.every((template): template is string => typeof template === 'string')
     || ('region' in parsed && typeof parsed.region !== 'string')
-    || ('region' in parsed && typeof parsed.region === 'string' && !/^[A-Za-z]{2}$/.test(parsed.region))
+    || ('region' in parsed && typeof parsed.region === 'string' && !isValidRegion(parsed.region))
   ) {
     throw new Error('This file is not a supported embed settings export.');
   }
@@ -59,21 +91,23 @@ export function parseEmbedSettingsFile(contents: string): { movieLinks: EmbedLin
   return {
     movieLinks: toEmbedLinks(parsed.movieLinks),
     tvLinks: toEmbedLinks(parsed.tvLinks),
-    ...('region' in parsed && typeof parsed.region === 'string' ? { region: parsed.region.toUpperCase() } : {}),
+    ...('region' in parsed && typeof parsed.region === 'string' ? { region: normalizeRegion(parsed.region) } : {}),
   };
 }
 
 export function createEmbedSettingsFile(movieLinks: EmbedLink[], tvLinks: EmbedLink[], region?: string): string {
+  const normalizedRegion = region ? normalizeRegion(region) : '';
   const file: EmbedSettingsFile = {
     version: 1,
-    movieLinks: movieLinks.map((link) => link.urlTemplate.trim()).filter(Boolean),
-    tvLinks: tvLinks.map((link) => link.urlTemplate.trim()).filter(Boolean),
-    ...(region ? { region: region.toUpperCase() } : {}),
+    movieLinks: normalizeEmbedLinks(movieLinks, { omitEmpty: true }).map((link) => link.urlTemplate),
+    tvLinks: normalizeEmbedLinks(tvLinks, { omitEmpty: true }).map((link) => link.urlTemplate),
+    ...(normalizedRegion ? { region: normalizedRegion } : {}),
   };
 
-  return JSON.stringify({
-    ...file,
-    movieLinks: toEmbedLinks(file.movieLinks).map((link) => link.urlTemplate),
-    tvLinks: toEmbedLinks(file.tvLinks).map((link) => link.urlTemplate),
-  }, null, 2);
+  const normalizedLinks = [...file.movieLinks, ...file.tvLinks];
+  if (!normalizedLinks.every(isValidEmbedUrlTemplate)) {
+    throw new Error('The JSON contains an invalid URL template.');
+  }
+
+  return JSON.stringify(file, null, 2);
 }

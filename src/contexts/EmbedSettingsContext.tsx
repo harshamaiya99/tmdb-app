@@ -1,5 +1,11 @@
 import { createContext, useContext, useState, type ReactNode } from 'react';
-import { getEmbedLinkName } from '@/lib/utils';
+import {
+  createEmbedLink,
+  isValidRegion,
+  normalizeEmbedLinks,
+  normalizeRegion,
+  type EmbedLink,
+} from '@/lib/embedSettings';
 
 const MOVIE_EMBED_STORAGE_KEY = 'tmdb_movie_embed_links';
 const TV_EMBED_STORAGE_KEY = 'tmdb_tv_embed_links';
@@ -7,20 +13,11 @@ const LEGACY_MOVIE_EMBED_STORAGE_KEY = 'tmdb_movie_embed_url';
 const LEGACY_TV_EMBED_STORAGE_KEY = 'tmdb_tv_embed_url';
 const REGION_STORAGE_KEY = 'tmdb_content_region';
 
-function createEmbedLink(urlTemplate: string): EmbedLink {
-  return { name: getEmbedLinkName(urlTemplate), urlTemplate };
-}
-
 function getDefaultRegion(): string {
   const localeParts = Intl.DateTimeFormat().resolvedOptions().locale.split('-');
-  const region = localeParts.slice(1).find((part) => /^[A-Z]{2}$/i.test(part));
+  const region = localeParts.slice(1).find(isValidRegion);
   const normalizedRegion = region?.toUpperCase() ?? '';
   return normalizedRegion || 'US';
-}
-
-export interface EmbedLink {
-  name: string;
-  urlTemplate: string;
 }
 
 interface EmbedSettings {
@@ -47,14 +44,6 @@ const defaultSettings: EmbedSettings = {
 
 const EmbedSettingsContext = createContext<EmbedSettingsContextValue | null>(null);
 
-function normalizeRegion(region: string): string {
-  const normalizedRegion = region.trim().toUpperCase();
-  if (normalizedRegion && !/^[A-Z]{2}$/.test(normalizedRegion)) {
-    throw new Error('Choose a valid country for regional TMDB content.');
-  }
-  return normalizedRegion;
-}
-
 function readLinks(storageKey: string, legacyStorageKey: string, defaults: EmbedLink[]): EmbedLink[] {
   const savedLinks = localStorage.getItem(storageKey);
   if (savedLinks !== null) {
@@ -70,12 +59,12 @@ function readLinks(storageKey: string, legacyStorageKey: string, defaults: Embed
     ) {
       throw new Error(`Saved embed links in ${storageKey} are invalid.`);
     }
-    return parsed.map((link) => createEmbedLink(link.urlTemplate));
+    return normalizeEmbedLinks(parsed);
   }
 
   const legacyTemplate = localStorage.getItem(legacyStorageKey);
   return legacyTemplate
-    ? [createEmbedLink(legacyTemplate)]
+    ? normalizeEmbedLinks([createEmbedLink(legacyTemplate)])
     : defaults;
 }
 
@@ -84,7 +73,7 @@ function loadSettings(): EmbedSettings {
   return {
     movieLinks: readLinks(MOVIE_EMBED_STORAGE_KEY, LEGACY_MOVIE_EMBED_STORAGE_KEY, defaultSettings.movieLinks),
     tvLinks: readLinks(TV_EMBED_STORAGE_KEY, LEGACY_TV_EMBED_STORAGE_KEY, defaultSettings.tvLinks),
-    region: /^[A-Z]{2}$/.test(savedRegion) ? savedRegion : defaultSettings.region,
+    region: isValidRegion(savedRegion) ? savedRegion : defaultSettings.region,
   };
 }
 
@@ -104,8 +93,8 @@ export function EmbedSettingsProvider({ children }: { children: ReactNode }) {
   const saveSettings = (nextSettings: EmbedSettings) => {
     const region = normalizeRegion(nextSettings.region);
     const normalizedSettings = {
-      movieLinks: nextSettings.movieLinks.map((link) => createEmbedLink(link.urlTemplate.trim())),
-      tvLinks: nextSettings.tvLinks.map((link) => createEmbedLink(link.urlTemplate.trim())),
+      movieLinks: normalizeEmbedLinks(nextSettings.movieLinks),
+      tvLinks: normalizeEmbedLinks(nextSettings.tvLinks),
       region,
     };
     localStorage.setItem(MOVIE_EMBED_STORAGE_KEY, JSON.stringify(normalizedSettings.movieLinks));

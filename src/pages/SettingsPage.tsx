@@ -4,13 +4,19 @@ import { Alert, AlertDescription } from '@/components/ui/alert';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
-import { useEmbedSettings, type EmbedLink } from '@/contexts/EmbedSettingsContext';
+import { useEmbedSettings } from '@/contexts/EmbedSettingsContext';
 import { useToast } from '@/components/ui/use-toast';
 import { useCachedQuery } from '@/hooks/useCachedQuery';
 import { usePageTitle } from '@/hooks/usePageTitle';
 import { useTheme } from '@/hooks/useTheme';
-import { createEmbedSettingsFile, isValidEmbedUrlTemplate, parseEmbedSettingsFile } from '@/lib/embedSettings';
-import { getEmbedLinkName } from '@/lib/utils';
+import {
+  createEmbedLink,
+  createEmbedSettingsFile,
+  isValidEmbedUrlTemplate,
+  normalizeEmbedLinks,
+  parseEmbedSettingsFile,
+  type EmbedLink,
+} from '@/lib/embedSettings';
 import { tmdbService, type TMDBCountry } from '@/lib/tmdb';
 
 function createDraftLinks(links: EmbedLink[]): EmbedLink[] {
@@ -35,7 +41,7 @@ export function SettingsPage() {
 
   const updateLink = (mediaType: 'movie' | 'tv', index: number, value: string) => {
     const update = (links: EmbedLink[]) => links.map((link, linkIndex) => (
-      linkIndex === index ? { ...link, name: getEmbedLinkName(value), urlTemplate: value } : link
+      linkIndex === index ? createEmbedLink(value) : link
     ));
     if (mediaType === 'movie') setMovieLinkInputs(update);
     else setTvLinkInputs(update);
@@ -94,9 +100,10 @@ export function SettingsPage() {
     event.preventDefault();
     setSettingsError('');
 
-    const links = [...movieLinkInputs, ...tvLinkInputs]
-      .map((link) => link.urlTemplate.trim())
-      .filter(Boolean);
+    const links = [
+      ...normalizeEmbedLinks(movieLinkInputs, { omitEmpty: true }),
+      ...normalizeEmbedLinks(tvLinkInputs, { omitEmpty: true }),
+    ].map((link) => link.urlTemplate);
     if (!links.every(isValidEmbedUrlTemplate)) {
       setSettingsError('Enter a valid http or https URL template for each link.');
       return;
@@ -104,12 +111,8 @@ export function SettingsPage() {
 
     try {
       saveSettings({
-        movieLinks: movieLinkInputs
-          .filter((link) => link.urlTemplate.trim())
-          .map((link) => ({ name: getEmbedLinkName(link.urlTemplate.trim()), urlTemplate: link.urlTemplate.trim() })),
-        tvLinks: tvLinkInputs
-          .filter((link) => link.urlTemplate.trim())
-          .map((link) => ({ name: getEmbedLinkName(link.urlTemplate.trim()), urlTemplate: link.urlTemplate.trim() })),
+        movieLinks: normalizeEmbedLinks(movieLinkInputs, { omitEmpty: true }),
+        tvLinks: normalizeEmbedLinks(tvLinkInputs, { omitEmpty: true }),
         region: regionInput,
       });
       toast({ title: 'Settings saved', description: 'Your preferences are saved in this browser.' });
@@ -233,7 +236,7 @@ export function SettingsPage() {
                 {links.map((link, index) => (
                   <div key={`${mediaType}-link-${index}`} className="flex min-w-0 items-center gap-2">
                     <span className="hidden w-28 shrink-0 truncate text-xs text-muted-foreground sm:block">
-                      {getEmbedLinkName(link.urlTemplate) || `Link ${index + 1}`}
+                      {createEmbedLink(link.urlTemplate).name || `Link ${index + 1}`}
                     </span>
                     <Input
                       aria-label={`${label} link URL template ${index + 1}`}
