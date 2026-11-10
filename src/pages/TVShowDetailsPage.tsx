@@ -126,6 +126,13 @@ export function TVShowDetailsPage() {
     ...(tvShow?.images?.logos ?? []).map((image) => ({ ...image, type: 'logo' as const })),
   ].filter((image) => image.file_path);
   const episodes = seasonQuery.data?.episodes ?? [];
+  const selectedEpisodeIndex = selectedEpisode
+    ? episodes.findIndex((episode) => episode.id === selectedEpisode.episode.id)
+    : -1;
+  const previousEpisode = selectedEpisodeIndex > 0 ? episodes[selectedEpisodeIndex - 1] : undefined;
+  const nextEpisode = selectedEpisodeIndex >= 0 && selectedEpisodeIndex < episodes.length - 1
+    ? episodes[selectedEpisodeIndex + 1]
+    : undefined;
   const seasonCast = seasonQuery.data?.credits?.cast ?? null;
   const seasonCrew = seasonQuery.data?.credits?.crew ?? null;
   const loadingEpisodes = seasonQuery.loading;
@@ -1184,7 +1191,7 @@ export function TVShowDetailsPage() {
               )}
 
             </div>
-            <div className="flex shrink-0 flex-col gap-3 border-t bg-card/95 p-4 backdrop-blur sm:flex-row sm:items-center sm:px-6">
+            <div className="flex shrink-0 flex-wrap items-center justify-between gap-3 border-t bg-card/95 p-4 backdrop-blur sm:px-6">
               <WatchLinkButton
                 links={tvShow ? tvLinks.map((link) => ({
                   name: link.name,
@@ -1196,8 +1203,32 @@ export function TVShowDetailsPage() {
                 size="lg"
                 className="gap-2"
               />
+              <div className="flex items-center gap-2">
+                <Button
+                  type="button"
+                  variant="outline"
+                  size="lg"
+                  aria-label="Previous episode"
+                  title="Previous episode"
+                  disabled={!previousEpisode}
+                  onClick={() => previousEpisode && setSelectedEpisode({ episode: previousEpisode })}
+                >
+                  <ArrowLeft className="h-5 w-5" />
+                </Button>
+                <Button
+                  type="button"
+                  variant="outline"
+                  size="lg"
+                  aria-label="Next episode"
+                  title="Next episode"
+                  disabled={!nextEpisode}
+                  onClick={() => nextEpisode && setSelectedEpisode({ episode: nextEpisode })}
+                >
+                  <ArrowRight className="h-5 w-5" />
+                </Button>
+              </div>
               {tvLinks.length === 0 && (
-                <p className="text-sm text-muted-foreground">
+                <p className="w-full text-sm text-muted-foreground">
                   Add a TV URL template in embed settings to enable playback.
                 </p>
               )}
