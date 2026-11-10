@@ -158,7 +158,7 @@ export function MovieReleaseCalendar({ region }: { region: string }) {
                 items={selectedMovies}
                 type="movie"
                 hideSeeMore
-                limit={7}
+                limit={20}
                 horizontalScroll
                 horizontalColumns={7}
                 className="space-y-0"
