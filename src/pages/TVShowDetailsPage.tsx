@@ -680,7 +680,7 @@ export function TVShowDetailsPage() {
                         setSelectedShowImageIndex(index);
                       }}
                       aria-label={`View TV show ${image.type} ${index + 1}`}
-                      className="block h-32 shrink-0 overflow-hidden rounded-lg border bg-muted p-0"
+                      className="relative block h-32 shrink-0 overflow-hidden rounded-lg border bg-muted p-0"
                       style={{ width: `${image.aspect_ratio * 8}rem` }}
                     >
                       <TMDBImage
@@ -691,6 +691,9 @@ export function TVShowDetailsPage() {
                         sizes={`${Math.ceil(image.aspect_ratio * 128)}px`}
                         className="block h-full w-full object-contain transition-transform hover:scale-105"
                       />
+                      <span className="pointer-events-none absolute left-2 top-2 rounded bg-black/65 px-2 py-1 text-[11px] font-medium capitalize text-white backdrop-blur-sm">
+                        {image.type}
+                      </span>
                     </button>
                   ))}
                 </div>

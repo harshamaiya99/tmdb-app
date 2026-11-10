@@ -51,8 +51,8 @@ export function MovieDetailsPage() {
   const loading = movieQuery.loading;
   const trailer = movie?.videos?.results.find((v) => v.type === 'Trailer' && v.site === 'YouTube');
   const movieImages = [
-    ...(movie?.images?.backdrops ?? []),
-    ...(movie?.images?.posters ?? []),
+    ...(movie?.images?.backdrops ?? []).map((image) => ({ ...image, type: 'backdrop' as const })),
+    ...(movie?.images?.posters ?? []).map((image) => ({ ...image, type: 'poster' as const })),
   ];
   const movieVideos = movie?.videos?.results ?? [];
   const hasCollection = collection && collection.parts.length > 1;
@@ -563,7 +563,6 @@ export function MovieDetailsPage() {
               {activeMovieMedia === 'images' && movieImages.length > 0 && (
                 <div className="flex items-start gap-3 overflow-x-auto pb-2">
                   {movieImages.map((image, index) => {
-                    const isPoster = index >= (movie?.images?.backdrops.length ?? 0);
                     return (
                       <button
                         type="button"
@@ -574,18 +573,21 @@ export function MovieDetailsPage() {
                             : null;
                           setSelectedMovieImageIndex(index);
                         }}
-                        aria-label={`View movie image ${index + 1}`}
-                        className="block h-32 shrink-0 overflow-hidden rounded-lg border bg-muted p-0"
+                        aria-label={`View movie ${image.type} ${index + 1}`}
+                        className="relative block h-32 shrink-0 overflow-hidden rounded-lg border bg-muted p-0"
                         style={{ width: `${image.aspect_ratio * 8}rem` }}
                       >
                         <TMDBImage
                           path={image.file_path}
-                          alt={`${movie.title}, ${isPoster ? 'poster' : 'backdrop'} ${isPoster ? index - (movie?.images?.backdrops.length ?? 0) + 1 : index + 1}`}
+                          alt={`${movie.title}, ${image.type} ${index + 1}`}
                           width={image.width}
                           height={image.height}
                           sizes={`${Math.ceil(image.aspect_ratio * 128)}px`}
                           className="block h-full w-full object-contain transition-transform hover:scale-105"
                         />
+                        <span className="pointer-events-none absolute left-2 top-2 rounded bg-black/65 px-2 py-1 text-[11px] font-medium capitalize text-white backdrop-blur-sm">
+                          {image.type}
+                        </span>
                       </button>
                     );
                   })}
