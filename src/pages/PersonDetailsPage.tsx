@@ -7,7 +7,7 @@ import { ArrowLeft, ArrowRight, Calendar, Facebook, Film, Instagram, Music2, Twi
 import { Button } from '@/components/ui/button';
 import { Skeleton } from '@/components/ui/skeleton';
 import { MediaSection } from '@/components/MediaSection';
-import { tmdbService, mergePersonCredits, type Person } from '@/lib/tmdb';
+import { tmdbService, mergePersonCredits, sortPersonCredits, type Person } from '@/lib/tmdb';
 import { formatDate } from '@/lib/utils';
 import { usePageTitle } from '@/hooks/usePageTitle';
 import { useCachedQuery } from '@/hooks/useCachedQuery';
@@ -207,15 +207,15 @@ export function PersonDetailsPage() {
     },
   ].filter((link): link is { label: string; href: string; icon: typeof Film } => Boolean(link));
 
-  const credits = mergePersonCredits(person.combined_credits?.cast || []);
-  const getActingCredits = (mediaType: 'movie' | 'tv') => {
-    return credits
-      .filter((credit) => credit.media_type === mediaType && credit.poster_path)
-      .sort((a, b) => b.popularity - a.popularity);
-  };
-
-  const allMovieCredits = getActingCredits('movie');
-  const allTvCredits = getActingCredits('tv');
+  const credits = sortPersonCredits(
+    mergePersonCredits([
+      ...(person.combined_credits?.cast ?? []),
+      ...(person.combined_credits?.crew ?? []),
+    ]).filter((credit) => credit.poster_path),
+    person.known_for_department,
+  );
+  const allMovieCredits = credits.filter((credit) => credit.media_type === 'movie');
+  const allTvCredits = credits.filter((credit) => credit.media_type === 'tv');
   const creditLimit = creditsFullWidth ? 10 : 8;
   const movieCredits = allMovieCredits;
   const tvCredits = allTvCredits;
@@ -247,7 +247,6 @@ export function PersonDetailsPage() {
       hideSeeMore={allTvCredits.length <= 10}
     />
   );
-
   const selectedImage = selectedImageIndex === null ? null : galleryImages[selectedImageIndex] ?? null;
   const selectedWikimediaImage = selectedWikimediaIndex === null
     ? null

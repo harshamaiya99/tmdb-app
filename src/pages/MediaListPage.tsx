@@ -7,7 +7,7 @@ import { MediaCard } from '@/components/MediaCard';
 import { MediaGridSkeleton } from '@/components/MediaGridSkeleton';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { MediaCategoryToggle, MOVIE_CATEGORIES, TV_CATEGORIES } from '@/components/MediaCategoryToggle';
-import { tmdbService, type Movie, type TVShow, type PersonCredit, type TrendingResponse } from '@/lib/tmdb';
+import { tmdbService, filterPersonCredits, sortPersonCredits, type Movie, type TVShow, type PersonCredit, type TrendingResponse } from '@/lib/tmdb';
 import { useCachedQuery } from '@/hooks/useCachedQuery';
 import { usePagination } from '@/hooks/usePagination';
 import { useEmbedSettings } from '@/contexts/EmbedSettingsContext';
@@ -132,6 +132,12 @@ const SORT_OPTIONS_BY_TYPE = {
   ],
 } as const;
 
+const PERSON_CREDITS_PAGE_SIZE = 20;
+const PERSON_MEDIA_OPTIONS = [
+  { value: 'movies', label: 'Movies' },
+  { value: 'tv', label: 'TV Shows' },
+] as const;
+
 export function MediaListPage() {
   const { category } = useParams<{ category: string }>();
   const { region } = useEmbedSettings();
@@ -192,7 +198,7 @@ export function MediaListPage() {
   );
 
   const listQuery = useCachedQuery<TrendingResponse<Movie | TVShow | PersonCredit>>(
-    `list:${effectiveCategory ?? 'none'}:${itemType}:${page}:${selectedLanguage}:${selectedGenre}:${selectedSort}:${region}`,
+    `list:${effectiveCategory ?? 'none'}:${itemType}:${personMatch ? 'all' : page}:${personMatch ? 'all' : selectedLanguage}:${personMatch ? 'all' : selectedGenre}:${personMatch ? 'default' : selectedSort}:${region}`,
     async (signal) => {
       const currentPersonMatch = effectiveCategory?.match(/^person-(\d+)-(movies|tv)$/);
       const currentCompanyMatch = effectiveCategory?.match(/^company-(\d+)$/);
@@ -203,7 +209,7 @@ export function MediaListPage() {
       const sortFilter = selectedSort || 'popularity.desc';
 
       if (currentPersonMatch && currentPersonMatch[1]) {
-        return tmdbService.getPersonCredits(Number(currentPersonMatch[1]), currentItemType, page, { signal });
+        return tmdbService.getPersonCredits(Number(currentPersonMatch[1]), currentItemType, { signal });
       }
       if (genreFilter !== undefined) {
         return tmdbService.getGenreMediaList(itemType, genreFilter, page, { signal }, languageMatch?.[2] ?? languageFilter, sortFilter);
@@ -226,8 +232,25 @@ export function MediaListPage() {
     { enabled: Boolean(effectiveCategory) },
   );
 
-  const items = listQuery.data?.results ?? [];
-  const totalPages = Math.min(listQuery.data?.total_pages ?? 1, 500);
+  const personCredits = personMatch
+    ? sortPersonCredits(
+        filterPersonCredits(
+          (listQuery.data?.results ?? []).filter(
+            (item): item is PersonCredit => 'media_type' in item,
+          ),
+          selectedGenre === 'all' ? undefined : Number(selectedGenre),
+          selectedLanguage === 'all' ? undefined : selectedLanguage,
+        ),
+        personNameQuery.data?.known_for_department,
+        selectedSort,
+      )
+    : null;
+  const items = personCredits
+    ? personCredits.slice((page - 1) * PERSON_CREDITS_PAGE_SIZE, page * PERSON_CREDITS_PAGE_SIZE)
+    : listQuery.data?.results ?? [];
+  const totalPages = personCredits
+    ? Math.ceil(personCredits.length / PERSON_CREDITS_PAGE_SIZE)
+    : Math.min(listQuery.data?.total_pages ?? 1, 500);
   const loading = listQuery.loading;
   const personName = personNameQuery.data?.name ?? (personNameQuery.error ? 'Unknown' : null);
 
@@ -258,6 +281,7 @@ export function MediaListPage() {
 
   const updateLanguageFilter = (language: string) => {
     const nextParams = new URLSearchParams(searchParams);
+    nextParams.delete('page');
     if (language === 'all') {
       nextParams.delete('language');
     } else {
@@ -269,6 +293,7 @@ export function MediaListPage() {
 
   const updateGenreFilter = (genre: string) => {
     const nextParams = new URLSearchParams(searchParams);
+    nextParams.delete('page');
     if (genre === 'all') {
       nextParams.delete('genre');
     } else {
@@ -280,6 +305,7 @@ export function MediaListPage() {
 
   const updateSortFilter = (sort: string) => {
     const nextParams = new URLSearchParams(searchParams);
+    nextParams.delete('page');
     if (sort === 'popularity.desc') {
       nextParams.delete('sort');
     } else {
@@ -313,6 +339,15 @@ export function MediaListPage() {
 
     nextParams.set(isMovieTab ? 'movie_category' : 'tv_category', nextCategory);
     setSearchParams(nextParams, { replace: true });
+  };
+
+  const updatePersonMediaType = (mediaType: 'movies' | 'tv') => {
+    if (!personMatch) return;
+
+    const nextParams = new URLSearchParams(searchParams);
+    nextParams.delete('page');
+    const query = nextParams.toString();
+    navigate(`/category/person-${personMatch[1]}-${mediaType}${query ? `?${query}` : ''}`);
   };
 
   const filtersControl = (
@@ -396,7 +431,16 @@ export function MediaListPage() {
           </div>
         )}
         {!showMovieCategories && !showTVCategories && (
-          <div className={`mb-4 flex items-center ${isCompanyProviderCategory ? 'justify-between gap-3' : 'justify-end'}`}>
+          <div className={`mb-4 flex flex-wrap items-center gap-3 ${personMatch || isCompanyProviderCategory ? 'justify-between' : 'justify-end'}`}>
+            {personMatch && (
+              <MediaCategoryToggle
+                label="Person media type"
+                options={PERSON_MEDIA_OPTIONS}
+                value={personType === 'movie' ? 'movies' : 'tv'}
+                onChange={updatePersonMediaType}
+                className="w-full sm:w-auto"
+              />
+            )}
             {isCompanyProviderCategory && (
               <MediaCategoryToggle
                 label="Media type"

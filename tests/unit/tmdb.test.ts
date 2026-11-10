@@ -1,5 +1,5 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
-import { tmdbService } from '@/lib/tmdb';
+import { filterPersonCredits, sortPersonCredits, tmdbService, type PersonCredit } from '@/lib/tmdb';
 
 function responseWith(payload: unknown): Response {
   return new Response(JSON.stringify(payload), {
@@ -367,6 +367,10 @@ describe('TMDB Talk-show filtering', () => {
         { id: 3, name: 'Another Talk Show', character: 'Himself', poster_path: '/self.jpg', vote_average: 8, genre_ids: [10767] },
         { id: 4, name: 'Guest Talk Show', character: 'Guest', poster_path: '/guest.jpg', vote_average: 8, genre_ids: [10767] },
       ],
+      crew: [
+        { id: 5, name: 'Talk Show Producer', job: 'Producer', poster_path: '/producer.jpg', vote_average: 8, genre_ids: [10767] },
+        { id: 6, name: 'Talk Show Host', job: 'Host', poster_path: '/host.jpg', vote_average: 8, genre_ids: [10767] },
+      ],
       total_pages: 1,
     }));
 
@@ -375,9 +379,64 @@ describe('TMDB Talk-show filtering', () => {
         { id: 1, name: 'Drama Series' },
         { id: 2, name: 'Talk Show' },
         { id: 3, name: 'Another Talk Show' },
+        { id: 6, name: 'Talk Show Host', job: 'Host' },
+      ],
+      total_results: 4,
+    });
+  });
+
+  it('combines cast and crew credits in person media lists', async () => {
+    vi.mocked(fetch).mockResolvedValue(responseWith({
+      page: 1,
+      cast: [
+        { id: 1, title: 'Movie Cast', character: 'Alex', poster_path: '/cast.jpg', vote_average: 8, popularity: 2 },
+        { id: 3, title: 'Movie Both', character: 'Sam', poster_path: '/both.jpg', vote_average: 8, popularity: 3 },
+      ],
+      crew: [
+        { id: 2, title: 'Movie Crew', job: 'Director', department: 'Directing', poster_path: '/crew.jpg', vote_average: 8, popularity: 1 },
+        { id: 3, title: 'Movie Both', job: 'Writer', department: 'Writing', poster_path: '/both.jpg', vote_average: 8, popularity: 3 },
+      ],
+    }));
+
+    await expect(tmdbService.getPersonCredits(10, 'movie')).resolves.toMatchObject({
+      page: 1,
+      total_pages: 1,
+      results: [
+        { id: 1, character: 'Alex' },
+        { id: 3, character: 'Sam', job: 'Writer' },
+        { id: 2, job: 'Director' },
       ],
       total_results: 3,
     });
+
+    const requestUrl = new URL(String(vi.mocked(fetch).mock.calls[0][0]));
+    expect(requestUrl.pathname).toBe('/3/person/10/movie_credits');
+    expect(requestUrl.searchParams.has('page')).toBe(false);
+  });
+
+  it('orders person credits by known-for department, retaining popularity within each group', () => {
+    const credits: PersonCredit[] = [
+      { id: 1, title: 'Crew low', media_type: 'movie', poster_path: '/1.jpg', vote_average: 0, popularity: 1, job: 'Director' },
+      { id: 2, title: 'Cast low', media_type: 'movie', poster_path: '/2.jpg', vote_average: 0, popularity: 1, character: 'Alex' },
+      { id: 3, title: 'Crew high', media_type: 'movie', poster_path: '/3.jpg', vote_average: 0, popularity: 3, job: 'Writer' },
+      { id: 4, title: 'Cast high', media_type: 'movie', poster_path: '/4.jpg', vote_average: 0, popularity: 3, character: 'Sam' },
+    ];
+
+    expect(sortPersonCredits(credits, 'Acting').map(({ id }) => id)).toEqual([4, 2, 3, 1]);
+    expect(sortPersonCredits(credits, 'Directing').map(({ id }) => id)).toEqual([3, 1, 4, 2]);
+  });
+
+  it('filters person credits by genre and language and sorts within known-for groups', () => {
+    const credits: PersonCredit[] = [
+      { id: 1, title: 'English Cast', media_type: 'movie', poster_path: '/1.jpg', vote_average: 7, popularity: 1, character: 'Alex', genre_ids: [18], original_language: 'en' },
+      { id: 2, title: 'French Cast', media_type: 'movie', poster_path: '/2.jpg', vote_average: 9, popularity: 3, character: 'Sam', genre_ids: [35], original_language: 'fr' },
+      { id: 3, title: 'English Crew', media_type: 'movie', poster_path: '/3.jpg', vote_average: 8, popularity: 2, job: 'Director', genre_ids: [18], original_language: 'en' },
+    ];
+
+    const filtered = filterPersonCredits(credits, 18, 'en');
+    expect(filtered.map(({ id }) => id)).toEqual([1, 3]);
+    expect(sortPersonCredits(filtered, 'Acting', 'vote_average.desc').map(({ id }) => id)).toEqual([1, 3]);
+    expect(sortPersonCredits(filtered, 'Directing', 'vote_average.desc').map(({ id }) => id)).toEqual([3, 1]);
   });
 
   describe('TMDB account integration', () => {
@@ -820,6 +879,11 @@ describe('TMDB Talk-show filtering', () => {
           { id: 3, name: 'Guest Talk Show', media_type: 'tv', character: 'Guest', popularity: 1, poster_path: '/guest.jpg', vote_average: 8, genre_ids: [10767] },
           { id: 4, title: 'Movie', media_type: 'movie', character: 'Alex', popularity: 1, poster_path: '/movie.jpg', vote_average: 8 },
         ],
+        crew: [
+          { id: 5, name: 'Talk Show', media_type: 'tv', job: 'Producer', department: 'Production', popularity: 1, poster_path: '/talk.jpg', vote_average: 8, genre_ids: [10767] },
+          { id: 6, name: 'Hosted Talk Show', media_type: 'tv', job: 'Host', department: 'Crew', popularity: 1, poster_path: '/host.jpg', vote_average: 8, genre_ids: [10767] },
+          { id: 7, title: 'Movie', media_type: 'movie', job: 'Director', department: 'Directing', popularity: 1, poster_path: '/movie.jpg', vote_average: 8 },
+        ],
       },
     }));
 
@@ -829,6 +893,10 @@ describe('TMDB Talk-show filtering', () => {
           { id: 1, name: 'Drama Series' },
           { id: 2, name: 'Talk Show' },
           { id: 4, title: 'Movie' },
+        ],
+        crew: [
+          { id: 6, name: 'Hosted Talk Show', job: 'Host' },
+          { id: 7, title: 'Movie', job: 'Director' },
         ],
       },
     });

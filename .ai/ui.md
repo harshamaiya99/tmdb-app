@@ -118,6 +118,7 @@ The media browsing experience uses [src/components/MediaCard.tsx](src/components
 - poster or profile image, with a fallback placeholder
 - a title clamped to two lines and a consistent metadata area
 - year and rating for movies and shows, or department for people
+- cast role and/or crew job metadata for person-credit cards
 - hover transition effects
 
 Keep people cards aligned with movie and show cards. Whenever the `MediaCard` layout or styling changes, preserve the same image aspect ratio, rounded image corners, title height, metadata spacing, and hover behavior for people cards as well. Keep the people loading skeleton in sync with the card layout.
@@ -143,6 +144,7 @@ The People page places its Popular/Trending segmented toggle beside the page hea
 The home page Movies and TV Shows headings match the `text-3xl` size of the corresponding main navigation page headings.
 
 On the main Movies and TV Shows pages, keep the category selector grouped on the left beside its heading and put the Filters button on the same row on wider screens. On narrow screens, keep the heading and Filters button together above a full-width, horizontally scrollable category selector. Language, genre, and sort controls on media list pages are tucked into the compact Filters dropdown.
+Person credit list pages keep a Movies/TV Shows toggle on the left and Filters on the right; switching media types resets pagination. Genre and original-language filters apply to the person's credits, and sort choices order credits within the Known For cast/crew priority groups.
 
 TV show details distinguish the series overview from the selected season overview and individual episode overviews. The selected season summary is shown with its episode list.
 

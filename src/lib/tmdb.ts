@@ -19,8 +19,9 @@ function withoutTalkShows<T extends { genre_ids?: number[] }>(shows: T[]): T[] {
 
 const SELF_OR_HOST_ROLES = new Set(['himself', 'herself', 'themselves', 'themself', 'self', 'host']);
 
-function shouldIncludePersonCredit(credit: Pick<PersonCredit, 'genre_ids' | 'character'>): boolean {
-  return !isTalkShow(credit) || SELF_OR_HOST_ROLES.has(credit.character.trim().toLowerCase());
+function shouldIncludePersonCredit(credit: Pick<PersonCredit, 'genre_ids' | 'character' | 'job'>): boolean {
+  const creditedRole = credit.character ?? credit.job ?? '';
+  return !isTalkShow(credit) || SELF_OR_HOST_ROLES.has(creditedRole.trim().toLowerCase());
 }
 
 export interface Cast {
@@ -221,6 +222,7 @@ export interface Person {
   };
   combined_credits?: {
     cast: PersonCredit[];
+    crew?: PersonCredit[];
   };
   images?: {
     profiles: PersonImage[];
@@ -233,35 +235,103 @@ export interface PersonCredit {
   name?: string;
   poster_path: string | null;
   genre_ids?: number[];
+  original_language?: string;
   vote_average: number;
   release_date?: string;
   first_air_date?: string;
   media_type: 'movie' | 'tv';
-  character: string;
+  character?: string;
+  job?: string;
+  department?: string;
   popularity: number;
 }
 
 export function mergePersonCredits(credits: PersonCredit[]): PersonCredit[] {
-  const groupedCredits = new Map<string, { credit: PersonCredit; characters: Map<string, string> }>();
+  const groupedCredits = new Map<string, {
+    credit: PersonCredit;
+    characters: Map<string, string>;
+    jobs: Map<string, string>;
+  }>();
 
   credits.forEach((credit) => {
     const key = `${credit.media_type}:${credit.id}`;
     let group = groupedCredits.get(key);
     if (!group) {
-      group = { credit, characters: new Map() };
+      group = { credit, characters: new Map(), jobs: new Map() };
       groupedCredits.set(key, group);
     }
 
-    const character = credit.character.trim();
+    const character = credit.character?.trim() ?? '';
     if (character) {
       group.characters.set(character.toLowerCase(), character);
     }
+    const job = credit.job?.trim() ?? '';
+    if (job) {
+      group.jobs.set(job.toLowerCase(), job);
+    }
   });
 
-  return [...groupedCredits.values()].map(({ credit, characters }) => ({
+  return [...groupedCredits.values()].map(({ credit, characters, jobs }) => ({
     ...credit,
     character: [...characters.values()].join(', '),
+    job: [...jobs.values()].join(', '),
   }));
+}
+
+export function filterPersonCredits(
+  credits: PersonCredit[],
+  genreId?: number,
+  language?: string,
+): PersonCredit[] {
+  return credits.filter((credit) => (
+    (genreId === undefined || credit.genre_ids?.includes(genreId))
+    && (!language || credit.original_language === language)
+  ));
+}
+
+export function sortPersonCredits(
+  credits: PersonCredit[],
+  knownForDepartment?: string,
+  sortBy = 'popularity.desc',
+): PersonCredit[] {
+  const castFirst = !knownForDepartment || knownForDepartment.toLowerCase() === 'acting';
+
+  return [...credits].sort((a, b) => {
+    const aHasCastCredit = Boolean(a.character);
+    const bHasCastCredit = Boolean(b.character);
+    const aHasCrewCredit = Boolean(a.job);
+    const bHasCrewCredit = Boolean(b.job);
+    const aPriority = castFirst
+      ? aHasCastCredit ? 0 : aHasCrewCredit ? 1 : 2
+      : aHasCrewCredit ? 0 : aHasCastCredit ? 1 : 2;
+    const bPriority = castFirst
+      ? bHasCastCredit ? 0 : bHasCrewCredit ? 1 : 2
+      : bHasCrewCredit ? 0 : bHasCastCredit ? 1 : 2;
+
+    if (aPriority !== bPriority) return aPriority - bPriority;
+
+    switch (sortBy) {
+      case 'vote_average.desc':
+        return b.vote_average - a.vote_average || b.popularity - a.popularity;
+      case 'primary_release_date.asc':
+      case 'first_air_date.asc': {
+        const aDate = a.release_date ?? a.first_air_date ?? '';
+        const bDate = b.release_date ?? b.first_air_date ?? '';
+        return aDate.localeCompare(bDate) || b.popularity - a.popularity;
+      }
+      case 'primary_release_date.desc':
+      case 'first_air_date.desc': {
+        const aDate = a.release_date ?? a.first_air_date ?? '';
+        const bDate = b.release_date ?? b.first_air_date ?? '';
+        return bDate.localeCompare(aDate) || b.popularity - a.popularity;
+      }
+      case 'original_title.asc':
+      case 'name.asc':
+        return (a.title ?? a.name ?? '').localeCompare(b.title ?? b.name ?? '') || b.popularity - a.popularity;
+      default:
+        return b.popularity - a.popularity;
+    }
+  });
 }
 
 export interface Review {
@@ -359,7 +429,8 @@ function getSearchSpacingCandidates(query: string): string[] {
 
 interface PersonCreditsResponse {
   page?: number;
-  cast: Omit<PersonCredit, 'media_type'>[];
+  cast?: Omit<PersonCredit, 'media_type'>[];
+  crew?: Omit<PersonCredit, 'media_type'>[];
   total_pages?: number;
 }
 
@@ -1112,25 +1183,28 @@ class TMDBService {
             cast: person.combined_credits.cast.filter(
               (credit) => credit.media_type !== 'tv' || shouldIncludePersonCredit(credit),
             ),
+            crew: person.combined_credits.crew?.filter(
+              (credit) => credit.media_type !== 'tv' || shouldIncludePersonCredit(credit),
+            ),
           }
         : undefined,
     };
   }
 
-  async getPersonCredits(personId: number, mediaType: 'movie' | 'tv', page: number = 1, options?: TMDBRequestOptions): Promise<TrendingResponse<PersonCredit>> {
+  async getPersonCredits(personId: number, mediaType: 'movie' | 'tv', options?: TMDBRequestOptions): Promise<TrendingResponse<PersonCredit>> {
     const endpoint = mediaType === 'movie' ? `/person/${personId}/movie_credits` : `/person/${personId}/tv_credits`;
-    const data = await this.fetchFromTMDB<PersonCreditsResponse>(`${endpoint}?page=${page}`, options);
+    const data = await this.fetchFromTMDB<PersonCreditsResponse>(endpoint, options);
 
-    const results = mergePersonCredits(
-      (data.cast || [])
-        .filter((item) => mediaType !== 'tv' || shouldIncludePersonCredit(item))
-        .map((item) => ({ ...item, media_type: mediaType })),
-    );
+    const credits = [
+      ...(data.cast || []).map((item) => ({ ...item, media_type: mediaType })),
+      ...(data.crew || []).map((item) => ({ ...item, media_type: mediaType })),
+    ].filter((item) => mediaType !== 'tv' || shouldIncludePersonCredit(item));
+    const results = mergePersonCredits(credits);
 
     return {
-      page: data.page ?? page,
+      page: 1,
       results,
-      total_pages: data.total_pages ?? 1,
+      total_pages: 1,
       total_results: results.length,
     };
   }

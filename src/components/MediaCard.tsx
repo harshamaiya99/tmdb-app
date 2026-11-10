@@ -75,6 +75,9 @@ export function MediaCard({ item, type, metadataAction }: MediaCardProps) {
         {'character' in item && item.character && (
           <p className="break-words text-[9px] leading-3 text-muted-foreground italic">as {item.character}</p>
         )}
+        {'job' in item && item.job && (
+          <p className="break-words text-[9px] leading-3 text-muted-foreground">{item.job}</p>
+        )}
       </div>
     </Card>
   );

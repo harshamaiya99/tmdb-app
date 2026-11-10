@@ -103,7 +103,8 @@ These fetch richer entity data:
 - TV show details with aggregate series-wide cast credits, crew, videos, similar titles, reviews, production companies, watch providers, and regional content ratings
 - TV season details with episodes and season-specific cast and crew credits
 - TV episode details with crew, guest stars, still images, and videos
-- person details with credits and images
+- person details with cast and crew credits, external IDs, and images. Movie and TV credit lists include both cast and crew roles, prioritizing the person's known-for department.
+- Person movie and TV credit endpoints return the full credit collection; the media list paginates those combined results locally in groups of 20.
 
 ### Search
 
