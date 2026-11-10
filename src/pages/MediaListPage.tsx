@@ -341,6 +341,18 @@ export function MediaListPage() {
     setSearchParams(nextParams, { replace: true });
   };
 
+  const clearFilters = () => {
+    const nextParams = new URLSearchParams(searchParams);
+    nextParams.delete('page');
+    nextParams.delete('sort');
+    if (genreMatch) nextParams.set('genre', 'all');
+    else nextParams.delete('genre');
+    if (languageMatch) nextParams.set('language', 'all');
+    else nextParams.delete('language');
+    setPage(1);
+    setSearchParams(nextParams, { replace: true });
+  };
+
   const updateMediaType = (mediaType: 'movie' | 'tv') => {
     const nextParams = new URLSearchParams(searchParams);
     nextParams.delete('page');
@@ -433,6 +445,17 @@ export function MediaListPage() {
                 <option key={option.value} value={option.value}>{option.label}</option>
               ))}
             </select>
+          </div>
+          <div className="flex justify-end border-t pt-2">
+            <Button
+              type="button"
+              variant="default"
+              size="sm"
+              className="w-full"
+              onClick={clearFilters}
+            >
+              Clear filters
+            </Button>
           </div>
         </DropdownMenu.Content>
       </DropdownMenu.Portal>

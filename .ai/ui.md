@@ -146,6 +146,10 @@ The home page Movies and TV Shows headings match the `text-3xl` size of the corr
 On the main Movies and TV Shows pages, keep the category selector grouped on the left beside its heading and put the Filters button on the same row on wider screens. On narrow screens, keep the heading and Filters button together above a full-width, horizontally scrollable category selector. Language, genre, and sort controls on media list pages are tucked into the compact Filters dropdown.
 Person credit list pages keep a Movies/TV Shows toggle on the left and Filters on the right; switching media types resets pagination. Genre and original-language filters apply to the person's credits, and sort choices order credits within the Known For cast/crew priority groups.
 
+### Filter controls
+
+Every page that exposes a Filters button must provide working filters, not presentation-only controls. Before adding one, identify the state or URL parameters for each control and verify that changing it affects the fetched or locally displayed results. Compose compatible filters together rather than letting one silently override another; preserve the page/category's baseline constraints when using a general discovery endpoint. When a filter changes, reset pagination and keep the selected values synchronized with the results. Provide a clearly visible, text-labeled **Clear filters** action that restores all filter values to their defaults; do not make it an icon-only or disabled-looking control. Ensure clearing filters preserves the current page identity/category, including route-based filters that need an explicit “all” override. Add or update tests to cover filter composition, clearing/reset behavior, and pagination where practical.
+
 TV show details distinguish the series overview from the selected season overview and individual episode overviews. The selected season summary is shown with its episode list.
 TV show detail pages include a lazy-loaded Media section with show backdrops, posters, logos, and videos. Images open in a viewer that supports keyboard navigation, matching the movie media experience.
 

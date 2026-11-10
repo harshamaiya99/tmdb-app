@@ -109,6 +109,10 @@ When making changes:
 - avoid introducing unnecessary state-management abstractions
 - prefer the shared title hook and shared media section component for repeated page-level concerns
 
+### Adding filters to a page
+
+Treat a Filters button as a behavior contract: every control must update the query or local result set, and the active selections must match the results shown. Combine filters so they work together, preserve the page's category constraints, and reset pagination after a filter change. Include a clearly visible text-labeled **Clear filters** action that resets filters to their defaults while retaining the current page/category. Add focused tests for the applied constraints and clearing behavior; for paginated lists, verify the page resets as well.
+
 ### Before implementing a change
 
 Before writing code, take a short design-review pass:
