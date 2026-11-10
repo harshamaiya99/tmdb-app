@@ -138,6 +138,14 @@ const PERSON_MEDIA_OPTIONS = [
   { value: 'tv', label: 'TV Shows' },
 ] as const;
 
+function getDefaultSort(category: string | undefined): string {
+  if (category === 'top-rated-movies' || category === 'top-rated-tv' || category === 'imdb-top-rated-movies') {
+    return 'vote_average.desc';
+  }
+  if (category === 'upcoming-movies') return 'primary_release_date.asc';
+  return 'popularity.desc';
+}
+
 export function MediaListPage() {
   const { category } = useParams<{ category: string }>();
   const { region } = useEmbedSettings();
@@ -147,8 +155,6 @@ export function MediaListPage() {
   const [searchParams, setSearchParams] = useSearchParams();
   const { page, setPage } = usePagination();
   const entityNameParam = searchParams.get('name');
-  const selectedLanguage = searchParams.get('language') ?? 'all';
-  const selectedSort = searchParams.get('sort') ?? 'popularity.desc';
   const isMovieTab = location.pathname === '/movie';
   const isTVTab = location.pathname === '/tv';
   const isMovieCategoryPage = MOVIE_CATEGORIES.some(({ value }) => value === category);
@@ -172,6 +178,7 @@ export function MediaListPage() {
   const personMatch = effectiveCategory?.match(/^person-(\d+)-(movies|tv)$/);
   const genreMatch = effectiveCategory?.match(/^genre-(movie|tv)-(\d+)$/);
   const languageMatch = effectiveCategory?.match(/^language-(movie|tv)-([a-z]{2,3})$/i);
+  const selectedLanguage = searchParams.get('language') ?? languageMatch?.[2].toLowerCase() ?? 'all';
   const companyMatch = effectiveCategory?.match(/^company-(\d+)$/); 
   const providerMatch = effectiveCategory?.match(/^provider-(\d+)$/); 
   const isCompanyProviderCategory = Boolean(companyMatch || providerMatch);
@@ -188,6 +195,8 @@ export function MediaListPage() {
         : isCompanyProviderCategory
           ? selectedMediaType
           : effectiveCategory?.includes('tv') ? 'tv' : 'movie';
+  const defaultSort = getDefaultSort(effectiveCategory);
+  const selectedSort = searchParams.get('sort') ?? defaultSort;
   const genreOptions = itemType === 'tv' ? GENRE_OPTIONS_BY_TYPE.tv : GENRE_OPTIONS_BY_TYPE.movie;
   const availableSortOptions = itemType === 'tv' ? SORT_OPTIONS_BY_TYPE.tv : SORT_OPTIONS_BY_TYPE.movie;
   
@@ -203,31 +212,42 @@ export function MediaListPage() {
       const currentPersonMatch = effectiveCategory?.match(/^person-(\d+)-(movies|tv)$/);
       const currentCompanyMatch = effectiveCategory?.match(/^company-(\d+)$/);
       const currentProviderMatch = effectiveCategory?.match(/^provider-(\d+)$/);
+      const currentGenreMatch = effectiveCategory?.match(/^genre-(movie|tv)-(\d+)$/);
+      const currentLanguageMatch = effectiveCategory?.match(/^language-(movie|tv)-([a-z]{2,3})$/i);
       const currentItemType = currentPersonMatch?.[2] === 'tv' ? 'tv' : 'movie';
       const languageFilter = selectedLanguage === 'all' ? undefined : selectedLanguage;
       const genreFilter = selectedGenre === 'all' ? undefined : Number(selectedGenre);
-      const sortFilter = selectedSort || 'popularity.desc';
+      const sortFilter = selectedSort || defaultSort;
 
       if (currentPersonMatch && currentPersonMatch[1]) {
         return tmdbService.getPersonCredits(Number(currentPersonMatch[1]), currentItemType, { signal });
       }
-      if (genreFilter !== undefined) {
-        return tmdbService.getGenreMediaList(itemType, genreFilter, page, { signal }, languageMatch?.[2] ?? languageFilter, sortFilter);
+
+      const effectiveLanguage = languageFilter;
+      const isCompanyOrProvider = Boolean(currentCompanyMatch || currentProviderMatch);
+      const isGenreOrLanguageRoute = Boolean(currentGenreMatch || currentLanguageMatch);
+      const hasCustomFilters = Boolean(effectiveLanguage)
+        || genreFilter !== undefined
+        || sortFilter !== defaultSort;
+      const needsDiscovery = isCompanyOrProvider
+        || isGenreOrLanguageRoute
+        || hasCustomFilters;
+
+      if (needsDiscovery) {
+        return tmdbService.getFilteredMediaList({
+          mediaType: itemType,
+          page,
+          category: isCompanyOrProvider || isGenreOrLanguageRoute ? undefined : effectiveCategory,
+          genreId: genreFilter,
+          language: effectiveLanguage,
+          sortBy: sortFilter,
+          companyId: currentCompanyMatch ? Number(currentCompanyMatch[1]) : undefined,
+          providerId: currentProviderMatch ? Number(currentProviderMatch[1]) : undefined,
+          region,
+        }, { signal });
       }
-      if (languageMatch) {
-        return tmdbService.getMediaByOriginalLanguage(itemType, languageMatch[2].toLowerCase(), page, { signal }, sortFilter);
-      }
-      if (currentCompanyMatch?.[1]) {
-        return itemType === 'tv'
-          ? tmdbService.getTVShowsByCompany(Number(currentCompanyMatch[1]), page, { signal }, languageFilter, sortFilter)
-          : tmdbService.getMoviesByCompany(Number(currentCompanyMatch[1]), page, { signal }, languageFilter, sortFilter);
-      }
-      if (currentProviderMatch?.[1]) {
-        return itemType === 'tv'
-          ? tmdbService.getTVShowsByProvider(Number(currentProviderMatch[1]), page, { signal }, languageFilter, sortFilter, region)
-          : tmdbService.getMoviesByProvider(Number(currentProviderMatch[1]), page, { signal }, languageFilter, sortFilter, region);
-      }
-      return tmdbService.getCategoryList(effectiveCategory ?? '', page, { signal }, languageFilter, sortFilter, region);
+
+      return tmdbService.getCategoryList(effectiveCategory ?? '', page, { signal }, undefined, sortFilter, region);
     },
     { enabled: Boolean(effectiveCategory) },
   );
@@ -258,10 +278,14 @@ export function MediaListPage() {
   if (personMatch && personName) {
     pageTitle = personType === 'tv' ? `${personName}'s TV Shows` : `${personName}'s Movies`;
   } else if (genreMatch?.[2]) {
-    const genreName = entityNameParam || GENRE_NAMES[genreMatch[2]] || 'Genre';
-    pageTitle = `${genreName} ${itemType === 'tv' ? 'TV Shows' : 'Movies'}`;
+    const activeGenre = selectedGenre === 'all' ? undefined : GENRE_NAMES[selectedGenre];
+    pageTitle = activeGenre
+      ? `${activeGenre} ${itemType === 'tv' ? 'TV Shows' : 'Movies'}`
+      : itemType === 'tv' ? 'TV Shows' : 'Movies';
   } else if (languageMatch) {
-    pageTitle = `${formatLanguage(languageMatch[2])} ${itemType === 'tv' ? 'TV Shows' : 'Movies'}`;
+    pageTitle = selectedLanguage === 'all'
+      ? itemType === 'tv' ? 'TV Shows' : 'Movies'
+      : `${formatLanguage(selectedLanguage)} ${itemType === 'tv' ? 'TV Shows' : 'Movies'}`;
   } else if (companyMatch) {
     pageTitle = itemType === 'tv'
       ? entityNameParam ? `TV Shows by ${entityNameParam}` : 'Production TV Shows'
@@ -283,7 +307,8 @@ export function MediaListPage() {
     const nextParams = new URLSearchParams(searchParams);
     nextParams.delete('page');
     if (language === 'all') {
-      nextParams.delete('language');
+      if (languageMatch) nextParams.set('language', 'all');
+      else nextParams.delete('language');
     } else {
       nextParams.set('language', language);
     }
@@ -295,7 +320,8 @@ export function MediaListPage() {
     const nextParams = new URLSearchParams(searchParams);
     nextParams.delete('page');
     if (genre === 'all') {
-      nextParams.delete('genre');
+      if (genreMatch) nextParams.set('genre', 'all');
+      else nextParams.delete('genre');
     } else {
       nextParams.set('genre', genre);
     }
@@ -306,7 +332,7 @@ export function MediaListPage() {
   const updateSortFilter = (sort: string) => {
     const nextParams = new URLSearchParams(searchParams);
     nextParams.delete('page');
-    if (sort === 'popularity.desc') {
+    if (sort === defaultSort) {
       nextParams.delete('sort');
     } else {
       nextParams.set('sort', sort);

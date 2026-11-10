@@ -127,6 +127,8 @@ Non-search TV lists exclude shows tagged with TMDB's Talk genre (`10767`), inclu
 
 The app's saved content-country setting is used for country-sensitive movie searches, release categories, and streaming-provider discovery. Movie and TV details filter TMDB's regional watch-provider and movie release-certification or TV content-rating data using that country. The country list comes from TMDB configuration.
 
+Media-list filters compose through TMDB Discover so genre, original language, sorting, and company/provider constraints apply together. Unfiltered category pages retain their category endpoints, including Trending. Filtered Trending uses Discover results; filtered Now Playing and Upcoming retain their release-date constraints, and Top Rated retains its voting constraint. Genre and language browse routes allow their embedded filter to be overridden or cleared.
+
 The service also supports category-based browsing for:
 
 - genre-based media lists

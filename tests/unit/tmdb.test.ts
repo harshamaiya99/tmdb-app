@@ -181,6 +181,104 @@ describe('TMDB Talk-show filtering', () => {
     expect(requestUrl.searchParams.get('page')).toBe('2');
   });
 
+  it('combines discovery filters for company and provider lists', async () => {
+    const fetchMock = vi.mocked(fetch);
+    fetchMock.mockResolvedValue(responseWith({
+      page: 2,
+      results: [{ id: 1, title: 'Filtered movie' }],
+      total_pages: 4,
+      total_results: 70,
+    }));
+
+    await tmdbService.getFilteredMediaList({
+      mediaType: 'movie',
+      page: 2,
+      companyId: 12,
+      providerId: 8,
+      genreId: 28,
+      language: 'ja',
+      sortBy: 'vote_average.desc',
+      region: 'JP',
+    });
+
+    const requestUrl = new URL(String(fetchMock.mock.calls[0][0]));
+    expect(requestUrl.pathname).toBe('/3/discover/movie');
+    expect(requestUrl.searchParams.get('with_companies')).toBe('12');
+    expect(requestUrl.searchParams.get('with_watch_providers')).toBe('8');
+    expect(requestUrl.searchParams.get('watch_region')).toBe('JP');
+    expect(requestUrl.searchParams.get('with_genres')).toBe('28');
+    expect(requestUrl.searchParams.get('with_original_language')).toBe('ja');
+    expect(requestUrl.searchParams.get('sort_by')).toBe('vote_average.desc');
+    expect(requestUrl.searchParams.get('page')).toBe('2');
+  });
+
+  it('keeps category constraints when discovering filtered now-playing and upcoming movies', async () => {
+    const fetchMock = vi.mocked(fetch);
+    fetchMock
+      .mockResolvedValueOnce(responseWith({
+        page: 1,
+        results: [],
+        total_pages: 1,
+        total_results: 0,
+      }))
+      .mockResolvedValueOnce(responseWith({
+        page: 1,
+        results: [],
+        total_pages: 1,
+        total_results: 0,
+      }));
+
+    await tmdbService.getFilteredMediaList({
+      mediaType: 'movie',
+      page: 1,
+      category: 'now-playing-movies',
+      genreId: 28,
+      region: 'IN',
+    });
+    await tmdbService.getFilteredMediaList({
+      mediaType: 'movie',
+      page: 1,
+      category: 'upcoming-movies',
+      language: 'hi',
+    });
+
+    const nowPlayingUrl = new URL(String(fetchMock.mock.calls[0][0]));
+    expect(nowPlayingUrl.searchParams.get('with_genres')).toBe('28');
+    expect(nowPlayingUrl.searchParams.get('with_release_type')).toBe('2|3');
+    expect(nowPlayingUrl.searchParams.get('region')).toBe('IN');
+    expect(nowPlayingUrl.searchParams.get('primary_release_date.gte')).toMatch(/^\d{4}-\d{2}-\d{2}$/);
+    expect(nowPlayingUrl.searchParams.get('primary_release_date.lte')).toMatch(/^\d{4}-\d{2}-\d{2}$/);
+
+    const upcomingUrl = new URL(String(fetchMock.mock.calls[1][0]));
+    expect(upcomingUrl.searchParams.get('with_original_language')).toBe('hi');
+    expect(upcomingUrl.searchParams.get('primary_release_date.gte')).toMatch(/^\d{4}-\d{2}-\d{2}$/);
+  });
+
+  it('applies discovery sort and Talk-show exclusion to filtered Trending TV', async () => {
+    const fetchMock = vi.mocked(fetch);
+    fetchMock.mockResolvedValue(responseWith({
+      page: 1,
+      results: [{ id: 1, name: 'Drama', genre_ids: [18] }],
+      total_pages: 1,
+      total_results: 1,
+    }));
+
+    await tmdbService.getFilteredMediaList({
+      mediaType: 'tv',
+      page: 1,
+      genreId: 18,
+      language: 'ko',
+      sortBy: 'first_air_date.desc',
+    });
+
+    const requestUrl = new URL(String(fetchMock.mock.calls[0][0]));
+    expect(requestUrl.pathname).toBe('/3/discover/tv');
+    expect(requestUrl.searchParams.get('with_genres')).toBe('18');
+    expect(requestUrl.searchParams.get('with_original_language')).toBe('ko');
+    expect(requestUrl.searchParams.get('without_genres')).toBe('10767');
+    expect(requestUrl.searchParams.get('sort_by')).toBe('first_air_date.desc');
+  });
+
   it('discovers paginated movies by original language', async () => {
     const fetchMock = vi.mocked(fetch);
     fetchMock.mockResolvedValue(responseWith({

@@ -407,6 +407,18 @@ export interface TrendingResponse<T> {
   total_results: number;
 }
 
+export interface MediaListDiscoveryFilters {
+  mediaType: 'movie' | 'tv';
+  page: number;
+  category?: string;
+  genreId?: number;
+  language?: string;
+  sortBy?: string;
+  companyId?: number;
+  providerId?: number;
+  region?: string;
+}
+
 export type MultiSearchResult =
   | (Movie & { media_type: 'movie' })
   | (TVShow & { media_type: 'tv' })
@@ -785,6 +797,80 @@ class TMDBService {
     const requestPath = isDiscoverEndpoint ? applySortParam(path, sortBy) : path;
     const data = await this.fetchFromTMDB<TrendingResponse<Movie | TVShow>>(requestPath, options);
     return isTVCategory
+      ? { ...data, results: withoutTalkShows(data.results) }
+      : data;
+  }
+
+  async getFilteredMediaList(
+    filters: MediaListDiscoveryFilters,
+    options?: TMDBRequestOptions,
+  ): Promise<TrendingResponse<Movie | TVShow>> {
+    const {
+      mediaType,
+      page,
+      category,
+      genreId,
+      language,
+      sortBy = 'popularity.desc',
+      companyId,
+      providerId,
+      region,
+    } = filters;
+    const params = new URLSearchParams({ page: String(page), sort_by: sortBy });
+    const today = new Date();
+    const todayString = today.toISOString().slice(0, 10);
+
+    if (genreId !== undefined) params.set('with_genres', String(genreId));
+    if (language) params.set('with_original_language', language);
+    if (companyId !== undefined) params.set('with_companies', String(companyId));
+    if (providerId !== undefined) {
+      params.set('with_watch_providers', String(providerId));
+      params.set('watch_region', region || 'US');
+    }
+
+    switch (category) {
+      case 'now-playing-movies': {
+        const startDate = new Date(today);
+        startDate.setUTCDate(startDate.getUTCDate() - 90);
+        params.set('primary_release_date.gte', startDate.toISOString().slice(0, 10));
+        params.set('primary_release_date.lte', todayString);
+        params.set('with_release_type', '2|3');
+        if (region) params.set('region', region);
+        break;
+      }
+      case 'upcoming-movies':
+        params.set('primary_release_date.gte', todayString);
+        if (region) params.set('region', region);
+        break;
+      case 'top-rated-movies':
+      case 'top-rated-tv':
+        params.set('vote_count.gte', '1');
+        if (category === 'top-rated-movies' && region) params.set('region', region);
+        break;
+      case 'imdb-top-rated-movies':
+        params.set('vote_count.gte', '10000');
+        if (region) params.set('region', region);
+        break;
+      case 'trending-streaming-movies':
+        params.set('with_watch_monetization_types', 'flatrate');
+        params.set('watch_region', region || 'US');
+        break;
+      case 'popular-movies':
+        if (region) params.set('region', region);
+        break;
+      default:
+        break;
+    }
+
+    if (mediaType === 'tv') {
+      params.set('without_genres', String(TV_TALK_GENRE_ID));
+    }
+
+    const data = await this.fetchFromTMDB<TrendingResponse<Movie | TVShow>>(
+      `/discover/${mediaType}?${params.toString()}`,
+      options,
+    );
+    return mediaType === 'tv'
       ? { ...data, results: withoutTalkShows(data.results) }
       : data;
   }
