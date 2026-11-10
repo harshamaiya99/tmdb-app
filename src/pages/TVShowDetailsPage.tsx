@@ -1,7 +1,7 @@
 // src/pages/TVShowDetailsPage.tsx
 import { useEffect, useRef, useState } from 'react';
 import { useParams, useNavigate, Link, useSearchParams } from 'react-router-dom';
-import { ArrowLeft, ArrowRight, Calendar, Clock, Star, PlayCircle, X, Users } from 'lucide-react';
+import { ArrowLeft, ArrowRight, Calendar, Clock, ExternalLink, Star, PlayCircle, X, Users } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Skeleton } from '@/components/ui/skeleton';
@@ -365,6 +365,29 @@ export function TVShowDetailsPage() {
                 ))}
               </div>
             )}
+
+            <div className="flex flex-wrap gap-x-4 gap-y-1">
+              {tvShow.external_ids?.imdb_id && (
+                <a
+                  href={`https://www.imdb.com/title/${tvShow.external_ids.imdb_id}`}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="inline-flex min-h-9 items-center gap-1.5 rounded-md text-sm font-medium text-primary underline-offset-4 hover:underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
+                >
+                  IMDb
+                  <ExternalLink aria-hidden="true" className="h-3.5 w-3.5" />
+                </a>
+              )}
+              <a
+                href={`https://www.themoviedb.org/tv/${tvShow.id}`}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="inline-flex min-h-9 items-center gap-1.5 rounded-md text-sm font-medium text-primary underline-offset-4 hover:underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
+              >
+                TMDB
+                <ExternalLink aria-hidden="true" className="h-3.5 w-3.5" />
+              </a>
+            </div>
 
             {(tvShow.status || tvShow.number_of_seasons !== undefined) && (
               <div className="space-y-1 text-sm">

@@ -1,7 +1,7 @@
 // src/pages/MovieDetailsPage.tsx
 import { useEffect, useLayoutEffect, useRef, useState } from 'react';
 import { useParams, useNavigate, Link } from 'react-router-dom';
-import { ArrowLeft, ArrowRight, Calendar, Clock, Star, X } from 'lucide-react';
+import { ArrowLeft, ArrowRight, Calendar, Clock, ExternalLink, Star, X } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Skeleton } from '@/components/ui/skeleton';
@@ -286,6 +286,29 @@ export function MovieDetailsPage() {
                   ))}
                 </div>
               )}
+
+              <div className="flex flex-wrap gap-x-4 gap-y-1">
+                {movie.external_ids?.imdb_id && (
+                  <a
+                    href={`https://www.imdb.com/title/${movie.external_ids.imdb_id}`}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="inline-flex min-h-9 items-center gap-1.5 rounded-md text-sm font-medium text-primary underline-offset-4 hover:underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
+                  >
+                    IMDb
+                    <ExternalLink aria-hidden="true" className="h-3.5 w-3.5" />
+                  </a>
+                )}
+                <a
+                  href={`https://www.themoviedb.org/movie/${movie.id}`}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="inline-flex min-h-9 items-center gap-1.5 rounded-md text-sm font-medium text-primary underline-offset-4 hover:underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
+                >
+                  TMDB
+                  <ExternalLink aria-hidden="true" className="h-3.5 w-3.5" />
+                </a>
+              </div>
 
               {movie.status && (
                 <p className="text-sm">
