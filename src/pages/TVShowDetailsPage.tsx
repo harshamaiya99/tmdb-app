@@ -1191,7 +1191,7 @@ export function TVShowDetailsPage() {
               )}
 
             </div>
-            <div className="flex shrink-0 flex-wrap items-center justify-between gap-3 border-t bg-card/95 p-4 backdrop-blur sm:px-6">
+            <div className="flex shrink-0 flex-wrap items-center justify-between gap-3 border-t bg-card/95 p-3 backdrop-blur sm:p-4 sm:px-6">
               <WatchLinkButton
                 links={tvShow ? tvLinks.map((link) => ({
                   name: link.name,
@@ -1201,13 +1201,14 @@ export function TVShowDetailsPage() {
                 })) : []}
                 label="Watch episode"
                 size="lg"
-                className="gap-2"
+                className="h-9 min-w-0 shrink gap-1 px-2 sm:h-10 sm:gap-2 sm:px-8"
               />
-              <div className="flex items-center gap-2">
+              <div className="flex shrink-0 items-center gap-1 sm:gap-2">
                 <Button
                   type="button"
                   variant="outline"
                   size="lg"
+                  className="h-9 w-9 shrink-0 px-0 sm:h-10 sm:w-10"
                   aria-label="Previous episode"
                   title="Previous episode"
                   disabled={!previousEpisode}
@@ -1219,6 +1220,7 @@ export function TVShowDetailsPage() {
                   type="button"
                   variant="outline"
                   size="lg"
+                  className="h-9 w-9 shrink-0 px-0 sm:h-10 sm:w-10"
                   aria-label="Next episode"
                   title="Next episode"
                   disabled={!nextEpisode}
