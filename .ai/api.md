@@ -46,7 +46,7 @@ Public direct local requests use `fetchFromTMDB`; deployed public and account re
 
 ### API key storage
 
-The deployed app allows public browsing and account connection without a user API key. The login page does not request TMDB credentials; an optional developer key may be stored locally for direct catalog requests.
+The deployed app allows public browsing and account connection without a user API key. There is no credential-based login page. An optional developer key may be stored locally for direct catalog requests during plain Vite development only.
 
 For local direct catalog requests, the developer key is:
 
@@ -63,14 +63,6 @@ For local direct requests using the v3 API key, every TMDB request is authentica
 This is handled inside the shared request helper, so pages do not need to manage auth details themselves.
 
 Request methods accept an optional `AbortSignal` through `TMDBRequestOptions`. Callers can use an `AbortController` to cancel requests when a page unmounts or a newer request supersedes an older one.
-
-### Local API key validation
-
-Local direct catalog requests can validate a developer key by calling the TMDB v3 configuration endpoint:
-
-- `/3/configuration?api_key=<key>`
-
-If the response is successful, the key is considered valid. Deployed account and catalog requests use server-side credentials instead.
 
 ### TMDB user account authorization
 

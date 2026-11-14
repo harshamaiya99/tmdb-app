@@ -18,7 +18,7 @@ The app boots from [src/main.tsx](src/main.tsx), which mounts the root React app
 
 The main application shell is defined in [src/App.tsx](src/App.tsx). It wires together:
 
-- account connection and status screens
+- account connection and status within the account pages
 - the browser router
 - global providers such as the title context
 - the toast container
@@ -26,7 +26,7 @@ The main application shell is defined in [src/App.tsx](src/App.tsx). It wires to
 ### Authentication flow
 
 1. Deployed public browsing loads without a user API key.
-2. The login page lets users connect their TMDB account without entering credentials.
+2. Users connect their TMDB account from account pages without entering TMDB credentials into the app.
 3. Public and account routes are available without a client-side credential gate.
 
 Vercel Functions provide public TMDB reads and account operations. Per-user account credentials are encrypted in Neon Postgres, and the browser holds only an opaque HTTP-only session cookie.
@@ -39,11 +39,10 @@ The app uses Vite environment variables for optional client-side integrations. `
 
 ## 3. Routing Model
 
-Routing is defined in [src/App.tsx](src/App.tsx) with React Router's `HashRouter`. Page components are lazy-loaded at the route boundary, so each page's code is downloaded when needed rather than included in the initial JavaScript bundle. A shared Suspense fallback is shown while a page chunk loads. Hash-based URLs keep client-side routes working on static hosting, including direct visits and refreshes. Vercel serves the app from the domain root.
+Routing is defined in [src/App.tsx](src/App.tsx) with React Router's `HashRouter`. Page components are lazy-loaded at the route boundary, so each page's code is downloaded when needed rather than included in the initial JavaScript bundle. A shared Suspense fallback is shown while a page chunk loads. Hash-based URLs keep client-side routes working for direct visits and refreshes. Vercel serves the app from the domain root.
 
 ### Main routes
 
-- `/login` — login screen
 - `/about` — application information and TMDB attribution
 - `/settings` — country, embed-link, and theme preferences
 - `/` — home page
@@ -85,7 +84,6 @@ The Vercel functions use the server-only `TMDB_API_KEY` and fixed or allowlisted
 
 The service includes methods for:
 
-- validating the API key
 - fetching trending movies and TV shows
 - fetching movies by category such as now playing, top rated, upcoming, and streaming trends
 - fetching TV show lists and season details
@@ -114,7 +112,6 @@ Keeping API logic in one place makes it easier to:
 
 Pages live in [src/pages](src/pages):
 
-- [src/pages/LoginPage.tsx](src/pages/LoginPage.tsx) — account connection entry point without asking users for credentials
 - [src/pages/HomePage.tsx](src/pages/HomePage.tsx) — displays independently selectable movie and TV categories, and handles search results
 - [src/pages/MediaListPage.tsx](src/pages/MediaListPage.tsx) — renders paginated lists for the main movie and TV category tabs, genres, companies, providers, and people-related media
 - [src/pages/ReleaseDateMoviesPage.tsx](src/pages/ReleaseDateMoviesPage.tsx) — renders paginated movie releases for a selected calendar date

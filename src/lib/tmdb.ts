@@ -1510,19 +1510,6 @@ class TMDBService {
       .join(', ');
   }
 
-  async validateApiKey(key: string, options?: TMDBRequestOptions): Promise<boolean> {
-    try {
-      const url = new URL(`${TMDB_BASE_URL}/3/configuration`);
-      url.searchParams.set('api_key', key);
-      const response = await fetch(url, { signal: options?.signal });
-      return response.ok;
-    } catch (error) {
-      if (error instanceof DOMException && error.name === 'AbortError') {
-        throw error;
-      }
-      return false;
-    }
-  }
 }
 
 function applySortParam(endpoint: string, sortBy: string = 'popularity.desc'): string {

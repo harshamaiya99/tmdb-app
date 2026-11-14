@@ -51,7 +51,7 @@ The app is organized around a few clear layers:
 ## Directory Structure
 
 - [src/App.tsx](src/App.tsx) – top-level router, public routes, and global providers
-- [src/pages](src/pages) – route pages such as home, details, lists, and login
+- [src/pages](src/pages) – route pages such as home, details, lists, and account features
 - [src/components](src/components) – layout, media cards, review section, shared section composition, and shared UI wrappers
 - [src/components/ui](src/components/ui) – reusable base UI primitives
 - [src/contexts](src/contexts) – context providers such as title state

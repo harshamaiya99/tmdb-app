@@ -100,11 +100,10 @@ Personal API keys and TMDB user tokens are not requested for deployed browsing o
 
 ### Common issue: invalid API key
 
-If the app shows auth errors:
+If plain Vite development requests fail authentication:
 
-- confirm the API key is correct
-- make sure it is entered exactly as provided by TMDB
-- verify the local developer key is configured in the app for direct requests
+- confirm the local developer key stored under `tmdb_api_key` is current
+- use the deployed site or `vercel dev` for server-side TMDB credentials; there is no in-app API-key login or entry form
 
 ## Editing Guidelines
 
@@ -161,8 +160,8 @@ Small, focused changes are preferred over broad rewrites. If a feature touches r
 ## Debugging Tips
 
 - inspect the browser console for runtime errors
-- verify the current route and whether the page is inside the protected layout
-- confirm the API key is present before making TMDB requests
+- verify the current route and account connection state
+- confirm the relevant Vercel server environment variables are present for account/API failures
 - check whether a feature should be implemented in a shared component, shared hook, or a page-local component
 
 ## When to Update Documentation

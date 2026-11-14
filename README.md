@@ -39,7 +39,7 @@ The app displays the TMDB logo and attribution on its **About** page, available 
 
 - Node.js 18+
 - npm
-- A TMDB API key is optional for deployed browsing. Local direct TMDB requests use an optional developer key ([Get one here](https://www.themoviedb.org/settings/api))
+- A TMDB API key is not needed for deployed browsing. Plain local Vite catalog requests use an optional developer key ([Get one here](https://www.themoviedb.org/settings/api))
 
 ### Installation
 
@@ -55,7 +55,7 @@ The app displays the TMDB logo and attribution on its **About** page, available 
 
 3. Open http://localhost:5173 in your browser
 
-4. The deployed site browses without asking visitors for an API key. `npm run dev` makes direct TMDB requests, so local catalog browsing needs a developer key saved in this browser.
+4. The deployed site browses without asking visitors for an API key. Plain `npm run dev` makes direct catalog requests and can use a developer key stored under `tmdb_api_key` in local browser storage; this is separate from account authorization, and the app has no credential-entry or API-key login page.
 5. To use watchlists, favorites, ratings, or custom lists on the deployed site, choose **Connect TMDB account** and approve access on TMDB. The app handles credentials on its server; users do not enter an API key or access token, and the app never asks for a TMDB password. Custom lists may require a separate TMDB approval the first time. Movies and TV shows can be saved to mixed custom lists from their detail pages; new lists are private by default.
 
 ### Vercel account features setup
@@ -190,7 +190,6 @@ The site can be installed as an app from supported browsers when served over HTT
 │       ├── AccountListsPage.tsx       # Browse, view, and manage custom lists
 │       ├── AccountPage.tsx            # Watchlists, favorites, and ratings
 │       ├── HomePage.tsx               # Home browsing and search results
-│       ├── LoginPage.tsx              # TMDB account connection entry point
 │       ├── MediaListPage.tsx          # Filtered and paginated movie/TV lists
 │       ├── MovieDetailsPage.tsx       # Movie details, credits, reviews, and watch link
 │       ├── PeopleListPage.tsx         # Paginated people listing
@@ -202,7 +201,6 @@ The site can be installed as an app from supported browsers when served over HTT
 │   ├── components/
 │   │   ├── AccountCallbackPage.test.tsx # Account authorization callback behavior
 │   │   ├── Footer.test.tsx            # Footer rendering behavior
-│   │   ├── LoginPage.test.tsx         # Login and API key validation behavior
 │   │   ├── MediaCard.test.tsx         # Media card rendering behavior
 │   │   ├── ReviewSection.test.tsx     # Review rendering and interaction behavior
 │   │   └── WatchLinkButton.test.tsx   # Watch link behavior

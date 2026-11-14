@@ -11,7 +11,6 @@ import { EmbedSettingsProvider } from '@/contexts/EmbedSettingsContext';
 import { TMDBAccountProvider } from '@/contexts/TMDBAccountContext';
 import { ThemeProvider } from '@/hooks/useTheme';
 
-const LoginPage = lazy(() => import('@/pages/LoginPage').then(({ LoginPage }) => ({ default: LoginPage })));
 const HomePage = lazy(() => import('@/pages/HomePage').then(({ HomePage }) => ({ default: HomePage })));
 const MovieDetailsPage = lazy(() => import('@/pages/MovieDetailsPage').then(({ MovieDetailsPage }) => ({ default: MovieDetailsPage })));
 const TVShowDetailsPage = lazy(() => import('@/pages/TVShowDetailsPage').then(({ TVShowDetailsPage }) => ({ default: TVShowDetailsPage })));
@@ -37,7 +36,9 @@ function AppLoadingSkeleton() {
 }
 
 function App() {
-  tmdbService.setApiKey(localStorage.getItem('tmdb_api_key') ?? '');
+  if (import.meta.env.DEV) {
+    tmdbService.setApiKey(localStorage.getItem('tmdb_api_key') ?? '');
+  }
 
   return (
     <ThemeProvider>
@@ -50,7 +51,6 @@ function App() {
               }>
                 <Routes>
                   <Route path="/" element={<Layout><HomePage /></Layout>} />
-                  <Route path="/login" element={<LoginPage />} />
                   <Route path="/about" element={<Layout><AboutPage /></Layout>} />
                   <Route path="/settings" element={<Layout><SettingsPage /></Layout>} />
                   <Route path="/account/callback" element={<AccountCallbackPage />} />
