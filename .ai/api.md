@@ -12,13 +12,15 @@ Configure `TMDB_API_KEY` in Vercel's project environment-variable settings for P
 
 The read-only `GET /api/tmdb/trending-movies?page=1` endpoint maps to the fixed TMDB `/3/trending/movie/day` operation, accepts only pages 1–500, uses the same server-only API key, and returns TMDB's response shape unchanged. In deployed builds, the home-page `tmdbService.getTrendingMovies()` method uses this Vercel endpoint; local Vite development continues calling TMDB directly so `npm run dev` works without a Vercel Functions emulator.
 
-The allowlisted `GET /api/tmdb/category?category=...` endpoint covers paginated category routes for trending, popular, now-playing, top-rated, upcoming, streaming, and IMDb-style movie/TV lists. The category selects a fixed TMDB route; callers cannot supply arbitrary paths. Page, language, region, and sort parameters are validated, and TV Talk-show filtering remains applied by the client service. Deployed `tmdbService.getCategoryList()` calls this endpoint; local development retains direct TMDB calls.
+The allowlisted `GET /api/tmdb/category?category=...` endpoint covers paginated movie/TV categories and trending/popular people lists. The category selects a fixed TMDB route; callers cannot supply arbitrary paths. Page, language, region, and sort parameters are validated, and TV Talk-show filtering remains applied by the client service. Deployed category, trending-TV, and people-list methods call this endpoint; local development retains direct TMDB calls.
 
 Public search uses `GET /api/tmdb/search?type=movie|tv|person|multi&query=...&page=...`; optional `region` is supported for movie search only. Search type is allowlisted, query length and page are validated, and the existing compact-query spacing fallback remains in the service. Deployed movie, TV, and person search and header multi-search use this endpoint.
 
 Other migrated public reads use `GET /api/tmdb/media?resource=...`. Resources are allowlisted for movie, TV, person, collection, movie/TV recommendations, similar titles and reviews, TV seasons and episodes, person movie/TV credits, and country configuration. Entity IDs, pagination, season numbers, and episode numbers are validated; append-to-response data is fixed per resource rather than caller-controlled. Deployed detail, related-media, season/episode, person-credit, collection, and country lookups use this endpoint.
 
-Discovery/filter reads and account authorization or mutations have not yet moved to Vercel. Local development continues to call TMDB directly for all methods, so `npm run dev` does not require a Vercel Functions emulator.
+Filtered discovery and release-calendar reads use `GET /api/tmdb/discover`. The endpoint accepts a fixed set of discovery parameters for movie/TV filters (genres, original language, companies, providers, regions, dates, release types, vote thresholds, monetization, sort order, and page), validates their formats, and always maps requests to `/3/discover/movie` or `/3/discover/tv`. Release-calendar requests use `mode=release-date-range` with validated ISO dates, a movie-only route, pagination, and optional region. Deployed genre/language/company/provider lists, composed filters, and release-date calendar pages use this endpoint. TV Talk-show exclusions remain applied in the service.
+
+Local development continues to call TMDB directly for these operations, so `npm run dev` does not require a Vercel Functions emulator. Account authorization and mutations remain browser-based.
 
 ## Environment and runtime config
 

@@ -81,7 +81,7 @@ The frontend API integration is centralized in [src/lib/tmdb.ts](src/lib/tmdb.ts
 - use the user's stored API key for local development and not-yet-migrated requests
 - attach browser credentials to direct TMDB requests
 
-The Vercel functions use the server-only `TMDB_API_KEY` and fixed or allowlisted operations for configuration, trending movies, categories, search, and media details/supporting lookups. Local Vite development continues calling TMDB directly; discovery/filter reads and account requests are not yet migrated.
+The Vercel functions use the server-only `TMDB_API_KEY` and fixed or allowlisted operations for configuration, trending and people categories, search, media details/supporting lookups, filtered discovery, and release-date ranges. Local Vite development continues calling TMDB directly; account requests remain browser-based.
 
 ### Core API capabilities
 

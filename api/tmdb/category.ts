@@ -16,6 +16,8 @@ declare const process: {
 const CATEGORY_PATHS: Record<string, string> = {
   'trending-movies': '/trending/movie/day',
   'trending-tv': '/trending/tv/day',
+  'trending-people': '/trending/person/day',
+  'popular-people': '/person/popular',
   'popular-movies': '/movie/popular',
   'now-playing-movies': '/movie/now_playing',
   'top-rated-movies': '/movie/top_rated',
@@ -117,7 +119,9 @@ export default async function handler(
   params.set('api_key', apiKey);
   params.set('page', String(page));
 
-  const isTrendingCategory = category === 'trending-movies' || category === 'trending-tv';
+  const isTrendingCategory = category === 'trending-movies'
+    || category === 'trending-tv'
+    || category === 'trending-people';
   if (language && !isTrendingCategory) {
     params.set(isDiscoverCategory ? 'with_original_language' : 'language', language);
   }

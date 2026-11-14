@@ -671,6 +671,16 @@ class TMDBService {
     return this.fetchFromAppApi<T>(`/api/tmdb/media?${query.toString()}`, options);
   }
 
+  private async fetchDiscoverFromAppApi<T>(
+    mediaType: 'movie' | 'tv',
+    params: URLSearchParams,
+    options?: TMDBRequestOptions,
+  ): Promise<T> {
+    const query = new URLSearchParams(params);
+    query.set('mediaType', mediaType);
+    return this.fetchFromAppApi<T>(`/api/tmdb/discover?${query.toString()}`, options);
+  }
+
   private async searchAppApiWithSpacingFallback<T>(
     type: 'movie' | 'tv' | 'person',
     query: string,
@@ -749,6 +759,17 @@ class TMDBService {
     options?: TMDBRequestOptions,
     region?: string,
   ): Promise<TrendingResponse<Movie>> {
+    if (!import.meta.env.DEV) {
+      const params = new URLSearchParams({
+        mode: 'release-date-range',
+        startDate,
+        endDate,
+        page: String(page),
+      });
+      if (region) params.set('region', region);
+      return this.fetchDiscoverFromAppApi<TrendingResponse<Movie>>('movie', params, options);
+    }
+
     const params = new URLSearchParams({
       'primary_release_date.gte': startDate,
       'primary_release_date.lte': endDate,
@@ -760,15 +781,34 @@ class TMDBService {
   }
 
   async getTrendingTVShows(options?: TMDBRequestOptions): Promise<TVShow[]> {
+    if (!import.meta.env.DEV) {
+      const data = await this.fetchFromAppApi<TrendingResponse<TVShow>>(
+        '/api/tmdb/category?category=trending-tv&page=1',
+        options,
+      );
+      return withoutTalkShows(data.results);
+    }
     const data = await this.fetchFromTMDB<TrendingResponse<TVShow>>('/trending/tv/day', options);
     return withoutTalkShows(data.results);
   }
 
   async getPopularPersons(page: number = 1, options?: TMDBRequestOptions): Promise<TrendingResponse<PersonListResult>> {
+    if (!import.meta.env.DEV) {
+      return this.fetchFromAppApi<TrendingResponse<PersonListResult>>(
+        `/api/tmdb/category?category=popular-people&page=${page}`,
+        options,
+      );
+    }
     return this.fetchFromTMDB<TrendingResponse<PersonListResult>>(`/person/popular?page=${page}`, options);
   }
 
   async getTrendingPersons(page: number = 1, options?: TMDBRequestOptions): Promise<TrendingResponse<PersonListResult>> {
+    if (!import.meta.env.DEV) {
+      return this.fetchFromAppApi<TrendingResponse<PersonListResult>>(
+        `/api/tmdb/category?category=trending-people&page=${page}`,
+        options,
+      );
+    }
     return this.fetchFromTMDB<TrendingResponse<PersonListResult>>(`/trending/person/day?page=${page}`, options);
   }
 
@@ -783,6 +823,18 @@ class TMDBService {
   // --- DISCOVER ENDPOINTS (NEW) ---
   
   async getTVShowsByCompany(companyId: number, page: number = 1, options?: TMDBRequestOptions, language?: string, sortBy: string = 'popularity.desc'): Promise<TrendingResponse<TVShow>> {
+    if (!import.meta.env.DEV) {
+      const params = new URLSearchParams({
+        with_companies: String(companyId),
+        without_genres: String(TV_TALK_GENRE_ID),
+        page: String(page),
+        sort_by: sortBy,
+      });
+      if (language) params.set('with_original_language', language);
+      const data = await this.fetchDiscoverFromAppApi<TrendingResponse<TVShow>>('tv', params, options);
+      return { ...data, results: withoutTalkShows(data.results) };
+    }
+
     const languageFilter = language ? `&with_original_language=${encodeURIComponent(language)}` : '';
     const path = `/discover/tv?with_companies=${companyId}${languageFilter}&without_genres=${TV_TALK_GENRE_ID}&page=${page}`;
     const data = await this.fetchFromTMDB<TrendingResponse<TVShow>>(`${applySortParam(path, sortBy)}`, options);
@@ -790,6 +842,19 @@ class TMDBService {
   }
 
   async getTVShowsByProvider(providerId: number, page: number = 1, options?: TMDBRequestOptions, language?: string, sortBy: string = 'popularity.desc', region = 'US'): Promise<TrendingResponse<TVShow>> {
+    if (!import.meta.env.DEV) {
+      const params = new URLSearchParams({
+        with_watch_providers: String(providerId),
+        watch_region: region || 'US',
+        without_genres: String(TV_TALK_GENRE_ID),
+        page: String(page),
+        sort_by: sortBy,
+      });
+      if (language) params.set('with_original_language', language);
+      const data = await this.fetchDiscoverFromAppApi<TrendingResponse<TVShow>>('tv', params, options);
+      return { ...data, results: withoutTalkShows(data.results) };
+    }
+
     const languageFilter = language ? `&with_original_language=${encodeURIComponent(language)}` : '';
     const path = `/discover/tv?with_watch_providers=${providerId}&watch_region=${encodeURIComponent(region || 'US')}${languageFilter}&without_genres=${TV_TALK_GENRE_ID}&page=${page}`;
     const data = await this.fetchFromTMDB<TrendingResponse<TVShow>>(`${applySortParam(path, sortBy)}`, options);
@@ -927,16 +992,36 @@ class TMDBService {
       params.set('without_genres', String(TV_TALK_GENRE_ID));
     }
 
-    const data = await this.fetchFromTMDB<TrendingResponse<Movie | TVShow>>(
-      `/discover/${mediaType}?${params.toString()}`,
-      options,
-    );
+    const data = !import.meta.env.DEV
+      ? await this.fetchDiscoverFromAppApi<TrendingResponse<Movie | TVShow>>(mediaType, params, options)
+      : await this.fetchFromTMDB<TrendingResponse<Movie | TVShow>>(
+          `/discover/${mediaType}?${params.toString()}`,
+          options,
+        );
     return mediaType === 'tv'
       ? { ...data, results: withoutTalkShows(data.results) }
       : data;
   }
 
   async getGenreMediaList(mediaType: 'movie' | 'tv', genreId: number, page: number = 1, options?: TMDBRequestOptions, language?: string, sortBy: string = 'popularity.desc'): Promise<TrendingResponse<Movie | TVShow>> {
+    if (!import.meta.env.DEV) {
+      const params = new URLSearchParams({
+        with_genres: String(genreId),
+        page: String(page),
+        sort_by: sortBy,
+      });
+      if (language) params.set('with_original_language', language);
+      if (mediaType === 'tv') params.set('without_genres', String(TV_TALK_GENRE_ID));
+      const data = await this.fetchDiscoverFromAppApi<TrendingResponse<Movie | TVShow>>(
+        mediaType,
+        params,
+        options,
+      );
+      return mediaType === 'tv'
+        ? { ...data, results: withoutTalkShows(data.results) }
+        : data;
+    }
+
     const endpoint = mediaType === 'movie' ? '/discover/movie' : '/discover/tv';
     const languageFilter = language ? `&with_original_language=${encodeURIComponent(language)}` : '';
     const talkFilter = mediaType === 'tv' ? `&without_genres=${TV_TALK_GENRE_ID}` : '';
@@ -948,6 +1033,23 @@ class TMDBService {
   }
 
   async getMediaByOriginalLanguage(mediaType: 'movie' | 'tv', language: string, page: number = 1, options?: TMDBRequestOptions, sortBy: string = 'popularity.desc'): Promise<TrendingResponse<Movie | TVShow>> {
+    if (!import.meta.env.DEV) {
+      const params = new URLSearchParams({
+        with_original_language: language,
+        page: String(page),
+        sort_by: sortBy,
+      });
+      if (mediaType === 'tv') params.set('without_genres', String(TV_TALK_GENRE_ID));
+      const data = await this.fetchDiscoverFromAppApi<TrendingResponse<Movie | TVShow>>(
+        mediaType,
+        params,
+        options,
+      );
+      return mediaType === 'tv'
+        ? { ...data, results: withoutTalkShows(data.results) }
+        : data;
+    }
+
     const endpoint = mediaType === 'movie' ? '/discover/movie' : '/discover/tv';
     const talkFilter = mediaType === 'tv' ? `&without_genres=${TV_TALK_GENRE_ID}` : '';
     const path = `${endpoint}?with_original_language=${encodeURIComponent(language)}${talkFilter}`;

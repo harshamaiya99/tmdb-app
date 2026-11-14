@@ -23,9 +23,9 @@ The repository is connected to Vercel and the production frontend is hosted at [
 1. **API foundation:** **Complete.** `GET /api/tmdb/configuration` uses server-only `TMDB_API_KEY`.
 2. **Catalog-data pilot:** **Complete.** Deployed trending movies use `GET /api/tmdb/trending-movies?page=1`.
 3. **Paginated categories:** **Complete.** Deployed category lists use the allowlisted `GET /api/tmdb/category?category=...` endpoint.
-4. **Search and media details:** **Implemented locally.** Deployed search and multi-search use `/api/tmdb/search`; details, recommendations, similar titles, reviews, seasons, episodes, collections, person credits, and countries use the allowlisted `/api/tmdb/media` endpoint. Verify the production deployment after pushing to `main`.
-5. **Remaining public reads:** Migrate discovery/filter and release-calendar reads through narrowly scoped, validated endpoints, preserving current filtering and pagination behavior.
-6. **Credential-free browsing:** Remove the app API-key login gate only after every public read needed for browsing uses the server API; keep local development practical.
+4. **Search and media details:** **Implemented.** Deployed search and multi-search use `/api/tmdb/search`; details, recommendations, similar titles, reviews, seasons, episodes, collections, person credits, and countries use the allowlisted `/api/tmdb/media` endpoint.
+5. **Filtered discovery and remaining public lists:** **Implemented locally.** Deployed genre/language/company/provider lists, composed movie/TV filters, paginated release-date calendar results, trending TV, and popular/trending people lists use the validated discovery or category endpoints. Local development retains direct TMDB calls. Verify production behavior after pushing to `main`.
+6. **Remaining public reads and credential-free browsing:** Identify any public browsing methods still calling TMDB directly, migrate them, then remove the app API-key login gate while keeping local development practical.
 7. **Account migration:** Separately design persistent storage and secure sessions before moving account authorization or mutations server-side.
 
 **Hosting migration outcome:** The existing React + Vite frontend is hosted on Vercel with GitHub-integrated deployments and behavior equivalent to the previous static site. This phase does not provide a backend or improve credential privacy.
