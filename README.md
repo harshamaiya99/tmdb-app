@@ -86,7 +86,7 @@ npm run build
 
 ## Deploy to Vercel
 
-Import this repository into Vercel. The included `vercel.json` configures the Vite framework, `npm ci`, the test-and-build command (`npm test && npm run build`), and the `dist` output directory. Vercel can create preview deployments for pull requests and production deployments from the configured production branch (normally `main`).
+Import this repository into Vercel. The included `vercel.json` configures the Vite framework, `npm ci`, the production build command (`npm run build`), and the `dist` output directory. Tests run separately in GitHub Actions. Vercel can create preview deployments for pull requests and production deployments from the configured production branch (normally `main`).
 
 The app retains hash-based routes (for example, `/#/movie/123`) and is built for the domain root. No SPA rewrite is required. Configure any optional Vite environment variables used by the deployment in the Vercel project settings. Values prefixed with `VITE_` are embedded in the client bundle and are public; this hosting-only migration does not make credentials private.
 

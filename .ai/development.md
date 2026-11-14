@@ -55,7 +55,7 @@ React Testing Library is used for component behavior, while pure utilities and s
 
 ### Vercel
 
-Import the repository into Vercel. `vercel.json` sets the Vite framework, install command (`npm ci`), test-and-build command (`npm test && npm run build`), and output directory (`dist`). Connect GitHub to create preview deployments for pull requests and production deployments from `main`. Vercel builds use the `/` base path, and the app retains hash-based URLs such as `/#/movie/123`; no SPA rewrite is needed.
+Import the repository into Vercel. `vercel.json` sets the Vite framework, install command (`npm ci`), production build command (`npm run build`), and output directory (`dist`). Tests run separately in GitHub Actions. Connect GitHub to create preview deployments for pull requests and production deployments from `main`. Vercel builds use the `/` base path, and the app retains hash-based URLs such as `/#/movie/123`; no SPA rewrite is needed.
 
 Configure optional Vite environment variables in the Vercel project settings when the deployment needs them. Every `VITE_*` value is included in the browser bundle and is public, not a server-side secret.
 

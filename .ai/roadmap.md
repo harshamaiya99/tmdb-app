@@ -15,7 +15,7 @@
 **Phase 1: Static frontend hosting**
 
 1. Connect the existing GitHub repository to Vercel and configure Git-based preview and production deployments.
-2. Configure Vercel to install with `npm ci`, run tests and build with `npm test && npm run build`, and serve `dist` from the domain root.
+2. Configure Vercel to install with `npm ci`, build with `npm run build`, and serve `dist` from the domain root; keep tests in the existing GitHub Actions workflow.
 3. Keep `HashRouter` and all existing client-side authentication, TMDB requests, and account behavior unchanged.
 4. Configure only the existing optional build-time variables needed to preserve current behavior, understanding that `VITE_*` values are public in the client bundle.
 5. Verify the Vercel preview, app routes, static assets, existing TMDB flows, and service worker before cutover.
