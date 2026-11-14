@@ -12,9 +12,16 @@ interface WatchLinkButtonProps {
   label: string;
   className?: string;
   size?: ButtonProps['size'];
+  onEmpty?: () => void;
 }
 
-export function WatchLinkButton({ links, label, className, size }: WatchLinkButtonProps) {
+export function WatchLinkButton({ links, label, className, size, onEmpty }: WatchLinkButtonProps) {
+  const handleEmptyClick = () => {
+    if (links.length === 0) {
+      onEmpty?.();
+    }
+  };
+
   if (links.length === 1) {
     return (
       <Button asChild size={size} className={`gap-2 ${className ?? ''}`}>
@@ -60,7 +67,7 @@ export function WatchLinkButton({ links, label, className, size }: WatchLinkButt
   }
 
   return (
-    <Button type="button" size={size} disabled className={`gap-2 ${className ?? ''}`}>
+    <Button type="button" size={size} onClick={handleEmptyClick} className={`gap-2 ${className ?? ''}`}>
       <PlayCircle className="h-5 w-5" />
       {label}
     </Button>

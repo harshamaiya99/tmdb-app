@@ -20,6 +20,9 @@ import { AccountMediaActions } from '@/components/AccountMediaActions';
 import { TVEpisodeRatingAction } from '@/components/TVEpisodeRatingAction';
 import { WatchLinkButton } from '@/components/WatchLinkButton';
 
+const embedSettingsDialogTitle = 'Embed settings needed';
+const embedSettingsDialogMessage = 'Add a TV URL template in embed settings to enable playback.';
+
 interface EpisodeCardProps {
   episode: Episode;
   tvShowName: string;
@@ -82,6 +85,7 @@ export function TVShowDetailsPage() {
   const [activeShowMedia, setActiveShowMedia] = useState<'images' | 'videos'>('images');
   const [selectedEpisode, setSelectedEpisode] = useState<{ episode: Episode } | null>(null);
   const [selectedShowImageIndex, setSelectedShowImageIndex] = useState<number | null>(null);
+  const [showEmbedSettingsDialog, setShowEmbedSettingsDialog] = useState(false);
   const episodeDialogCloseRef = useRef<HTMLButtonElement>(null);
   const showImageDialogRef = useRef<HTMLDivElement>(null);
   const showImageTriggerRef = useRef<HTMLButtonElement | null>(null);
@@ -1202,6 +1206,7 @@ export function TVShowDetailsPage() {
                 label="Watch episode"
                 size="lg"
                 className="h-9 min-w-0 shrink gap-1 px-2 sm:h-10 sm:gap-2 sm:px-8"
+                onEmpty={() => setShowEmbedSettingsDialog(true)}
               />
               <div className="flex shrink-0 items-center gap-1 sm:gap-2">
                 <Button
@@ -1229,15 +1234,39 @@ export function TVShowDetailsPage() {
                   <ArrowRight className="h-5 w-5" />
                 </Button>
               </div>
-              {tvLinks.length === 0 && (
-                <p className="w-full text-sm text-muted-foreground">
-                  Add a TV URL template in embed settings to enable playback.
-                </p>
-              )}
             </div>
           </section>
+        </div>
+      )}
+      {showEmbedSettingsDialog && (
+        <div className="fixed inset-0 z-[120] flex items-center justify-center bg-black/80 px-4 py-6">
+          <div className="max-w-sm rounded-lg bg-card p-6 shadow-lg">
+            <h3 className="mb-4 text-lg font-semibold">{embedSettingsDialogTitle}</h3>
+            <p className="mb-6 text-sm text-muted-foreground">
+              {embedSettingsDialogMessage}
+            </p>
+            <div className="flex justify-end gap-2">
+              <Button
+                variant="outline"
+                onClick={() => setShowEmbedSettingsDialog(false)}
+                className="flex-1"
+              >
+                Close
+              </Button>
+              <Button
+                onClick={() => {
+                  setShowEmbedSettingsDialog(false);
+                  navigate('/settings');
+                }}
+                className="flex-1"
+              >
+                Go to Settings
+              </Button>
+            </div>
+          </div>
         </div>
       )}
     </div>
   );
 }
+

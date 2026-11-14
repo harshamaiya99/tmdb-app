@@ -19,12 +19,16 @@ import { useEmbedSettings } from '@/contexts/EmbedSettingsContext';
 import { AccountMediaActions } from '@/components/AccountMediaActions';
 import { WatchLinkButton } from '@/components/WatchLinkButton';
 
+const embedSettingsDialogTitle = 'Embed settings needed';
+const embedSettingsDialogMessage = 'Add a movie URL template in embed settings to enable playback.';
+
 export function MovieDetailsPage() {
   const { id } = useParams<{ id: string }>();
   const [activeCredits, setActiveCredits] = useState<'cast' | 'crew'>('cast');
   const [activeMovieMedia, setActiveMovieMedia] = useState<'images' | 'videos'>('images');
   const [selectedMovieImageIndex, setSelectedMovieImageIndex] = useState<number | null>(null);
   const [placeCompanyInfoBesideRightColumn, setPlaceCompanyInfoBesideRightColumn] = useState(false);
+  const [showEmbedSettingsDialog, setShowEmbedSettingsDialog] = useState(false);
   const mediaDialogRef = useRef<HTMLDivElement>(null);
   const imageTriggerRef = useRef<HTMLButtonElement | null>(null);
   const posterColumnRef = useRef<HTMLDivElement>(null);
@@ -224,12 +228,8 @@ export function MovieDetailsPage() {
               }))}
               label="Watch movie"
               className="w-full"
+              onEmpty={() => setShowEmbedSettingsDialog(true)}
             />
-            {movieLinks.length === 0 && (
-              <p className="text-center text-sm text-muted-foreground">
-                Add a movie URL template in embed settings to enable playback.
-              </p>
-            )}
           </div>
 
           <div className="contents md:grid md:min-w-0 md:grid-cols-1 md:gap-y-4 xl:contents">
@@ -748,7 +748,37 @@ export function MovieDetailsPage() {
             />
           </LazySection>
         )}
+
+        {showEmbedSettingsDialog && (
+          <div className="fixed inset-0 z-[70] flex items-center justify-center bg-black/80 px-4 py-6">
+            <div className="max-w-sm rounded-lg bg-card p-6 shadow-lg">
+              <h3 className="mb-4 text-lg font-semibold">{embedSettingsDialogTitle}</h3>
+              <p className="mb-6 text-sm text-muted-foreground">
+                {embedSettingsDialogMessage}
+              </p>
+              <div className="flex justify-end gap-2">
+                <Button
+                  variant="outline"
+                  onClick={() => setShowEmbedSettingsDialog(false)}
+                  className="flex-1"
+                >
+                  Close
+                </Button>
+                <Button
+                  onClick={() => {
+                    setShowEmbedSettingsDialog(false);
+                    navigate('/settings');
+                  }}
+                  className="flex-1"
+                >
+                  Go to Settings
+                </Button>
+              </div>
+            </div>
+          </div>
+        )}
       </div>
     </div>
   );
 }
+
