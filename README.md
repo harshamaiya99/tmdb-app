@@ -142,10 +142,9 @@ The site can be installed as an app from supported browsers when served over HTT
 │   └── tmdb/
 │       ├── category.ts                     # Allowlisted paginated media and people categories
 │       ├── configuration.ts                # Read-only TMDB configuration endpoint
-│       ├── discover.ts                    # Validated movie/TV discovery filters and release-date ranges
+│       ├── discover.ts                     # Validated movie/TV discovery filters and release-date ranges
 │       ├── media.ts                        # Media detail and supporting TMDB reads
-│       ├── search.ts                      # Search for movies, TV shows, people, and multi-results
-│       └── trending-movies.ts              # Trending movies endpoint
+│       └── search.ts                       # Search for movies, TV shows, people, and multi-results
 ├── db/
 │   └── schema.sql                          # Neon database schema for account sessions and auth state
 ├── public/
@@ -255,7 +254,6 @@ The site can be installed as an app from supported browsers when served over HTT
 │   │   ├── tmdbMediaFunction.test.ts        # Media endpoint tests
 │   │   ├── tmdbPublicLists.test.ts          # Public-list API tests
 │   │   ├── tmdbSearchFunction.test.ts       # Search endpoint tests
-│   │   ├── tmdbTrendingMoviesFunction.test.ts # Trending endpoint tests
 │   │   ├── useCachedQuery.test.tsx          # Cache hook tests
 │   │   ├── utils.test.ts                   # Utility tests
 │   │   └── ...
