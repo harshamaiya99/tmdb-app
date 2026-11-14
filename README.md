@@ -201,8 +201,7 @@ The site can be installed as an app from supported browsers when served over HTT
 │   │   ├── usePageTitle.ts                # Synchronizes document title
 │   │   ├── usePagination.ts               # Shared pagination behavior
 │   │   ├── useRatingDialog.ts             # Rating-dialog state hook
-│   │   ├── useTheme.ts                    # Theme reader and selector hook
-│   │   └── useTheme.tsx                   # Theme provider wrapper and state
+│   │   └── useTheme.ts                    # Theme reader and selector hook
 │   ├── lib/
 │   │   ├── accountCache.ts                # Cache layer for account data and derived results
 │   │   ├── embedSettings.ts               # Helpers for embed URL templates and settings
