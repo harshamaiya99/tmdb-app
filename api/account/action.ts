@@ -9,7 +9,7 @@ import {
   respondWithError,
   type VercelRequest,
   type VercelResponse,
-} from '../_lib/account';
+} from '../_lib/account.js';
 
 type MediaType = 'movie' | 'tv';
 

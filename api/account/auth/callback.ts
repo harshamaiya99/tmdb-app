@@ -14,7 +14,7 @@ import {
   tokenHash,
   type VercelRequest,
   type VercelResponse,
-} from '../../_lib/account';
+} from '../../_lib/account.js';
 
 interface V3Account {
   id: number;
