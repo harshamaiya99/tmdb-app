@@ -12,6 +12,8 @@ The migration is being introduced incrementally so the current client behavior r
 
 Configure `TMDB_API_KEY` in Vercel's project environment-variable settings for Preview and Production to enable this endpoint; the local `.env` file is not automatically uploaded to Vercel. Do not prefix the server variable with `VITE_`. The existing `VITE_TMDB_ACCESS_TOKEN` is a separate v4 app token and is not used by this function; the embed URL variables remain client-side settings. Later migration steps will add specific allowlisted operations and switch the frontend service only after the new API surface has been verified.
 
+The read-only `GET /api/tmdb/trending-movies?page=1` endpoint is the first catalog-data pilot. It maps to the fixed TMDB `/3/trending/movie/day` operation, accepts only pages 1–500, uses the same server-only API key, and returns TMDB's response shape unchanged. The frontend is not switched to this endpoint yet; compare its response with `tmdbService.getTrendingMovies()` on a Preview deployment before scheduling the client cutover.
+
 ## Environment and runtime config
 
 The default TMDB credential is provided by the user and stored in local storage. The app does not rely on a server-side secret or a separate auth service. Optional `VITE_MOVIE_EMBED_URL` and `VITE_TV_EMBED_URL` variables provide build-time defaults for movie and TV watch-link templates. Browser-local settings can override those defaults and are stored separately in local storage.
