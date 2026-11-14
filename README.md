@@ -1,5 +1,17 @@
 # TMDB Browser
 
+[![REACT](https://img.shields.io/badge/REACT-61DAFB?style=for-the-badge&logo=react&logoColor=white)](https://react.dev/)
+[![TYPESCRIPT](https://img.shields.io/badge/TYPESCRIPT-3178C6?style=for-the-badge&logo=typescript&logoColor=white)](https://www.typescriptlang.org/)
+[![VITE](https://img.shields.io/badge/VITE-646CFF?style=for-the-badge&logo=vite&logoColor=white)](https://vite.dev/)
+[![TAILWIND](https://img.shields.io/badge/TAILWIND-38B2AC?style=for-the-badge&logo=tailwindcss&logoColor=white)](https://tailwindcss.com/)
+[![SHADCN%2FUI](https://img.shields.io/badge/SHADCN%2FUI-111827?style=for-the-badge&logo=shadcnui&logoColor=white)](https://ui.shadcn.com/)
+[![REACT ROUTER](https://img.shields.io/badge/REACT_ROUTER-CA4245?style=for-the-badge&logo=reactrouter&logoColor=white)](https://reactrouter.com/)
+[![RADIX UI](https://img.shields.io/badge/RADIX_UI-16181D?style=for-the-badge&logo=radixui&logoColor=white)](https://www.radix-ui.com/)
+[![VITEST](https://img.shields.io/badge/VITEST-6E9F18?style=for-the-badge&logo=vitest&logoColor=white)](https://vitest.dev/)
+[![VERCEL](https://img.shields.io/badge/VERCEL-000000?style=for-the-badge&logo=vercel&logoColor=white)](https://vercel.com/)
+[![NEON](https://img.shields.io/badge/NEON-00E599?style=for-the-badge&logo=neon&logoColor=white)](https://neon.tech/)
+[![PWA](https://img.shields.io/badge/PWA-5A0FC8?style=for-the-badge&logo=pwa&logoColor=white)](https://web.dev/progressive-web-apps/)
+
 A clean, minimal web app for browsing movies, TV shows, and people with data from The Movie Database (TMDB). Built with React, TypeScript, Vite, Tailwind CSS, and shadcn/ui-style components.
 
 **Live site:** [TMDB Browser](https://tmdb-app-rho.vercel.app/)
