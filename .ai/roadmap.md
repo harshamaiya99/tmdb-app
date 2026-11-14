@@ -53,3 +53,143 @@ The repository is connected to Vercel and the production frontend is hosted at [
 * `src/lib/tmdb/account.ts` — account authorization, watchlists, ratings, and custom lists.
 * Keep `src/lib/tmdb.ts` as a small entry point that exports the existing `tmdbService` and types, so callers do not need to change.
 * Start with the clearest boundaries (types and account operations), and validate each extraction with the existing tests and build before proceeding. Avoid splitting into many overly small files.
+
+## Documentation and API Reference Strategy
+
+* Document the app at the correct layer: inline TSDoc for TypeScript APIs, Storybook for reusable UI components, and project docs for architecture and workflows.
+* Prefer selective documentation over broad comment spam; document public contracts, integration boundaries, and non-obvious behavior.
+* Keep the existing README and `.ai/` docs aligned with the implementation rather than creating overlapping documentation layers.
+
+### Why this matters
+
+This project has multiple contracts that are easy to misunderstand:
+
+* TMDB integration and normalized response logic in `src/lib/*`
+* account/session behavior in `api/*`
+* shared hooks and reusable UI behavior in `src/hooks/*` and `src/components/*`
+* route-level data fetching and page composition in `src/pages/*`
+
+TSDoc and generated API docs reduce onboarding time, make shared logic easier to maintain, and clarify the real public behavior of functions and components.
+
+### Documentation model
+
+#### 1. TSDoc for TypeScript contracts
+
+Use TSDoc for exported functions, hooks, utilities, and public component props.
+
+Priority files:
+
+* `src/lib/tmdb.ts`
+* `src/lib/utils.ts`
+* `src/hooks/usePageTitle.ts`
+* `src/hooks/usePagination.ts`
+* `src/hooks/useRatingDialog.ts`
+* `src/components/MediaCard.tsx`
+* `src/components/RatingDialog.tsx`
+* `src/components/ReviewSection.tsx`
+* `api/tmdb/*.ts`
+* `api/account/*.ts`
+
+Document:
+
+* purpose and intent
+* inputs and outputs
+* edge cases and error behavior
+* caching, auth, and side effects
+* expected return shape or normalized model
+
+#### 2. Storybook for reusable UI
+
+Use Storybook for interactive or visually stateful components whose behavior is easiest to understand by example.
+
+Best candidates:
+
+* `MediaCard`
+* `RatingDialog`
+* `PaginationControls`
+* `WatchLinkButton`
+* `ReviewSection`
+
+#### 3. Project docs for architecture and flow
+
+Use the existing README and `.ai/*.md` files for higher-level context:
+
+* app structure and routing
+* TMDB/public-vs-account flow
+* auth and session boundaries
+* deployment and environment assumptions
+
+### Implementation roadmap
+
+#### Phase 1: establish the documentation standard
+
+* Define which files should use TSDoc vs Storybook vs project docs.
+* Keep the standard narrow and reusable rather than forcing comments everywhere.
+* Align the README and `.ai/` documents with the same terminology and boundaries.
+
+#### Phase 2: document the public API surface
+
+* Add TSDoc to the TMDB service layer, utility helpers, and shared hooks.
+* Document request/response contracts and important edge cases.
+* Ensure exported public functions are self-describing.
+
+#### Phase 3: document major UI components
+
+* Add prop and behavior docs to key reusable UI components.
+* Add Storybook examples for complex or stateful components.
+* Document loading, empty, and error states where they affect behavior.
+
+#### Phase 4: document server endpoints and auth flow
+
+* Add endpoint-level notes for account and TMDB routes.
+* Explain auth boundaries, expected input, and error handling.
+* Keep docs specific to actual runtime behavior rather than generic API summaries.
+
+#### Phase 5: generate docs automatically
+
+* Add TypeDoc to generate API docs from TSDoc comments.
+* Keep generated output in a dedicated docs folder or internal site for review.
+* Exclude test-only files and internal implementation detail from public docs.
+
+### Quality bar
+
+Document exported functions, hooks, and component props when they are part of the app's public contract. Leave internal one-off logic undocumented unless it is complex or easily misunderstood.
+
+This approach keeps the project maintainable without creating redundant or noisy documentation.
+
+### Practical file-by-file priority
+
+Highest priority:
+
+* `src/lib/tmdb.ts`
+* `src/lib/utils.ts`
+* `src/hooks/usePageTitle.ts`
+* `src/hooks/usePagination.ts`
+* `src/hooks/useRatingDialog.ts`
+* `src/components/MediaCard.tsx`
+* `src/components/RatingDialog.tsx`
+* `src/components/ReviewSection.tsx`
+* `api/tmdb/*.ts`
+* `api/account/*.ts`
+
+Secondary priority:
+
+* `src/components/Layout.tsx`
+* `src/components/MediaSection.tsx`
+* `src/components/PaginationControls.tsx`
+* `src/components/WatchLinkButton.tsx`
+* `src/lib/accountCache.ts`
+* `src/lib/requestCache.ts`
+* `src/lib/embedSettings.ts`
+
+### Recommended end state
+
+The project should have:
+
+* TSDoc comments on public TypeScript functions and components
+* TypeDoc-generated project docs for API surfaces
+* Storybook coverage for the key UI components
+* A concise architecture doc for routing, data flow, and account flows
+* Enough inline explanation that a contributor can understand the app without reading every file in sequence
+
+This gives the project a Javadoc-style documentation story without over-documenting small internals, and it fits the current codebase structure and project goals.
