@@ -40,7 +40,7 @@ The app uses Vite environment variables for optional client-side integrations. `
 
 ## 3. Routing Model
 
-Routing is defined in [src/App.tsx](src/App.tsx) with React Router's `HashRouter`. Page components are lazy-loaded at the route boundary, so each page's code is downloaded when needed rather than included in the initial JavaScript bundle. A shared Suspense fallback is shown while a page chunk loads. Hash-based URLs keep client-side routes working on static hosting, including direct visits and refreshes. Vercel builds from the domain root; the GitHub Actions Pages build temporarily retains its `/tmdb-app/` base path during migration.
+Routing is defined in [src/App.tsx](src/App.tsx) with React Router's `HashRouter`. Page components are lazy-loaded at the route boundary, so each page's code is downloaded when needed rather than included in the initial JavaScript bundle. A shared Suspense fallback is shown while a page chunk loads. Hash-based URLs keep client-side routes working on static hosting, including direct visits and refreshes. Vercel serves the app from the domain root.
 
 ### Main routes
 

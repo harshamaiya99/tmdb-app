@@ -2,7 +2,7 @@
 
 ## Migration: GitHub Pages to Vercel
 
-**Objective:** Move frontend hosting from GitHub Pages to Vercel first, preserving the existing static app behavior. Backend execution, server-side TMDB credentials, and account-token storage are later work and are explicitly out of scope for this first hosting phase.
+**Objective:** Move frontend hosting from GitHub Pages to Vercel while preserving the existing static app behavior. Backend execution, server-side TMDB credentials, and account-token storage are later work and are explicitly out of scope for the hosting migration.
 
 **Reason for Migration:**
 
@@ -12,18 +12,13 @@
 * Support optional TMDB account authorization for personal features without requiring an API-key login to browse.
 * Simplify deployment by integrating GitHub directly with Vercel.
 
-**Phase 1: Static frontend hosting**
+**Completed: Static frontend hosting**
 
-1. Connect the existing GitHub repository to Vercel and configure Git-based preview and production deployments.
-2. Configure Vercel to install with `npm ci`, build with `npm run build`, and serve `dist` from the domain root; keep tests in the existing GitHub Actions workflow.
-3. Keep `HashRouter` and all existing client-side authentication, TMDB requests, and account behavior unchanged.
-4. Configure only the existing optional build-time variables needed to preserve current behavior, understanding that `VITE_*` values are public in the client bundle.
-5. Verify the Vercel preview, app routes, static assets, existing TMDB flows, and service worker before cutover.
-6. Update the live-site link and disable GitHub Pages only after the Vercel production deployment is verified; retain Pages as a fallback until then.
+The repository is connected to Vercel and the production frontend is hosted at [tmdb-app-rho.vercel.app](https://tmdb-app-rho.vercel.app/). Vercel builds with `npm ci` and `npm run build`, serving `dist` from the domain root. Hash routing and the existing client-side authentication, TMDB requests, and account behavior are unchanged. GitHub Pages deployment has been retired.
 
 **Later phases (not part of the hosting migration):** design a narrow Vercel API for the TMDB operations used by the app; move shared TMDB application credentials server-side; update the frontend TMDB service; remove the required API-key login gate; and move user account authorization, session handling, and token storage to a suitably persistent server-side system with appropriate authorization, CSRF, caching, and rate-limit protections.
 
-**Phase 1 expected outcome:** The existing React + Vite frontend is hosted on Vercel with GitHub-integrated deployments and behavior equivalent to the current static site. This phase does not provide a backend or improve credential privacy.
+**Hosting migration outcome:** The existing React + Vite frontend is hosted on Vercel with GitHub-integrated deployments and behavior equivalent to the previous static site. This phase does not provide a backend or improve credential privacy.
 
 **Security and architecture notes:**
 

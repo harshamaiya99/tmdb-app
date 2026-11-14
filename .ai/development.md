@@ -59,12 +59,6 @@ Import the repository into Vercel. `vercel.json` sets the Vite framework, instal
 
 Configure optional Vite environment variables in the Vercel project settings when the deployment needs them. Every `VITE_*` value is included in the browser bundle and is public, not a server-side secret.
 
-The GitHub Pages workflow remains enabled as a fallback until Vercel production and the existing app flows have been verified. Its build retains the `/tmdb-app/` base path through the `GITHUB_ACTIONS` environment variable; Vercel builds use `/`. Disable the Pages workflow only after confirming the Vercel production deployment, then update the live-site link in the README.
-
-### GitHub Pages fallback
-
-The `.github/workflows/deploy.yml` workflow still builds and deploys the `dist` directory to GitHub Pages after pushes to `main` (or a manual workflow dispatch). The GitHub Actions build uses the `/tmdb-app/` base path for the existing project-site URL; this is a temporary compatibility path for the cutover and can be removed after Pages is retired.
-
 The app includes a web app manifest and registers its service worker in production, allowing supported browsers to offer installation when served over HTTPS. The worker caches the app shell and same-origin assets for launch; TMDB API content still requires an internet connection.
 
 ## Environment Variables

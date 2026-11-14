@@ -2,7 +2,7 @@
 
 A clean, minimal web app for browsing movies, TV shows, and people with data from The Movie Database (TMDB). Built with React, TypeScript, Vite, Tailwind CSS, and shadcn/ui-style components.
 
-**Current live site:** [TMDB Browser](https://harshamaiya99.github.io/tmdb-app/) (GitHub Pages remains active until the Vercel production deployment is verified.)
+**Live site:** [TMDB Browser](https://tmdb-app-rho.vercel.app/)
 
 ## Features
 
@@ -86,11 +86,9 @@ npm run build
 
 ## Deploy to Vercel
 
-Import this repository into Vercel. The included `vercel.json` configures the Vite framework, `npm ci`, the production build command (`npm run build`), and the `dist` output directory. Tests run separately in GitHub Actions. Vercel can create preview deployments for pull requests and production deployments from the configured production branch (normally `main`).
+The repository is connected to Vercel. The included `vercel.json` configures the Vite framework, `npm ci`, the production build command (`npm run build`), and the `dist` output directory. Vercel creates preview deployments for pull requests and production deployments from `main`. Tests run separately in GitHub Actions.
 
 The app retains hash-based routes (for example, `/#/movie/123`) and is built for the domain root. No SPA rewrite is required. Configure any optional Vite environment variables used by the deployment in the Vercel project settings. Values prefixed with `VITE_` are embedded in the client bundle and are public; this hosting-only migration does not make credentials private.
-
-The GitHub Pages workflow remains enabled as a fallback until the Vercel production deployment and existing app flows have been verified. After verification, update the live-site link and disable the Pages workflow.
 
 The site can be installed as an app from supported browsers when served over HTTPS. The service worker caches the app shell and same-origin assets; TMDB content still requires an internet connection.
 
@@ -104,9 +102,6 @@ The site can be installed as an app from supported browsers when served over HTT
 │   ├── development.md                 # Local development and deployment workflow
 │   ├── roadmap.md                      # Planned project improvements
 │   └── ui.md                           # UI conventions, design tokens, and component patterns
-├── .github/
-│   └── workflows/
-│       └── deploy.yml                 # Builds and deploys the site to GitHub Pages
 ├── vercel.json                        # Vercel Vite build and output configuration
 ├── public/
 │   ├── apple-touch-icon.png           # Icon used when adding the app to an Apple device
@@ -210,7 +205,7 @@ The site can be installed as an app from supported browsers when served over HTT
 ├── tsconfig.json                      # TypeScript settings for the application
 ├── tsconfig.node.json                 # TypeScript settings for Vite configuration
 ├── tsconfig.test.json                 # TypeScript settings for tests
-├── vite.config.ts                     # Vite plugins, source alias, and GitHub Pages base path
+├── vite.config.ts                     # Vite plugins, source alias, and root base path
 └── vitest.config.ts                   # Vitest test environment and setup configuration
 ```
 
