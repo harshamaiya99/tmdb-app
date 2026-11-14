@@ -67,7 +67,13 @@ export function WatchLinkButton({ links, label, className, size, onEmpty }: Watc
   }
 
   return (
-    <Button type="button" size={size} onClick={handleEmptyClick} className={`gap-2 ${className ?? ''}`}>
+    <Button
+      type="button"
+      size={size}
+      onClick={handleEmptyClick}
+      disabled={links.length === 0}
+      className={`gap-2 ${className ?? ''}`}
+    >
       <PlayCircle className="h-5 w-5" />
       {label}
     </Button>
