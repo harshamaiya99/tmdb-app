@@ -184,22 +184,6 @@ export function Layout({ children }: LayoutProps) {
 
   const showBackButton = location.pathname !== '/';
 
-  const handleLogout = async () => {
-    try {
-      await disconnectTMDBAccount();
-    } catch (error) {
-      toast({
-        title: 'TMDB account logout issue',
-        description: error instanceof Error ? error.message : 'Please try again.',
-        variant: 'destructive',
-      });
-      navigate('/');
-      return;
-    }
-
-    navigate('/');
-  };
-
   const handleConnectTMDBAccount = () => {
     void connectTMDBAccount().catch((error: unknown) => {
       toast({
@@ -353,14 +337,6 @@ export function Layout({ children }: LayoutProps) {
             <Info className="h-4 w-4" />
             About
           </Link>
-        </DropdownMenu.Item>
-        <DropdownMenu.Separator className="my-1 h-px bg-border" />
-        <DropdownMenu.Item
-          onSelect={() => void handleLogout()}
-          className="flex min-h-10 cursor-pointer select-none items-center gap-2 rounded-sm bg-destructive px-3 py-2 text-sm text-destructive-foreground outline-none hover:bg-destructive/90 focus:bg-destructive/90 focus:text-destructive-foreground"
-        >
-          <LogOut className="h-4 w-4" />
-          Log out
         </DropdownMenu.Item>
       </DropdownMenu.Content>
     </DropdownMenu.Portal>
