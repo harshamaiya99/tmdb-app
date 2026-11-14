@@ -49,6 +49,13 @@ export function AccountMediaActions({
     ? stateOverride.value
     : accountStateQuery.data;
   const currentRating = typeof accountState?.rated === 'object' ? accountState.rated.value : null;
+  const actionGridClassName = squareButtons
+    ? 'grid w-fit grid-cols-2 gap-2'
+    : showAddToList && showRatings
+      ? 'grid min-w-0 grid-cols-4 gap-1'
+      : showAddToList || showRatings
+        ? 'grid min-w-0 grid-cols-3 gap-1'
+        : 'grid min-w-0 grid-cols-2 gap-1';
 
   useEffect(() => {
     if (isLoginPromptOpen) closeLoginPromptButtonRef.current?.focus();
@@ -113,7 +120,7 @@ export function AccountMediaActions({
 
     return (
       <>
-        <section aria-label="TMDB account actions" className={squareButtons ? 'grid w-fit grid-cols-2 gap-2' : 'grid min-w-0 grid-cols-4 gap-1'}>
+        <section aria-label="TMDB account actions" className={actionGridClassName}>
           <Button
             type="button"
             variant="outline"
@@ -149,17 +156,19 @@ export function AccountMediaActions({
               <ListPlus aria-hidden="true" className="h-4 w-4" />
             </Button>
           )}
-          <Button
-            type="button"
-            variant="outline"
-            size="sm"
-            className={squareButtons ? 'h-9 w-9 p-0' : 'h-9 w-full min-w-0 justify-center px-1'}
-            aria-label="Rate this title"
-            title="Rate this title"
-            onClick={() => setIsLoginPromptOpen(true)}
-          >
-            <Star aria-hidden="true" className="h-4 w-4" />
-          </Button>
+          {showRatings && (
+            <Button
+              type="button"
+              variant="outline"
+              size="sm"
+              className={squareButtons ? 'h-9 w-9 p-0' : 'h-9 w-full min-w-0 justify-center px-1'}
+              aria-label="Rate this title"
+              title="Rate this title"
+              onClick={() => setIsLoginPromptOpen(true)}
+            >
+              <Star aria-hidden="true" className="h-4 w-4" />
+            </Button>
+          )}
         </section>
         {isLoginPromptOpen && (
           <div
@@ -261,7 +270,7 @@ export function AccountMediaActions({
 
   return (
     <>
-      <section aria-label="TMDB account actions" className={squareButtons ? 'grid w-fit grid-cols-2 gap-2' : 'grid min-w-0 grid-cols-4 gap-1'}>
+      <section aria-label="TMDB account actions" className={actionGridClassName}>
         <Button
           type="button"
           variant={accountState?.watchlist ? 'selected' : 'outline'}
