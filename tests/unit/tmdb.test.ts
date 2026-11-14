@@ -103,6 +103,69 @@ describe('TMDB Talk-show filtering', () => {
     });
   });
 
+  it('routes movie and multi-search through the Vercel API in deployed builds', async () => {
+    vi.stubEnv('DEV', false);
+    const fetchMock = vi.mocked(fetch);
+    fetchMock.mockImplementation(async () => responseWith({
+      page: 1,
+      results: [{ id: 1, title: 'Example' }],
+    }));
+
+    await tmdbService.searchMovies('Example', 2, undefined, 'IN');
+    await tmdbService.searchMulti('Example show', 1);
+
+    expect(fetchMock.mock.calls[0][0]).toBe(
+      '/api/tmdb/search?type=movie&query=Example&page=2&region=IN',
+    );
+    expect(fetchMock.mock.calls[1][0]).toBe(
+      '/api/tmdb/search?type=multi&query=Example+show&page=1',
+    );
+  });
+
+  it('preserves search spacing fallback through the Vercel API', async () => {
+    vi.stubEnv('DEV', false);
+    const fetchMock = vi.mocked(fetch);
+    fetchMock
+      .mockResolvedValueOnce(responseWith({ page: 1, results: [] }))
+      .mockResolvedValueOnce(responseWith({
+        page: 1,
+        results: [{ id: 1, title: 'Ice Age' }],
+      }));
+
+    await expect(tmdbService.searchMovies('iceage')).resolves.toMatchObject({
+      results: [{ id: 1, title: 'Ice Age' }],
+    });
+
+    expect(fetchMock.mock.calls[0][0]).toBe(
+      '/api/tmdb/search?type=movie&query=iceage&page=1',
+    );
+    expect(fetchMock.mock.calls[1][0]).toBe(
+      '/api/tmdb/search?type=movie&query=ice+age&page=1',
+    );
+  });
+
+  it('routes movie and TV detail requests through the Vercel media API', async () => {
+    vi.stubEnv('DEV', false);
+    const fetchMock = vi.mocked(fetch);
+    fetchMock
+      .mockResolvedValueOnce(responseWith({ id: 10, title: 'Movie' }))
+      .mockResolvedValueOnce(responseWith({
+        id: 11,
+        name: 'Show',
+        recommendations: { results: [{ id: 12, genre_ids: [18] }] },
+        similar: { results: [{ id: 13, genre_ids: [10767] }] },
+      }));
+
+    await tmdbService.getMovieDetails(10);
+    await expect(tmdbService.getTVShowDetails(11)).resolves.toMatchObject({
+      recommendations: { results: [{ id: 12 }] },
+      similar: { results: [] },
+    });
+
+    expect(fetchMock.mock.calls[0][0]).toBe('/api/tmdb/media?resource=movie&id=10');
+    expect(fetchMock.mock.calls[1][0]).toBe('/api/tmdb/media?resource=tv&id=11');
+  });
+
   it('passes cancellation signals to the Vercel trending movies API', async () => {
     vi.stubEnv('DEV', false);
     const fetchMock = vi.mocked(fetch);

@@ -2,10 +2,11 @@
 
 ## 1. Overview
 
-This project is a client-side React + TypeScript application for browsing TMDB media catalog data. It is intentionally lightweight and centered around a few core ideas:
+This project is a React + TypeScript application for browsing TMDB media catalog data. Its frontend is client-side, with a small Vercel Functions layer proxying selected public reads. It is intentionally lightweight and centered around a few core ideas:
 
 - A user provides a TMDB API key at login.
-- The app stores that key locally and uses it for authenticated requests.
+- The app stores the user's key locally for login, local development, and public operations not yet migrated.
+- Deployed, migrated public reads use a server-only TMDB API key through fixed Vercel function routes.
 - Routing is handled by React Router.
 - UI is composed from reusable page components and shared UI primitives.
 - TMDB requests remain centralized in one service module rather than spread across pages.
@@ -30,7 +31,7 @@ The main application shell is defined in [src/App.tsx](src/App.tsx). It wires to
 3. On success, the key is stored in local storage and injected into the TMDB service.
 4. Protected routes become accessible.
 
-This means the app is fully client-driven and does not rely on a backend server.
+The app does not use a backend for account sessions or mutations. Vercel Functions provide a narrow proxy for selected public TMDB reads.
 
 TMDB account features use an additional, optional user-consent flow. The app creates a request token, redirects the user to TMDB for approval, then exchanges the approved token for a session ID and account identity. The session and account identity are stored locally by `TMDBAccountProvider`; the temporary request token stays in session storage during the redirect. Account list routes remain protected by the app API-key login and require the separate TMDB session.
 
@@ -69,14 +70,18 @@ Routing is defined in [src/App.tsx](src/App.tsx) with React Router's `HashRouter
 
 ## 4. API Layer
 
-The API integration is centralized in [src/lib/tmdb.ts](src/lib/tmdb.ts).
+The frontend API integration is centralized in [src/lib/tmdb.ts](src/lib/tmdb.ts), with server-side proxy routes under [api/tmdb](../api/tmdb).
 
 ### Responsibilities of the API layer
 
 - manage the TMDB API base URL and image base URL
 - hold strongly typed interfaces for movies, TV shows, people, reviews, episodes, and related entities
 - expose a single `tmdbService` object with methods for fetching data
-- store the current API key and attach it to outgoing requests
+- route migrated deployed public reads through the Vercel API
+- use the user's stored API key for local development and not-yet-migrated requests
+- attach browser credentials to direct TMDB requests
+
+The Vercel functions use the server-only `TMDB_API_KEY` and fixed or allowlisted operations for configuration, trending movies, categories, search, and media details/supporting lookups. Local Vite development continues calling TMDB directly; discovery/filter reads and account requests are not yet migrated.
 
 ### Core API capabilities
 
@@ -169,7 +174,7 @@ A typical request path looks like this:
 
 1. A page component mounts.
 2. It calls a method on `tmdbService` from [src/lib/tmdb.ts](src/lib/tmdb.ts).
-3. The service builds the appropriate TMDB request and includes the stored API key.
+3. In production, migrated public reads call an allowlisted same-origin Vercel function, which authenticates to TMDB using the server environment variable. In local development and for un-migrated requests, the service calls TMDB directly using browser credentials.
 4. Data is returned as typed results.
 5. The page stores the result in local state.
 6. Shared UI components render the result and any loading or error state.

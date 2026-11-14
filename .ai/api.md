@@ -2,23 +2,27 @@
 
 ## Overview
 
-TMDB access is handled through a single service module in [src/lib/tmdb.ts](src/lib/tmdb.ts). The app uses the browser's native fetch API to call The Movie Database endpoints directly from the client.
-
-This means the project is fully client-side and does not rely on a separate backend server for TMDB requests.
+TMDB access is centralized in [src/lib/tmdb.ts](src/lib/tmdb.ts). In local Vite development, the service calls TMDB directly using the user's API key. In deployed builds, migrated public reads use same-origin Vercel Functions and the server-only `TMDB_API_KEY`; account authorization and mutations still use the existing browser-based flows.
 
 ## Vercel API migration (in progress)
 
-The migration is being introduced incrementally so the current client behavior remains available while server-side functions are verified. The first Vercel function, [api/tmdb/configuration.ts](../api/tmdb/configuration.ts), handles only `GET /api/tmdb/configuration`. It accepts GET requests only, calls the fixed TMDB `/3/configuration` endpoint using the server-only `TMDB_API_KEY` environment variable, disables caching, and returns a generic error if TMDB fails.
+The migration is being introduced incrementally so local development and not-yet-migrated methods retain their current behavior. Vercel functions accept GET requests only, use fixed or allowlisted TMDB routes, disable caching, and return generic errors when TMDB fails.
 
-Configure `TMDB_API_KEY` in Vercel's project environment-variable settings for Preview and Production to enable this endpoint; the local `.env` file is not automatically uploaded to Vercel. Do not prefix the server variable with `VITE_`. The existing `VITE_TMDB_ACCESS_TOKEN` is a separate v4 app token and is not used by this function; the embed URL variables remain client-side settings. Later migration steps will add specific allowlisted operations and switch the frontend service only after the new API surface has been verified.
+Configure `TMDB_API_KEY` in Vercel's project environment-variable settings for Production to enable these endpoints; the local `.env` file is not automatically uploaded to Vercel. Do not prefix the server variable with `VITE_`. The existing `VITE_TMDB_ACCESS_TOKEN` is a separate v4 app token and is not used by these read functions; embed URL variables remain client-side settings.
 
 The read-only `GET /api/tmdb/trending-movies?page=1` endpoint maps to the fixed TMDB `/3/trending/movie/day` operation, accepts only pages 1–500, uses the same server-only API key, and returns TMDB's response shape unchanged. In deployed builds, the home-page `tmdbService.getTrendingMovies()` method uses this Vercel endpoint; local Vite development continues calling TMDB directly so `npm run dev` works without a Vercel Functions emulator.
 
-The allowlisted `GET /api/tmdb/category?category=...` endpoint covers paginated category routes for trending, popular, now-playing, top-rated, upcoming, streaming, and IMDb-style movie/TV lists. The category selects a fixed TMDB route; callers cannot supply arbitrary paths. Page, language, region, and sort parameters are validated, and TV Talk-show filtering remains applied by the client service. Deployed `tmdbService.getCategoryList()` calls this endpoint; local development retains direct TMDB calls. Other reads such as detail pages, search, and account operations have not yet been migrated.
+The allowlisted `GET /api/tmdb/category?category=...` endpoint covers paginated category routes for trending, popular, now-playing, top-rated, upcoming, streaming, and IMDb-style movie/TV lists. The category selects a fixed TMDB route; callers cannot supply arbitrary paths. Page, language, region, and sort parameters are validated, and TV Talk-show filtering remains applied by the client service. Deployed `tmdbService.getCategoryList()` calls this endpoint; local development retains direct TMDB calls.
+
+Public search uses `GET /api/tmdb/search?type=movie|tv|person|multi&query=...&page=...`; optional `region` is supported for movie search only. Search type is allowlisted, query length and page are validated, and the existing compact-query spacing fallback remains in the service. Deployed movie, TV, and person search and header multi-search use this endpoint.
+
+Other migrated public reads use `GET /api/tmdb/media?resource=...`. Resources are allowlisted for movie, TV, person, collection, movie/TV recommendations, similar titles and reviews, TV seasons and episodes, person movie/TV credits, and country configuration. Entity IDs, pagination, season numbers, and episode numbers are validated; append-to-response data is fixed per resource rather than caller-controlled. Deployed detail, related-media, season/episode, person-credit, collection, and country lookups use this endpoint.
+
+Discovery/filter reads and account authorization or mutations have not yet moved to Vercel. Local development continues to call TMDB directly for all methods, so `npm run dev` does not require a Vercel Functions emulator.
 
 ## Environment and runtime config
 
-The default TMDB credential is provided by the user and stored in local storage. The app does not rely on a server-side secret or a separate auth service. Optional `VITE_MOVIE_EMBED_URL` and `VITE_TV_EMBED_URL` variables provide build-time defaults for movie and TV watch-link templates. Browser-local settings can override those defaults and are stored separately in local storage.
+The app API key is configured as a server-only Vercel variable for migrated deployed reads. The user-entered key remains in local storage for login, local development, and reads that have not yet migrated. Optional `VITE_MOVIE_EMBED_URL` and `VITE_TV_EMBED_URL` variables provide build-time defaults for movie and TV watch-link templates. Browser-local settings can override those defaults and are stored separately in local storage.
 
 The service also supports an optional TMDB v4 app access token for custom-list authorization. Users may enter it on the login screen; it is stored in browser local storage under `tmdb_v4_access_token`. A build-time `VITE_TMDB_ACCESS_TOKEN` remains supported as a fallback. Both approaches expose the app-level token to the browser and are suitable only when that exposure is acceptable; a server-side proxy is required to keep credentials private.
 
@@ -29,8 +33,8 @@ Account features use a separate TMDB user session. The API key or configured bea
 A typical request follows this path:
 
 1. A page component requests data from the TMDB service.
-2. The service builds a full TMDB URL.
-3. The request uses the user-entered v4 access token, or the build-time `VITE_TMDB_ACCESS_TOKEN` fallback, as a bearer token when available; otherwise the user-supplied v3 API key is appended as a query parameter.
+2. The service routes deployed, migrated public reads through the same-origin `/api/tmdb/*` functions; local development and un-migrated operations continue using direct TMDB requests.
+3. Vercel functions call fixed TMDB routes using `TMDB_API_KEY`; direct requests use the existing browser credentials.
 4. The response is parsed as JSON and returned to the calling page.
 5. The page stores the result in React state and renders the UI.
 
@@ -49,7 +53,7 @@ Once validated, the key is:
 
 ### How authentication is used
 
-When using the v3 API key, every TMDB request is authenticated by appending the current API key to the URL as:
+For direct requests using the v3 API key, every TMDB request is authenticated by appending the current API key to the URL as:
 
 - `?api_key=...` when the endpoint has no existing query string
 - `&api_key=...` when the endpoint already contains query parameters

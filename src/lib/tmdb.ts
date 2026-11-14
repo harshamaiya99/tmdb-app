@@ -659,6 +659,50 @@ class TMDBService {
     return await response.json() as T;
   }
 
+  private async fetchMediaFromAppApi<T>(
+    resource: string,
+    params: Record<string, string | number> = {},
+    options: TMDBRequestOptions = {},
+  ): Promise<T> {
+    const query = new URLSearchParams({ resource });
+    for (const [key, value] of Object.entries(params)) {
+      query.set(key, String(value));
+    }
+    return this.fetchFromAppApi<T>(`/api/tmdb/media?${query.toString()}`, options);
+  }
+
+  private async searchAppApiWithSpacingFallback<T>(
+    type: 'movie' | 'tv' | 'person',
+    query: string,
+    page: number,
+    options?: TMDBRequestOptions,
+    fallbackLimit = MAX_SEARCH_SPACING_CANDIDATES,
+    region?: string,
+  ): Promise<TrendingResponse<T>> {
+    const search = (term: string) => {
+      const params = new URLSearchParams({
+        type,
+        query: term,
+        page: String(page),
+      });
+      if (region) params.set('region', region);
+      return this.fetchFromAppApi<TrendingResponse<T>>(
+        `/api/tmdb/search?${params.toString()}`,
+        options,
+      );
+    };
+
+    const results = await search(query);
+    if (results.results.length > 0) return results;
+
+    for (const candidate of getSearchSpacingCandidates(query).slice(0, fallbackLimit)) {
+      const candidateResults = await search(candidate);
+      if (candidateResults.results.length > 0) return candidateResults;
+    }
+
+    return results;
+  }
+
   private async searchWithSpacingFallback<T>(
     endpoint: string,
     query: string,
@@ -730,6 +774,9 @@ class TMDBService {
 
   // Fetch collection (franchise/series) details
   async getCollectionDetails(id: number, options?: TMDBRequestOptions): Promise<Collection> {
+    if (!import.meta.env.DEV) {
+      return this.fetchMediaFromAppApi<Collection>('collection', { id }, options);
+    }
     return this.fetchFromTMDB<Collection>(`/collection/${id}`, options);
   }
 
@@ -912,27 +959,44 @@ class TMDBService {
 
   // --- DETAILS ENDPOINTS ---
   async getMovieDetails(id: number, options?: TMDBRequestOptions): Promise<Movie> {
+    if (!import.meta.env.DEV) {
+      return this.fetchMediaFromAppApi<Movie>('movie', { id }, options);
+    }
     return this.fetchFromTMDB<Movie>(`/movie/${id}?append_to_response=credits,videos,images,recommendations,similar,external_ids,reviews,watch/providers,release_dates`, options);
   }
 
   async getMovieRecommendations(id: number, page: number = 1, options?: TMDBRequestOptions): Promise<TrendingResponse<Movie>> {
+    if (!import.meta.env.DEV) {
+      return this.fetchMediaFromAppApi<TrendingResponse<Movie>>('movie-recommendations', { id, page }, options);
+    }
     return this.fetchFromTMDB<TrendingResponse<Movie>>(`/movie/${id}/recommendations?page=${page}`, options);
   }
 
   async getSimilarMovies(id: number, page: number = 1, options?: TMDBRequestOptions): Promise<TrendingResponse<Movie>> {
+    if (!import.meta.env.DEV) {
+      return this.fetchMediaFromAppApi<TrendingResponse<Movie>>('movie-similar', { id, page }, options);
+    }
     return this.fetchFromTMDB<TrendingResponse<Movie>>(`/movie/${id}/similar?page=${page}`, options);
   }
 
   async getCountries(options?: TMDBRequestOptions): Promise<TMDBCountry[]> {
+    if (!import.meta.env.DEV) {
+      return this.fetchMediaFromAppApi<TMDBCountry[]>('countries', {}, options);
+    }
     return this.fetchFromTMDB<TMDBCountry[]>('/configuration/countries', options);
   }
 
   async getMovieReviews(id: number, page: number = 1, options?: TMDBRequestOptions): Promise<ReviewResponse> {
+    if (!import.meta.env.DEV) {
+      return this.fetchMediaFromAppApi<ReviewResponse>('movie-reviews', { id, page }, options);
+    }
     return this.fetchFromTMDB<ReviewResponse>(`/movie/${id}/reviews?page=${page}`, options);
   }
 
   async getTVShowDetails(id: number, options?: TMDBRequestOptions): Promise<TVShow> {
-    const show = await this.fetchFromTMDB<TVShow>(`/tv/${id}?append_to_response=credits,aggregate_credits,videos,images,recommendations,similar,external_ids,reviews,watch/providers,content_ratings`, options);
+    const show = !import.meta.env.DEV
+      ? await this.fetchMediaFromAppApi<TVShow>('tv', { id }, options)
+      : await this.fetchFromTMDB<TVShow>(`/tv/${id}?append_to_response=credits,aggregate_credits,videos,images,recommendations,similar,external_ids,reviews,watch/providers,content_ratings`, options);
     return {
       ...show,
       recommendations: show.recommendations
@@ -945,24 +1009,41 @@ class TMDBService {
   }
 
   async getTVShowRecommendations(id: number, page: number = 1, options?: TMDBRequestOptions): Promise<TrendingResponse<TVShow>> {
-    const data = await this.fetchFromTMDB<TrendingResponse<TVShow>>(`/tv/${id}/recommendations?page=${page}`, options);
+    const data = !import.meta.env.DEV
+      ? await this.fetchMediaFromAppApi<TrendingResponse<TVShow>>('tv-recommendations', { id, page }, options)
+      : await this.fetchFromTMDB<TrendingResponse<TVShow>>(`/tv/${id}/recommendations?page=${page}`, options);
     return { ...data, results: withoutTalkShows(data.results) };
   }
 
   async getSimilarTVShows(id: number, page: number = 1, options?: TMDBRequestOptions): Promise<TrendingResponse<TVShow>> {
-    const data = await this.fetchFromTMDB<TrendingResponse<TVShow>>(`/tv/${id}/similar?page=${page}`, options);
+    const data = !import.meta.env.DEV
+      ? await this.fetchMediaFromAppApi<TrendingResponse<TVShow>>('tv-similar', { id, page }, options)
+      : await this.fetchFromTMDB<TrendingResponse<TVShow>>(`/tv/${id}/similar?page=${page}`, options);
     return { ...data, results: withoutTalkShows(data.results) };
   }
 
   async getTVShowReviews(id: number, page: number = 1, options?: TMDBRequestOptions): Promise<ReviewResponse> {
+    if (!import.meta.env.DEV) {
+      return this.fetchMediaFromAppApi<ReviewResponse>('tv-reviews', { id, page }, options);
+    }
     return this.fetchFromTMDB<ReviewResponse>(`/tv/${id}/reviews?page=${page}`, options);
   }
 
   async getTVSeasonDetails(tvId: number, seasonNumber: number, options?: TMDBRequestOptions): Promise<TVSeasonDetails> {
+    if (!import.meta.env.DEV) {
+      return this.fetchMediaFromAppApi<TVSeasonDetails>('season', { id: tvId, season: seasonNumber }, options);
+    }
     return this.fetchFromTMDB<TVSeasonDetails>(`/tv/${tvId}/season/${seasonNumber}?append_to_response=credits`, options);
   }
 
   async getTVEpisodeDetails(tvId: number, seasonNumber: number, episodeNumber: number, options?: TMDBRequestOptions): Promise<TVEpisodeDetails> {
+    if (!import.meta.env.DEV) {
+      return this.fetchMediaFromAppApi<TVEpisodeDetails>(
+        'episode',
+        { id: tvId, season: seasonNumber, episode: episodeNumber },
+        options,
+      );
+    }
     return this.fetchFromTMDB<TVEpisodeDetails>(
       `/tv/${tvId}/season/${seasonNumber}/episode/${episodeNumber}?append_to_response=credits,images,videos`,
       options,
@@ -1361,7 +1442,9 @@ class TMDBService {
   }
 
   async getPersonDetails(id: number, options?: TMDBRequestOptions): Promise<Person> {
-    const person = await this.fetchFromTMDB<Person>(`/person/${id}?append_to_response=combined_credits,images,external_ids`, options);
+    const person = !import.meta.env.DEV
+      ? await this.fetchMediaFromAppApi<Person>('person', { id }, options)
+      : await this.fetchFromTMDB<Person>(`/person/${id}?append_to_response=combined_credits,images,external_ids`, options);
     return {
       ...person,
       combined_credits: person.combined_credits
@@ -1379,8 +1462,16 @@ class TMDBService {
   }
 
   async getPersonCredits(personId: number, mediaType: 'movie' | 'tv', options?: TMDBRequestOptions): Promise<TrendingResponse<PersonCredit>> {
-    const endpoint = mediaType === 'movie' ? `/person/${personId}/movie_credits` : `/person/${personId}/tv_credits`;
-    const data = await this.fetchFromTMDB<PersonCreditsResponse>(endpoint, options);
+    const data = !import.meta.env.DEV
+      ? await this.fetchMediaFromAppApi<PersonCreditsResponse>(
+        `person-${mediaType}-credits`,
+        { id: personId },
+        options,
+      )
+      : await this.fetchFromTMDB<PersonCreditsResponse>(
+        mediaType === 'movie' ? `/person/${personId}/movie_credits` : `/person/${personId}/tv_credits`,
+        options,
+      );
 
     const credits = [
       ...(data.cast || []).map((item) => ({ ...item, media_type: mediaType })),
@@ -1398,18 +1489,38 @@ class TMDBService {
 
   // --- SEARCH ---
   async searchMovies(query: string, page: number = 1, options?: TMDBRequestOptions, region?: string): Promise<TrendingResponse<Movie>> {
+    if (!import.meta.env.DEV) {
+      return this.searchAppApiWithSpacingFallback<Movie>('movie', query, page, options, MAX_SEARCH_SPACING_CANDIDATES, region);
+    }
     return this.searchWithSpacingFallback<Movie>('/search/movie', query, page, options, MAX_SEARCH_SPACING_CANDIDATES, region);
   }
 
   async searchTVShows(query: string, page: number = 1, options?: TMDBRequestOptions): Promise<TrendingResponse<TVShow>> {
+    if (!import.meta.env.DEV) {
+      return this.searchAppApiWithSpacingFallback<TVShow>('tv', query, page, options);
+    }
     return this.searchWithSpacingFallback<TVShow>('/search/tv', query, page, options);
   }
 
   async searchPersons(query: string, page: number = 1, options?: TMDBRequestOptions): Promise<TrendingResponse<PersonListResult>> {
+    if (!import.meta.env.DEV) {
+      return this.searchAppApiWithSpacingFallback<PersonListResult>('person', query, page, options);
+    }
     return this.searchWithSpacingFallback<PersonListResult>('/search/person', query, page, options);
   }
 
   async searchMulti(query: string, page: number = 1, options?: TMDBRequestOptions): Promise<TrendingResponse<MultiSearchResult>> {
+    if (!import.meta.env.DEV) {
+      const params = new URLSearchParams({
+        type: 'multi',
+        query,
+        page: String(page),
+      });
+      return this.fetchFromAppApi<TrendingResponse<MultiSearchResult>>(
+        `/api/tmdb/search?${params.toString()}`,
+        options,
+      );
+    }
     return this.fetchFromTMDB<TrendingResponse<MultiSearchResult>>(
       `/search/multi?query=${encodeURIComponent(query)}&page=${page}`,
       options,

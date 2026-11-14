@@ -86,7 +86,7 @@ npm run build
 
 ## Deploy to Vercel
 
-The repository is connected to Vercel. The included `vercel.json` configures the Vite framework, `npm ci`, the production build command (`npm run build`), and the `dist` output directory. Vercel creates preview deployments for pull requests and production deployments from `main`. Tests run separately in GitHub Actions.
+The repository is connected to Vercel. The included `vercel.json` configures the Vite framework, `npm ci`, the production build command (`npm run build`), and the `dist` output directory. Pushes to `main` deploy to production. Tests run separately in GitHub Actions.
 
 The app retains hash-based routes (for example, `/#/movie/123`) and is built for the domain root. No SPA rewrite is required. Configure any optional Vite environment variables used by the deployment in the Vercel project settings. Values prefixed with `VITE_` are embedded in the client bundle and are public; this hosting-only migration does not make credentials private.
 
@@ -107,9 +107,11 @@ The site can be installed as an app from supported browsers when served over HTT
 │       └── test.yml                    # Runs tests on pushes and pull requests to main
 ├── api/
 │   └── tmdb/
-│       ├── configuration.ts            # Initial server-side TMDB API migration endpoint
-│       ├── trending-movies.ts           # Read-only trending movies endpoint
-│       └── category.ts                  # Allowlisted paginated media categories
+│       ├── configuration.ts            # Server-side TMDB configuration endpoint
+│       ├── trending-movies.ts          # Read-only trending movies endpoint
+│       ├── category.ts                 # Allowlisted paginated media categories
+│       ├── search.ts                   # Allowlisted movie, TV, person, and multi-search
+│       └── media.ts                    # Allowlisted media details and supporting reads
 ├── vercel.json                        # Vercel Vite build and output configuration
 ├── public/
 │   ├── apple-touch-icon.png           # Icon used when adding the app to an Apple device
