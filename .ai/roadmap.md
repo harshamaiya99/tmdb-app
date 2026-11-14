@@ -2,7 +2,7 @@
 
 ## Migration: GitHub Pages to Vercel
 
-**Objective:** Migrate the existing React + Vite application from GitHub Pages to Vercel to host both frontend and backend on a single platform.
+**Objective:** Move frontend hosting from GitHub Pages to Vercel first, preserving the existing static app behavior. Backend execution, server-side TMDB credentials, and account-token storage are later work and are explicitly out of scope for this first hosting phase.
 
 **Reason for Migration:**
 
@@ -12,22 +12,18 @@
 * Support optional TMDB account authorization for personal features without requiring an API-key login to browse.
 * Simplify deployment by integrating GitHub directly with Vercel.
 
-**Implementation Roadmap:**
+**Phase 1: Static frontend hosting**
 
-1. Connect the existing GitHub repository to Vercel.
-2. Migrate frontend hosting from GitHub Pages to Vercel and remove the GitHub Pages-specific Vite base path.
-3. Design a narrow Vercel API for the TMDB operations used by the app. Do not expose an arbitrary URL proxy.
-4. Configure TMDB application credentials as server-only Vercel environment variables; never use `VITE_*` variables for secrets.
-5. Update the frontend TMDB service to call the Vercel API. Keep public TMDB image URLs direct where appropriate.
-6. Remove the required API-key login gate so browsing does not require user credentials.
-7. Design optional TMDB user authorization for account features. Perform token exchanges and privileged account requests on the server.
-8. Use a secure app session (for example, an HttpOnly, Secure, SameSite cookie) and persistent server-side storage for user-specific TMDB session and v4 access tokens. Do not put user tokens in shared environment variables; encrypt sensitive tokens at rest where supported.
-9. Protect account-changing endpoints with appropriate authorization and CSRF protections. Validate inputs, restrict CORS to the deployed app origin, apply reasonable rate limits, and prevent shared caching of personalized responses.
-10. Update TMDB authorization callback URLs and verify routing against the Vercel production domain.
-11. Test public browsing, details, search, TMDB account connection/callback, watchlists, favourites, ratings, custom lists, logout, and failure/expiry cases on a Vercel preview deployment.
-12. Disable the GitHub Pages deployment workflow only after the Vercel deployment and required account flows are verified.
+1. Connect the existing GitHub repository to Vercel and configure Git-based preview and production deployments.
+2. Configure Vercel to install with `npm ci`, run tests and build with `npm test && npm run build`, and serve `dist` from the domain root.
+3. Keep `HashRouter` and all existing client-side authentication, TMDB requests, and account behavior unchanged.
+4. Configure only the existing optional build-time variables needed to preserve current behavior, understanding that `VITE_*` values are public in the client bundle.
+5. Verify the Vercel preview, app routes, static assets, existing TMDB flows, and service worker before cutover.
+6. Update the live-site link and disable GitHub Pages only after the Vercel production deployment is verified; retain Pages as a fallback until then.
 
-**Expected Outcome:** A unified React + Vite application with a serverless backend, hosted on Vercel, with secure credential management and automated GitHub deployments.
+**Later phases (not part of the hosting migration):** design a narrow Vercel API for the TMDB operations used by the app; move shared TMDB application credentials server-side; update the frontend TMDB service; remove the required API-key login gate; and move user account authorization, session handling, and token storage to a suitably persistent server-side system with appropriate authorization, CSRF, caching, and rate-limit protections.
+
+**Phase 1 expected outcome:** The existing React + Vite frontend is hosted on Vercel with GitHub-integrated deployments and behavior equivalent to the current static site. This phase does not provide a backend or improve credential privacy.
 
 **Security and architecture notes:**
 

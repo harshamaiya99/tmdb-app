@@ -51,11 +51,19 @@ npm run test:watch
 
 React Testing Library is used for component behavior, while pure utilities and shared logic are tested directly. Tests mock TMDB requests and do not require a real API key. Test tooling is installed as development dependencies and is not imported by the application bundle. The deployment workflow runs the test suite before building the app.
 
-## GitHub Pages Deployment
+## Deployment
 
-The `.github/workflows/deploy.yml` workflow builds the app and deploys the `dist` directory to GitHub Pages after pushes to `main` (or a manual workflow dispatch). Set the repository's Pages source to **GitHub Actions** under **Settings → Pages**.
+### Vercel
 
-Vite is configured with the `/tmdb-app/` base path for this repository's project site. The app uses hash-based routing, so route URLs look like `/#/movie/123`; this avoids GitHub Pages returning 404 for client-side routes on direct visits or refreshes.
+Import the repository into Vercel. `vercel.json` sets the Vite framework, install command (`npm ci`), test-and-build command (`npm test && npm run build`), and output directory (`dist`). Connect GitHub to create preview deployments for pull requests and production deployments from `main`. Vercel builds use the `/` base path, and the app retains hash-based URLs such as `/#/movie/123`; no SPA rewrite is needed.
+
+Configure optional Vite environment variables in the Vercel project settings when the deployment needs them. Every `VITE_*` value is included in the browser bundle and is public, not a server-side secret.
+
+The GitHub Pages workflow remains enabled as a fallback until Vercel production and the existing app flows have been verified. Its build retains the `/tmdb-app/` base path through the `GITHUB_ACTIONS` environment variable; Vercel builds use `/`. Disable the Pages workflow only after confirming the Vercel production deployment, then update the live-site link in the README.
+
+### GitHub Pages fallback
+
+The `.github/workflows/deploy.yml` workflow still builds and deploys the `dist` directory to GitHub Pages after pushes to `main` (or a manual workflow dispatch). The GitHub Actions build uses the `/tmdb-app/` base path for the existing project-site URL; this is a temporary compatibility path for the cutover and can be removed after Pages is retired.
 
 The app includes a web app manifest and registers its service worker in production, allowing supported browsers to offer installation when served over HTTPS. The worker caches the app shell and same-origin assets for launch; TMDB API content still requires an internet connection.
 

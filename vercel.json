@@ -1,0 +1,6 @@
+{
+  "framework": "vite",
+  "installCommand": "npm ci",
+  "buildCommand": "npm test && npm run build",
+  "outputDirectory": "dist"
+}
