@@ -760,7 +760,10 @@ class TMDBService {
       return data.results;
     }
 
-    const data = await this.fetchFromAppApi<TrendingResponse<Movie>>('/api/tmdb/trending-movies', options);
+    const data = await this.fetchFromAppApi<TrendingResponse<Movie>>(
+      '/api/tmdb/category?category=trending-movies&page=1',
+      options,
+    );
     return data.results;
   }
 

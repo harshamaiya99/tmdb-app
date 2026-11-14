@@ -40,7 +40,7 @@ describe('TMDB Talk-show filtering', () => {
       { id: 1, title: 'Trending Movie' },
     ]);
 
-    expect(fetchMock).toHaveBeenCalledWith('/api/tmdb/trending-movies', {
+    expect(fetchMock).toHaveBeenCalledWith('/api/tmdb/category?category=trending-movies&page=1', {
       signal: undefined,
     });
   });
@@ -162,7 +162,7 @@ describe('TMDB Talk-show filtering', () => {
 
     await tmdbService.getTrendingMovies({ signal: controller.signal });
 
-    expect(fetchMock).toHaveBeenCalledWith('/api/tmdb/trending-movies', {
+    expect(fetchMock).toHaveBeenCalledWith('/api/tmdb/category?category=trending-movies&page=1', {
       signal: controller.signal,
     });
   });
