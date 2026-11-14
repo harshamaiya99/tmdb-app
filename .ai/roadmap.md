@@ -21,9 +21,9 @@ The repository is connected to Vercel and the production frontend is hosted at [
 ### Next migration stages
 
 1. **API foundation:** deploy and verify the fixed, read-only TMDB configuration function using the existing `TMDB_API_KEY` as a server-only Vercel environment variable; keep the frontend unchanged.
-2. **Catalog-data pilot:** deploy `GET /api/tmdb/trending-movies?page=1`, then compare its response with the existing direct-service response on Preview. Do not switch the frontend yet.
-3. **Public read operations:** add allowlisted browsing, search, discovery, and detail operations; test response compatibility while the frontend still uses its existing direct requests.
-4. **Frontend cutover:** switch the central TMDB service to the Vercel API in small groups of methods and verify each on Preview.
+2. **Catalog-data pilot:** deploy `GET /api/tmdb/trending-movies?page=1` and verify its response. **Complete:** the deployed home-page `getTrendingMovies()` call now uses this endpoint; local Vite development retains direct TMDB calls.
+3. **Public read operations:** add allowlisted browsing, search, discovery, and detail operations; test response compatibility while remaining frontend methods still use their direct requests.
+4. **Incremental frontend cutover:** switch the remaining central TMDB service methods to the Vercel API in small groups and verify each on Preview.
 5. **Credential-free browsing:** remove the app API-key login gate after all public reads use the server API.
 6. **Account migration:** separately design persistent storage and secure sessions before moving account authorization or mutations server-side.
 

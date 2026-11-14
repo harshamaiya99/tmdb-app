@@ -8,11 +8,11 @@ This means the project is fully client-side and does not rely on a separate back
 
 ## Vercel API migration (in progress)
 
-The migration is being introduced incrementally so the current client behavior remains available while server-side functions are verified. The first Vercel function, [api/tmdb/configuration.ts](../api/tmdb/configuration.ts), handles only `GET /api/tmdb/configuration`. It accepts GET requests only, calls the fixed TMDB `/3/configuration` endpoint using the server-only `TMDB_API_KEY` environment variable, disables caching, and returns a generic error if TMDB fails. The frontend does not call this function yet; existing TMDB service requests continue directly from the browser.
+The migration is being introduced incrementally so the current client behavior remains available while server-side functions are verified. The first Vercel function, [api/tmdb/configuration.ts](../api/tmdb/configuration.ts), handles only `GET /api/tmdb/configuration`. It accepts GET requests only, calls the fixed TMDB `/3/configuration` endpoint using the server-only `TMDB_API_KEY` environment variable, disables caching, and returns a generic error if TMDB fails.
 
 Configure `TMDB_API_KEY` in Vercel's project environment-variable settings for Preview and Production to enable this endpoint; the local `.env` file is not automatically uploaded to Vercel. Do not prefix the server variable with `VITE_`. The existing `VITE_TMDB_ACCESS_TOKEN` is a separate v4 app token and is not used by this function; the embed URL variables remain client-side settings. Later migration steps will add specific allowlisted operations and switch the frontend service only after the new API surface has been verified.
 
-The read-only `GET /api/tmdb/trending-movies?page=1` endpoint is the first catalog-data pilot. It maps to the fixed TMDB `/3/trending/movie/day` operation, accepts only pages 1–500, uses the same server-only API key, and returns TMDB's response shape unchanged. The frontend is not switched to this endpoint yet; compare its response with `tmdbService.getTrendingMovies()` on a Preview deployment before scheduling the client cutover.
+The read-only `GET /api/tmdb/trending-movies?page=1` endpoint is the first catalog-data pilot. It maps to the fixed TMDB `/3/trending/movie/day` operation, accepts only pages 1–500, uses the same server-only API key, and returns TMDB's response shape unchanged. In deployed builds, the home-page `tmdbService.getTrendingMovies()` method now uses this Vercel endpoint; local Vite development continues calling TMDB directly so `npm run dev` works without a Vercel Functions emulator. Other TMDB methods, including paginated trending categories, still call TMDB directly and remain unchanged.
 
 ## Environment and runtime config
 

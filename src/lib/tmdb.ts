@@ -667,7 +667,30 @@ class TMDBService {
 
   // --- HOME PAGE ENDPOINTS ---
   async getTrendingMovies(options?: TMDBRequestOptions): Promise<Movie[]> {
-    const data = await this.fetchFromTMDB<TrendingResponse<Movie>>('/trending/movie/day', options);
+    if (import.meta.env.DEV) {
+      const data = await this.fetchFromTMDB<TrendingResponse<Movie>>('/trending/movie/day', options);
+      return data.results;
+    }
+
+    let response: Response;
+    try {
+      response = await fetch('/api/tmdb/trending-movies', { signal: options?.signal });
+    } catch (error) {
+      if (error instanceof DOMException && error.name === 'AbortError') {
+        throw error;
+      }
+      throw new TMDBError('Unable to reach the TMDB service. Check your network connection.', 'NETWORK_ERROR');
+    }
+
+    if (!response.ok) {
+      throw new TMDBError(
+        `TMDB trending movies request failed (${response.status})`,
+        'API_ERROR',
+        response.status,
+      );
+    }
+
+    const data = await response.json() as TrendingResponse<Movie>;
     return data.results;
   }
 

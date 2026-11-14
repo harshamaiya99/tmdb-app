@@ -38,6 +38,49 @@ describe('TMDB Talk-show filtering', () => {
     expect(requestUrl.searchParams.get('api_key')).toBe('test-api-key');
   });
 
+  it('loads home trending movies through the Vercel API outside development', async () => {
+    vi.stubEnv('DEV', false);
+    const fetchMock = vi.mocked(fetch);
+    fetchMock.mockResolvedValue(responseWith({
+      page: 1,
+      results: [{ id: 1, title: 'Trending Movie' }],
+      total_pages: 1,
+      total_results: 1,
+    }));
+
+    await expect(tmdbService.getTrendingMovies()).resolves.toEqual([
+      { id: 1, title: 'Trending Movie' },
+    ]);
+
+    expect(fetchMock).toHaveBeenCalledWith('/api/tmdb/trending-movies', {
+      signal: undefined,
+    });
+  });
+
+  it('passes cancellation signals to the Vercel trending movies API', async () => {
+    vi.stubEnv('DEV', false);
+    const fetchMock = vi.mocked(fetch);
+    fetchMock.mockResolvedValue(responseWith({ page: 1, results: [] }));
+    const controller = new AbortController();
+
+    await tmdbService.getTrendingMovies({ signal: controller.signal });
+
+    expect(fetchMock).toHaveBeenCalledWith('/api/tmdb/trending-movies', {
+      signal: controller.signal,
+    });
+  });
+
+  it('normalizes failed Vercel trending movies responses', async () => {
+    vi.stubEnv('DEV', false);
+    vi.mocked(fetch).mockResolvedValue(new Response(null, { status: 502 }));
+
+    await expect(tmdbService.getTrendingMovies()).rejects.toMatchObject({
+      name: 'TMDBError',
+      code: 'API_ERROR',
+      status: 502,
+    });
+  });
+
   it('interleaves separately newest-first account media results', () => {
     const movies = [
       { id: 1, title: 'Movie 1', poster_path: null, backdrop_path: null, overview: '', release_date: '', vote_count: 0 },
