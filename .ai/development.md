@@ -92,7 +92,7 @@ Movie and TV embed URL templates can be overridden in the authenticated app's **
 ### Manual testing checklist
 
 1. Start the Vite app, optionally configure a developer API key for direct local catalog requests, and verify public browsing and search.
-2. Use `vercel dev` with the server environment variables and Neon schema configured to test account connection, custom-list consent, account operations, and disconnect.
+2. Use `vercel dev` with the server environment variables and Neon schema configured to test v3 account connection, the separate v4 custom-list consent/callback, account operations, and disconnect. The v4 callback should complete using its short-lived HTTP-only request-token cookie even when TMDB redirects without a `request_token` query parameter.
 3. Verify that two separate browser profiles connect to different TMDB accounts and see only their own account data.
 4. Check the same flows at a narrow smartphone width (around 320–390px): confirm the header, search, navigation, account menus, cards, and dialogs remain usable and there is no unintended horizontal page overflow. Intentional carousels may scroll horizontally.
 

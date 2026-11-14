@@ -48,14 +48,14 @@ Public direct local requests use `fetchFromTMDB`; deployed public and account re
 
 The deployed app allows public browsing and account connection without a user API key. The login page does not request TMDB credentials; an optional developer key may be stored locally for direct catalog requests.
 
-Once validated, the key is:
+For local direct catalog requests, the developer key is:
 
 - stored in local storage under `tmdb_api_key`
 - assigned to the service instance via `tmdbService.setApiKey(...)`
 
 ### How authentication is used
 
-For direct requests using the v3 API key, every TMDB request is authenticated by appending the current API key to the URL as:
+For local direct requests using the v3 API key, every TMDB request is authenticated by appending the current API key to the URL as:
 
 - `?api_key=...` when the endpoint has no existing query string
 - `&api_key=...` when the endpoint already contains query parameters
@@ -64,13 +64,13 @@ This is handled inside the shared request helper, so pages do not need to manage
 
 Request methods accept an optional `AbortSignal` through `TMDBRequestOptions`. Callers can use an `AbortController` to cancel requests when a page unmounts or a newer request supersedes an older one.
 
-### API key validation
+### Local API key validation
 
 Local direct catalog requests can validate a developer key by calling the TMDB v3 configuration endpoint:
 
 - `/3/configuration?api_key=<key>`
 
-If the response is successful, the key is considered valid.
+If the response is successful, the key is considered valid. Deployed account and catalog requests use server-side credentials instead.
 
 ### TMDB user account authorization
 
@@ -85,7 +85,7 @@ The session ID is a sensitive credential and is treated like a password. The acc
 
 Account requests are sent to `/api/account/action`. The server derives the account ID and credentials from the session cookie; the browser never sends a TMDB session ID or user token. The service supports movie and TV watchlists, favorites, and rated lists; per-title account state; adding/removing watchlist and favorite items; half-point ratings from 0.5 to 10; and TV episode ratings.
 
-Custom lists use a separate TMDB v4 user approval, started by the server with `TMDB_V4_ACCESS_TOKEN`. The user token and account object ID are encrypted in Neon; server account operations use that per-user token. V4 list operations support mixed movies and TV shows: create, edit, delete, add/remove items, retrieve paginated account lists, and read paginated list details. The custom-list overview reads item counts from list details; media-type filters fetch all pages before filtering; membership checks combine `object_ids` with paginated results.
+Custom lists use a separate TMDB v4 user approval, started by the server with `TMDB_V4_ACCESS_TOKEN`. The server includes an `approved=true` callback marker and keeps TMDB's temporary request token in a short-lived, HTTP-only cookie because the v4 redirect may return only the supplied callback URL parameters. The callback validates the one-time state and exchanges that cookie-held request token for the user's v4 access token. The user token and account object ID are encrypted in Neon; server account operations use that per-user token. V4 list operations support mixed movies and TV shows: create, edit, delete, add/remove items, retrieve paginated account lists, and read paginated list details. The custom-list overview reads item counts from list details; media-type filters fetch all pages before filtering; membership checks combine `object_ids` with paginated results.
 
 The v3 watchlist, favorite, and rated endpoints are separate for movies and TV, and return no cross-media added timestamp. The account pages therefore interleave the independently `created_at.desc`-sorted movie and TV results for All view, while preserving newest-first order within each media type; this is balanced interleaving rather than a guaranteed global added-time chronology.
 
@@ -210,8 +210,8 @@ The current implementation also includes richer types for creator metadata, prod
 ## Important Design Notes
 
 - The API layer is intentionally centralized to avoid spreading fetch logic across pages.
-- Authentication is simple and user-driven rather than server-backed.
-- The app depends on the browser environment and local storage for persistence.
+- TMDB account credentials and sessions are server-managed; only the opaque session cookie is held by the browser.
+- An optional developer API key and UI preferences may use browser storage during local development.
 - Embed URL templates use browser-local overrides first, then Vite build-time defaults.
 - The current design favors simplicity over advanced caching or offline support.
 
@@ -220,7 +220,7 @@ The current implementation also includes richer types for creator metadata, prod
 The TMDB integration is compact and direct:
 
 - one centralized service handles all requests
-- API keys are stored in local storage and attached to requests
+- Local development may store a developer API key in local storage; deployed API credentials remain server-side
 - responses are typed and returned to components
 - selected request results are cached in memory with TTLs and concurrent identical requests are deduplicated
 - the response cache is cleared on full page reload; the service worker explicitly bypasses `/api/` requests so server API responses are never cached by the app shell worker

@@ -5,6 +5,7 @@ import {
   consumeOAuthState,
   getCookie,
   getSessionToken,
+  getV4RequestToken,
   oauthStateCookieName,
   refreshSessionAndClearStateCookies,
   redirect,
@@ -42,11 +43,13 @@ export default async function handler(
   const rawFlow = request.query?.flow;
   const rawRequestToken = request.query?.request_token;
   const rawApproved = request.query?.approved;
+  const rawDenied = request.query?.denied;
   if (
     typeof rawState !== 'string'
     || (rawFlow !== 'v3' && rawFlow !== 'v4')
     || typeof rawApproved !== 'string'
     || (rawApproved !== 'true' && rawApproved !== 'false')
+    || (rawDenied !== undefined && rawDenied !== 'true' && rawDenied !== 'false')
   ) {
     response.status(400).json({ error: 'Invalid TMDB authorization callback' });
     return;
@@ -71,9 +74,16 @@ export default async function handler(
     return;
   }
 
-  if (rawApproved !== 'true' || typeof rawRequestToken !== 'string' || !rawRequestToken) {
+  if (rawApproved === 'false' || rawDenied === 'true') {
     clearOAuthStateCookie(response);
     redirect(response, getFrontendRedirect('account/callback?error=denied'));
+    return;
+  }
+
+  const requestToken = rawFlow === 'v4' ? getV4RequestToken(request) : rawRequestToken;
+  if (typeof requestToken !== 'string' || !requestToken) {
+    clearOAuthStateCookie(response);
+    response.status(400).json({ error: 'TMDB authorization token is missing or expired' });
     return;
   }
 
@@ -81,7 +91,7 @@ export default async function handler(
     if (rawFlow === 'v3') {
       const session = await callTMDB<{ session_id: string }>('/authentication/session/new', {
         method: 'POST',
-        body: { request_token: rawRequestToken },
+        body: { request_token: requestToken },
       });
       const account = await callTMDB<V3Account>('/account', { sessionId: session.session_id });
       await saveV3Account(pending.session_hash, session.session_id, account);
@@ -99,7 +109,7 @@ export default async function handler(
       version: '4',
       method: 'POST',
       v4Token: appToken,
-      body: { request_token: rawRequestToken },
+      body: { request_token: requestToken },
     });
     await saveV4Account(pending.session_hash, authorization.access_token, authorization.account_id);
     refreshSessionAndClearStateCookies(response, sessionToken);

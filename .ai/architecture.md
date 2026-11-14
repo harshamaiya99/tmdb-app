@@ -31,7 +31,7 @@ The main application shell is defined in [src/App.tsx](src/App.tsx). It wires to
 
 Vercel Functions provide public TMDB reads and account operations. Per-user account credentials are encrypted in Neon Postgres, and the browser holds only an opaque HTTP-only session cookie.
 
-TMDB account features use an optional user-consent flow. The server creates a request token, redirects the user to TMDB for approval, validates the callback state, and exchanges the approved token for a session ID and account identity. Each user's session and credentials are stored separately and encrypted in Neon; account routes do not require a personal API key.
+TMDB account features use optional user-consent flows. The server creates request tokens, redirects the user to TMDB for approval, validates one-time callback state, and exchanges approved tokens for account credentials. V4 request tokens are held in a short-lived HTTP-only cookie during approval because TMDB may return only the supplied callback URL. Each user's session and credentials are stored separately and encrypted in Neon; account routes do not require a personal API key.
 
 ### Environment and runtime config
 
@@ -172,7 +172,7 @@ A typical request path looks like this:
 
 1. A page component mounts.
 2. It calls a method on `tmdbService` from [src/lib/tmdb.ts](src/lib/tmdb.ts).
-3. In production, public catalog reads call allowlisted same-origin Vercel functions, which authenticate to TMDB using the server environment variable. In local development and for account operations, the service calls TMDB directly using browser credentials.
+3. In production, public catalog reads and account operations call allowlisted same-origin Vercel functions, which authenticate to TMDB using server environment variables and the current user's encrypted Neon credentials. Local catalog development may use an optional developer API key.
 4. Data is returned as typed results.
 5. The page stores the result in local state.
 6. Shared UI components render the result and any loading or error state.

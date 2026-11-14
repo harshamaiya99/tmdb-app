@@ -81,7 +81,7 @@ VITE_TV_EMBED_URL=https://example.com/tv/{TMDB_ID}/{SEASON}/{EPISODE}
 
 On the deployed app, open **Settings** from the profile menu to choose the content country, select a theme, and add movie and TV URL templates. The country is used for regional results, certifications, and streaming availability. Embed-link source names are automatically taken from each URL's domain. A single link opens directly from the watch button; multiple links let you choose a source. Use **Import JSON** and **Export JSON** to move these templates between browsers or back them up; imported settings are applied after you choose **Save content settings**. The build-time template is available as the default until browser links are saved, and **Reset content defaults** restores them. Removing all links disables that media type's watch button. Browser settings are not shared across browsers or devices.
 
-TMDB account credentials are stored encrypted in Neon and are never placed in browser storage. The browser receives only an opaque HTTP-only session cookie; disconnecting from the profile menu asks TMDB to revoke the user's credentials and clears the server-side session.
+TMDB account credentials are stored encrypted in Neon and are never placed in browser storage. The browser receives only an opaque HTTP-only session cookie; temporary v4 authorization request tokens are also held only in short-lived HTTP-only cookies during approval. Disconnecting from the profile menu asks TMDB to revoke the user's credentials and clears the server-side session.
 
 ## Build and Verification
 

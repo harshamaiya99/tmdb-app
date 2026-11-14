@@ -55,8 +55,13 @@ export default async function handler(
     }
 
     const state = newOpaqueToken();
-    const callbackUrl = appCallbackUrl({ flow, state }, request);
+    const callbackUrl = appCallbackUrl({
+      flow,
+      state,
+      ...(flow === 'v4' ? { approved: 'true' } : {}),
+    }, request);
     let authorizationUrl: URL;
+    let v4RequestToken: string | undefined;
 
     if (flow === 'v3') {
       const token = await callTMDB<{ request_token: string }>('/authentication/token/new');
@@ -73,12 +78,13 @@ export default async function handler(
         v4Token: appToken,
         body: { redirect_to: callbackUrl },
       });
+      v4RequestToken = token.request_token;
       authorizationUrl = new URL('https://www.themoviedb.org/auth/access');
       authorizationUrl.searchParams.set('request_token', token.request_token);
     }
 
     await createOAuthState(state, sessionHash, flow);
-    setAuthCookies(response, sessionToken, state);
+    setAuthCookies(response, sessionToken, state, v4RequestToken);
     redirect(response, authorizationUrl.toString());
   } catch (error) {
     respondWithError(response, error);

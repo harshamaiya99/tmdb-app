@@ -38,6 +38,7 @@ interface OAuthStateRow {
 
 const SESSION_COOKIE = '__Host-tmdb_session';
 const OAUTH_STATE_COOKIE = '__Host-tmdb_oauth_state';
+const V4_REQUEST_TOKEN_COOKIE = '__Host-tmdb_v4_request_token';
 const SESSION_MAX_AGE_SECONDS = 60 * 60 * 24 * 30;
 const OAUTH_STATE_MAX_AGE_SECONDS = 60 * 10;
 
@@ -142,15 +143,23 @@ export function setAuthCookies(
   response: VercelResponse,
   sessionToken: string,
   state: string,
+  v4RequestToken?: string,
 ): void {
-  response.setHeader('Set-Cookie', [
+  const cookies = [
     secureCookie(SESSION_COOKIE, sessionToken, SESSION_MAX_AGE_SECONDS),
     secureCookie(OAUTH_STATE_COOKIE, state, OAUTH_STATE_MAX_AGE_SECONDS),
-  ]);
+  ];
+  if (v4RequestToken) {
+    cookies.push(secureCookie(V4_REQUEST_TOKEN_COOKIE, v4RequestToken, OAUTH_STATE_MAX_AGE_SECONDS));
+  }
+  response.setHeader('Set-Cookie', cookies);
 }
 
 export function clearOAuthStateCookie(response: VercelResponse): void {
-  response.setHeader('Set-Cookie', `${OAUTH_STATE_COOKIE}=; Path=/; HttpOnly; Secure; SameSite=Lax; Max-Age=0`);
+  response.setHeader('Set-Cookie', [
+    `${OAUTH_STATE_COOKIE}=; Path=/; HttpOnly; Secure; SameSite=Lax; Max-Age=0`,
+    `${V4_REQUEST_TOKEN_COOKIE}=; Path=/; HttpOnly; Secure; SameSite=Lax; Max-Age=0`,
+  ]);
 }
 
 export function clearSessionCookie(response: VercelResponse): void {
@@ -164,6 +173,7 @@ export function refreshSessionAndClearStateCookies(
   response.setHeader('Set-Cookie', [
     secureCookie(SESSION_COOKIE, sessionToken, SESSION_MAX_AGE_SECONDS),
     `${OAUTH_STATE_COOKIE}=; Path=/; HttpOnly; Secure; SameSite=Lax; Max-Age=0`,
+    `${V4_REQUEST_TOKEN_COOKIE}=; Path=/; HttpOnly; Secure; SameSite=Lax; Max-Age=0`,
   ]);
 }
 
@@ -171,11 +181,16 @@ export function clearAuthCookies(response: VercelResponse): void {
   response.setHeader('Set-Cookie', [
     `${SESSION_COOKIE}=; Path=/; HttpOnly; Secure; SameSite=Lax; Max-Age=0`,
     `${OAUTH_STATE_COOKIE}=; Path=/; HttpOnly; Secure; SameSite=Lax; Max-Age=0`,
+    `${V4_REQUEST_TOKEN_COOKIE}=; Path=/; HttpOnly; Secure; SameSite=Lax; Max-Age=0`,
   ]);
 }
 
 export function getSessionToken(request: VercelRequest): string | undefined {
   return getCookie(request, SESSION_COOKIE);
+}
+
+export function getV4RequestToken(request: VercelRequest): string | undefined {
+  return getCookie(request, V4_REQUEST_TOKEN_COOKIE);
 }
 
 export async function createSession(token: string): Promise<string> {
