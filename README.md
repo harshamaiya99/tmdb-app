@@ -105,6 +105,9 @@ The site can be installed as an app from supported browsers when served over HTT
 ├── .github/
 │   └── workflows/
 │       └── test.yml                    # Runs tests on pushes and pull requests to main
+├── api/
+│   └── tmdb/
+│       └── configuration.ts            # Initial server-side TMDB API migration endpoint
 ├── vercel.json                        # Vercel Vite build and output configuration
 ├── public/
 │   ├── apple-touch-icon.png           # Icon used when adding the app to an Apple device

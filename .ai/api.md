@@ -6,6 +6,12 @@ TMDB access is handled through a single service module in [src/lib/tmdb.ts](src/
 
 This means the project is fully client-side and does not rely on a separate backend server for TMDB requests.
 
+## Vercel API migration (in progress)
+
+The migration is being introduced incrementally so the current client behavior remains available while server-side functions are verified. The first Vercel function, [api/tmdb/configuration.ts](../api/tmdb/configuration.ts), handles only `GET /api/tmdb/configuration`. It accepts GET requests only, calls the fixed TMDB `/3/configuration` endpoint using the server-only `TMDB_API_KEY` environment variable, disables caching, and returns a generic error if TMDB fails. The frontend does not call this function yet; existing TMDB service requests continue directly from the browser.
+
+Configure `TMDB_API_KEY` in Vercel's project environment-variable settings for Preview and Production to enable this endpoint; the local `.env` file is not automatically uploaded to Vercel. Do not prefix the server variable with `VITE_`. The existing `VITE_TMDB_ACCESS_TOKEN` is a separate v4 app token and is not used by this function; the embed URL variables remain client-side settings. Later migration steps will add specific allowlisted operations and switch the frontend service only after the new API surface has been verified.
+
 ## Environment and runtime config
 
 The default TMDB credential is provided by the user and stored in local storage. The app does not rely on a server-side secret or a separate auth service. Optional `VITE_MOVIE_EMBED_URL` and `VITE_TV_EMBED_URL` variables provide build-time defaults for movie and TV watch-link templates. Browser-local settings can override those defaults and are stored separately in local storage.

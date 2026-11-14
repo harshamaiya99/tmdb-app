@@ -18,6 +18,14 @@ The repository is connected to Vercel and the production frontend is hosted at [
 
 **Later phases (not part of the hosting migration):** design a narrow Vercel API for the TMDB operations used by the app; move shared TMDB application credentials server-side; update the frontend TMDB service; remove the required API-key login gate; and move user account authorization, session handling, and token storage to a suitably persistent server-side system with appropriate authorization, CSRF, caching, and rate-limit protections.
 
+### Next migration stages
+
+1. **API foundation:** deploy and verify a fixed, read-only TMDB configuration function using the existing `TMDB_API_KEY` as a server-only Vercel environment variable; keep the frontend unchanged.
+2. **Public read operations:** add allowlisted browsing, search, discovery, and detail operations; test response compatibility while the frontend still uses its existing direct requests.
+3. **Frontend cutover:** switch the central TMDB service to the Vercel API in small groups of methods and verify each on Preview.
+4. **Credential-free browsing:** remove the app API-key login gate after all public reads use the server API.
+5. **Account migration:** separately design persistent storage and secure sessions before moving account authorization or mutations server-side.
+
 **Hosting migration outcome:** The existing React + Vite frontend is hosted on Vercel with GitHub-integrated deployments and behavior equivalent to the previous static site. This phase does not provide a backend or improve credential privacy.
 
 **Security and architecture notes:**
