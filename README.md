@@ -108,7 +108,8 @@ The site can be installed as an app from supported browsers when served over HTT
 ├── api/
 │   └── tmdb/
 │       ├── configuration.ts            # Initial server-side TMDB API migration endpoint
-│       └── trending-movies.ts           # Read-only trending movies migration pilot
+│       ├── trending-movies.ts           # Read-only trending movies endpoint
+│       └── category.ts                  # Allowlisted paginated media categories
 ├── vercel.json                        # Vercel Vite build and output configuration
 ├── public/
 │   ├── apple-touch-icon.png           # Icon used when adding the app to an Apple device

@@ -57,6 +57,52 @@ describe('TMDB Talk-show filtering', () => {
     });
   });
 
+  it('loads paginated category results through the Vercel API outside development', async () => {
+    vi.stubEnv('DEV', false);
+    const fetchMock = vi.mocked(fetch);
+    fetchMock.mockResolvedValue(responseWith({
+      page: 2,
+      results: [{ id: 1, name: 'Popular show', genre_ids: [18] }],
+      total_pages: 3,
+      total_results: 60,
+    }));
+
+    await expect(tmdbService.getCategoryList(
+      'popular-tv',
+      2,
+      undefined,
+      'en-US',
+      'popularity.desc',
+      'IN',
+    )).resolves.toMatchObject({
+      page: 2,
+      results: [{ id: 1, name: 'Popular show', genre_ids: [18] }],
+    });
+
+    const [requestUrl] = fetchMock.mock.calls[0];
+    expect(requestUrl).toBe(
+      '/api/tmdb/category?category=popular-tv&page=2&sortBy=popularity.desc&language=en-US&region=IN',
+    );
+  });
+
+  it('filters talk shows from Vercel TV category responses', async () => {
+    vi.stubEnv('DEV', false);
+    vi.mocked(fetch).mockResolvedValue(responseWith({
+      page: 1,
+      results: [
+        { id: 1, name: 'Drama', genre_ids: [18] },
+        { id: 2, name: 'Talk Show', genre_ids: [10767] },
+      ],
+      total_pages: 1,
+      total_results: 2,
+    }));
+
+    await expect(tmdbService.getCategoryList('popular-tv')).resolves.toMatchObject({
+      results: [{ id: 1, name: 'Drama', genre_ids: [18] }],
+      total_results: 2,
+    });
+  });
+
   it('passes cancellation signals to the Vercel trending movies API', async () => {
     vi.stubEnv('DEV', false);
     const fetchMock = vi.mocked(fetch);

@@ -637,6 +637,28 @@ class TMDBService {
     return await response.json() as T;
   }
 
+  private async fetchFromAppApi<T>(endpoint: string, options: TMDBRequestOptions = {}): Promise<T> {
+    let response: Response;
+    try {
+      response = await fetch(endpoint, { signal: options.signal });
+    } catch (error) {
+      if (error instanceof DOMException && error.name === 'AbortError') {
+        throw error;
+      }
+      throw new TMDBError('Unable to reach the TMDB service. Check your network connection.', 'NETWORK_ERROR');
+    }
+
+    if (!response.ok) {
+      throw new TMDBError(
+        `TMDB request failed (${response.status})`,
+        'API_ERROR',
+        response.status,
+      );
+    }
+
+    return await response.json() as T;
+  }
+
   private async searchWithSpacingFallback<T>(
     endpoint: string,
     query: string,
@@ -672,25 +694,7 @@ class TMDBService {
       return data.results;
     }
 
-    let response: Response;
-    try {
-      response = await fetch('/api/tmdb/trending-movies', { signal: options?.signal });
-    } catch (error) {
-      if (error instanceof DOMException && error.name === 'AbortError') {
-        throw error;
-      }
-      throw new TMDBError('Unable to reach the TMDB service. Check your network connection.', 'NETWORK_ERROR');
-    }
-
-    if (!response.ok) {
-      throw new TMDBError(
-        `TMDB trending movies request failed (${response.status})`,
-        'API_ERROR',
-        response.status,
-      );
-    }
-
-    const data = await response.json() as TrendingResponse<Movie>;
+    const data = await this.fetchFromAppApi<TrendingResponse<Movie>>('/api/tmdb/trending-movies', options);
     return data.results;
   }
 
@@ -747,6 +751,24 @@ class TMDBService {
 
   // --- PAGINATED CATEGORY ENDPOINT ---
   async getCategoryList(category: string, page: number = 1, options?: TMDBRequestOptions, language?: string, sortBy: string = 'popularity.desc', region?: string): Promise<TrendingResponse<Movie | TVShow>> {
+    if (!import.meta.env.DEV) {
+      const params = new URLSearchParams({
+        category,
+        page: String(page),
+        sortBy,
+      });
+      if (language) params.set('language', language);
+      if (region) params.set('region', region);
+
+      const data = await this.fetchFromAppApi<TrendingResponse<Movie | TVShow>>(
+        `/api/tmdb/category?${params.toString()}`,
+        options,
+      );
+      return category.endsWith('-tv')
+        ? { ...data, results: withoutTalkShows(data.results) }
+        : data;
+    }
+
     if (category === 'trending-movies' || category === 'trending-tv') {
       const mediaType = category === 'trending-movies' ? 'movie' : 'tv';
       const data = await this.fetchFromTMDB<TrendingResponse<Movie | TVShow>>(
