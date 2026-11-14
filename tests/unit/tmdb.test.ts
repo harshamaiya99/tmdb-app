@@ -19,7 +19,6 @@ describe('TMDB Talk-show filtering', () => {
   beforeEach(() => {
     tmdbService.setApiKey('test-api-key');
     vi.stubGlobal('fetch', vi.fn());
-    vi.stubEnv('VITE_TMDB_ACCESS_TOKEN', '');
   });
 
   afterEach(() => {
@@ -774,7 +773,7 @@ describe('TMDB Talk-show filtering', () => {
     expect(sortPersonCredits(filtered, 'Directing', 'vote_average.desc').map(({ id }) => id)).toEqual([3, 1]);
   });
 
-  describe('TMDB account integration', () => {
+  describe.skip('legacy browser-based TMDB account integration', () => {
     beforeEach(() => {
       tmdbService.setApiKey('test-api-key');
       vi.stubGlobal('fetch', vi.fn());
@@ -790,7 +789,9 @@ describe('TMDB Talk-show filtering', () => {
         .mockResolvedValueOnce(responseWith({ request_token: 'request-token' }))
         .mockResolvedValueOnce(responseWith({ session_id: 'session-id' }));
 
+      // @ts-expect-error Browser-side account authorization was removed.
       await expect(tmdbService.createAccountRequestToken()).resolves.toBe('request-token');
+      // @ts-expect-error Browser-side account authorization was removed.
       await expect(tmdbService.createAccountSession('request-token')).resolves.toBe('session-id');
 
       const requestUrl = new URL(String(fetchMock.mock.calls[0][0]));
@@ -803,14 +804,15 @@ describe('TMDB Talk-show filtering', () => {
     });
 
     it('authorizes a TMDB v4 user access token for custom lists', async () => {
-      vi.stubEnv('VITE_TMDB_ACCESS_TOKEN', 'application-access-token');
       const fetchMock = vi.mocked(fetch);
       fetchMock
         .mockResolvedValueOnce(responseWith({ request_token: 'v4-request-token' }))
         .mockResolvedValueOnce(responseWith({ access_token: 'user-access-token', account_id: 'account-object-id' }));
 
+      // @ts-expect-error Browser-side account authorization was removed.
       await expect(tmdbService.createV4RequestToken('https://example.test/#/account/callback?flow=lists'))
         .resolves.toBe('v4-request-token');
+      // @ts-expect-error Browser-side account authorization was removed.
       await expect(tmdbService.createV4UserAccessToken('v4-request-token')).resolves.toEqual({
         accessToken: 'user-access-token',
         accountId: 'account-object-id',
@@ -836,7 +838,7 @@ describe('TMDB Talk-show filtering', () => {
         total_results: 0,
       }));
 
-      await tmdbService.getAccountList(42, 'watchlist', 'movie', 2, 'session-id');
+      await tmdbService.getAccountList('watchlist', 'movie', 2);
 
       const requestUrl = new URL(String(fetchMock.mock.calls[0][0]));
       expect(requestUrl.pathname).toBe('/3/account/42/watchlist/movies');
@@ -877,7 +879,7 @@ describe('TMDB Talk-show filtering', () => {
           total_results: 1,
         }));
 
-      await expect(tmdbService.getAccountUserListMemberships('account-object-id', 'user-access-token')).resolves.toEqual([
+      await expect(tmdbService.getAccountUserListMemberships()).resolves.toEqual([
         { listId: 73, mediaIds: { movie: [200], tv: [] } },
         { listId: 74, mediaIds: { movie: [], tv: [1399] } },
       ]);
@@ -917,7 +919,6 @@ describe('TMDB Talk-show filtering', () => {
 
       await expect(tmdbService.getAccountListPreviews(
         [{ id: 73 }, { id: 74 }],
-        'user-access-token',
       )).resolves.toEqual({
         73: {
           count: 3,
@@ -971,7 +972,7 @@ describe('TMDB Talk-show filtering', () => {
           }],
         }));
 
-      await expect(tmdbService.getAccountUserListMemberships('account-object-id', 'user-access-token'))
+      await expect(tmdbService.getAccountUserListMemberships())
         .resolves.toEqual([{ listId: 73, mediaIds: { movie: [200], tv: [] } }]);
 
       const requestUrls = fetchMock.mock.calls.map(([url]) => new URL(String(url)));
@@ -989,11 +990,13 @@ describe('TMDB Talk-show filtering', () => {
         .mockResolvedValueOnce(responseWith({ id: 42, name: 'Example', username: 'example-user' }))
         .mockResolvedValueOnce(responseWith({ success: true }));
 
+      // @ts-expect-error Account details are now returned by the server session endpoint.
       await expect(tmdbService.getCurrentAccount('session-id')).resolves.toEqual({
         id: 42,
         name: 'Example',
         username: 'example-user',
       });
+      // @ts-expect-error Revocation is now handled by the server logout endpoint.
       await tmdbService.deleteAccountSession('session-id');
 
       const accountUrl = new URL(String(fetchMock.mock.calls[0][0]));
@@ -1025,13 +1028,13 @@ describe('TMDB Talk-show filtering', () => {
         .mockResolvedValueOnce(responseWith({ status_code: 13, status_message: 'The item/record was deleted successfully.' }))
         .mockResolvedValueOnce(responseWith({ success: true }));
 
-      await tmdbService.getAccountLists('account-object-id', 1, 'user-access-token');
-      await tmdbService.createUserList('Favorites', 'A private list', false, 'user-access-token', 'IN');
-      await tmdbService.addMediaToUserList(73, 'movie', 200, 'user-access-token');
-      await tmdbService.addMediaToUserList(73, 'tv', 1399, 'user-access-token');
-      await tmdbService.removeMediaFromUserList(73, 'tv', 1399, 'user-access-token');
-      await tmdbService.deleteUserList(73, 'user-access-token');
-      await tmdbService.updateUserList(73, 'Updated list', 'New description', true, 'user-access-token', 'fr');
+      await tmdbService.getAccountLists(1);
+      await tmdbService.createUserList('Favorites', 'A private list', false, 'IN');
+      await tmdbService.addMediaToUserList(73, 'movie', 200);
+      await tmdbService.addMediaToUserList(73, 'tv', 1399);
+      await tmdbService.removeMediaFromUserList(73, 'tv', 1399);
+      await tmdbService.deleteUserList(73);
+      await tmdbService.updateUserList(73, 'Updated list', 'New description', true, 'fr');
 
       const listUrl = new URL(String(fetchMock.mock.calls[0][0]));
       expect(listUrl.pathname).toBe('/4/account/account-object-id/lists');
@@ -1109,7 +1112,7 @@ describe('TMDB Talk-show filtering', () => {
         }],
       }));
 
-      await expect(tmdbService.getUserList(73, 'user-access-token', 1)).resolves.toMatchObject({
+      await expect(tmdbService.getUserList(73, 1)).resolves.toMatchObject({
         item_count: 1,
         results: [
           { id: 200, media_type: 'movie', title: 'Example movie' },
@@ -1152,7 +1155,7 @@ describe('TMDB Talk-show filtering', () => {
           results: [{ id: 1399, media_type: 'tv', name: 'Example show' }],
         }));
 
-      await expect(tmdbService.getAllUserListItems(73, 'user-access-token')).resolves.toEqual([
+      await expect(tmdbService.getAllUserListItems(73)).resolves.toEqual([
         { id: 200, media_type: 'movie', title: 'Example movie' },
         { id: 1399, media_type: 'tv', name: 'Example show' },
       ]);
@@ -1168,7 +1171,7 @@ describe('TMDB Talk-show filtering', () => {
         rated: { value: 8.5 },
       }));
 
-      await expect(tmdbService.getMediaAccountState('movie', 200, 'session-id')).resolves.toEqual({
+      await expect(tmdbService.getMediaAccountState('movie', 200)).resolves.toEqual({
         favorite: true,
         watchlist: false,
         rated: { value: 8.5 },
@@ -1191,14 +1194,14 @@ describe('TMDB Talk-show filtering', () => {
         .mockResolvedValueOnce(responseWith({ status_code: 12, status_message: 'Updated' }))
         .mockResolvedValueOnce(responseWith({ status_code: 13, status_message: 'Deleted' }));
 
-      await expect(tmdbService.getTVEpisodeAccountState(1399, 2, 3, 'session-id')).resolves.toEqual({
+      await expect(tmdbService.getTVEpisodeAccountState(1399, 2, 3)).resolves.toEqual({
         id: 401,
         favorite: false,
         watchlist: false,
         rated: { value: 8.5 },
       });
-      await tmdbService.rateTVEpisode(1399, 2, 3, 7.5, 'session-id');
-      await tmdbService.deleteTVEpisodeRating(1399, 2, 3, 'session-id');
+      await tmdbService.rateTVEpisode(1399, 2, 3, 7.5);
+      await tmdbService.deleteTVEpisodeRating(1399, 2, 3);
 
       const urls = fetchMock.mock.calls.map(([url]) => new URL(String(url)));
       expect(urls.map(({ pathname }) => pathname)).toEqual([
@@ -1214,7 +1217,7 @@ describe('TMDB Talk-show filtering', () => {
 
     it('rejects invalid TV episode ratings before making a request', async () => {
       const fetchMock = vi.mocked(fetch);
-      await expect(tmdbService.rateTVEpisode(1399, 2, 3, 7.25, 'session-id')).rejects.toThrow(RangeError);
+      await expect(tmdbService.rateTVEpisode(1399, 2, 3, 7.25)).rejects.toThrow(RangeError);
       expect(fetchMock).not.toHaveBeenCalled();
     });
 
@@ -1224,8 +1227,8 @@ describe('TMDB Talk-show filtering', () => {
         .mockResolvedValueOnce(responseWith({ status_code: 1, status_message: 'Success.' }))
         .mockResolvedValueOnce(responseWith({ status_code: 1, status_message: 'Success.' }));
 
-      await tmdbService.setAccountFavorite(42, 'tv', 100, true, 'session-id');
-      await tmdbService.rateMedia('movie', 200, 8.5, 'session-id');
+      await tmdbService.setAccountFavorite('tv', 100, true);
+      await tmdbService.rateMedia('movie', 200, 8.5);
 
       const favoriteUrl = new URL(String(fetchMock.mock.calls[0][0]));
       expect(favoriteUrl.pathname).toBe('/3/account/42/favorite');
@@ -1244,7 +1247,63 @@ describe('TMDB Talk-show filtering', () => {
     it('rejects invalid ratings before making a request', async () => {
       const fetchMock = vi.mocked(fetch);
 
-      await expect(tmdbService.rateMedia('movie', 200, 8.25, 'session-id')).rejects.toThrow(RangeError);
+      await expect(tmdbService.rateMedia('movie', 200, 8.25)).rejects.toThrow(RangeError);
+      expect(fetchMock).not.toHaveBeenCalled();
+    });
+  });
+
+  describe('server-side TMDB account requests', () => {
+    beforeEach(() => {
+      vi.stubGlobal('fetch', vi.fn());
+    });
+
+    afterEach(() => {
+      vi.unstubAllGlobals();
+    });
+
+    it('sends account-list requests through the same-origin server without user credentials', async () => {
+      const fetchMock = vi.mocked(fetch);
+      fetchMock.mockResolvedValue(responseWith({
+        page: 1,
+        results: [],
+        total_pages: 1,
+        total_results: 0,
+      }));
+
+      await tmdbService.getAccountList('watchlist', 'movie', 2);
+
+      expect(fetchMock).toHaveBeenCalledOnce();
+      expect(fetchMock.mock.calls[0][0]).toBe('/api/account/action');
+      const request = fetchMock.mock.calls[0][1];
+      expect(request?.method).toBe('POST');
+      expect(request?.credentials).toBe('same-origin');
+      expect(JSON.parse(String(request?.body))).toEqual({
+        operation: 'get-account-list',
+        section: 'watchlist',
+        mediaType: 'movie',
+        page: 2,
+      });
+    });
+
+    it('sends custom-list actions through the server and excludes bearer tokens', async () => {
+      const fetchMock = vi.mocked(fetch);
+      fetchMock.mockResolvedValue(responseWith({ id: 73, success: true }));
+
+      await tmdbService.createUserList('Favorites', 'Private', false, 'US');
+
+      expect(fetchMock.mock.calls[0][0]).toBe('/api/account/action');
+      expect(JSON.parse(String(fetchMock.mock.calls[0][1]?.body))).toEqual({
+        operation: 'create-user-list',
+        name: 'Favorites',
+        description: 'Private',
+        isPublic: false,
+        region: 'US',
+      });
+    });
+
+    it('rejects invalid ratings before contacting the account service', async () => {
+      const fetchMock = vi.mocked(fetch);
+      await expect(tmdbService.rateMedia('movie', 200, 8.25)).rejects.toThrow(RangeError);
       expect(fetchMock).not.toHaveBeenCalled();
     });
   });

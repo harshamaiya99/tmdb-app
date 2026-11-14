@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState, type FormEvent, type KeyboardEvent } from 'react';
-import { Link, useLocation, useNavigate } from 'react-router-dom';
+import { Link } from 'react-router-dom';
 import { Check, ListPlus, Loader2, Plus, X } from 'lucide-react';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { Button } from '@/components/ui/button';
@@ -25,15 +25,12 @@ export function AddToListButton({ mediaId, mediaTitle, mediaType, className, ico
   const {
     canConnectLists,
     connectTMDBAccount,
+    isConnected,
     isListAccountConnected,
-    listAccessToken,
     listAccountId,
   } = useTMDBAccount();
   const { region } = useEmbedSettings();
   const { toast } = useToast();
-  const location = useLocation();
-  const navigate = useNavigate();
-  const hasPersonalApiKey = Boolean(localStorage.getItem('tmdb_api_key'));
   const [isOpen, setIsOpen] = useState(false);
   const [isCreateFormOpen, setIsCreateFormOpen] = useState(false);
   const [isSubmittingCreate, setIsSubmittingCreate] = useState(false);
@@ -46,12 +43,12 @@ export function AddToListButton({ mediaId, mediaTitle, mediaType, className, ico
   const closeButtonRef = useRef<HTMLButtonElement>(null);
   const membershipQuery = useCachedQuery(
     accountQueryKeys.userListMemberships(listAccountId, membershipRevision),
-    (signal) => tmdbService.getAccountUserListMemberships(listAccountId, listAccessToken, signal),
+    (signal) => tmdbService.getAccountUserListMemberships(signal),
     { enabled: isListAccountConnected },
   );
   const listsQuery = useCachedQuery(
     accountQueryKeys.userLists(listAccountId, listPage, membershipRevision),
-    (signal) => tmdbService.getAccountLists(listAccountId, listPage, listAccessToken, signal),
+    (signal) => tmdbService.getAccountLists(listPage, signal),
     { enabled: isOpen && isListAccountConnected },
   );
   const lists = listsQuery.data?.results ?? [];
@@ -89,9 +86,9 @@ export function AddToListButton({ mediaId, mediaTitle, mediaType, className, ico
     setPendingListId(listId);
     try {
       if (isAdded) {
-        await tmdbService.removeMediaFromUserList(listId, mediaType, mediaId, listAccessToken);
+        await tmdbService.removeMediaFromUserList(listId, mediaType, mediaId);
       } else {
-        await tmdbService.addMediaToUserList(listId, mediaType, mediaId, listAccessToken);
+        await tmdbService.addMediaToUserList(listId, mediaType, mediaId);
       }
       invalidateAccountCache();
       setMembershipRevision((revision) => revision + 1);
@@ -128,11 +125,10 @@ export function AddToListButton({ mediaId, mediaTitle, mediaType, className, ico
         name,
         description.trim(),
         isPublic,
-        listAccessToken,
         region || 'US',
       );
       createdListId = createdList.id;
-      await tmdbService.addMediaToUserList(createdList.id, mediaType, mediaId, listAccessToken);
+      await tmdbService.addMediaToUserList(createdList.id, mediaType, mediaId);
       invalidateAccountCache();
       setMembershipRevision((revision) => revision + 1);
       toast({
@@ -158,14 +154,6 @@ export function AddToListButton({ mediaId, mediaTitle, mediaType, className, ico
   };
 
   const handleConnectLists = () => {
-    if (!hasPersonalApiKey) {
-      closeDialog();
-      navigate('/login', {
-        state: { from: `${location.pathname}${location.search}` },
-      });
-      return;
-    }
-
     void connectTMDBAccount().catch((error: unknown) => {
       toast({
         title: 'Could not connect your TMDB account',
@@ -228,18 +216,16 @@ export function AddToListButton({ mediaId, mediaTitle, mediaType, className, ico
             {!isListAccountConnected ? (
               <div className="space-y-3">
                 <p className="text-sm text-muted-foreground">
-                  {hasPersonalApiKey
-                    ? 'Approve account access on TMDB to save movies and TV shows to your custom lists.'
-                    : 'Add a personal TMDB API key to this browser before connecting to your custom lists.'}
+                  Approve access on TMDB to save movies and TV shows to your custom lists.
                 </p>
-                {!hasPersonalApiKey || canConnectLists ? (
+                {!isConnected || canConnectLists ? (
                   <Button type="button" className="w-full" onClick={handleConnectLists}>
-                    {hasPersonalApiKey ? 'Connect TMDB account' : 'Set up account access'}
+                    Connect TMDB account
                   </Button>
                 ) : (
                   <Alert variant="destructive">
                     <AlertDescription>
-                      Custom lists need the app-level v4 access token. Enter it on the login screen or configure VITE_TMDB_ACCESS_TOKEN at build time.
+                      Custom lists are not configured on this app. Please contact its administrator.
                     </AlertDescription>
                   </Alert>
                 )}

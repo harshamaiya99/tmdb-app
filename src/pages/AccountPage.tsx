@@ -29,7 +29,7 @@ function isAccountSection(value: string | undefined): value is TMDBAccountSectio
 export function AccountPage() {
   const { section: sectionParam } = useParams<{ section: string }>();
   const section = isAccountSection(sectionParam) ? sectionParam : 'watchlist';
-  const { account, isConnected, sessionId, connectTMDBAccount } = useTMDBAccount();
+  const { account, isConnected, connectTMDBAccount, sessionLoading, sessionError } = useTMDBAccount();
   const { toast } = useToast();
   const [searchParams, setSearchParams] = useSearchParams();
   const { page, setPage } = usePagination();
@@ -44,12 +44,12 @@ export function AccountPage() {
 
   const movieQuery = useCachedQuery(
     accountQueryKeys.mediaList(account?.id, section, 'movie', apiPage, revision),
-    (signal) => tmdbService.getAccountList(account?.id ?? 0, section, 'movie', apiPage, sessionId, signal),
+    (signal) => tmdbService.getAccountList(section, 'movie', apiPage, signal),
     { enabled: isConnected && Boolean(account) && mediaType !== 'tv' },
   );
   const tvQuery = useCachedQuery(
     accountQueryKeys.mediaList(account?.id, section, 'tv', apiPage, revision),
-    (signal) => tmdbService.getAccountList(account?.id ?? 0, section, 'tv', apiPage, sessionId, signal),
+    (signal) => tmdbService.getAccountList(section, 'tv', apiPage, signal),
     { enabled: isConnected && Boolean(account) && mediaType !== 'movie' },
   );
   const loading = movieQuery.loading || tvQuery.loading;
@@ -83,11 +83,11 @@ export function AccountPage() {
     setPendingMediaKey(`${itemMediaType}:${item.id}`);
     try {
       if (section === 'watchlist') {
-        await tmdbService.setAccountWatchlist(account.id, itemMediaType, item.id, false, sessionId);
+        await tmdbService.setAccountWatchlist(itemMediaType, item.id, false);
       } else if (section === 'favorites') {
-        await tmdbService.setAccountFavorite(account.id, itemMediaType, item.id, false, sessionId);
+        await tmdbService.setAccountFavorite(itemMediaType, item.id, false);
       } else {
-        await tmdbService.deleteMediaRating(itemMediaType, item.id, sessionId);
+        await tmdbService.deleteMediaRating(itemMediaType, item.id);
       }
       setRevision((value) => value + 1);
       toast({ title: section === 'ratings' ? 'Rating removed' : 'Title removed' });
@@ -119,9 +119,16 @@ export function AccountPage() {
           <CardContent className="space-y-4 p-6">
             <h1 className="text-xl font-semibold">Connect your TMDB account</h1>
             <p className="text-sm leading-relaxed text-muted-foreground">
-              Approve access on TMDB to view and manage your watchlists, favorites, and ratings. Your API key alone does not grant access to personal account data.
+              Approve access on TMDB to view and manage your watchlists, favorites, and ratings. You do not need to enter an API key.
             </p>
-            <Button type="button" onClick={handleConnect}>Connect TMDB account</Button>
+            {sessionError && (
+              <Alert variant="destructive">
+                <AlertDescription>{sessionError}</AlertDescription>
+              </Alert>
+            )}
+            <Button type="button" onClick={handleConnect} disabled={sessionLoading}>
+              {sessionLoading ? 'Checking account…' : 'Connect TMDB account'}
+            </Button>
           </CardContent>
         </Card>
       </main>

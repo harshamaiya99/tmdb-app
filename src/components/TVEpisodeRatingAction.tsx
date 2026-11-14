@@ -1,6 +1,5 @@
 import { useEffect, useRef, useState } from 'react';
 import { Star, UserRound, X } from 'lucide-react';
-import { useLocation, useNavigate } from 'react-router-dom';
 import { RatingDialog } from '@/components/RatingDialog';
 import { Button } from '@/components/ui/button';
 import { useToast } from '@/components/ui/use-toast';
@@ -23,11 +22,8 @@ export function TVEpisodeRatingAction({
   episodeNumber,
   episodeName,
 }: TVEpisodeRatingActionProps) {
-  const { account, connectTMDBAccount, isConnected, sessionId } = useTMDBAccount();
+  const { account, connectTMDBAccount, isConnected } = useTMDBAccount();
   const { toast } = useToast();
-  const location = useLocation();
-  const navigate = useNavigate();
-  const hasPersonalApiKey = Boolean(localStorage.getItem('tmdb_api_key'));
   const [isLoginPromptOpen, setIsLoginPromptOpen] = useState(false);
   const ratingDialog = useRatingDialog();
   const [ratingOverride, setRatingOverride] = useState<{ key: string; value: number | null } | null>(null);
@@ -35,7 +31,7 @@ export function TVEpisodeRatingAction({
   const accountStateKey = accountQueryKeys.episodeState(account?.id, tvId, seasonNumber, episodeNumber);
   const accountStateQuery = useCachedQuery(
     accountStateKey,
-    (signal) => tmdbService.getTVEpisodeAccountState(tvId, seasonNumber, episodeNumber, sessionId, signal),
+    (signal) => tmdbService.getTVEpisodeAccountState(tvId, seasonNumber, episodeNumber, signal),
     { enabled: isConnected && Boolean(account) },
   );
   const accountState = accountStateQuery.data;
@@ -52,7 +48,7 @@ export function TVEpisodeRatingAction({
   const handleRate = async (rating: number) => {
     try {
       await ratingDialog.runAction(rating, async () => {
-        await tmdbService.rateTVEpisode(tvId, seasonNumber, episodeNumber, rating, sessionId);
+        await tmdbService.rateTVEpisode(tvId, seasonNumber, episodeNumber, rating);
         invalidateAccountCache();
         setRatingOverride({ key: accountStateKey, value: rating });
         toast({ title: `Episode rated ${rating.toFixed(1)}` });
@@ -69,7 +65,7 @@ export function TVEpisodeRatingAction({
   const handleRemoveRating = async () => {
     try {
       await ratingDialog.runAction(-1, async () => {
-        await tmdbService.deleteTVEpisodeRating(tvId, seasonNumber, episodeNumber, sessionId);
+        await tmdbService.deleteTVEpisodeRating(tvId, seasonNumber, episodeNumber);
         invalidateAccountCache();
         setRatingOverride({ key: accountStateKey, value: null });
         toast({ title: 'Episode rating removed' });
@@ -84,14 +80,6 @@ export function TVEpisodeRatingAction({
   };
 
   const handleConnect = () => {
-    if (!hasPersonalApiKey) {
-      setIsLoginPromptOpen(false);
-      navigate('/login', {
-        state: { from: `${location.pathname}${location.search}` },
-      });
-      return;
-    }
-
     void connectTMDBAccount().catch((error: unknown) => {
       toast({
         title: 'Could not connect your TMDB account',
@@ -153,9 +141,7 @@ export function TVEpisodeRatingAction({
               <div>
                 <h2 id="episode-rating-login-title" className="text-lg font-semibold">Connect your TMDB account</h2>
                 <p className="mt-2 text-sm text-muted-foreground">
-                  {hasPersonalApiKey
-                    ? 'Log in to rate TV episodes.'
-                    : 'Add a personal TMDB API key to this browser before connecting to rate TV episodes.'}
+                  Approve access on TMDB to rate TV episodes.
                 </p>
               </div>
               <Button
@@ -173,7 +159,7 @@ export function TVEpisodeRatingAction({
               <Button type="button" variant="outline" onClick={() => setIsLoginPromptOpen(false)}>Cancel</Button>
               <Button type="button" onClick={handleConnect}>
                 <UserRound aria-hidden="true" className="mr-2 h-4 w-4" />
-                {hasPersonalApiKey ? 'Log in to TMDB' : 'Set up account access'}
+                Connect TMDB account
               </Button>
             </div>
           </section>

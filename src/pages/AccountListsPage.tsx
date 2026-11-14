@@ -35,8 +35,8 @@ export function AccountListsPage() {
   const {
     canConnectLists,
     connectTMDBAccount,
+    isConnected,
     isListAccountConnected,
-    listAccessToken,
     listAccountId,
   } = useTMDBAccount();
   const { toast } = useToast();
@@ -57,13 +57,13 @@ export function AccountListsPage() {
 
   const listsQuery = useCachedQuery(
     accountQueryKeys.accountLists(listAccountId, page, revision),
-    (signal) => tmdbService.getAccountLists(listAccountId, page, listAccessToken, signal),
+    (signal) => tmdbService.getAccountLists(page, signal),
     { enabled: isListAccountConnected && !listId },
   );
   const listSummaries = listsQuery.data?.results ?? [];
   const listPreviewsQuery = useCachedQuery(
     accountQueryKeys.listPreviews(listAccountId, page, revision),
-    (signal) => tmdbService.getAccountListPreviews(listSummaries, listAccessToken, signal),
+    (signal) => tmdbService.getAccountListPreviews(listSummaries, signal),
     {
       enabled: isListAccountConnected
         && !listId
@@ -74,12 +74,12 @@ export function AccountListsPage() {
   );
   const detailQuery = useCachedQuery(
     accountQueryKeys.userList(listAccountId, listId, mediaType === 'all' ? page : 1, revision),
-    (signal) => tmdbService.getUserList(listId ?? 0, listAccessToken, mediaType === 'all' ? page : 1, signal),
+    (signal) => tmdbService.getUserList(listId ?? 0, mediaType === 'all' ? page : 1, signal),
     { enabled: isListAccountConnected && Boolean(listId) },
   );
   const filteredItemsQuery = useCachedQuery(
     accountQueryKeys.userListItems(listAccountId, listId, revision),
-    (signal) => tmdbService.getAllUserListItems(listId ?? 0, listAccessToken, signal),
+    (signal) => tmdbService.getAllUserListItems(listId ?? 0, signal),
     { enabled: isListAccountConnected && Boolean(listId) && mediaType !== 'all' },
   );
   const list = detailQuery.data;
@@ -98,7 +98,7 @@ export function AccountListsPage() {
     const mediaKey = `${mediaType}:${mediaId}`;
     setPendingMediaKey(mediaKey);
     try {
-      await tmdbService.removeMediaFromUserList(listId, mediaType, mediaId, listAccessToken);
+      await tmdbService.removeMediaFromUserList(listId, mediaType, mediaId);
       invalidateAccountCache();
       setRevision((value) => value + 1);
       toast({ title: 'Title removed from list' });
@@ -117,7 +117,7 @@ export function AccountListsPage() {
     if (!listId) return;
     setIsDeleting(true);
     try {
-      await tmdbService.deleteUserList(listId, listAccessToken);
+      await tmdbService.deleteUserList(listId);
       invalidateAccountCache();
       toast({ title: 'List deleted' });
       setIsDeleteDialogOpen(false);
@@ -161,7 +161,6 @@ export function AccountListsPage() {
         name,
         editDescription.trim(),
         editIsPublic,
-        listAccessToken,
         list.iso_639_1 || 'en',
       );
       invalidateAccountCache();
@@ -198,11 +197,11 @@ export function AccountListsPage() {
             <p className="text-sm leading-relaxed text-muted-foreground">
               Connect your TMDB account to view and manage watchlists, favorites, ratings, and custom lists.
             </p>
-            {canConnectLists ? (
+            {!isConnected || canConnectLists ? (
               <Button type="button" onClick={handleConnectLists}>Connect TMDB account</Button>
             ) : (
               <p role="alert" className="text-sm text-destructive">
-                Custom lists need the app-level v4 access token. Enter it on the login screen or configure VITE_TMDB_ACCESS_TOKEN at build time.
+                Custom lists are not configured on this app. Please contact its administrator.
               </p>
             )}
           </CardContent>

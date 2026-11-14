@@ -2,7 +2,7 @@
 
 ## Migration: GitHub Pages to Vercel
 
-**Objective:** Host the frontend on Vercel and incrementally proxy public TMDB reads through serverless functions using a server-side API key. Account-token storage and mutations remain separate future work.
+**Objective:** Host the frontend on Vercel, proxy TMDB operations through serverless functions, and keep each user's account credentials encrypted server-side.
 
 **Reason for Migration:**
 
@@ -12,11 +12,11 @@
 * Support optional TMDB account authorization for personal features without requiring an API-key login to browse.
 * Simplify deployment by integrating GitHub directly with Vercel.
 
-**Completed: Static frontend hosting**
+**Completed: Vercel hosting and public API migration**
 
-The repository is connected to Vercel and the production frontend is hosted at [tmdb-app-rho.vercel.app](https://tmdb-app-rho.vercel.app/). Vercel builds with `npm ci` and `npm run build`, serving `dist` from the domain root. Hash routing and the existing client-side authentication, TMDB requests, and account behavior are unchanged. GitHub Pages deployment has been retired.
+The repository is connected to Vercel and the production frontend is hosted at [tmdb-app-rho.vercel.app](https://tmdb-app-rho.vercel.app/). Vercel builds with `npm ci` and `npm run build`, serving `dist` from the domain root. GitHub Pages deployment has been retired.
 
-**API migration status:** Public catalog reads are routed through Vercel functions in deployed builds, and public browsing no longer requires a user-provided API key. A personal key is still optional for local direct requests and is required by the existing browser-based account authorization and mutation flows.
+**API migration status:** Public catalog reads and account operations use Vercel functions. Public browsing and account authorization no longer require visitors to provide an API key or v4 token. Account credentials are encrypted per user in Neon; account features require the database schema and server-only environment variables described in the README.
 
 ### Next migration stages
 
@@ -25,16 +25,16 @@ The repository is connected to Vercel and the production frontend is hosted at [
 3. **Paginated categories:** **Complete.** Deployed category lists use the allowlisted `GET /api/tmdb/category?category=...` endpoint.
 4. **Search and media details:** **Implemented.** Deployed search and multi-search use `/api/tmdb/search`; details, recommendations, similar titles, reviews, seasons, episodes, collections, person credits, and countries use the allowlisted `/api/tmdb/media` endpoint.
 5. **Filtered discovery and remaining public lists:** **Implemented locally.** Deployed genre/language/company/provider lists, composed movie/TV filters, paginated release-date calendar results, trending TV, and popular/trending people lists use the validated discovery or category endpoints. Local development retains direct TMDB calls. Verify production behavior after pushing to `main`.
-6. **Credential-free public browsing:** **Complete.** Public catalog routes no longer require user-key login; account routes still require the optional personal API key, while local development retains direct TMDB calls.
-7. **Account migration:** Separately design persistent storage and secure sessions before moving account authorization or mutations server-side.
+6. **Credential-free public browsing:** **Complete.** Public catalog routes no longer require user-key login; local Vite development may use a developer key for direct TMDB calls.
+7. **Account migration:** **Implemented locally.** Server-side v3/v4 authorization, encrypted per-user Neon storage, secure session cookies, and allowlisted account actions are in place. Apply `db/schema.sql`, configure Vercel environment variables, and verify production authorization after deployment.
 
-**Hosting migration outcome:** The existing React + Vite frontend is hosted on Vercel with GitHub-integrated deployments and behavior equivalent to the previous static site. This phase does not provide a backend or improve credential privacy.
+**Hosting migration outcome:** The React + Vite frontend and serverless API functions are hosted on Vercel with GitHub-integrated deployments. Public reads use the server-side TMDB API key; account tokens stay encrypted in Neon and are isolated by each user's opaque session cookie.
 
 **Security and architecture notes:**
 
 * GitHub Actions Secrets protect values only while workflows use them. A secret inserted into a Vite build becomes public; Vercel server-only environment variables must be read only by backend functions.
-* Vercel functions are stateless. Environment variables are not a per-user token store; user authorization requires an appropriate persistent data store and a secure session design.
-* Browser-held user tokens are accessible to the user and scripts executing in that browser. Keep them server-side if the requirement is that account access tokens are not exposed to the client.
+* Vercel functions are stateless. Neon provides persistent per-user credentials; `TMDB_TOKEN_ENCRYPTION_KEY` must remain stable and backed up or stored credentials can no longer be decrypted.
+* Browser-held user tokens are accessible to the user and scripts executing in that browser. Keep account tokens in encrypted server-side storage and never return them to the client.
 * Review and rotate any TMDB app credential previously embedded in a public deployment, including credentials supplied through `VITE_TMDB_ACCESS_TOKEN`.
 * Avoid caching personalized TMDB responses in shared caches. Do not log API keys, session identifiers, access tokens, or authorization codes.
 

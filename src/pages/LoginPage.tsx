@@ -1,18 +1,17 @@
-import { useState } from 'react';
+import { useState, type FormEvent } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
-import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Alert, AlertDescription } from '@/components/ui/alert';
-import { tmdbService } from '@/lib/tmdb';
+import { Button } from '@/components/ui/button';
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import { Input } from '@/components/ui/input';
 import { useTMDBAccount } from '@/contexts/TMDBAccountContext';
+import { tmdbService } from '@/lib/tmdb';
 
 export function LoginPage() {
-  const [apiKey, setApiKey] = useState('');
-  const [accessToken, setAccessToken] = useState('');
-  const { configureV4AccessToken } = useTMDBAccount();
+  const { connectAccount, isConnected } = useTMDBAccount();
   const [error, setError] = useState('');
-  const [loading, setLoading] = useState(false);
+  const [developerApiKey, setDeveloperApiKey] = useState('');
+  const [isSavingDeveloperKey, setIsSavingDeveloperKey] = useState(false);
   const navigate = useNavigate();
   const location = useLocation();
   const requestedPath = (location.state as { from?: unknown } | null)?.from;
@@ -23,114 +22,88 @@ export function LoginPage() {
     ? requestedPath
     : '/';
 
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
+  const handleConnect = () => {
     setError('');
-
-    if (!apiKey.trim()) {
-      setError('Add a TMDB API key to configure account features, or continue browsing without one.');
+    if (isConnected) {
+      navigate(returnPath, { replace: true });
       return;
     }
+    void connectAccount().catch((connectError: unknown) => {
+      setError(connectError instanceof Error ? connectError.message : 'Could not start TMDB authorization.');
+    });
+  };
 
-    setLoading(true);
-
+  const handleSaveDeveloperKey = async (event: FormEvent<HTMLFormElement>) => {
+    event.preventDefault();
+    setError('');
+    setIsSavingDeveloperKey(true);
     try {
-      const isValid = await tmdbService.validateApiKey(apiKey);
-      
-      if (isValid) {
-        tmdbService.setApiKey(apiKey);
-        configureV4AccessToken(accessToken);
-        localStorage.setItem('tmdb_api_key', apiKey);
-        if (accessToken.trim()) {
-          localStorage.setItem('tmdb_v4_access_token', accessToken.trim());
-        } else {
-          localStorage.removeItem('tmdb_v4_access_token');
-        }
-        navigate(returnPath, { replace: true });
-      } else {
-        setError('Invalid API key. Please check and try again.');
+      const isValid = await tmdbService.validateApiKey(developerApiKey.trim());
+      if (!isValid) {
+        setError('That local development API key could not be validated.');
+        return;
       }
-    } catch {
-      setError('Failed to validate API key. Please try again.');
+      tmdbService.setApiKey(developerApiKey.trim());
+      localStorage.setItem('tmdb_api_key', developerApiKey.trim());
+      navigate(returnPath, { replace: true });
+    } catch (validationError) {
+      setError(validationError instanceof Error
+        ? validationError.message
+        : 'Could not validate the local development API key.');
     } finally {
-      setLoading(false);
+      setIsSavingDeveloperKey(false);
     }
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center p-4 bg-background">
-      <div className="w-full max-w-sm">
-        <Card>
-          <CardHeader className="space-y-1">
-            <CardTitle className="text-2xl">Welcome</CardTitle>
-            <CardDescription>
-              Browse without an API key. Add your own key only if you want to connect TMDB account features.
-            </CardDescription>
-          </CardHeader>
-          <CardContent>
-            <form onSubmit={handleSubmit} className="space-y-4">
-              <div className="space-y-2">
-                <Input
-                  type="password"
-                  aria-label="TMDB API key (optional)"
-                  placeholder="API key"
-                  value={apiKey}
-                  onChange={(e) => setApiKey(e.target.value)}
-                  disabled={loading}
-                />
-                <p className="text-xs text-muted-foreground">
-                  A personal API key is needed to connect watchlists, favorites, ratings, and custom lists.{' '}
-                  <a
-                    href="https://www.themoviedb.org/settings/api"
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="underline underline-offset-4 hover:text-primary"
-                  >
-                    Get one here
-                  </a>
-                </p>
-              </div>
-
-              <div className="space-y-2">
-                <Input
-                  type="password"
-                  aria-label="TMDB v4 access token"
-                  placeholder="v4 access token (optional)"
-                  value={accessToken}
-                  onChange={(e) => setAccessToken(e.target.value)}
-                  disabled={loading}
-                />
-                <p className="text-xs text-muted-foreground">
-                  Required for custom lists. It is stored in this browser and is visible to anyone who can inspect the app.
-                </p>
-              </div>
-
-              {error && (
-                <Alert variant="destructive">
-                  <AlertDescription>{error}</AlertDescription>
-                </Alert>
-              )}
-
+    <div className="flex min-h-screen items-center justify-center bg-background p-4">
+      <Card className="w-full max-w-sm">
+        <CardHeader>
+          <CardTitle className="text-2xl">Welcome</CardTitle>
+          <CardDescription>
+            You can browse without signing in. Connect your TMDB account only to use personal account features.
+          </CardDescription>
+        </CardHeader>
+        <CardContent className="space-y-3">
+          {error && (
+            <Alert variant="destructive">
+              <AlertDescription>{error}</AlertDescription>
+            </Alert>
+          )}
+          <Button type="button" className="w-full" onClick={handleConnect}>
+            {isConnected ? 'Continue to account' : 'Connect TMDB account'}
+          </Button>
+          <Button
+            type="button"
+            variant="outline"
+            className="w-full"
+            onClick={() => navigate(returnPath, { replace: true })}
+          >
+            Continue browsing
+          </Button>
+          {import.meta.env.DEV && (
+            <form onSubmit={handleSaveDeveloperKey} className="space-y-2 border-t pt-4">
+              <p className="text-sm font-medium">Local catalog development only</p>
+              <Input
+                type="password"
+                aria-label="Local developer TMDB API key"
+                placeholder="Developer API key"
+                value={developerApiKey}
+                onChange={(event) => setDeveloperApiKey(event.target.value)}
+                disabled={isSavingDeveloperKey}
+              />
               <Button
                 type="submit"
+                variant="outline"
                 className="w-full"
-                disabled={loading}
+                disabled={isSavingDeveloperKey || !developerApiKey.trim()}
               >
-                {loading ? 'Validating...' : 'Save key and continue'}
+                {isSavingDeveloperKey ? 'Checking key…' : 'Save local developer key'}
               </Button>
             </form>
-            <Button
-              type="button"
-              variant="outline"
-              className="mt-3 w-full"
-              onClick={() => navigate('/', { replace: true })}
-              disabled={loading}
-            >
-              Continue browsing without an API key
-            </Button>
-          </CardContent>
-        </Card>
-      </div>
+          )}
+        </CardContent>
+      </Card>
     </div>
   );
 }

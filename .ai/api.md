@@ -2,13 +2,13 @@
 
 ## Overview
 
-TMDB access is centralized in [src/lib/tmdb.ts](src/lib/tmdb.ts). In local Vite development, the service calls TMDB directly using an optional user-supplied key. In deployed builds, public catalog reads use same-origin Vercel Functions and the server-only `TMDB_API_KEY`; personal account authorization and mutations still use the existing browser-based flows.
+TMDB access is centralized in [src/lib/tmdb.ts](src/lib/tmdb.ts). In deployed builds, public catalog reads and personal account operations use same-origin Vercel Functions and server-only credentials. Local Vite development can make public catalog requests directly with an optional developer API key; account authorization requires Vercel Functions.
 
-## Vercel API migration (in progress)
+## Vercel API
 
-The migration was introduced incrementally so local development retains direct TMDB requests. All public catalog reads used for browsing now use Vercel functions in deployed builds. The functions accept GET requests only, use fixed or allowlisted TMDB routes, disable caching, and return generic errors when TMDB fails.
+Public catalog reads use GET-only Vercel functions with fixed or allowlisted TMDB routes. Account authentication and mutations use dedicated Vercel functions, persistent Neon sessions, and same-origin POST requests.
 
-Configure `TMDB_API_KEY` in Vercel's project environment-variable settings for Production to enable these endpoints; the local `.env` file is not automatically uploaded to Vercel. Do not prefix the server variable with `VITE_`. The existing `VITE_TMDB_ACCESS_TOKEN` is a separate v4 app token and is not used by these read functions; embed URL variables remain client-side settings.
+Configure `TMDB_API_KEY`, `TMDB_V4_ACCESS_TOKEN`, `TMDB_TOKEN_ENCRYPTION_KEY`, and `DATABASE_URL` in Vercel for Production. These are server-only variables; do not prefix them with `VITE_`. Apply [`db/schema.sql`](../db/schema.sql) to the connected Neon database. `VITE_MOVIE_EMBED_URL` and `VITE_TV_EMBED_URL` remain client-side settings.
 
 The read-only `GET /api/tmdb/trending-movies?page=1` endpoint maps to the fixed TMDB `/3/trending/movie/day` operation, accepts only pages 1–500, uses the same server-only API key, and returns TMDB's response shape unchanged. In deployed builds, the home-page `tmdbService.getTrendingMovies()` method uses this Vercel endpoint; local Vite development continues calling TMDB directly so `npm run dev` works without a Vercel Functions emulator.
 
@@ -20,33 +20,33 @@ Other migrated public reads use `GET /api/tmdb/media?resource=...`. Resources ar
 
 Filtered discovery and release-calendar reads use `GET /api/tmdb/discover`. The endpoint accepts a fixed set of discovery parameters for movie/TV filters (genres, original language, companies, providers, regions, dates, release types, vote thresholds, monetization, sort order, and page), validates their formats, and always maps requests to `/3/discover/movie` or `/3/discover/tv`. Release-calendar requests use `mode=release-date-range` with validated ISO dates, a movie-only route, pagination, and optional region. Deployed genre/language/company/provider lists, composed filters, and release-date calendar pages use this endpoint. TV Talk-show exclusions remain applied in the service.
 
-All public catalog reads used by the app have been routed through these Vercel functions in deployed builds. Local development continues to call TMDB directly, so a user-supplied key is needed to load catalog data with `npm run dev`; no Vercel Functions emulator is required. Account authorization and mutations remain browser-based.
+All deployed catalog and account requests use the Vercel API. Local catalog browsing with `npm run dev` still uses direct TMDB requests and may use a developer API key. Use `vercel dev` to test account authorization and mutations locally.
 
 ## Environment and runtime config
 
-The app API key is configured as a server-only Vercel variable for deployed public reads. Browsing the deployed app does not require the user to enter a key. An optional user-entered key remains in local storage for local development and browser-based account authorization and mutations. Optional `VITE_MOVIE_EMBED_URL` and `VITE_TV_EMBED_URL` variables provide build-time defaults for movie and TV watch-link templates. Browser-local settings can override those defaults and are stored separately in local storage.
+The app API key is configured as a server-only Vercel variable for deployed public reads and account requests. Browsing or connecting an account on the deployed site does not require the user to enter a key. An optional developer key may be used for direct catalog requests during local Vite development. Optional `VITE_MOVIE_EMBED_URL` and `VITE_TV_EMBED_URL` variables provide build-time defaults for movie and TV watch-link templates.
 
-The service also supports an optional TMDB v4 app access token for custom-list authorization. Users may enter it on the login screen; it is stored in browser local storage under `tmdb_v4_access_token`. A build-time `VITE_TMDB_ACCESS_TOKEN` remains supported as a fallback. Both approaches expose the app-level token to the browser and are suitable only when that exposure is acceptable; a server-side proxy is required to keep credentials private.
+The app-level `TMDB_V4_ACCESS_TOKEN` is used only by the server to start and complete custom-list authorization. Per-user v3 session IDs and v4 user access tokens are encrypted with `TMDB_TOKEN_ENCRYPTION_KEY` before storage in Neon. The browser receives only an opaque, HTTP-only session cookie.
 
-Account features use a separate TMDB user session. The API key or configured bearer token identifies the application; it does not grant access to a user's private account data. Users must approve access on TMDB's website before the app can create a session.
+Each person's approved TMDB authorization identifies their own account. The app's server-side credentials identify the application and do not give other users access to the owner's watchlist.
 
 ## Request Flow
 
 A typical request follows this path:
 
 1. A page component requests data from the TMDB service.
-2. The service routes deployed public catalog reads through same-origin `/api/tmdb/*` functions; local development and account operations continue using direct TMDB requests.
-3. Vercel functions call fixed TMDB routes using `TMDB_API_KEY`; direct requests use optional browser credentials.
+2. The service routes deployed public reads through same-origin `/api/tmdb/*` functions and account operations through `/api/account/*`.
+3. Vercel functions call fixed TMDB routes using server-only environment variables and credentials loaded for the current opaque browser session.
 4. The response is parsed as JSON and returned to the calling page.
 5. The page stores the result in React state and renders the UI.
 
-The central method that performs most requests is `fetchFromTMDB`, which assembles the URL and handles HTTP errors.
+Public direct local requests use `fetchFromTMDB`; deployed public and account requests use same-origin API helpers that handle HTTP errors.
 
 ## Authentication Model
 
 ### API key storage
 
-The deployed app allows public browsing without a user API key. The optional credential form in [src/pages/LoginPage.tsx](src/pages/LoginPage.tsx) validates and stores a key for local development and browser-based account features.
+The deployed app allows public browsing and account connection without a user API key. The login page does not request TMDB credentials; an optional developer key may be stored locally for direct catalog requests.
 
 Once validated, the key is:
 
@@ -62,13 +62,11 @@ For direct requests using the v3 API key, every TMDB request is authenticated by
 
 This is handled inside the shared request helper, so pages do not need to manage auth details themselves.
 
-When using a v4 access token, the service sends `Authorization: Bearer <token>` instead, avoiding the credential in the request URL.
-
 Request methods accept an optional `AbortSignal` through `TMDBRequestOptions`. Callers can use an `AbortController` to cancel requests when a page unmounts or a newer request supersedes an older one.
 
 ### API key validation
 
-The app validates a key by calling the TMDB v3 configuration endpoint:
+Local direct catalog requests can validate a developer key by calling the TMDB v3 configuration endpoint:
 
 - `/3/configuration?api_key=<key>`
 
@@ -76,18 +74,18 @@ If the response is successful, the key is considered valid.
 
 ### TMDB user account authorization
 
-The app's unified account connection completes the TMDB v3 and v4 user-authorization flows in sequence. Watchlist, favorites, and ratings use TMDB v3's request-token process:
+The server starts and completes TMDB authorization. Watchlists, favorites, and ratings use TMDB v3's request-token process:
 
 1. Create a temporary request token.
-2. Redirect the user to TMDB to approve access, returning to the app's `/account/callback` hash route.
-3. Exchange the approved request token for a TMDB session ID and retrieve the user's account details.
-4. Store the session ID and account identity in browser local storage. The temporary request token is held in session storage while the user is redirected.
+2. Redirect the user to TMDB to approve access, returning to `/api/account/auth/callback` with a one-time state value.
+3. The server validates state, exchanges the approved request token for a TMDB session ID, and retrieves the user's account details.
+4. Encrypt the session ID and account identity in Neon. A random opaque session cookie ties later requests to that user's stored credentials.
 
-The session ID is a sensitive credential and is treated like a password. The account menu's combined disconnect action asks TMDB to revoke both the v3 session and any v4 user access token, then clears both from local storage. This browser-only app does not send account credentials to a project backend.
+The session ID is a sensitive credential and is treated like a password. The account menu's disconnect action asks TMDB to revoke both user credentials and then clears the server-side session and browser cookie.
 
-Account requests use the account ID and session ID with TMDB's v3 account endpoints. The service supports movie and TV watchlists, favorites, and rated lists; reading per-title account state to show whether a title is already saved or rated; adding/removing watchlist and favorite items; submitting half-point ratings from 0.5 to 10; and deleting ratings. TV episode details support episode account-state lookup and rating creation/deletion through `/tv/{series_id}/season/{season_number}/episode/{episode_number}/account_states` and `/rating`.
+Account requests are sent to `/api/account/action`. The server derives the account ID and credentials from the session cookie; the browser never sends a TMDB session ID or user token. The service supports movie and TV watchlists, favorites, and rated lists; per-title account state; adding/removing watchlist and favorite items; half-point ratings from 0.5 to 10; and TV episode ratings.
 
-Custom lists use TMDB v4 user authorization, which is started automatically after v3 account authorization when an app-level v4 access token is configured at login or through `VITE_TMDB_ACCESS_TOKEN`. The app requests user approval, exchanges the request token for a user access token, and stores that token and the returned account object ID in browser local storage. The callback also accepts a v4 request token when TMDB omits the approval flag; the token exchange verifies the approval. Private list access and mutation use the v4 user token as a bearer credential. V4 list operations support mixed movies and TV shows: create with `POST /4/list`, edit list details with `PUT /4/list/{list_id}`, delete with `DELETE /4/list/{list_id}`, add with `POST /4/list/{list_id}/items` using `{ items: [{ media_type, media_id }] }`, remove with `DELETE /4/list/{list_id}/items` using the same body, retrieve lists from `/4/account/{account_object_id}/lists`, and read paginated `results` and `total_results` from `/4/list/{list_id}`. The custom-list overview reads item counts from each list's detail response because the account-list summary may not provide an accurate count. Individual-list media type filters fetch all pages before filtering, then paginate the matching items in the app. Membership checks combine `object_ids.movie` and `object_ids.tv` with the list's paginated `results`, so list items are detected even when those ID arrays are incomplete. The combined disconnect action revokes both the v3 session and v4 user access token.
+Custom lists use a separate TMDB v4 user approval, started by the server with `TMDB_V4_ACCESS_TOKEN`. The user token and account object ID are encrypted in Neon; server account operations use that per-user token. V4 list operations support mixed movies and TV shows: create, edit, delete, add/remove items, retrieve paginated account lists, and read paginated list details. The custom-list overview reads item counts from list details; media-type filters fetch all pages before filtering; membership checks combine `object_ids` with paginated results.
 
 The v3 watchlist, favorite, and rated endpoints are separate for movies and TV, and return no cross-media added timestamp. The account pages therefore interleave the independently `created_at.desc`-sorted movie and TV results for All view, while preserving newest-first order within each media type; this is balanced interleaving rather than a guaranteed global added-time chronology.
 

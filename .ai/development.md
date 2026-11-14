@@ -10,7 +10,8 @@ This document captures the practical workflow for working on the app day to day.
 
 - Node.js 18 or newer
 - npm
-- a valid TMDB API key for local TMDB requests or account-feature testing
+- a TMDB API key is optional for local direct catalog requests
+- Vercel CLI and the project's server environment variables to test account features locally
 
 ### Install dependencies
 
@@ -59,7 +60,9 @@ The repository is connected to Vercel. `vercel.json` sets the Vite framework, in
 
 Configure optional Vite environment variables in the Vercel project settings when the deployment needs them. Every `VITE_*` value is included in the browser bundle and is public, not a server-side secret.
 
-Set `TMDB_API_KEY` as a server-only Vercel environment variable for Production. The deployed public catalog API requires it; never prefix this key with `VITE_`. Local Vite development uses the optional personal key entered in the app.
+Set `TMDB_API_KEY` as a server-only Vercel environment variable for Production. The deployed public catalog API requires it; never prefix this key with `VITE_`.
+
+To enable account features in Production, connect a Neon Postgres database and expose `DATABASE_URL` to Vercel. Apply `db/schema.sql` to that database. Add server-only `TMDB_V4_ACCESS_TOKEN` and `TMDB_TOKEN_ENCRYPTION_KEY` variables; generate the latter with `node -e "console.log(require('crypto').randomBytes(32).toString('base64'))"`. Redeploy after setting or rotating environment variables. Do not use a `VITE_` prefix for any TMDB credential or database value.
 
 The app includes a web app manifest and registers its service worker in production, allowing supported browsers to offer installation when served over HTTPS. The worker caches the app shell and same-origin static assets for launch but bypasses `/api/` requests; TMDB API content still requires an internet connection.
 
@@ -69,6 +72,10 @@ The app uses Vite-style environment variables for optional client-side behavior.
 
 ### Current known variables
 
+- `TMDB_API_KEY` — server-only key for public TMDB requests
+- `TMDB_V4_ACCESS_TOKEN` — server-only app token for user custom-list authorization
+- `TMDB_TOKEN_ENCRYPTION_KEY` — base64-encoded random 32-byte key used to encrypt user tokens in Neon
+- `DATABASE_URL` — Neon Postgres connection string
 - `VITE_MOVIE_EMBED_URL` — default watch-link template for movie detail pages
 - `VITE_TV_EMBED_URL` — default watch-link template for TV episodes
 
@@ -84,15 +91,12 @@ Movie and TV embed URL templates can be overridden in the authenticated app's **
 
 ### Manual testing checklist
 
-1. Start the app.
-2. With no saved API key, confirm the home page and public catalog routes load through the Vercel functions.
-3. During local development, add a valid TMDB API key on the welcome page so direct TMDB requests can load.
-4. Open a movie or TV details page and verify the UI renders expected metadata.
-5. Try a search and confirm results load correctly.
-6. Verify the shared layout navigation tabs still behave correctly for movies, TV shows, and people.
-7. Check the same flows at a narrow smartphone width (around 320–390px): confirm the header, search, navigation, filters, cards, and dialogs remain usable and there is no unintended horizontal page overflow. Intentional carousels may scroll horizontally.
+1. Start the Vite app, optionally configure a developer API key for direct local catalog requests, and verify public browsing and search.
+2. Use `vercel dev` with the server environment variables and Neon schema configured to test account connection, custom-list consent, account operations, and disconnect.
+3. Verify that two separate browser profiles connect to different TMDB accounts and see only their own account data.
+4. Check the same flows at a narrow smartphone width (around 320–390px): confirm the header, search, navigation, account menus, cards, and dialogs remain usable and there is no unintended horizontal page overflow. Intentional carousels may scroll horizontally.
 
-The personal API key is optional for deployed public browsing but is required for local direct requests and browser-based account authorization and mutations.
+Personal API keys and TMDB user tokens are not requested for deployed browsing or account features. Local account testing requires the server functions rather than plain Vite.
 
 ### Common issue: invalid API key
 
@@ -100,7 +104,7 @@ If the app shows auth errors:
 
 - confirm the API key is correct
 - make sure it is entered exactly as provided by TMDB
-- verify the app stored the key in local storage and that the service is using it
+- verify the local developer key is configured in the app for direct requests
 
 ## Editing Guidelines
 

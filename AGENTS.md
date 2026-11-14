@@ -14,7 +14,7 @@ The repository now includes focused guides in [.ai/architecture.md](.ai/architec
 
 - Provide a modern media browser for TMDB content.
 - Keep the UI simple, responsive, and polished.
-- Use a server-side TMDB API key for deployed public catalog access; an optional user key remains for local development and personal account features.
+- Use server-side TMDB credentials and per-user encrypted sessions for deployed account operations; an optional developer key may be used for local catalog requests.
 - Favor clear component composition over heavy state-management abstractions.
 - Maintain a TypeScript-first codebase with strong typing.
 
@@ -32,7 +32,7 @@ The repository now includes focused guides in [.ai/architecture.md](.ai/architec
 
 The app is organized around a few clear layers:
 
-- App shell and routing live in [src/App.tsx](src/App.tsx), with the account-route credential gate in [src/components/AccountRoute.tsx](src/components/AccountRoute.tsx).
+- App shell and routing live in [src/App.tsx](src/App.tsx); account access is handled through server-side sessions rather than a client-side route gate.
 - Route-level pages live in [src/pages](src/pages).
 - Reusable UI and feature components live in [src/components](src/components).
 - Shared state and app-wide context live in [src/contexts](src/contexts).
@@ -43,10 +43,10 @@ The app is organized around a few clear layers:
 ### Runtime flow
 
 1. Deployed public browsing uses the Vercel TMDB API without requiring a user key.
-2. The optional credential page validates and saves a personal key for local development or account features.
-3. Public routes render without an API-key gate; account routes require the personal key and use the central service layer.
+2. Deployed account operations use same-origin Vercel functions and encrypted per-user credentials in Neon.
+3. Public and account routes render without asking users for a personal API key.
 4. Pages render content and use shared UI components for cards, skeletons, badges, and toasts.
-5. Users authorize the app on TMDB for account features: a v3 session enables watchlists, favorites, and ratings, while a separate v4 user access token enables mixed movie/TV custom lists.
+5. Users authorize the app on TMDB for account features: a v3 session enables watchlists, favorites, and ratings, while a separate v4 approval enables mixed movie/TV custom lists.
 
 ## Directory Structure
 
@@ -148,11 +148,11 @@ When a new feature seems to require a new file, confirm that the existing reposi
 ## Important Design Decisions
 
 - Deployed public TMDB reads use the server-only `TMDB_API_KEY` through allowlisted Vercel functions.
-- A user-supplied TMDB API key is optional for deployed browsing, but remains stored in local storage after validation for local development and browser-based account operations.
+- An optional developer TMDB API key may be stored locally for direct catalog requests during local development; deployed account features never use browser credentials.
 - TMDB integration is centralized in [src/lib/tmdb.ts](src/lib/tmdb.ts) so pages do not directly call the API.
-- Routing is handled by React Router; public catalog routes are open, while account routes require the optional personal API key.
-- Personal TMDB account access is optional and requires separate website approvals: a v3 session for watchlists/favorites/ratings and a v4 user access token for mixed movie/TV custom lists. The app-level `VITE_TMDB_ACCESS_TOKEN` is required to start v4 user authorization; the API key login alone never grants personal account access.
-- Account authorization state is shared through the TMDB account context, while all account requests stay centralized in the TMDB service.
+- Routing is handled by React Router; public and account routes do not require a personal API key.
+- Personal TMDB account access is optional and requires separate website approvals: a v3 session for watchlists/favorites/ratings and a v4 approval for mixed movie/TV custom lists. Per-user credentials are encrypted in Neon using a server-only encryption key.
+- Account authorization state is loaded through the TMDB account context; account requests use same-origin Vercel functions and server-side credentials.
 - The header title is shared through the title context, with a small hook wrapper for page-specific title updates.
 - Images come from TMDB and are resolved through the centralized image URL helper.
 - The app uses Vite environment variables such as VITE_MOVIE_EMBED_URL for optional watch-link behavior; keep any new environment usage client-safe and non-secret.

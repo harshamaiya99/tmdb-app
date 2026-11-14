@@ -109,7 +109,6 @@ export function Layout({ children }: LayoutProps) {
     account,
     canConnectLists,
     connectTMDBAccount,
-    configureV4AccessToken,
     disconnectTMDBAccount,
     isConnected: isTMDBAccountConnected,
     isListAccountConnected,
@@ -186,38 +185,22 @@ export function Layout({ children }: LayoutProps) {
   const showBackButton = location.pathname !== '/';
 
   const handleLogout = async () => {
-    let disconnectError: string | null = null;
     try {
       await disconnectTMDBAccount();
     } catch (error) {
-      disconnectError = error instanceof Error
-        ? error.message
-        : 'Could not revoke all TMDB credentials remotely.';
-    }
-
-    localStorage.removeItem('tmdb_api_key');
-    localStorage.removeItem('tmdb_v4_access_token');
-    tmdbService.setApiKey('');
-    configureV4AccessToken('');
-    navigate('/');
-
-    if (disconnectError) {
       toast({
-        title: 'Credentials cleared from this browser',
-        description: `Some TMDB credentials could not be revoked remotely: ${disconnectError}`,
+        title: 'TMDB account logout issue',
+        description: error instanceof Error ? error.message : 'Please try again.',
         variant: 'destructive',
       });
-    }
-  };
-
-  const handleConnectTMDBAccount = () => {
-    if (!localStorage.getItem('tmdb_api_key')) {
-      navigate('/login', {
-        state: { from: `${location.pathname}${location.search}` },
-      });
+      navigate('/');
       return;
     }
 
+    navigate('/');
+  };
+
+  const handleConnectTMDBAccount = () => {
     void connectTMDBAccount().catch((error: unknown) => {
       toast({
         title: 'Could not connect your TMDB account',
@@ -232,10 +215,10 @@ export function Layout({ children }: LayoutProps) {
       toast({ title: 'TMDB account disconnected' });
     }).catch((error: unknown) => {
       toast({
-        title: 'TMDB account disconnected locally',
+        title: 'Could not fully disconnect TMDB account',
         description: error instanceof Error
-          ? `Could not revoke all access remotely: ${error.message}`
-          : 'Could not revoke all access remotely.',
+          ? error.message
+          : 'TMDB could not revoke every account token.',
         variant: 'destructive',
       });
     });
@@ -346,7 +329,7 @@ export function Layout({ children }: LayoutProps) {
             className="flex min-h-10 cursor-default select-none items-center gap-2 rounded-sm px-3 py-2 text-sm text-muted-foreground data-[disabled]:pointer-events-none data-[disabled]:opacity-70"
           >
             <ListPlus className="h-4 w-4" />
-            Configure v4 token for custom lists
+            Custom lists are not configured on this app
           </DropdownMenu.Item>
         )}
         <DropdownMenu.Separator className="my-1 h-px bg-border" />

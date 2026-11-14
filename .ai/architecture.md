@@ -5,7 +5,7 @@
 This project is a React + TypeScript application for browsing TMDB media catalog data. Its frontend is client-side, with a small Vercel Functions layer proxying selected public reads. It is intentionally lightweight and centered around a few core ideas:
 
 - Deployed public browsing uses a server-only TMDB API key through fixed Vercel function routes and does not require user credentials.
-- An optional user-provided TMDB API key is stored locally for direct TMDB requests during local development and browser-based account operations.
+- An optional developer TMDB API key may be stored locally for direct catalog requests during local development.
 - Routing is handled by React Router.
 - UI is composed from reusable page components and shared UI primitives.
 - TMDB requests remain centralized in one service module rather than spread across pages.
@@ -18,7 +18,7 @@ The app boots from [src/main.tsx](src/main.tsx), which mounts the root React app
 
 The main application shell is defined in [src/App.tsx](src/App.tsx). It wires together:
 
-- optional API-key protection for account routes
+- account connection and status screens
 - the browser router
 - global providers such as the title context
 - the toast container
@@ -26,12 +26,12 @@ The main application shell is defined in [src/App.tsx](src/App.tsx). It wires to
 ### Authentication flow
 
 1. Deployed public browsing loads without a user API key.
-2. The optional credential page validates and stores a user API key for local development or account features.
-3. Account routes require that personal API key; public catalog routes are not gated.
+2. The login page lets users connect their TMDB account without entering credentials.
+3. Public and account routes are available without a client-side credential gate.
 
-The app does not use a backend for account sessions or mutations. Vercel Functions provide a narrow proxy for selected public TMDB reads.
+Vercel Functions provide public TMDB reads and account operations. Per-user account credentials are encrypted in Neon Postgres, and the browser holds only an opaque HTTP-only session cookie.
 
-TMDB account features use an additional, optional user-consent flow. The app creates a request token, redirects the user to TMDB for approval, then exchanges the approved token for a session ID and account identity. The session and account identity are stored locally by `TMDBAccountProvider`; the temporary request token stays in session storage during the redirect. Account routes require the personal API key and, depending on the feature, the separate TMDB v3 session or v4 user token.
+TMDB account features use an optional user-consent flow. The server creates a request token, redirects the user to TMDB for approval, validates the callback state, and exchanges the approved token for a session ID and account identity. Each user's session and credentials are stored separately and encrypted in Neon; account routes do not require a personal API key.
 
 ### Environment and runtime config
 
@@ -62,7 +62,7 @@ Routing is defined in [src/App.tsx](src/App.tsx) with React Router's `HashRouter
 
 ### Routing behavior
 
-- Public catalog routes are available without a personal API key. Account routes without one are redirected to `/login` to configure the optional account credential.
+- Public and account routes are available without a personal API key; disconnected account pages offer TMDB authorization.
 - The app uses a catch-all redirect back to `/` for unknown routes.
 - The layout shell remains consistent across most pages through the shared layout wrapper.
 
@@ -76,10 +76,10 @@ The frontend API integration is centralized in [src/lib/tmdb.ts](src/lib/tmdb.ts
 - hold strongly typed interfaces for movies, TV shows, people, reviews, episodes, and related entities
 - expose a single `tmdbService` object with methods for fetching data
 - route migrated deployed public reads through the Vercel API
-- use the user's stored API key for local development and browser-based account requests
-- attach browser credentials to direct TMDB requests
+- use an optional developer key for direct catalog requests during local development
+- route deployed account actions through `/api/account/*`, where user credentials are loaded from the server session
 
-The Vercel functions use the server-only `TMDB_API_KEY` and fixed or allowlisted operations for configuration, trending and people categories, search, media details/supporting lookups, filtered discovery, and release-date ranges. Local Vite development continues calling TMDB directly; account requests remain browser-based.
+The Vercel functions use the server-only `TMDB_API_KEY` and fixed or allowlisted operations for public reads and account actions. Local Vite development continues calling TMDB directly for public catalog data; use `vercel dev` for account flows.
 
 ### Core API capabilities
 
@@ -114,7 +114,7 @@ Keeping API logic in one place makes it easier to:
 
 Pages live in [src/pages](src/pages):
 
-- [src/pages/LoginPage.tsx](src/pages/LoginPage.tsx) — optional API-key setup for local development and account features
+- [src/pages/LoginPage.tsx](src/pages/LoginPage.tsx) — account connection entry point without asking users for credentials
 - [src/pages/HomePage.tsx](src/pages/HomePage.tsx) — displays independently selectable movie and TV categories, and handles search results
 - [src/pages/MediaListPage.tsx](src/pages/MediaListPage.tsx) — renders paginated lists for the main movie and TV category tabs, genres, companies, providers, and people-related media
 - [src/pages/ReleaseDateMoviesPage.tsx](src/pages/ReleaseDateMoviesPage.tsx) — renders paginated movie releases for a selected calendar date
@@ -136,7 +136,7 @@ Pages live in [src/pages](src/pages):
 
 ### Account context
 
-`TMDBAccountProvider` shares the v3 account identity/session and the separate v4 custom-list access token with the settings menu, account pages, and detail-page actions. Both TMDB account requests and authentication endpoints remain centralized in `src/lib/tmdb.ts`.
+`TMDBAccountProvider` loads non-secret connection status from `/api/account/session` and starts redirects to the server-side authorization endpoints. Account actions are centralized in `src/lib/tmdb.ts` and `/api/account/action`; no TMDB user credential is stored in browser state.
 
 ### Shared hooks
 

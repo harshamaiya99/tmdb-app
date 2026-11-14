@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState, type KeyboardEvent } from 'react';
-import { Link, useLocation, useNavigate } from 'react-router-dom';
+import { Link } from 'react-router-dom';
 import { BookmarkCheck, BookmarkPlus, Heart, ListPlus, Star, UserRound, X } from 'lucide-react';
 import { AddToListButton } from '@/components/AddToListButton';
 import { RatingDialog } from '@/components/RatingDialog';
@@ -29,11 +29,8 @@ export function AccountMediaActions({
   showRatings = true,
   squareButtons = false,
 }: AccountMediaActionsProps) {
-  const { account, connectTMDBAccount, isConnected, sessionId } = useTMDBAccount();
+  const { account, connectTMDBAccount, isConnected } = useTMDBAccount();
   const { toast } = useToast();
-  const location = useLocation();
-  const navigate = useNavigate();
-  const hasPersonalApiKey = Boolean(localStorage.getItem('tmdb_api_key'));
   const [pendingAction, setPendingAction] = useState<'watchlist' | 'favorite' | null>(null);
   const ratingDialog = useRatingDialog();
   const [isLoginPromptOpen, setIsLoginPromptOpen] = useState(false);
@@ -41,7 +38,7 @@ export function AccountMediaActions({
   const accountStateKey = accountQueryKeys.mediaState(account?.id, mediaType, mediaId);
   const accountStateQuery = useCachedQuery(
     accountStateKey,
-    (signal) => tmdbService.getMediaAccountState(mediaType, mediaId, sessionId, signal),
+    (signal) => tmdbService.getMediaAccountState(mediaType, mediaId, signal),
     { enabled: isConnected && Boolean(account) },
   );
   const [stateOverride, setStateOverride] = useState<{
@@ -61,7 +58,7 @@ export function AccountMediaActions({
     if (!accountState || !account) return;
     try {
       await ratingDialog.runAction(rating, async () => {
-        await tmdbService.rateMedia(mediaType, mediaId, rating, sessionId);
+        await tmdbService.rateMedia(mediaType, mediaId, rating);
         invalidateAccountCache();
         setStateOverride({
           key: accountStateKey,
@@ -82,7 +79,7 @@ export function AccountMediaActions({
     if (!account || !accountState || accountState.rated === false) return;
     try {
       await ratingDialog.runAction(-1, async () => {
-        await tmdbService.deleteMediaRating(mediaType, mediaId, sessionId);
+        await tmdbService.deleteMediaRating(mediaType, mediaId);
         invalidateAccountCache();
         setStateOverride({
           key: accountStateKey,
@@ -105,14 +102,6 @@ export function AccountMediaActions({
     };
 
     const handleConnectAccount = () => {
-      if (!hasPersonalApiKey) {
-        setIsLoginPromptOpen(false);
-        navigate('/login', {
-          state: { from: `${location.pathname}${location.search}` },
-        });
-        return;
-      }
-
       void connectTMDBAccount().catch((error: unknown) => {
         toast({
           title: 'Could not connect your TMDB account',
@@ -190,9 +179,7 @@ export function AccountMediaActions({
                 <div>
                   <h2 id="tmdb-login-title" className="text-lg font-semibold">Connect your TMDB account</h2>
                   <p className="mt-2 text-sm text-muted-foreground">
-                    {hasPersonalApiKey
-                      ? 'Log in to TMDB to manage your watchlist, favorites, ratings, and lists.'
-                      : 'Add a personal TMDB API key to this browser before connecting your watchlist, favorites, and ratings.'}
+                    Approve access on TMDB to manage your watchlist, favorites, ratings, and lists.
                   </p>
                 </div>
                 <Button
@@ -212,7 +199,7 @@ export function AccountMediaActions({
                 </Button>
                 <Button type="button" onClick={handleConnectAccount}>
                   <UserRound aria-hidden="true" className="mr-2 h-4 w-4" />
-                  {hasPersonalApiKey ? 'Log in to TMDB' : 'Set up account access'}
+                  Connect TMDB account
                 </Button>
               </div>
             </section>
@@ -228,9 +215,9 @@ export function AccountMediaActions({
     setPendingAction(action);
     try {
       if (action === 'watchlist') {
-        await tmdbService.setAccountWatchlist(account.id, mediaType, mediaId, enabled, sessionId);
+        await tmdbService.setAccountWatchlist(mediaType, mediaId, enabled);
       } else {
-        await tmdbService.setAccountFavorite(account.id, mediaType, mediaId, enabled, sessionId);
+        await tmdbService.setAccountFavorite(mediaType, mediaId, enabled);
       }
       invalidateAccountCache();
       setStateOverride({

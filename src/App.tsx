@@ -1,6 +1,5 @@
 // src/App.tsx
 import { Layout } from '@/components/Layout';
-import { AccountRoute } from '@/components/AccountRoute';
 import { MediaGridSkeleton } from '@/components/MediaGridSkeleton';
 import { Skeleton } from '@/components/ui/skeleton';
 import { HashRouter, Routes, Route, Navigate } from 'react-router-dom';
@@ -54,11 +53,11 @@ function App() {
                   <Route path="/login" element={<LoginPage />} />
                   <Route path="/about" element={<Layout><AboutPage /></Layout>} />
                   <Route path="/settings" element={<Layout><SettingsPage /></Layout>} />
-                  <Route path="/account/callback" element={<AccountRoute><AccountCallbackPage /></AccountRoute>} />
+                  <Route path="/account/callback" element={<AccountCallbackPage />} />
                   <Route path="/account" element={<Navigate to="/account/watchlist" replace />} />
-                  <Route path="/account/lists" element={<AccountRoute><Layout><AccountListsPage /></Layout></AccountRoute>} />
-                  <Route path="/account/lists/:listId" element={<AccountRoute><Layout><AccountListsPage /></Layout></AccountRoute>} />
-                  <Route path="/account/:section" element={<AccountRoute><Layout><AccountPage /></Layout></AccountRoute>} />
+                  <Route path="/account/lists" element={<Layout><AccountListsPage /></Layout>} />
+                  <Route path="/account/lists/:listId" element={<Layout><AccountListsPage /></Layout>} />
+                  <Route path="/account/:section" element={<Layout><AccountPage /></Layout>} />
                   <Route path="/movie/:id" element={<Layout><MovieDetailsPage /></Layout>} />
                   <Route path="/tv/:id" element={<Layout><TVShowDetailsPage /></Layout>} />
                   <Route path="/person/:id" element={<Layout><PersonDetailsPage /></Layout>} />
