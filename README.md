@@ -102,6 +102,9 @@ The site can be installed as an app from supported browsers when served over HTT
 │   ├── development.md                 # Local development and deployment workflow
 │   ├── roadmap.md                      # Planned project improvements
 │   └── ui.md                           # UI conventions, design tokens, and component patterns
+├── .github/
+│   └── workflows/
+│       └── test.yml                    # Runs tests on pushes and pull requests to main
 ├── vercel.json                        # Vercel Vite build and output configuration
 ├── public/
 │   ├── apple-touch-icon.png           # Icon used when adding the app to an Apple device
