@@ -5,7 +5,7 @@
 This project is a React + TypeScript application for browsing TMDB media catalog data. Its frontend is client-side, with a small Vercel Functions layer proxying selected public reads. It is intentionally lightweight and centered around a few core ideas:
 
 - Deployed public browsing uses a server-only TMDB API key through fixed Vercel function routes and does not require user credentials.
-- An optional developer TMDB API key may be stored locally for direct catalog requests during local development.
+- Plain Vite development reads `TMDB_API_KEY` from local `.env` for direct catalog requests; the Vite config injects it only for the development server. There is no credential-entry login page.
 - Routing is handled by React Router.
 - UI is composed from reusable page components and shared UI primitives.
 - TMDB requests remain centralized in one service module rather than spread across pages.
@@ -75,10 +75,10 @@ The frontend API integration is centralized in [src/lib/tmdb.ts](src/lib/tmdb.ts
 - hold strongly typed interfaces for movies, TV shows, people, reviews, episodes, and related entities
 - expose a single `tmdbService` object with methods for fetching data
 - route migrated deployed public reads through the Vercel API
-- use an optional developer key for direct catalog requests during local development
+- use the local `TMDB_API_KEY` environment variable for direct catalog requests during Vite development
 - route deployed account actions through `/api/account/*`, where user credentials are loaded from the server session
 
-The Vercel functions use the server-only `TMDB_API_KEY` and fixed or allowlisted operations for public reads and account actions. Local Vite development continues calling TMDB directly for public catalog data; use `vercel dev` for account flows.
+The Vercel functions use the server-only `TMDB_API_KEY` and fixed or allowlisted operations for public reads and account actions. Local Vite development reads `TMDB_API_KEY` from `.env` and calls TMDB directly for public catalog data; the value is injected only by the development server. Use `vercel dev` for account flows.
 
 ### Core API capabilities
 
@@ -169,7 +169,7 @@ A typical request path looks like this:
 
 1. A page component mounts.
 2. It calls a method on `tmdbService` from [src/lib/tmdb.ts](src/lib/tmdb.ts).
-3. In production, public catalog reads and account operations call allowlisted same-origin Vercel functions, which authenticate to TMDB using server environment variables and the current user's encrypted Neon credentials. Local catalog development may use an optional developer API key.
+3. In production, public catalog reads and account operations call allowlisted same-origin Vercel functions, which authenticate to TMDB using server environment variables and the current user's encrypted Neon credentials. Local Vite catalog development reads `TMDB_API_KEY` from `.env`.
 4. Data is returned as typed results.
 5. The page stores the result in local state.
 6. Shared UI components render the result and any loading or error state.

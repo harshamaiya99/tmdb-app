@@ -14,7 +14,7 @@ The repository now includes focused guides in [.ai/architecture.md](.ai/architec
 
 - Provide a modern media browser for TMDB content.
 - Keep the UI simple, responsive, and polished.
-- Use server-side TMDB credentials and per-user encrypted sessions for deployed account operations; an optional developer key may be used for local catalog requests.
+- Use server-side TMDB credentials and per-user encrypted sessions for deployed account operations; plain Vite development reads `TMDB_API_KEY` from the local `.env` file for direct catalog requests.
 - Favor clear component composition over heavy state-management abstractions.
 - Maintain a TypeScript-first codebase with strong typing.
 
@@ -148,7 +148,7 @@ When a new feature seems to require a new file, confirm that the existing reposi
 ## Important Design Decisions
 
 - Deployed public TMDB reads use the server-only `TMDB_API_KEY` through allowlisted Vercel functions.
-- An optional developer TMDB API key may be stored locally for direct catalog requests during local development; deployed account features never use browser credentials.
+- Plain Vite development reads `TMDB_API_KEY` from local `.env` for direct catalog requests; the Vite config injects it only for the development server. Deployed features use server-side credentials and never use browser account credentials.
 - TMDB integration is centralized in [src/lib/tmdb.ts](src/lib/tmdb.ts) so pages do not directly call the API.
 - Routing is handled by React Router; public and account routes do not require a personal API key.
 - Personal TMDB account access is optional and requires separate website approvals: a v3 session for watchlists/favorites/ratings and a v4 approval for mixed movie/TV custom lists. Per-user credentials are encrypted in Neon using a server-only encryption key.

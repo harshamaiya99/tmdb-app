@@ -39,7 +39,7 @@ The app displays the TMDB logo and attribution on its **About** page, available 
 
 - Node.js 18+
 - npm
-- A TMDB API key is not needed for deployed browsing. Plain local Vite catalog requests use an optional developer key ([Get one here](https://www.themoviedb.org/settings/api))
+- A TMDB API key is not needed for deployed browsing. Plain local Vite catalog requests read `TMDB_API_KEY` from `.env` ([Get one here](https://www.themoviedb.org/settings/api))
 
 ### Installation
 
@@ -55,7 +55,7 @@ The app displays the TMDB logo and attribution on its **About** page, available 
 
 3. Open http://localhost:5173 in your browser
 
-4. The deployed site browses without asking visitors for an API key. Plain `npm run dev` makes direct catalog requests and can use a developer key stored under `tmdb_api_key` in local browser storage; this is separate from account authorization, and the app has no credential-entry or API-key login page.
+4. The deployed site browses without asking visitors for an API key. Plain `npm run dev` reads `TMDB_API_KEY` from your local `.env` file for direct catalog requests. This key is only used by local development, not account authorization. There is no API-key login page.
 5. To use watchlists, favorites, ratings, or custom lists on the deployed site, choose **Connect TMDB account** and approve access on TMDB. The app handles credentials on its server; users do not enter an API key or access token, and the app never asks for a TMDB password. Custom lists may require a separate TMDB approval the first time. Movies and TV shows can be saved to mixed custom lists from their detail pages; new lists are private by default.
 
 ### Vercel account features setup
@@ -100,7 +100,7 @@ npm run build
 
 The repository is connected to Vercel. The included `vercel.json` configures the Vite framework, `npm ci`, the production build command (`npm run build`), and the `dist` output directory. Pushes to `main` deploy to production. Tests run separately in GitHub Actions.
 
-The app retains hash-based routes (for example, `/#/movie/123`) and is built for the domain root. No SPA rewrite is required. Configure `TMDB_API_KEY` as a server-only Vercel environment variable for Production; public catalog requests use it through Vercel Functions. Do not prefix it with `VITE_`. Optional client environment values prefixed with `VITE_` are embedded in the browser bundle and are public.
+The app retains hash-based routes (for example, `/#/movie/123`) and is built for the domain root. No SPA rewrite is required. Configure `TMDB_API_KEY` as a server-only Vercel environment variable for Production; public catalog requests use it through Vercel Functions. Do not prefix it with `VITE_`. For local `npm run dev`, the Vite config reads the same variable from `.env` and injects it only into the development server. Optional client environment values prefixed with `VITE_` are embedded in browser builds and are public.
 
 The site can be installed as an app from supported browsers when served over HTTPS. The service worker caches the app shell and same-origin static assets but bypasses `/api/` requests; TMDB content still requires an internet connection.
 

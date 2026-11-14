@@ -37,7 +37,7 @@ function AppLoadingSkeleton() {
 
 function App() {
   if (import.meta.env.DEV) {
-    tmdbService.setApiKey(localStorage.getItem('tmdb_api_key') ?? '');
+    tmdbService.setApiKey(__TMDB_DEV_API_KEY__);
   }
 
   return (

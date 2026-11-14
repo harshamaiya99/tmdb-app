@@ -2,7 +2,7 @@
 
 ## Overview
 
-TMDB access is centralized in [src/lib/tmdb.ts](src/lib/tmdb.ts). In deployed builds, public catalog reads and personal account operations use same-origin Vercel Functions and server-only credentials. Local Vite development can make public catalog requests directly with an optional developer API key; account authorization requires Vercel Functions.
+TMDB access is centralized in [src/lib/tmdb.ts](src/lib/tmdb.ts). In deployed builds, public catalog reads and personal account operations use same-origin Vercel Functions and server-only credentials. Local Vite development reads `TMDB_API_KEY` from `.env` for direct public catalog requests; account authorization requires Vercel Functions.
 
 ## Vercel API
 
@@ -20,11 +20,11 @@ Other migrated public reads use `GET /api/tmdb/media?resource=...`. Resources ar
 
 Filtered discovery and release-calendar reads use `GET /api/tmdb/discover`. The endpoint accepts a fixed set of discovery parameters for movie/TV filters (genres, original language, companies, providers, regions, dates, release types, vote thresholds, monetization, sort order, and page), validates their formats, and always maps requests to `/3/discover/movie` or `/3/discover/tv`. Release-calendar requests use `mode=release-date-range` with validated ISO dates, a movie-only route, pagination, and optional region. Deployed genre/language/company/provider lists, composed filters, and release-date calendar pages use this endpoint. TV Talk-show exclusions remain applied in the service.
 
-All deployed catalog and account requests use the Vercel API. Local catalog browsing with `npm run dev` still uses direct TMDB requests and may use a developer API key. Use `vercel dev` to test account authorization and mutations locally.
+All deployed catalog and account requests use the Vercel API. Local catalog browsing with `npm run dev` uses direct TMDB requests and reads `TMDB_API_KEY` from `.env`. Use `vercel dev` to test account authorization and mutations locally.
 
 ## Environment and runtime config
 
-The app API key is configured as a server-only Vercel variable for deployed public reads and account requests. Browsing or connecting an account on the deployed site does not require the user to enter a key. An optional developer key may be used for direct catalog requests during local Vite development. Optional `VITE_MOVIE_EMBED_URL` and `VITE_TV_EMBED_URL` variables provide build-time defaults for movie and TV watch-link templates.
+The app API key is configured as a server-only Vercel variable for deployed public reads and account requests. Browsing or connecting an account on the deployed site does not require the user to enter a key. For plain Vite development, `vite.config.ts` reads `TMDB_API_KEY` from `.env` and injects it only when running the development server, where the browser calls TMDB directly. Do not prefix it with `VITE_`; production builds do not inject this value. Optional `VITE_MOVIE_EMBED_URL` and `VITE_TV_EMBED_URL` variables provide build-time defaults for movie and TV watch-link templates.
 
 The app-level `TMDB_V4_ACCESS_TOKEN` is used only by the server to start and complete custom-list authorization. Per-user v3 session IDs and v4 user access tokens are encrypted with `TMDB_TOKEN_ENCRYPTION_KEY` before storage in Neon. The browser receives only an opaque, HTTP-only session cookie.
 
@@ -46,12 +46,7 @@ Public direct local requests use `fetchFromTMDB`; deployed public and account re
 
 ### API key storage
 
-The deployed app allows public browsing and account connection without a user API key. There is no credential-based login page. An optional developer key may be stored locally for direct catalog requests during plain Vite development only.
-
-For local direct catalog requests, the developer key is:
-
-- stored in local storage under `tmdb_api_key`
-- assigned to the service instance via `tmdbService.setApiKey(...)`
+The deployed app allows public browsing and account connection without a user API key. There is no credential-based login page. During plain Vite development, `TMDB_API_KEY` from `.env` is assigned to the service instance; it is not stored in browser local storage.
 
 ### How authentication is used
 
@@ -203,7 +198,7 @@ The current implementation also includes richer types for creator metadata, prod
 
 - The API layer is intentionally centralized to avoid spreading fetch logic across pages.
 - TMDB account credentials and sessions are server-managed; only the opaque session cookie is held by the browser.
-- An optional developer API key and UI preferences may use browser storage during local development.
+- TMDB API credentials stay server-side in deployed builds; the local Vite development server injects its `.env` key only for direct catalog requests.
 - Embed URL templates use browser-local overrides first, then Vite build-time defaults.
 - The current design favors simplicity over advanced caching or offline support.
 
@@ -212,7 +207,7 @@ The current implementation also includes richer types for creator metadata, prod
 The TMDB integration is compact and direct:
 
 - one centralized service handles all requests
-- Local development may store a developer API key in local storage; deployed API credentials remain server-side
+- Local development reads `TMDB_API_KEY` from `.env`; deployed API credentials remain server-side
 - responses are typed and returned to components
 - selected request results are cached in memory with TTLs and concurrent identical requests are deduplicated
 - the response cache is cleared on full page reload; the service worker explicitly bypasses `/api/` requests so server API responses are never cached by the app shell worker
