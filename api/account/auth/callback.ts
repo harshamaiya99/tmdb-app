@@ -8,7 +8,6 @@ import {
   oauthStateCookieName,
   refreshSessionAndClearStateCookies,
   redirect,
-  respondWithError,
   safeEqual,
   saveV3Account,
   saveV4Account,
