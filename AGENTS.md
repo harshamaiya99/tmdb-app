@@ -14,7 +14,7 @@ The repository now includes focused guides in [.ai/architecture.md](.ai/architec
 
 - Provide a modern media browser for TMDB content.
 - Keep the UI simple, responsive, and polished.
-- Use a user-provided TMDB API key for access.
+- Use a server-side TMDB API key for deployed public catalog access; an optional user key remains for local development and personal account features.
 - Favor clear component composition over heavy state-management abstractions.
 - Maintain a TypeScript-first codebase with strong typing.
 
@@ -32,7 +32,7 @@ The repository now includes focused guides in [.ai/architecture.md](.ai/architec
 
 The app is organized around a few clear layers:
 
-- App shell and routing live in [src/App.tsx](src/App.tsx).
+- App shell and routing live in [src/App.tsx](src/App.tsx), with the account-route credential gate in [src/components/AccountRoute.tsx](src/components/AccountRoute.tsx).
 - Route-level pages live in [src/pages](src/pages).
 - Reusable UI and feature components live in [src/components](src/components).
 - Shared state and app-wide context live in [src/contexts](src/contexts).
@@ -42,15 +42,15 @@ The app is organized around a few clear layers:
 
 ### Runtime flow
 
-1. The user enters a TMDB API key on the login page.
-2. The key is validated and saved in local storage.
-3. Protected routes render the app shell and fetch TMDB data through the central service layer.
+1. Deployed public browsing uses the Vercel TMDB API without requiring a user key.
+2. The optional credential page validates and saves a personal key for local development or account features.
+3. Public routes render without an API-key gate; account routes require the personal key and use the central service layer.
 4. Pages render content and use shared UI components for cards, skeletons, badges, and toasts.
 5. Users authorize the app on TMDB for account features: a v3 session enables watchlists, favorites, and ratings, while a separate v4 user access token enables mixed movie/TV custom lists.
 
 ## Directory Structure
 
-- [src/App.tsx](src/App.tsx) – top-level router, protected-route logic, and global providers
+- [src/App.tsx](src/App.tsx) – top-level router, public routes, and global providers
 - [src/pages](src/pages) – route pages such as home, details, lists, and login
 - [src/components](src/components) – layout, media cards, review section, shared section composition, and shared UI wrappers
 - [src/components/ui](src/components/ui) – reusable base UI primitives
@@ -147,10 +147,10 @@ When a new feature seems to require a new file, confirm that the existing reposi
 
 ## Important Design Decisions
 
-- The app uses a user-supplied TMDB API key rather than a server-side secret flow.
-- The API key is stored in local storage after successful validation.
+- Deployed public TMDB reads use the server-only `TMDB_API_KEY` through allowlisted Vercel functions.
+- A user-supplied TMDB API key is optional for deployed browsing, but remains stored in local storage after validation for local development and browser-based account operations.
 - TMDB integration is centralized in [src/lib/tmdb.ts](src/lib/tmdb.ts) so pages do not directly call the API.
-- Routing is handled by React Router, with protected routes preventing access until authentication succeeds.
+- Routing is handled by React Router; public catalog routes are open, while account routes require the optional personal API key.
 - Personal TMDB account access is optional and requires separate website approvals: a v3 session for watchlists/favorites/ratings and a v4 user access token for mixed movie/TV custom lists. The app-level `VITE_TMDB_ACCESS_TOKEN` is required to start v4 user authorization; the API key login alone never grants personal account access.
 - Account authorization state is shared through the TMDB account context, while all account requests stay centralized in the TMDB service.
 - The header title is shared through the title context, with a small hook wrapper for page-specific title updates.

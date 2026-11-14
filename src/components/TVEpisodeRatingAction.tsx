@@ -1,5 +1,6 @@
 import { useEffect, useRef, useState } from 'react';
 import { Star, UserRound, X } from 'lucide-react';
+import { useLocation, useNavigate } from 'react-router-dom';
 import { RatingDialog } from '@/components/RatingDialog';
 import { Button } from '@/components/ui/button';
 import { useToast } from '@/components/ui/use-toast';
@@ -24,6 +25,9 @@ export function TVEpisodeRatingAction({
 }: TVEpisodeRatingActionProps) {
   const { account, connectTMDBAccount, isConnected, sessionId } = useTMDBAccount();
   const { toast } = useToast();
+  const location = useLocation();
+  const navigate = useNavigate();
+  const hasPersonalApiKey = Boolean(localStorage.getItem('tmdb_api_key'));
   const [isLoginPromptOpen, setIsLoginPromptOpen] = useState(false);
   const ratingDialog = useRatingDialog();
   const [ratingOverride, setRatingOverride] = useState<{ key: string; value: number | null } | null>(null);
@@ -80,6 +84,14 @@ export function TVEpisodeRatingAction({
   };
 
   const handleConnect = () => {
+    if (!hasPersonalApiKey) {
+      setIsLoginPromptOpen(false);
+      navigate('/login', {
+        state: { from: `${location.pathname}${location.search}` },
+      });
+      return;
+    }
+
     void connectTMDBAccount().catch((error: unknown) => {
       toast({
         title: 'Could not connect your TMDB account',
@@ -140,7 +152,11 @@ export function TVEpisodeRatingAction({
             <header className="mb-4 flex items-start justify-between gap-4">
               <div>
                 <h2 id="episode-rating-login-title" className="text-lg font-semibold">Connect your TMDB account</h2>
-                <p className="mt-2 text-sm text-muted-foreground">Log in to rate TV episodes.</p>
+                <p className="mt-2 text-sm text-muted-foreground">
+                  {hasPersonalApiKey
+                    ? 'Log in to rate TV episodes.'
+                    : 'Add a personal TMDB API key to this browser before connecting to rate TV episodes.'}
+                </p>
               </div>
               <Button
                 ref={closeLoginButtonRef}
@@ -157,7 +173,7 @@ export function TVEpisodeRatingAction({
               <Button type="button" variant="outline" onClick={() => setIsLoginPromptOpen(false)}>Cancel</Button>
               <Button type="button" onClick={handleConnect}>
                 <UserRound aria-hidden="true" className="mr-2 h-4 w-4" />
-                Log in to TMDB
+                {hasPersonalApiKey ? 'Log in to TMDB' : 'Set up account access'}
               </Button>
             </div>
           </section>

@@ -6,7 +6,7 @@ A clean, minimal web app for browsing movies, TV shows, and people with data fro
 
 ## Features
 
-- User-entered TMDB API key authentication
+- Public browsing without a personal API key on the deployed site
 - Browse trending, now-playing, top-rated, upcoming, and streaming-focused movies
 - Explore popular and top-rated TV shows
 - Search movies, TV shows, and people
@@ -39,7 +39,7 @@ The app displays the TMDB logo and attribution on its **About** page, available 
 
 - Node.js 18+
 - npm
-- A TMDB API key ([Get one here](https://www.themoviedb.org/settings/api))
+- A TMDB API key is optional for deployed browsing; it is needed for local direct requests and personal account features ([Get one here](https://www.themoviedb.org/settings/api))
 
 ### Installation
 
@@ -55,8 +55,8 @@ The app displays the TMDB logo and attribution on its **About** page, available 
 
 3. Open http://localhost:5173 in your browser
 
-4. Enter your TMDB API key to start browsing
-5. To use watchlists, favorites, and ratings, connect your TMDB account from the header's **Settings** menu and approve access on TMDB. Custom lists use TMDB's v4 user authorization and require the app-level `VITE_TMDB_ACCESS_TOKEN`; connect them separately from **Settings → Connect custom lists**. This is separate from the API key login; the app never asks for your TMDB password. Mixed movie/TV lists can be created from a movie or TV detail page, and a title can be saved to multiple lists; membership is shown and can be changed in the **Add to list** dialog. Lists can be managed from **Settings → Custom lists**; new lists are private by default.
+4. On the deployed site, browse without providing an API key. Local development still calls TMDB directly, so enter your own key on the welcome page to browse locally.
+5. To use watchlists, favorites, and ratings, add your own TMDB API key on the welcome page, then connect your TMDB account from the header and approve access on TMDB. Custom lists use TMDB's v4 user authorization and require the app-level `VITE_TMDB_ACCESS_TOKEN`; connect them separately from **Settings → Connect custom lists**. This is separate from the API key; the app never asks for your TMDB password. Mixed movie/TV lists can be created from a movie or TV detail page, and a title can be saved to multiple lists; membership is shown and can be changed in the **Add to list** dialog. Lists can be managed from **Settings → Custom lists**; new lists are private by default.
 
 ### Optional embed URL templates
 
@@ -69,7 +69,7 @@ VITE_TV_EMBED_URL=https://example.com/tv/{TMDB_ID}/{SEASON}/{EPISODE}
 
 On the deployed app, open **Settings** from the profile menu to choose the content country, select a theme, and add movie and TV URL templates. The country is used for regional results, certifications, and streaming availability. Embed-link source names are automatically taken from each URL's domain. A single link opens directly from the watch button; multiple links let you choose a source. Use **Import JSON** and **Export JSON** to move these templates between browsers or back them up; imported settings are applied after you choose **Save content settings**. The build-time template is available as the default until browser links are saved, and **Reset content defaults** restores them. Removing all links disables that media type's watch button. Browser settings are not shared across browsers or devices.
 
-The optional TMDB v3 account session and v4 custom-list user access token are stored separately in the browser's local storage. Disconnect each from the **Settings** menu to revoke that credential and remove its local copy. The app-level `VITE_TMDB_ACCESS_TOKEN` is included in the client build and must not be treated as a server-side secret.
+The optional TMDB API key, v3 account session, and v4 custom-list user access token are stored in the browser's local storage. Disconnect account sessions from the profile menu to revoke them; the API key can be cleared there as well. The app-level `VITE_TMDB_ACCESS_TOKEN` is included in the client build and must not be treated as a server-side secret.
 
 ## Build and Verification
 
@@ -88,7 +88,7 @@ npm run build
 
 The repository is connected to Vercel. The included `vercel.json` configures the Vite framework, `npm ci`, the production build command (`npm run build`), and the `dist` output directory. Pushes to `main` deploy to production. Tests run separately in GitHub Actions.
 
-The app retains hash-based routes (for example, `/#/movie/123`) and is built for the domain root. No SPA rewrite is required. Configure any optional Vite environment variables used by the deployment in the Vercel project settings. Values prefixed with `VITE_` are embedded in the client bundle and are public; this hosting-only migration does not make credentials private.
+The app retains hash-based routes (for example, `/#/movie/123`) and is built for the domain root. No SPA rewrite is required. Configure `TMDB_API_KEY` as a server-only Vercel environment variable for Production; public catalog requests use it through Vercel Functions. Do not prefix it with `VITE_`. Optional client environment values prefixed with `VITE_` are embedded in the browser bundle and are public.
 
 The site can be installed as an app from supported browsers when served over HTTPS. The service worker caches the app shell and same-origin static assets but bypasses `/api/` requests; TMDB content still requires an internet connection.
 
@@ -123,11 +123,12 @@ The site can be installed as an app from supported browsers when served over HTT
 │   ├── sw.js                          # Service worker for caching the app shell
 │   └── tmdb-logo.svg                  # TMDB logo used for attribution
 ├── src/
-│   ├── App.tsx                        # Routes, providers, and protected-page access
+│   ├── App.tsx                        # Routes, providers, and account-route access
 │   ├── main.tsx                       # React application entry point
 │   ├── index.css                      # Global styles, Tailwind layers, and theme variables
 │   ├── vite-env.d.ts                  # TypeScript declarations for Vite environment variables
 │   ├── components/
+│   │   ├── AccountRoute.tsx           # API-key gate for personal account routes
 │   │   ├── CreditsCarousel.tsx        # Cast and crew carousel
 │   │   ├── EpisodesRatingOverview.tsx # Episode rating visualization
 │   │   ├── AccountMediaActions.tsx    # TMDB account actions on media detail pages
@@ -178,7 +179,7 @@ The site can be installed as an app from supported browsers when served over HTT
 │       ├── AccountListsPage.tsx       # Browse, view, and manage custom lists
 │       ├── AccountPage.tsx            # Watchlists, favorites, and ratings
 │       ├── HomePage.tsx               # Home browsing and search results
-│       ├── LoginPage.tsx              # TMDB API key entry and validation
+│       ├── LoginPage.tsx              # Optional API key setup for local/account features
 │       ├── MediaListPage.tsx          # Filtered and paginated movie/TV lists
 │       ├── MovieDetailsPage.tsx       # Movie details, credits, reviews, and watch link
 │       ├── PeopleListPage.tsx         # Paginated people listing

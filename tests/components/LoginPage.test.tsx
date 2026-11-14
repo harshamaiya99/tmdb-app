@@ -26,10 +26,10 @@ function CurrentPath() {
   return <output aria-label="Current path">{location.pathname}</output>;
 }
 
-function renderLoginPage() {
+function renderLoginPage(initialEntry: string | { pathname: string; state?: unknown } = '/login') {
   return render(
     <MemoryRouter
-      initialEntries={['/login']}
+      initialEntries={[initialEntry]}
       future={{ v7_startTransition: true, v7_relativeSplatPath: true }}
     >
       <LoginPage />
@@ -45,14 +45,25 @@ describe('LoginPage', () => {
     accountMocks.configureV4AccessToken.mockReset();
   });
 
-  it('requires an API key before validating', async () => {
+  it('allows browsing without an API key', async () => {
     const user = userEvent.setup();
     renderLoginPage();
 
-    await user.click(screen.getByRole('button', { name: 'Continue' }));
+    await user.click(screen.getByRole('button', { name: 'Continue browsing without an API key' }));
 
-    expect(screen.getByText('Please enter your TMDB API key')).toBeInTheDocument();
+    expect(screen.getByLabelText('Current path')).toHaveTextContent('/');
     expect(tmdbService.validateApiKey).not.toHaveBeenCalled();
+  });
+
+  it('requires a key only when saving account credentials', async () => {
+    const user = userEvent.setup();
+    renderLoginPage();
+
+    await user.click(screen.getByRole('button', { name: 'Save key and continue' }));
+
+    expect(screen.getByText(/Add a TMDB API key to configure account features/)).toBeInTheDocument();
+    expect(tmdbService.validateApiKey).not.toHaveBeenCalled();
+    expect(screen.getByLabelText('Current path')).toHaveTextContent('/login');
   });
 
   it('stores a valid key and navigates into the app', async () => {
@@ -61,15 +72,29 @@ describe('LoginPage', () => {
     renderLoginPage();
 
     await user.type(screen.getByPlaceholderText('API key'), 'valid-key');
-    await user.click(screen.getByRole('button', { name: 'Continue' }));
+    await user.click(screen.getByRole('button', { name: 'Save key and continue' }));
 
     await waitFor(() => {
       expect(screen.getByLabelText('Current path')).toHaveTextContent('/');
     });
+
     expect(tmdbService.setApiKey).toHaveBeenCalledWith('valid-key');
     expect(window.localStorage.getItem('tmdb_api_key')).toBe('valid-key');
     expect(accountMocks.configureV4AccessToken).toHaveBeenCalledWith('');
     expect(window.localStorage.getItem('tmdb_v4_access_token')).toBeNull();
+  });
+
+  it('returns to the account page that requested API-key setup', async () => {
+    const user = userEvent.setup();
+    vi.mocked(tmdbService.validateApiKey).mockResolvedValue(true);
+    renderLoginPage({ pathname: '/login', state: { from: '/account/watchlist' } });
+
+    await user.type(screen.getByPlaceholderText('API key'), 'valid-key');
+    await user.click(screen.getByRole('button', { name: 'Save key and continue' }));
+
+    await waitFor(() => {
+      expect(screen.getByLabelText('Current path')).toHaveTextContent('/account/watchlist');
+    });
   });
 
   it('stores an optional v4 access token for custom lists', async () => {
@@ -77,9 +102,9 @@ describe('LoginPage', () => {
     vi.mocked(tmdbService.validateApiKey).mockResolvedValue(true);
     renderLoginPage();
 
-    await user.type(screen.getByLabelText('TMDB API key'), 'valid-key');
+    await user.type(screen.getByLabelText('TMDB API key (optional)'), 'valid-key');
     await user.type(screen.getByLabelText('TMDB v4 access token'), ' v4-token ');
-    await user.click(screen.getByRole('button', { name: 'Continue' }));
+    await user.click(screen.getByRole('button', { name: 'Save key and continue' }));
 
     await waitFor(() => {
       expect(screen.getByLabelText('Current path')).toHaveTextContent('/');
@@ -94,7 +119,7 @@ describe('LoginPage', () => {
     renderLoginPage();
 
     await user.type(screen.getByPlaceholderText('API key'), 'invalid-key');
-    await user.click(screen.getByRole('button', { name: 'Continue' }));
+    await user.click(screen.getByRole('button', { name: 'Save key and continue' }));
 
     expect(await screen.findByText('Invalid API key. Please check and try again.'))
       .toBeInTheDocument();

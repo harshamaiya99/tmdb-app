@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useLocation, useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
@@ -14,13 +14,21 @@ export function LoginPage() {
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
   const navigate = useNavigate();
+  const location = useLocation();
+  const requestedPath = (location.state as { from?: unknown } | null)?.from;
+  const returnPath = typeof requestedPath === 'string'
+    && requestedPath.startsWith('/')
+    && !requestedPath.startsWith('//')
+    && requestedPath !== '/login'
+    ? requestedPath
+    : '/';
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setError('');
 
     if (!apiKey.trim()) {
-      setError('Please enter your TMDB API key');
+      setError('Add a TMDB API key to configure account features, or continue browsing without one.');
       return;
     }
 
@@ -38,7 +46,7 @@ export function LoginPage() {
         } else {
           localStorage.removeItem('tmdb_v4_access_token');
         }
-        navigate('/');
+        navigate(returnPath, { replace: true });
       } else {
         setError('Invalid API key. Please check and try again.');
       }
@@ -56,7 +64,7 @@ export function LoginPage() {
           <CardHeader className="space-y-1">
             <CardTitle className="text-2xl">Welcome</CardTitle>
             <CardDescription>
-              Enter your TMDB API key to continue
+              Browse without an API key. Add your own key only if you want to connect TMDB account features.
             </CardDescription>
           </CardHeader>
           <CardContent>
@@ -64,14 +72,14 @@ export function LoginPage() {
               <div className="space-y-2">
                 <Input
                   type="password"
-                  aria-label="TMDB API key"
+                  aria-label="TMDB API key (optional)"
                   placeholder="API key"
                   value={apiKey}
                   onChange={(e) => setApiKey(e.target.value)}
                   disabled={loading}
                 />
                 <p className="text-xs text-muted-foreground">
-                  Don't have an API key?{' '}
+                  A personal API key is needed to connect watchlists, favorites, ratings, and custom lists.{' '}
                   <a
                     href="https://www.themoviedb.org/settings/api"
                     target="_blank"
@@ -108,9 +116,18 @@ export function LoginPage() {
                 className="w-full"
                 disabled={loading}
               >
-                {loading ? 'Validating...' : 'Continue'}
+                {loading ? 'Validating...' : 'Save key and continue'}
               </Button>
             </form>
+            <Button
+              type="button"
+              variant="outline"
+              className="mt-3 w-full"
+              onClick={() => navigate('/', { replace: true })}
+              disabled={loading}
+            >
+              Continue browsing without an API key
+            </Button>
           </CardContent>
         </Card>
       </div>

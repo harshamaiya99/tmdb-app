@@ -1,12 +1,13 @@
 // src/App.tsx
 import { Layout } from '@/components/Layout';
+import { AccountRoute } from '@/components/AccountRoute';
 import { MediaGridSkeleton } from '@/components/MediaGridSkeleton';
 import { Skeleton } from '@/components/ui/skeleton';
 import { HashRouter, Routes, Route, Navigate } from 'react-router-dom';
 import { Toaster } from '@/components/ui/toaster';
 import { TitleProvider } from '@/contexts/TitleContext';
 import { tmdbService } from '@/lib/tmdb';
-import { lazy, Suspense, useEffect, useState } from 'react';
+import { lazy, Suspense } from 'react';
 import { EmbedSettingsProvider } from '@/contexts/EmbedSettingsContext';
 import { TMDBAccountProvider } from '@/contexts/TMDBAccountContext';
 import { ThemeProvider } from '@/hooks/useTheme';
@@ -36,27 +37,9 @@ function AppLoadingSkeleton() {
   );
 }
 
-function ProtectedRoute({ children }: { children: React.ReactNode }) {
-  const [isAuthenticated, setIsAuthenticated] = useState<boolean | null>(null);
-
-  useEffect(() => {
-    const apiKey = localStorage.getItem('tmdb_api_key');
-    if (apiKey) {
-      tmdbService.setApiKey(apiKey);
-      setIsAuthenticated(true);
-    } else {
-      setIsAuthenticated(false);
-    }
-  }, []);
-
-  if (isAuthenticated === null) {
-    return <AppLoadingSkeleton />;
-  }
-
-  return isAuthenticated ? <>{children}</> : <Navigate to="/login" replace />;
-}
-
 function App() {
+  tmdbService.setApiKey(localStorage.getItem('tmdb_api_key') ?? '');
+
   return (
     <ThemeProvider>
       <TitleProvider>
@@ -67,23 +50,23 @@ function App() {
                 <AppLoadingSkeleton />
               }>
                 <Routes>
-                  <Route path="/" element={<ProtectedRoute><Layout><HomePage /></Layout></ProtectedRoute>} />
+                  <Route path="/" element={<Layout><HomePage /></Layout>} />
                   <Route path="/login" element={<LoginPage />} />
-                  <Route path="/about" element={<ProtectedRoute><Layout><AboutPage /></Layout></ProtectedRoute>} />
-                  <Route path="/settings" element={<ProtectedRoute><Layout><SettingsPage /></Layout></ProtectedRoute>} />
-                  <Route path="/account/callback" element={<ProtectedRoute><AccountCallbackPage /></ProtectedRoute>} />
+                  <Route path="/about" element={<Layout><AboutPage /></Layout>} />
+                  <Route path="/settings" element={<Layout><SettingsPage /></Layout>} />
+                  <Route path="/account/callback" element={<AccountRoute><AccountCallbackPage /></AccountRoute>} />
                   <Route path="/account" element={<Navigate to="/account/watchlist" replace />} />
-                  <Route path="/account/lists" element={<ProtectedRoute><Layout><AccountListsPage /></Layout></ProtectedRoute>} />
-                  <Route path="/account/lists/:listId" element={<ProtectedRoute><Layout><AccountListsPage /></Layout></ProtectedRoute>} />
-                  <Route path="/account/:section" element={<ProtectedRoute><Layout><AccountPage /></Layout></ProtectedRoute>} />
-                  <Route path="/movie/:id" element={<ProtectedRoute><Layout><MovieDetailsPage /></Layout></ProtectedRoute>} />
-                  <Route path="/tv/:id" element={<ProtectedRoute><Layout><TVShowDetailsPage /></Layout></ProtectedRoute>} />
-                  <Route path="/person/:id" element={<ProtectedRoute><Layout><PersonDetailsPage /></Layout></ProtectedRoute>} />
-                  <Route path="/category/:category" element={<ProtectedRoute><Layout><MediaListPage /></Layout></ProtectedRoute>} />
-                  <Route path="/releases/:date" element={<ProtectedRoute><Layout><ReleaseDateMoviesPage /></Layout></ProtectedRoute>} />
-                  <Route path="/movie" element={<ProtectedRoute><Layout><MediaListPage /></Layout></ProtectedRoute>} />
-                  <Route path="/tv" element={<ProtectedRoute><Layout><MediaListPage /></Layout></ProtectedRoute>} />
-                  <Route path="/person" element={<ProtectedRoute><Layout><PeopleListPage /></Layout></ProtectedRoute>} />
+                  <Route path="/account/lists" element={<AccountRoute><Layout><AccountListsPage /></Layout></AccountRoute>} />
+                  <Route path="/account/lists/:listId" element={<AccountRoute><Layout><AccountListsPage /></Layout></AccountRoute>} />
+                  <Route path="/account/:section" element={<AccountRoute><Layout><AccountPage /></Layout></AccountRoute>} />
+                  <Route path="/movie/:id" element={<Layout><MovieDetailsPage /></Layout>} />
+                  <Route path="/tv/:id" element={<Layout><TVShowDetailsPage /></Layout>} />
+                  <Route path="/person/:id" element={<Layout><PersonDetailsPage /></Layout>} />
+                  <Route path="/category/:category" element={<Layout><MediaListPage /></Layout>} />
+                  <Route path="/releases/:date" element={<Layout><ReleaseDateMoviesPage /></Layout>} />
+                  <Route path="/movie" element={<Layout><MediaListPage /></Layout>} />
+                  <Route path="/tv" element={<Layout><MediaListPage /></Layout>} />
+                  <Route path="/person" element={<Layout><PeopleListPage /></Layout>} />
                   <Route path="*" element={<Navigate to="/" replace />} />
                 </Routes>
               </Suspense>

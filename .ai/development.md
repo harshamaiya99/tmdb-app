@@ -10,7 +10,7 @@ This document captures the practical workflow for working on the app day to day.
 
 - Node.js 18 or newer
 - npm
-- a valid TMDB API key for manual testing
+- a valid TMDB API key for local TMDB requests or account-feature testing
 
 ### Install dependencies
 
@@ -55,9 +55,11 @@ React Testing Library is used for component behavior, while pure utilities and s
 
 ### Vercel
 
-Import the repository into Vercel. `vercel.json` sets the Vite framework, install command (`npm ci`), production build command (`npm run build`), and output directory (`dist`). Tests run separately in GitHub Actions. Connect GitHub to create preview deployments for pull requests and production deployments from `main`. Vercel builds use the `/` base path, and the app retains hash-based URLs such as `/#/movie/123`; no SPA rewrite is needed.
+The repository is connected to Vercel. `vercel.json` sets the Vite framework, install command (`npm ci`), production build command (`npm run build`), and output directory (`dist`). Pushes to `main` trigger production deployments, while tests run separately in GitHub Actions. Vercel builds use the `/` base path, and the app retains hash-based URLs such as `/#/movie/123`; no SPA rewrite is needed.
 
 Configure optional Vite environment variables in the Vercel project settings when the deployment needs them. Every `VITE_*` value is included in the browser bundle and is public, not a server-side secret.
+
+Set `TMDB_API_KEY` as a server-only Vercel environment variable for Production. The deployed public catalog API requires it; never prefix this key with `VITE_`. Local Vite development uses the optional personal key entered in the app.
 
 The app includes a web app manifest and registers its service worker in production, allowing supported browsers to offer installation when served over HTTPS. The worker caches the app shell and same-origin static assets for launch but bypasses `/api/` requests; TMDB API content still requires an internet connection.
 
@@ -83,13 +85,14 @@ Movie and TV embed URL templates can be overridden in the authenticated app's **
 ### Manual testing checklist
 
 1. Start the app.
-2. Open the login page.
-3. Enter a valid TMDB API key.
-4. Confirm the app loads home content.
-5. Open a movie or TV details page and verify the UI renders expected metadata.
-6. Try a search and confirm results load correctly.
-7. Verify the shared layout navigation tabs still behave correctly for movies, TV shows, and people.
-8. Check the same key flows at a narrow smartphone width (around 320–390px): confirm the header, search, navigation, filters, cards, and dialogs remain usable and there is no unintended horizontal page overflow. Intentional carousels may scroll horizontally.
+2. With no saved API key, confirm the home page and public catalog routes load through the Vercel functions.
+3. During local development, add a valid TMDB API key on the welcome page so direct TMDB requests can load.
+4. Open a movie or TV details page and verify the UI renders expected metadata.
+5. Try a search and confirm results load correctly.
+6. Verify the shared layout navigation tabs still behave correctly for movies, TV shows, and people.
+7. Check the same flows at a narrow smartphone width (around 320–390px): confirm the header, search, navigation, filters, cards, and dialogs remain usable and there is no unintended horizontal page overflow. Intentional carousels may scroll horizontally.
+
+The personal API key is optional for deployed public browsing but is required for local direct requests and browser-based account authorization and mutations.
 
 ### Common issue: invalid API key
 

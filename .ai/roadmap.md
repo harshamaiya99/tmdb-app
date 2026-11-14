@@ -16,7 +16,7 @@
 
 The repository is connected to Vercel and the production frontend is hosted at [tmdb-app-rho.vercel.app](https://tmdb-app-rho.vercel.app/). Vercel builds with `npm ci` and `npm run build`, serving `dist` from the domain root. Hash routing and the existing client-side authentication, TMDB requests, and account behavior are unchanged. GitHub Pages deployment has been retired.
 
-**API migration status:** Hosting and several groups of public reads are complete. The frontend still requires the user's API key for login and for public reads not yet migrated. Account authorization and mutation requests remain browser-based and are not part of this phase.
+**API migration status:** Public catalog reads are routed through Vercel functions in deployed builds, and public browsing no longer requires a user-provided API key. A personal key is still optional for local direct requests and is required by the existing browser-based account authorization and mutation flows.
 
 ### Next migration stages
 
@@ -25,7 +25,7 @@ The repository is connected to Vercel and the production frontend is hosted at [
 3. **Paginated categories:** **Complete.** Deployed category lists use the allowlisted `GET /api/tmdb/category?category=...` endpoint.
 4. **Search and media details:** **Implemented.** Deployed search and multi-search use `/api/tmdb/search`; details, recommendations, similar titles, reviews, seasons, episodes, collections, person credits, and countries use the allowlisted `/api/tmdb/media` endpoint.
 5. **Filtered discovery and remaining public lists:** **Implemented locally.** Deployed genre/language/company/provider lists, composed movie/TV filters, paginated release-date calendar results, trending TV, and popular/trending people lists use the validated discovery or category endpoints. Local development retains direct TMDB calls. Verify production behavior after pushing to `main`.
-6. **Remaining public reads and credential-free browsing:** Identify any public browsing methods still calling TMDB directly, migrate them, then remove the app API-key login gate while keeping local development practical.
+6. **Credential-free public browsing:** **Complete.** Public catalog routes no longer require user-key login; account routes still require the optional personal API key, while local development retains direct TMDB calls.
 7. **Account migration:** Separately design persistent storage and secure sessions before moving account authorization or mutations server-side.
 
 **Hosting migration outcome:** The existing React + Vite frontend is hosted on Vercel with GitHub-integrated deployments and behavior equivalent to the previous static site. This phase does not provide a backend or improve credential privacy.

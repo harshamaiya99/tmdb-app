@@ -4,9 +4,8 @@
 
 This project is a React + TypeScript application for browsing TMDB media catalog data. Its frontend is client-side, with a small Vercel Functions layer proxying selected public reads. It is intentionally lightweight and centered around a few core ideas:
 
-- A user provides a TMDB API key at login.
-- The app stores the user's key locally for login, local development, and public operations not yet migrated.
-- Deployed, migrated public reads use a server-only TMDB API key through fixed Vercel function routes.
+- Deployed public browsing uses a server-only TMDB API key through fixed Vercel function routes and does not require user credentials.
+- An optional user-provided TMDB API key is stored locally for direct TMDB requests during local development and browser-based account operations.
 - Routing is handled by React Router.
 - UI is composed from reusable page components and shared UI primitives.
 - TMDB requests remain centralized in one service module rather than spread across pages.
@@ -19,21 +18,20 @@ The app boots from [src/main.tsx](src/main.tsx), which mounts the root React app
 
 The main application shell is defined in [src/App.tsx](src/App.tsx). It wires together:
 
-- a protected-route mechanism for authenticated access
+- optional API-key protection for account routes
 - the browser router
 - global providers such as the title context
 - the toast container
 
 ### Authentication flow
 
-1. The user lands on the login page.
-2. The app validates the supplied TMDB API key.
-3. On success, the key is stored in local storage and injected into the TMDB service.
-4. Protected routes become accessible.
+1. Deployed public browsing loads without a user API key.
+2. The optional credential page validates and stores a user API key for local development or account features.
+3. Account routes require that personal API key; public catalog routes are not gated.
 
 The app does not use a backend for account sessions or mutations. Vercel Functions provide a narrow proxy for selected public TMDB reads.
 
-TMDB account features use an additional, optional user-consent flow. The app creates a request token, redirects the user to TMDB for approval, then exchanges the approved token for a session ID and account identity. The session and account identity are stored locally by `TMDBAccountProvider`; the temporary request token stays in session storage during the redirect. Account list routes remain protected by the app API-key login and require the separate TMDB session.
+TMDB account features use an additional, optional user-consent flow. The app creates a request token, redirects the user to TMDB for approval, then exchanges the approved token for a session ID and account identity. The session and account identity are stored locally by `TMDBAccountProvider`; the temporary request token stays in session storage during the redirect. Account routes require the personal API key and, depending on the feature, the separate TMDB v3 session or v4 user token.
 
 ### Environment and runtime config
 
@@ -64,7 +62,7 @@ Routing is defined in [src/App.tsx](src/App.tsx) with React Router's `HashRouter
 
 ### Routing behavior
 
-- Unauthenticated users are redirected to `/login`.
+- Public catalog routes are available without a personal API key. Account routes without one are redirected to `/login` to configure the optional account credential.
 - The app uses a catch-all redirect back to `/` for unknown routes.
 - The layout shell remains consistent across most pages through the shared layout wrapper.
 
@@ -78,7 +76,7 @@ The frontend API integration is centralized in [src/lib/tmdb.ts](src/lib/tmdb.ts
 - hold strongly typed interfaces for movies, TV shows, people, reviews, episodes, and related entities
 - expose a single `tmdbService` object with methods for fetching data
 - route migrated deployed public reads through the Vercel API
-- use the user's stored API key for local development and not-yet-migrated requests
+- use the user's stored API key for local development and browser-based account requests
 - attach browser credentials to direct TMDB requests
 
 The Vercel functions use the server-only `TMDB_API_KEY` and fixed or allowlisted operations for configuration, trending and people categories, search, media details/supporting lookups, filtered discovery, and release-date ranges. Local Vite development continues calling TMDB directly; account requests remain browser-based.
@@ -116,7 +114,7 @@ Keeping API logic in one place makes it easier to:
 
 Pages live in [src/pages](src/pages):
 
-- [src/pages/LoginPage.tsx](src/pages/LoginPage.tsx) — collects and validates the TMDB API key
+- [src/pages/LoginPage.tsx](src/pages/LoginPage.tsx) — optional API-key setup for local development and account features
 - [src/pages/HomePage.tsx](src/pages/HomePage.tsx) — displays independently selectable movie and TV categories, and handles search results
 - [src/pages/MediaListPage.tsx](src/pages/MediaListPage.tsx) — renders paginated lists for the main movie and TV category tabs, genres, companies, providers, and people-related media
 - [src/pages/ReleaseDateMoviesPage.tsx](src/pages/ReleaseDateMoviesPage.tsx) — renders paginated movie releases for a selected calendar date
@@ -166,7 +164,7 @@ The app uses [src/contexts/TitleContext.tsx](src/contexts/TitleContext.tsx) to k
 
 That title state is now wrapped by a small hook abstraction in [src/hooks/usePageTitle.ts](src/hooks/usePageTitle.ts), which keeps page-level code simpler and more consistent.
 
-The embed URL templates and content country are shared through [src/contexts/EmbedSettingsContext.tsx](src/contexts/EmbedSettingsContext.tsx). Browser-local links override the optional Vite build-time defaults and are editable from the authenticated [Settings page](../src/pages/SettingsPage.tsx). Link names are derived from URL hostnames, older single-template browser settings are migrated, and country options are loaded from TMDB. Theme state is shared by the root-level `ThemeProvider` in [src/hooks/useTheme.tsx](src/hooks/useTheme.tsx).
+The embed URL templates and content country are shared through [src/contexts/EmbedSettingsContext.tsx](src/contexts/EmbedSettingsContext.tsx). Browser-local links override the optional Vite build-time defaults and are editable from the public [Settings page](../src/pages/SettingsPage.tsx). Link names are derived from URL hostnames, older single-template browser settings are migrated, and country options are loaded from TMDB. Theme state is shared by the root-level `ThemeProvider` in [src/hooks/useTheme.tsx](src/hooks/useTheme.tsx).
 
 ## 7. Data Flow
 
@@ -174,7 +172,7 @@ A typical request path looks like this:
 
 1. A page component mounts.
 2. It calls a method on `tmdbService` from [src/lib/tmdb.ts](src/lib/tmdb.ts).
-3. In production, migrated public reads call an allowlisted same-origin Vercel function, which authenticates to TMDB using the server environment variable. In local development and for un-migrated requests, the service calls TMDB directly using browser credentials.
+3. In production, public catalog reads call allowlisted same-origin Vercel functions, which authenticate to TMDB using the server environment variable. In local development and for account operations, the service calls TMDB directly using browser credentials.
 4. Data is returned as typed results.
 5. The page stores the result in local state.
 6. Shared UI components render the result and any loading or error state.

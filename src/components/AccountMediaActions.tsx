@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState, type KeyboardEvent } from 'react';
-import { Link } from 'react-router-dom';
+import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { BookmarkCheck, BookmarkPlus, Heart, ListPlus, Star, UserRound, X } from 'lucide-react';
 import { AddToListButton } from '@/components/AddToListButton';
 import { RatingDialog } from '@/components/RatingDialog';
@@ -31,6 +31,9 @@ export function AccountMediaActions({
 }: AccountMediaActionsProps) {
   const { account, connectTMDBAccount, isConnected, sessionId } = useTMDBAccount();
   const { toast } = useToast();
+  const location = useLocation();
+  const navigate = useNavigate();
+  const hasPersonalApiKey = Boolean(localStorage.getItem('tmdb_api_key'));
   const [pendingAction, setPendingAction] = useState<'watchlist' | 'favorite' | null>(null);
   const ratingDialog = useRatingDialog();
   const [isLoginPromptOpen, setIsLoginPromptOpen] = useState(false);
@@ -102,6 +105,14 @@ export function AccountMediaActions({
     };
 
     const handleConnectAccount = () => {
+      if (!hasPersonalApiKey) {
+        setIsLoginPromptOpen(false);
+        navigate('/login', {
+          state: { from: `${location.pathname}${location.search}` },
+        });
+        return;
+      }
+
       void connectTMDBAccount().catch((error: unknown) => {
         toast({
           title: 'Could not connect your TMDB account',
@@ -179,7 +190,9 @@ export function AccountMediaActions({
                 <div>
                   <h2 id="tmdb-login-title" className="text-lg font-semibold">Connect your TMDB account</h2>
                   <p className="mt-2 text-sm text-muted-foreground">
-                    Log in to TMDB to manage your watchlist, favorites, ratings, and lists.
+                    {hasPersonalApiKey
+                      ? 'Log in to TMDB to manage your watchlist, favorites, ratings, and lists.'
+                      : 'Add a personal TMDB API key to this browser before connecting your watchlist, favorites, and ratings.'}
                   </p>
                 </div>
                 <Button
@@ -199,7 +212,7 @@ export function AccountMediaActions({
                 </Button>
                 <Button type="button" onClick={handleConnectAccount}>
                   <UserRound aria-hidden="true" className="mr-2 h-4 w-4" />
-                  Log in to TMDB
+                  {hasPersonalApiKey ? 'Log in to TMDB' : 'Set up account access'}
                 </Button>
               </div>
             </section>

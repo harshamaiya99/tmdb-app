@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState, type FormEvent, type KeyboardEvent } from 'react';
-import { Link } from 'react-router-dom';
+import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { Check, ListPlus, Loader2, Plus, X } from 'lucide-react';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { Button } from '@/components/ui/button';
@@ -31,6 +31,9 @@ export function AddToListButton({ mediaId, mediaTitle, mediaType, className, ico
   } = useTMDBAccount();
   const { region } = useEmbedSettings();
   const { toast } = useToast();
+  const location = useLocation();
+  const navigate = useNavigate();
+  const hasPersonalApiKey = Boolean(localStorage.getItem('tmdb_api_key'));
   const [isOpen, setIsOpen] = useState(false);
   const [isCreateFormOpen, setIsCreateFormOpen] = useState(false);
   const [isSubmittingCreate, setIsSubmittingCreate] = useState(false);
@@ -155,6 +158,14 @@ export function AddToListButton({ mediaId, mediaTitle, mediaType, className, ico
   };
 
   const handleConnectLists = () => {
+    if (!hasPersonalApiKey) {
+      closeDialog();
+      navigate('/login', {
+        state: { from: `${location.pathname}${location.search}` },
+      });
+      return;
+    }
+
     void connectTMDBAccount().catch((error: unknown) => {
       toast({
         title: 'Could not connect your TMDB account',
@@ -217,10 +228,14 @@ export function AddToListButton({ mediaId, mediaTitle, mediaType, className, ico
             {!isListAccountConnected ? (
               <div className="space-y-3">
                 <p className="text-sm text-muted-foreground">
-                  Approve account access on TMDB to save movies and TV shows to your custom lists.
+                  {hasPersonalApiKey
+                    ? 'Approve account access on TMDB to save movies and TV shows to your custom lists.'
+                    : 'Add a personal TMDB API key to this browser before connecting to your custom lists.'}
                 </p>
-                {canConnectLists ? (
-                  <Button type="button" className="w-full" onClick={handleConnectLists}>Connect TMDB account</Button>
+                {!hasPersonalApiKey || canConnectLists ? (
+                  <Button type="button" className="w-full" onClick={handleConnectLists}>
+                    {hasPersonalApiKey ? 'Connect TMDB account' : 'Set up account access'}
+                  </Button>
                 ) : (
                   <Alert variant="destructive">
                     <AlertDescription>
