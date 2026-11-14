@@ -272,3 +272,11 @@ Update documentation when you change any of the following:
 - New features should fit the current visual language and component patterns.
 - If you add new routes, ensure they are wired correctly in [src/App.tsx](src/App.tsx) and that any relevant list/detail pages support them.
 - If you introduce new shared behavior, prefer placing it in the existing app-level abstractions rather than duplicating logic across pages.
+
+### Project tree and description maintenance
+
+- Keep the repository tree and component descriptions in [README.md](README.md) aligned with the actual project structure whenever a new file is added or an existing file changes purpose.
+- When a file is added, renamed, moved, or significantly refactored, update the project tree and any relevant descriptive notes in the same change.
+- If a file or directory has a major update in responsibility, behavior, or architecture, update the documentation description to reflect the new role immediately.
+- Treat project structure and documentation as part of the implementation, not as optional cleanup later.
+

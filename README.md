@@ -109,125 +109,163 @@ The site can be installed as an app from supported browsers when served over HTT
 ```text
 .
 ├── .ai/
-│   ├── api.md                          # TMDB integration, authentication, and API behavior
-│   ├── architecture.md                # Application structure, routing, and data flow
-│   ├── development.md                 # Local development and deployment workflow
-│   ├── roadmap.md                      # Planned project improvements
-│   └── ui.md                           # UI conventions, design tokens, and component patterns
+│   ├── api.md                               # TMDB integration, account auth flows, and API behavior
+│   ├── architecture.md                      # Application architecture, routing, and data flow
+│   ├── development.md                       # Local development, Vercel, and deployment workflow
+│   ├── roadmap.md                           # Planned improvements and future work
+│   └── ui.md                                # UI conventions, design tokens, and component patterns
 ├── .github/
 │   └── workflows/
-│       └── test.yml                    # Runs tests on pushes and pull requests to main
+│       └── test.yml                        # Runs the Vitest suite on pushes and pull requests
 ├── api/
+│   ├── _lib/
+│   │   └── account.ts                      # Shared TMDB account helpers and config utilities
+│   ├── account/
+│   │   ├── action.ts                       # Logged-in TMDB account actions (favorites, ratings, lists)
+│   │   ├── logout.ts                       # Revoke account access and clear the app session
+│   │   ├── session.ts                      # Reads and manages the current app session
+│   │   └── auth/
+│   │       ├── callback.ts                 # Handles TMDB OAuth callback and token exchange
+│   │       └── start.ts                    # Starts the TMDB account authorization flow
 │   └── tmdb/
-│       ├── configuration.ts            # Server-side TMDB configuration endpoint
-│       ├── trending-movies.ts          # Read-only trending movies endpoint
-│       ├── category.ts                 # Allowlisted paginated media and people categories
-│       ├── search.ts                   # Allowlisted movie, TV, person, and multi-search
-│       ├── media.ts                    # Allowlisted media details and supporting reads
-│       └── discover.ts                 # Validated movie/TV filters and release-date ranges
-├── vercel.json                        # Vercel Vite build and output configuration
+│       ├── category.ts                     # Allowlisted paginated media and people categories
+│       ├── configuration.ts                # Read-only TMDB configuration endpoint
+│       ├── discover.ts                    # Validated movie/TV discovery filters and release-date ranges
+│       ├── media.ts                        # Media detail and supporting TMDB reads
+│       ├── search.ts                      # Search for movies, TV shows, people, and multi-results
+│       └── trending-movies.ts              # Trending movies endpoint
+├── db/
+│   └── schema.sql                          # Neon database schema for account sessions and auth state
 ├── public/
-│   ├── apple-touch-icon.png           # Icon used when adding the app to an Apple device
-│   ├── favicon.svg                    # Browser tab and header logo
-│   ├── icon-192.png                   # Installable app icon
-│   ├── icon-512.png                   # High-resolution installable app icon
-│   ├── manifest.webmanifest           # PWA name, display, theme, and icon settings
-│   ├── sw.js                          # Service worker for caching the app shell
-│   └── tmdb-logo.svg                  # TMDB logo used for attribution
+│   ├── apple-touch-icon.png                # Apple home-screen icon
+│   ├── favicon.svg                         # Browser tab icon
+│   ├── icon-192.png                        # Installable app icon (192x192)
+│   ├── icon-512.png                        # Installable app icon (512x512)
+│   ├── manifest.webmanifest                # PWA metadata and install settings
+│   ├── sw.js                               # Service worker for app-shell caching
+│   └── tmdb-logo.svg                       # TMDB logo for attribution and branding
 ├── src/
-│   ├── App.tsx                        # Routes and global providers
-│   ├── main.tsx                       # React application entry point
-│   ├── index.css                      # Global styles, Tailwind layers, and theme variables
-│   ├── vite-env.d.ts                  # TypeScript declarations for Vite environment variables
+│   ├── App.tsx                             # App routes and global providers
+│   ├── index.css                           # Tailwind layers, shared styles, and theme variables
+│   ├── main.tsx                            # React application entry point
+│   ├── vite-env.d.ts                       # Vite environment declarations
 │   ├── components/
-│   │   ├── CreditsCarousel.tsx        # Cast and crew carousel
-│   │   ├── EpisodesRatingOverview.tsx # Episode rating visualization
-│   │   ├── AccountMediaActions.tsx    # TMDB account actions on media detail pages
-│   │   ├── AddToListButton.tsx        # Add movies and TV shows to TMDB custom lists
-│   │   ├── Footer.tsx                 # Shared site footer
-│   │   ├── Layout.tsx                 # App header, navigation, search, and settings menu
-│   │   ├── LazySection.tsx            # Defers section rendering until near the viewport
-│   │   ├── MediaCard.tsx              # Reusable movie, TV, and person card
-│   │   ├── MediaCategoryToggle.tsx    # Movie/TV category selector
-│   │   ├── MediaGridSkeleton.tsx      # Loading placeholders for media grids
-│   │   ├── MediaSection.tsx           # Shared heading and grid/carousel composition
-│   │   ├── MovieReleaseCalendar.tsx   # Upcoming movie release calendar
-│   │   ├── ReviewSection.tsx          # Review cards with Markdown rendering
-│   │   ├── ThemeToggle.tsx            # Light/dark theme control
-│   │   ├── TMDBImage.tsx              # Responsive TMDB image rendering and fallback
-│   │   ├── WatchLinkButton.tsx        # Opens configured media watch links
+│   │   ├── AccountMediaActions.tsx         # Shared account actions for media pages
+│   │   ├── AddToListButton.tsx              # Add media to a user-managed TMDB list
+│   │   ├── CreditsCarousel.tsx             # Cast and crew carousel UI
+│   │   ├── EpisodesRatingOverview.tsx      # Episode rating overview and summary
+│   │   ├── Footer.tsx                      # Shared site footer
+│   │   ├── Layout.tsx                      # Header, navigation, search, and profile controls
+│   │   ├── LazySection.tsx                 # Defer rendering until a section is near the viewport
+│   │   ├── MediaCard.tsx                   # Reusable movie, TV, and person card
+│   │   ├── MediaCategoryToggle.tsx         # Movie/TV content toggle control
+│   │   ├── MediaGridSkeleton.tsx           # Loading placeholders for media grids
+│   │   ├── MediaSection.tsx                # Shared section heading and grid composition
+│   │   ├── MovieReleaseCalendar.tsx        # Upcoming releases UI
+│   │   ├── PaginationControls.tsx          # Page navigation controls
+│   │   ├── RatingDialog.tsx                # Rating modal and controls
+│   │   ├── ReviewSection.tsx               # Review cards with Markdown rendering
+│   │   ├── TMDBImage.tsx                   # Responsive TMDB image loader and fallback
+│   │   ├── TVEpisodeRatingAction.tsx       # Per-episode rating action UI
+│   │   ├── ThemeToggle.tsx                 # Light/dark theme toggle
+│   │   ├── WatchLinkButton.tsx             # Opens configured watch links or handles empty state
 │   │   └── ui/
-│   │       ├── alert.tsx              # Alert primitive
-│   │       ├── badge.tsx              # Badge primitive
-│   │       ├── button.tsx             # Button primitive and variants
-│   │       ├── card.tsx               # Card layout primitives
-│   │       ├── input.tsx              # Styled input primitive
-│   │       ├── skeleton.tsx           # Loading skeleton primitive
-│   │       ├── toast.tsx              # Toast primitives
-│   │       ├── toaster.tsx            # Renders queued toast notifications
-│   │       └── use-toast.ts           # Toast state and notification helper
+│   │       ├── alert.tsx                  # Alert primitive
+│   │       ├── badge.tsx                  # Badge primitive
+│   │       ├── button.tsx                 # Button primitive and variants
+│   │       ├── card.tsx                   # Card layout primitive
+│   │       ├── input.tsx                  # Input primitive
+│   │       ├── skeleton.tsx               # Loading skeleton primitive
+│   │       ├── toaster.tsx                # Renders queued toast notifications
+│   │       ├── toast.tsx                  # Toast primitives
+│   │       └── use-toast.ts               # Notification helper and state hook
 │   ├── contexts/
-│   │   ├── TMDBAccountContext.tsx     # TMDB consent flow and browser-local account session
-│   │   ├── EmbedSettingsContext.tsx   # Browser-local embed URL overrides and env defaults
-│   │   └── TitleContext.tsx           # Shares the current page title with the layout
+│   │   ├── EmbedSettingsContext.tsx       # Browser-local watch-link and embed settings
+│   │   ├── TMDBAccountContext.tsx         # TMDB OAuth/account session context
+│   │   └── TitleContext.tsx               # Shared page-title state
 │   ├── hooks/
-│   │   ├── useCachedQuery.ts          # Fetches and tracks cached async queries
-│   │   ├── useDebouncedValue.ts       # Debounces values such as search text
-│   │   ├── useLazyLoad.ts             # Starts work when a target nears the viewport
-│   │   ├── usePageTitle.ts            # Synchronizes page title with title context
-│   │   ├── usePagination.ts           # Shared pagination state and behavior
-│   │   ├── useTheme.ts                # Theme hook
-│   │   └── useTheme.tsx               # Shares theme state and applies the selected theme
+│   │   ├── useCachedQuery.ts              # Cached async fetch helper
+│   │   ├── useDebouncedValue.ts           # Debounced form/search state
+│   │   ├── useLazyLoad.ts                 # Lazy loading near-viewport behavior
+│   │   ├── usePageTitle.ts                # Synchronizes document title
+│   │   ├── usePagination.ts               # Shared pagination behavior
+│   │   ├── useRatingDialog.ts             # Rating-dialog state hook
+│   │   ├── useTheme.ts                    # Theme reader and selector hook
+│   │   └── useTheme.tsx                   # Theme provider wrapper and state
 │   ├── lib/
-│   │   ├── embedSettings.ts           # Embed URL settings helpers
-│   │   ├── requestCache.ts            # In-memory request cache and deduplication
-│   │   ├── tmdb.ts                    # TMDB API client, requests, and domain types
-│   │   ├── utils.ts                   # Shared styling, date, and embed URL helpers
-│   │   └── wikimedia.ts               # Wikimedia image lookup helpers
+│   │   ├── accountCache.ts                # Cache layer for account data and derived results
+│   │   ├── embedSettings.ts               # Helpers for embed URL templates and settings
+│   │   ├── requestCache.ts                # In-memory request deduplication cache
+│   │   ├── tmdb.ts                        # Base TMDB request client and shared types
+│   │   ├── utils.ts                      # Shared utilities and formatting helpers
+│   │   └── wikimedia.ts                   # Wikimedia image lookup utilities
 │   └── pages/
-│       ├── AboutPage.tsx              # App information and TMDB attribution
-│       ├── AccountCallbackPage.tsx    # TMDB user authorization callback
-│       ├── AccountListsPage.tsx       # Browse, view, and manage custom lists
-│       ├── AccountPage.tsx            # Watchlists, favorites, and ratings
-│       ├── HomePage.tsx               # Home browsing and search results
-│       ├── MediaListPage.tsx          # Filtered and paginated movie/TV lists
-│       ├── MovieDetailsPage.tsx       # Movie details, credits, reviews, and watch link
-│       ├── PeopleListPage.tsx         # Paginated people listing
-│       ├── PersonDetailsPage.tsx      # Person biography and filmography
-│       ├── ReleaseDateMoviesPage.tsx  # Movies grouped by release date
-│       ├── SettingsPage.tsx           # Content, embed link, and theme settings
-│       └── TVShowDetailsPage.tsx      # TV details, seasons, episodes, and watch links
+│       ├── AboutPage.tsx                  # App info and TMDB attribution
+│       ├── AccountCallbackPage.tsx        # OAuth callback page
+│       ├── AccountListsPage.tsx           # User-created custom-list management
+│       ├── AccountPage.tsx                # Saved favorites, ratings, and watchlists
+│       ├── HomePage.tsx                   # Home and search results UI
+│       ├── MediaListPage.tsx              # Filtered paginated media list pages
+│       ├── MovieDetailsPage.tsx           # Movie details, credits, reviews, and links
+│       ├── PeopleListPage.tsx            # Paginated people listing
+│       ├── PersonDetailsPage.tsx         # Person biography and filmography
+│       ├── ReleaseDateMoviesPage.tsx     # Movies grouped by release date
+│       ├── SettingsPage.tsx              # Content country, embed URLs, and theme settings
+│       └── TVShowDetailsPage.tsx         # TV details, seasons, episodes, and links
 ├── tests/
 │   ├── components/
-│   │   ├── AccountCallbackPage.test.tsx # Account authorization callback behavior
-│   │   ├── Footer.test.tsx            # Footer rendering behavior
-│   │   ├── MediaCard.test.tsx         # Media card rendering behavior
-│   │   ├── ReviewSection.test.tsx     # Review rendering and interaction behavior
-│   │   └── WatchLinkButton.test.tsx   # Watch link behavior
+│   │   ├── AccountCallbackPage.test.tsx     # OAuth callback page behavior
+│   │   ├── AccountMediaActions.test.tsx     # Account media action behavior
+│   │   ├── Footer.test.tsx                  # Footer rendering behavior
+│   │   ├── MediaCard.test.tsx               # Media card rendering behavior
+│   │   ├── PaginationControls.test.tsx      # Pagination logic and keyboard behavior
+│   │   ├── RatingDialog.test.tsx            # Rating dialog behavior
+│   │   ├── ReviewSection.test.tsx           # Review rendering and interaction behavior
+│   │   ├── WatchLinkButton.test.tsx         # Watch-link action behavior
+│   │   └── ...
 │   ├── pages/
-│   │   ├── AboutPage.test.tsx         # About page and attribution behavior
-│   │   └── SettingsPage.test.tsx      # Settings page behavior
+│   │   ├── AboutPage.test.tsx               # About page behavior
+│   │   ├── SettingsPage.test.tsx            # Settings page behavior
+│   │   └── ...
 │   ├── unit/
-│   │   ├── EmbedSettingsContext.test.tsx # Embed settings context behavior
-│   │   ├── embedSettings.test.ts      # Embed settings helper behavior
-│   │   ├── requestCache.test.ts       # Request cache behavior
-│   │   ├── tmdb.test.ts               # TMDB service behavior
-│   │   └── utils.test.ts              # Shared utility behavior
-│   └── setup.ts                       # Vitest and Testing Library setup
-├── .gitignore                         # Excludes dependencies, builds, local env, and editor files
-├── AGENTS.md                          # Repository guidance for contributors and coding agents
-├── index.html                         # Vite HTML document and React mount element
-├── LICENSE                            # MIT License
-├── README.md                          # Project overview, setup, and documentation
-├── package.json                       # Project scripts and dependency manifest
-├── package-lock.json                  # Locked npm dependency versions
-├── postcss.config.js                  # PostCSS plugin configuration
-├── tailwind.config.js                 # Tailwind theme and content configuration
-├── tsconfig.json                      # TypeScript settings for the application
-├── tsconfig.node.json                 # TypeScript settings for Vite configuration
-├── tsconfig.test.json                 # TypeScript settings for tests
-├── vite.config.ts                     # Vite plugins, source alias, and root base path
-└── vitest.config.ts                   # Vitest test environment and setup configuration
+│   │   ├── accountCache.test.ts             # Account cache tests
+│   │   ├── EmbedSettingsContext.test.tsx    # Embed settings context tests
+│   │   ├── embedSettings.test.ts            # Embed settings helper tests
+│   │   ├── requestCache.test.ts             # Request cache tests
+│   │   ├── tmdb.test.ts                     # TMDB client/service tests
+│   │   ├── tmdbAccountActionFunction.test.ts        # Vercel account action tests
+│   │   ├── tmdbAccountAuthCallbackFunction.test.ts  # Auth callback tests
+│   │   ├── tmdbAccountAuthStartFunction.test.ts     # Auth start tests
+│   │   ├── tmdbCategoryFunction.test.ts      # Category endpoint tests
+│   │   ├── tmdbConfigurationFunction.test.ts  # Config endpoint tests
+│   │   ├── tmdbDiscover.test.ts             # Discovery logic tests
+│   │   ├── tmdbDiscoverFunction.test.ts     # Discovery API tests
+│   │   ├── tmdbMediaFunction.test.ts        # Media endpoint tests
+│   │   ├── tmdbPublicLists.test.ts          # Public-list API tests
+│   │   ├── tmdbSearchFunction.test.ts       # Search endpoint tests
+│   │   ├── tmdbTrendingMoviesFunction.test.ts # Trending endpoint tests
+│   │   ├── useCachedQuery.test.tsx          # Cache hook tests
+│   │   ├── utils.test.ts                   # Utility tests
+│   │   └── ...
+│   └── setup.ts                            # Vitest + Testing Library setup
+├── .gitignore                             # Git ignore rules
+├── .idea/                                 # Local JetBrains project metadata (ignored)
+├── .vercel/                               # Local Vercel metadata (ignored)
+├── AGENTS.md                              # Contributor and agent guidance
+├── LICENSE                                # MIT license
+├── README.md                              # Project overview and setup guide
+├── index.html                             # Vite HTML shell
+├── package.json                           # Scripts and dependency manifest
+├── package-lock.json                      # Locked dependency tree
+├── postcss.config.js                      # PostCSS config
+├── tailwind.config.js                     # Tailwind theme and content config
+├── tsconfig.json                          # App TypeScript configuration
+├── tsconfig.node.json                     # Vite/Node TypeScript config
+├── tsconfig.test.json                     # Test TypeScript config
+├── vercel.json                            # Vercel build and output config
+├── vite.config.ts                         # Vite config and aliases
+├── vitest.config.ts                       # Vitest config and setup
+└── .env                                   # Local environment file (not committed)
 ```
 
 ## Documentation
