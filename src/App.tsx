@@ -1,5 +1,7 @@
 // src/App.tsx
 import { Layout } from '@/components/Layout';
+import { MediaGridSkeleton } from '@/components/MediaGridSkeleton';
+import { Skeleton } from '@/components/ui/skeleton';
 import { HashRouter, Routes, Route, Navigate } from 'react-router-dom';
 import { Toaster } from '@/components/ui/toaster';
 import { TitleProvider } from '@/contexts/TitleContext';
@@ -23,6 +25,17 @@ const AboutPage = lazy(() => import('@/pages/AboutPage').then(({ AboutPage }) =>
 const SettingsPage = lazy(() => import('@/pages/SettingsPage').then(({ SettingsPage }) => ({ default: SettingsPage })));
 const ReleaseDateMoviesPage = lazy(() => import('@/pages/ReleaseDateMoviesPage').then(({ ReleaseDateMoviesPage }) => ({ default: ReleaseDateMoviesPage })));
 
+function AppLoadingSkeleton() {
+  return (
+    <main aria-busy="true" className="min-h-screen">
+      <div className="container mx-auto max-w-screen-2xl px-4 py-8">
+        <Skeleton className="mb-6 h-8 w-48" />
+        <MediaGridSkeleton />
+      </div>
+    </main>
+  );
+}
+
 function ProtectedRoute({ children }: { children: React.ReactNode }) {
   const [isAuthenticated, setIsAuthenticated] = useState<boolean | null>(null);
 
@@ -37,11 +50,7 @@ function ProtectedRoute({ children }: { children: React.ReactNode }) {
   }, []);
 
   if (isAuthenticated === null) {
-    return (
-      <div className="min-h-screen flex items-center justify-center">
-        <div className="text-sm text-muted-foreground">Loading...</div>
-      </div>
-    );
+    return <AppLoadingSkeleton />;
   }
 
   return isAuthenticated ? <>{children}</> : <Navigate to="/login" replace />;
@@ -55,9 +64,7 @@ function App() {
           <TMDBAccountProvider>
             <EmbedSettingsProvider>
               <Suspense fallback={
-                <div className="min-h-screen flex items-center justify-center">
-                  <div className="text-sm text-muted-foreground">Loading...</div>
-                </div>
+                <AppLoadingSkeleton />
               }>
                 <Routes>
                   <Route path="/" element={<ProtectedRoute><Layout><HomePage /></Layout></ProtectedRoute>} />
