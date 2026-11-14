@@ -217,4 +217,4 @@ The TMDB integration is compact and direct:
 - API keys are stored in local storage and attached to requests
 - responses are typed and returned to components
 - selected request results are cached in memory with TTLs and concurrent identical requests are deduplicated
-- the response cache is cleared on full page reload; TMDB API content is not cached by the service worker
+- the response cache is cleared on full page reload; the service worker explicitly bypasses `/api/` requests so server API responses are never cached by the app shell worker

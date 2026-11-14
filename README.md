@@ -90,7 +90,7 @@ The repository is connected to Vercel. The included `vercel.json` configures the
 
 The app retains hash-based routes (for example, `/#/movie/123`) and is built for the domain root. No SPA rewrite is required. Configure any optional Vite environment variables used by the deployment in the Vercel project settings. Values prefixed with `VITE_` are embedded in the client bundle and are public; this hosting-only migration does not make credentials private.
 
-The site can be installed as an app from supported browsers when served over HTTPS. The service worker caches the app shell and same-origin assets; TMDB content still requires an internet connection.
+The site can be installed as an app from supported browsers when served over HTTPS. The service worker caches the app shell and same-origin static assets but bypasses `/api/` requests; TMDB content still requires an internet connection.
 
 ## Project Structure
 

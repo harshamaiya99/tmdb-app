@@ -59,7 +59,7 @@ Import the repository into Vercel. `vercel.json` sets the Vite framework, instal
 
 Configure optional Vite environment variables in the Vercel project settings when the deployment needs them. Every `VITE_*` value is included in the browser bundle and is public, not a server-side secret.
 
-The app includes a web app manifest and registers its service worker in production, allowing supported browsers to offer installation when served over HTTPS. The worker caches the app shell and same-origin assets for launch; TMDB API content still requires an internet connection.
+The app includes a web app manifest and registers its service worker in production, allowing supported browsers to offer installation when served over HTTPS. The worker caches the app shell and same-origin static assets for launch but bypasses `/api/` requests; TMDB API content still requires an internet connection.
 
 ## Environment Variables
 

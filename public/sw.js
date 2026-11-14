@@ -1,4 +1,4 @@
-const CACHE_NAME = 'tmdb-browser-v1'
+const CACHE_NAME = 'tmdb-browser-v2'
 const APP_SHELL = [
   './',
   './manifest.webmanifest',
@@ -39,6 +39,10 @@ self.addEventListener('fetch', (event) => {
     requestUrl.origin !== self.location.origin ||
     !requestUrl.pathname.startsWith(new URL(self.registration.scope).pathname)
   ) {
+    return
+  }
+
+  if (requestUrl.pathname.startsWith(new URL('./api/', self.registration.scope).pathname)) {
     return
   }
 
