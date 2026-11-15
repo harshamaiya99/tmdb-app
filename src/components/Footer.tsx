@@ -49,7 +49,7 @@ export function Footer() {
               <li><Link to="/settings" className={footerLinkClassName}>Settings</Link></li>
               <li>
                 <a
-                  href="https://github.com/harshamaiya99/tmdb-app"
+                  href="https://github.com/harshamaiya99/watch-tower"
                   target="_blank"
                   rel="noreferrer"
                   className={footerLinkClassName}

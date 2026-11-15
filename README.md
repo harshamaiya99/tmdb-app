@@ -1,4 +1,4 @@
-# TMDB Browser
+# WATCHTOWER
 
 [![REACT](https://img.shields.io/badge/REACT-61DAFB?style=for-the-badge&logo=react&logoColor=white)](https://react.dev/)
 [![TYPESCRIPT](https://img.shields.io/badge/TYPESCRIPT-3178C6?style=for-the-badge&logo=typescript&logoColor=white)](https://www.typescriptlang.org/)
@@ -14,7 +14,7 @@
 
 A clean, minimal web app for browsing movies, TV shows, and people with data from The Movie Database (TMDB). Built with React, TypeScript, Vite, Tailwind CSS, and shadcn/ui-style components.
 
-**Live site:** [TMDB Browser](https://tmdb-app-rho.vercel.app/)
+**Live site:** [WATCHTOWER](https://watch-tower.vercel.app/)
 
 ## Features
 

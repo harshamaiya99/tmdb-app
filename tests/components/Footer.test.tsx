@@ -25,6 +25,6 @@ describe('Footer', () => {
     expect(screen.getByRole('link', { name: 'Logo & attribution' }))
       .toHaveAttribute('href', 'https://www.themoviedb.org/about/logos-attribution');
     expect(screen.getByRole('link', { name: 'GitHub' }))
-      .toHaveAttribute('href', 'https://github.com/harshamaiya99/tmdb-app');
+      .toHaveAttribute('href', 'https://github.com/harshamaiya99/watch-tower');
   });
 });

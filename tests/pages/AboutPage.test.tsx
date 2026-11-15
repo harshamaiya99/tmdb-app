@@ -24,6 +24,6 @@ describe('AboutPage', () => {
     expect(screen.getByRole('link', { name: 'TMDB logo and attribution guidelines' }))
       .toHaveAttribute('href', 'https://www.themoviedb.org/about/logos-attribution');
     expect(screen.getByRole('link', { name: 'GitHub' }))
-      .toHaveAttribute('href', 'https://github.com/harshamaiya99/tmdb-app');
+      .toHaveAttribute('href', 'https://github.com/harshamaiya99/watch-tower');
   });
 });

@@ -1,6 +1,6 @@
 {
-  "name": "TMDB Browser",
-  "short_name": "TMDB",
+  "name": "WATCHTOWER",
+  "short_name": "WATCHTOWER",
   "description": "Browse movies, TV shows, and people from TMDB.",
   "start_url": "./#/",
   "scope": "./",

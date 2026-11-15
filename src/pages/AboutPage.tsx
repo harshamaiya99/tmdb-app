@@ -53,7 +53,7 @@ export function AboutPage() {
       <section className="rounded-lg border bg-card p-5 shadow-sm sm:p-6">
         <h2 className="text-xl font-semibold">Project</h2>
         <a
-          href="https://github.com/harshamaiya99/tmdb-app"
+          href="https://github.com/harshamaiya99/watch-tower"
           target="_blank"
           rel="noreferrer"
           className="mt-3 inline-flex items-center gap-2 text-sm text-primary underline-offset-4 hover:underline"
