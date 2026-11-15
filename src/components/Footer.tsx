@@ -10,10 +10,10 @@ export function Footer() {
           <div className="col-span-2 space-y-3 sm:col-span-3 lg:col-span-1">
             <Link to="/" className="inline-flex items-center gap-2 font-semibold text-foreground">
               <img
-                src={`${import.meta.env.BASE_URL}favicon.svg`}
+                src={`${import.meta.env.BASE_URL}watch-tower_logo.png`}
                 alt=""
                 aria-hidden="true"
-                className="h-7 w-7"
+                className="h-7 w-7 rounded-md object-contain"
               />
               TMDB Explorer
             </Link>

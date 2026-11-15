@@ -365,10 +365,10 @@ export function Layout({ children }: LayoutProps) {
             >
               {!showBackButton && (
                 <img
-                  src={`${import.meta.env.BASE_URL}favicon.svg`}
+                  src={`${import.meta.env.BASE_URL}watch-tower_logo.png`}
                   alt=""
                   aria-hidden="true"
-                  className="h-7 w-7 shrink-0"
+                  className="h-7 w-7 shrink-0 rounded-md object-contain"
                 />
               )}
               <span
