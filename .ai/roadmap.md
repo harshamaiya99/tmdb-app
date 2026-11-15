@@ -1,12 +1,11 @@
 # Project Roadmap
 
-## Completed Migration: GitHub Pages to Vercel
+## Vercel hosting and TMDB API migration
 
 **Objective:** Host the frontend on Vercel, proxy TMDB operations through serverless functions, and keep each user's account credentials encrypted server-side.
 
-**Reason for Migration:**
+**Reason for migration:**
 
-* GitHub Pages supports static hosting and doesn't provide backend execution.
 * Vercel supports both frontend hosting and serverless backend functions.
 * Keep the TMDB application credential used by migrated public reads on the server instead of exposing it in the browser bundle.
 * Support optional TMDB account authorization for personal features without requiring a personal API key to browse.
@@ -14,7 +13,7 @@
 
 **Completed: Vercel hosting and public API migration**
 
-The repository is connected to Vercel and the production frontend is hosted at [tmdb-app-rho.vercel.app](https://tmdb-app-rho.vercel.app/). Vercel builds with `npm ci` and `npm run build`, serving `dist` from the domain root. GitHub Pages deployment has been retired.
+The app is hosted on Vercel and builds with `npm ci` and `npm run build`, serving `dist` from the domain root. Public catalog reads and account operations use Vercel functions, and the app no longer depends on GitHub Pages.
 
 **API migration status:** Public catalog reads and account operations use Vercel functions. Public browsing and account authorization do not require visitors to provide an API key or v4 token. Account credentials are encrypted per user in Neon.
 
