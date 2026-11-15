@@ -148,13 +148,14 @@ The site can be installed as an app from supported browsers when served over HTT
 ├── db/
 │   └── schema.sql                          # Neon database schema for account sessions and auth state
 ├── public/
-│   ├── apple-touch-icon.png                # Apple home-screen icon
 │   ├── favicon.svg                         # Browser tab icon
 │   ├── icon-192.png                        # Installable app icon (192x192)
 │   ├── icon-512.png                        # Installable app icon (512x512)
 │   ├── manifest.webmanifest                # PWA metadata and install settings
 │   ├── sw.js                               # Service worker for app-shell caching
-│   └── tmdb-logo.svg                       # TMDB logo for attribution and branding
+│   ├── tmdb-logo.svg                       # TMDB logo for attribution and branding
+│   ├── watch-tower_logo.png                 # App logo used in the header and install metadata
+│   └── watch-tower_text.png                 # Brand wordmark used in the app header
 ├── src/
 │   ├── App.tsx                             # App routes and global providers
 │   ├── index.css                           # Tailwind layers, shared styles, and theme variables
@@ -176,19 +177,19 @@ The site can be installed as an app from supported browsers when served over HTT
 │   │   ├── PaginationControls.tsx          # Page navigation controls
 │   │   ├── RatingDialog.tsx                # Rating modal and controls
 │   │   ├── ReviewSection.tsx               # Review cards with Markdown rendering
-│   │   ├── TMDBImage.tsx                   # Responsive TMDB image loader and fallback
-│   │   ├── TVEpisodeRatingAction.tsx       # Per-episode rating action UI
 │   │   ├── ThemeToggle.tsx                 # Light/dark theme toggle
+│   │   ├── TMDBImage.tsx                  # Responsive TMDB image loader and fallback
+│   │   ├── TVEpisodeRatingAction.tsx       # Per-episode rating action UI
 │   │   ├── WatchLinkButton.tsx             # Opens configured watch links or handles empty state
 │   │   └── ui/
-│   │       ├── alert.tsx                  # Alert primitive
-│   │       ├── badge.tsx                  # Badge primitive
-│   │       ├── button.tsx                 # Button primitive and variants
-│   │       ├── card.tsx                   # Card layout primitive
-│   │       ├── input.tsx                  # Input primitive
-│   │       ├── skeleton.tsx               # Loading skeleton primitive
-│   │       ├── toaster.tsx                # Renders queued toast notifications
+│   │       ├── alert.tsx                   # Alert primitive
+│   │       ├── badge.tsx                   # Badge primitive
+│   │       ├── button.tsx                  # Button primitive and variants
+│   │       ├── card.tsx                    # Card layout primitive
+│   │       ├── input.tsx                   # Input primitive
+│   │       ├── skeleton.tsx                # Loading skeleton primitive
 │   │       ├── toast.tsx                  # Toast primitives
+│   │       ├── toaster.tsx                # Renders queued toast notifications
 │   │       └── use-toast.ts               # Notification helper and state hook
 │   ├── contexts/
 │   │   ├── EmbedSettingsContext.tsx       # Browser-local watch-link and embed settings
@@ -217,11 +218,11 @@ The site can be installed as an app from supported browsers when served over HTT
 │       ├── HomePage.tsx                   # Home and search results UI
 │       ├── MediaListPage.tsx              # Filtered paginated media list pages
 │       ├── MovieDetailsPage.tsx           # Movie details, credits, reviews, and links
-│       ├── PeopleListPage.tsx            # Paginated people listing
-│       ├── PersonDetailsPage.tsx         # Person biography and filmography
-│       ├── ReleaseDateMoviesPage.tsx     # Movies grouped by release date
-│       ├── SettingsPage.tsx              # Content country, embed URLs, and theme settings
-│       └── TVShowDetailsPage.tsx         # TV details, seasons, episodes, and links
+│       ├── PeopleListPage.tsx             # Paginated people listing
+│       ├── PersonDetailsPage.tsx          # Person biography and filmography
+│       ├── ReleaseDateMoviesPage.tsx      # Movies grouped by release date
+│       ├── SettingsPage.tsx               # Content country, embed URLs, and theme settings
+│       └── TVShowDetailsPage.tsx          # TV details, seasons, episodes, and links
 ├── tests/
 │   ├── components/
 │   │   ├── AccountCallbackPage.test.tsx     # OAuth callback page behavior
@@ -231,32 +232,28 @@ The site can be installed as an app from supported browsers when served over HTT
 │   │   ├── PaginationControls.test.tsx      # Pagination logic and keyboard behavior
 │   │   ├── RatingDialog.test.tsx            # Rating dialog behavior
 │   │   ├── ReviewSection.test.tsx           # Review rendering and interaction behavior
-│   │   ├── WatchLinkButton.test.tsx         # Watch-link action behavior
-│   │   └── ...
+│   │   └── WatchLinkButton.test.tsx         # Watch-link action behavior
 │   ├── pages/
 │   │   ├── AboutPage.test.tsx               # About page behavior
-│   │   ├── SettingsPage.test.tsx            # Settings page behavior
-│   │   └── ...
-│   ├── unit/
-│   │   ├── accountCache.test.ts             # Account cache tests
-│   │   ├── EmbedSettingsContext.test.tsx    # Embed settings context tests
-│   │   ├── embedSettings.test.ts            # Embed settings helper tests
-│   │   ├── requestCache.test.ts             # Request cache tests
-│   │   ├── tmdb.test.ts                     # TMDB client/service tests
-│   │   ├── tmdbAccountActionFunction.test.ts        # Vercel account action tests
-│   │   ├── tmdbAccountAuthCallbackFunction.test.ts  # Auth callback tests
-│   │   ├── tmdbAccountAuthStartFunction.test.ts     # Auth start tests
-│   │   ├── tmdbCategoryFunction.test.ts      # Category endpoint tests
-│   │   ├── tmdbConfigurationFunction.test.ts  # Config endpoint tests
-│   │   ├── tmdbDiscover.test.ts             # Discovery logic tests
-│   │   ├── tmdbDiscoverFunction.test.ts     # Discovery API tests
-│   │   ├── tmdbMediaFunction.test.ts        # Media endpoint tests
-│   │   ├── tmdbPublicLists.test.ts          # Public-list API tests
-│   │   ├── tmdbSearchFunction.test.ts       # Search endpoint tests
-│   │   ├── useCachedQuery.test.tsx          # Cache hook tests
-│   │   ├── utils.test.ts                   # Utility tests
-│   │   └── ...
-│   └── setup.ts                            # Vitest + Testing Library setup
+│   │   └── SettingsPage.test.tsx            # Settings page behavior
+│   └── unit/
+│       ├── accountCache.test.ts             # Account cache tests
+│       ├── EmbedSettingsContext.test.tsx    # Embed settings context tests
+│       ├── embedSettings.test.ts            # Embed settings helper tests
+│       ├── requestCache.test.ts             # Request cache tests
+│       ├── tmdb.test.ts                     # TMDB client/service tests
+│       ├── tmdbAccountActionFunction.test.ts        # Vercel account action tests
+│       ├── tmdbAccountAuthCallbackFunction.test.ts  # Auth callback tests
+│       ├── tmdbAccountAuthStartFunction.test.ts     # Auth start tests
+│       ├── tmdbCategoryFunction.test.ts      # Category endpoint tests
+│       ├── tmdbConfigurationFunction.test.ts  # Config endpoint tests
+│       ├── tmdbDiscover.test.ts             # Discovery logic tests
+│       ├── tmdbDiscoverFunction.test.ts     # Discovery API tests
+│       ├── tmdbMediaFunction.test.ts        # Media endpoint tests
+│       ├── tmdbPublicLists.test.ts          # Public-list API tests
+│       ├── tmdbSearchFunction.test.ts       # Search endpoint tests
+│       ├── useCachedQuery.test.tsx          # Cache hook tests
+│       └── utils.test.ts                   # Utility tests
 ├── .gitignore                             # Git ignore rules
 ├── .idea/                                 # Local JetBrains project metadata (ignored)
 ├── .vercel/                               # Local Vercel metadata (ignored)
