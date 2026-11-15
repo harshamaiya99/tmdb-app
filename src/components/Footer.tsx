@@ -15,7 +15,11 @@ export function Footer() {
                 aria-hidden="true"
                 className="h-7 w-7 rounded-md object-contain"
               />
-              TMDB Explorer
+              <img
+                src={`${import.meta.env.BASE_URL}watch-tower_text.png`}
+                alt="WATCHTOWER"
+                className="h-5 w-auto max-w-[120px] object-contain"
+              />
             </Link>
             <p className="max-w-xs text-sm leading-relaxed text-muted-foreground">
               Discover movies, TV shows, and the people behind them.

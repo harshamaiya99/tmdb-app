@@ -371,13 +371,22 @@ export function Layout({ children }: LayoutProps) {
                   className="h-7 w-7 shrink-0 rounded-md object-contain"
                 />
               )}
-              <span
-                className={`min-w-0 truncate font-bold ${
-                  showBackButton ? 'max-w-[calc(100vw-16rem)]' : 'max-w-[calc(100vw-13.5rem)]'
-                } md:max-w-none`}
-              >
-                {title}
-              </span>
+              {!showBackButton && (
+                <img
+                  src={`${import.meta.env.BASE_URL}watch-tower_text.png`}
+                  alt="WATCHTOWER"
+                  className="h-4 w-auto max-w-[120px] object-contain"
+                />
+              )}
+              {showBackButton && (
+                <span
+                  className={`min-w-0 truncate font-bold ${
+                    showBackButton ? 'max-w-[calc(100vw-16rem)]' : 'max-w-[calc(100vw-13.5rem)]'
+                  } md:max-w-none`}
+                >
+                  {title}
+                </span>
+              )}
             </Link>
             {!isMobileSearchOpen && (
               <Button

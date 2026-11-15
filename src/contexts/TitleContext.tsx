@@ -8,7 +8,7 @@ interface TitleContextType {
 const TitleContext = createContext<TitleContextType | undefined>(undefined);
 
 export function TitleProvider({ children }: { children: ReactNode }) {
-  const [title, setTitle] = useState('TMDB Explorer');
+  const [title, setTitle] = useState('WATCHTOWER');
 
   return (
     <TitleContext.Provider value={{ title, setTitle }}>

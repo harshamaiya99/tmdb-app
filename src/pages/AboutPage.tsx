@@ -9,7 +9,7 @@ export function AboutPage() {
       <header className="space-y-2">
         <h1 className="text-3xl font-bold tracking-tight">About</h1>
         <p className="text-muted-foreground">
-          TMDB Browser helps you explore movies, TV shows, and people.
+          WATCHTOWER helps you explore movies, TV shows, and people.
         </p>
       </header>
 

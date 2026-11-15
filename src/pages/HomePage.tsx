@@ -51,7 +51,7 @@ export function HomePage() {
   const requestedTVCategory = searchParams.get('tv_category');
   const tvCategory = TV_CATEGORIES.find(({ value }) => value === requestedTVCategory)?.value ?? 'trending-tv';
 
-  usePageTitle('TMDB Explorer');
+  usePageTitle('WATCHTOWER');
 
   const movieList = useCachedQuery(
     `home:${movieCategory}:${region}`,
