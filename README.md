@@ -14,7 +14,7 @@
 
 A clean, minimal web app for browsing movies, TV shows, and people with data from The Movie Database (TMDB). Built with React, TypeScript, Vite, Tailwind CSS, and shadcn/ui-style components.
 
-**Live site:** [WATCHTOWER](https://watch-tower.vercel.app/)
+**Live site:** [WATCHTOWER](https://watch-tower-app.vercel.app/)
 
 ## Features
 
