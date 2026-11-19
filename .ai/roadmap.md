@@ -1,42 +1,5 @@
 # Project Roadmap
 
-## Vercel hosting and TMDB API migration
-
-**Objective:** Host the frontend on Vercel, proxy TMDB operations through serverless functions, and keep each user's account credentials encrypted server-side.
-
-**Reason for migration:**
-
-* Vercel supports both frontend hosting and serverless backend functions.
-* Keep the TMDB application credential used by migrated public reads on the server instead of exposing it in the browser bundle.
-* Support optional TMDB account authorization for personal features without requiring a personal API key to browse.
-* Simplify deployment by integrating GitHub directly with Vercel.
-
-**Completed: Vercel hosting and public API migration**
-
-The app is hosted on Vercel and builds with `npm ci` and `npm run build`, serving `dist` from the domain root. Public catalog reads and account operations use Vercel functions, and the app no longer depends on GitHub Pages.
-
-**API migration status:** Public catalog reads and account operations use Vercel functions. Public browsing and account authorization do not require visitors to provide an API key or v4 token. Account credentials are encrypted per user in Neon.
-
-### Migration stages
-
-1. **API foundation:** **Complete.** `GET /api/tmdb/configuration` uses server-only `TMDB_API_KEY`.
-2. **Catalog-data pilot:** **Complete.** Deployed trending movies use `GET /api/tmdb/trending-movies?page=1`.
-3. **Paginated categories:** **Complete.** Deployed category lists use the allowlisted `GET /api/tmdb/category?category=...` endpoint.
-4. **Search and media details:** **Complete.** Deployed search and multi-search use `/api/tmdb/search`; details, recommendations, similar titles, reviews, seasons, episodes, collections, person credits, and countries use the allowlisted `/api/tmdb/media` endpoint.
-5. **Filtered discovery and remaining public lists:** **Complete.** Deployed genre/language/company/provider lists, composed movie/TV filters, paginated release-date calendar results, trending TV, and popular/trending people lists use the validated discovery or category endpoints. Local development retains direct TMDB calls.
-6. **Credential-free public browsing:** **Complete.** Public catalog routes no longer require user-supplied credentials; local Vite development may use a developer key for direct catalog calls.
-7. **Account migration:** **Complete.** Server-side v3/v4 authorization, encrypted per-user Neon storage, secure session cookies, and allowlisted account actions are deployed and verified.
-
-**Hosting migration outcome:** The React + Vite frontend and serverless API functions are hosted on Vercel with GitHub-integrated deployments. Public reads use the server-side TMDB API key; account tokens stay encrypted in Neon and are isolated by each user's opaque session cookie.
-
-**Security and architecture notes:**
-
-* GitHub Actions Secrets protect values only while workflows use them. A secret inserted into a Vite build becomes public; Vercel server-only environment variables must be read only by backend functions.
-* Vercel functions are stateless. Neon provides persistent per-user credentials; `TMDB_TOKEN_ENCRYPTION_KEY` must remain stable and backed up or stored credentials can no longer be decrypted.
-* Browser-held user tokens are accessible to the user and scripts executing in that browser. Keep account tokens in encrypted server-side storage and never return them to the client.
-* Review and rotate any TMDB app credential previously embedded in a public client-side build.
-* Avoid caching personalized TMDB responses in shared caches. Do not log API keys, session identifiers, access tokens, or authorization codes.
-
 ## TV Episode Release Calendar
 
 * Add a calendar view for upcoming TV episode air dates, inspired by TMDB's website calendar. Show a navigable date range in a seven-column week grid on larger screens, with episode title, show name, season/episode number, poster or still, and premiere/finale labels where available. Indicate overflow when a day has more episodes than can be displayed, and allow users to open the episode or TV show details.
@@ -52,146 +15,6 @@ The app is hosted on Vercel and builds with `npm ci` and `npm run build`, servin
 * `src/lib/tmdb/account.ts` — account authorization, watchlists, ratings, and custom lists.
 * Keep `src/lib/tmdb.ts` as a small entry point that exports the existing `tmdbService` and types, so callers do not need to change.
 * Start with the clearest boundaries (types and account operations), and validate each extraction with the existing tests and build before proceeding. Avoid splitting into many overly small files.
-
-## Documentation and API Reference Strategy
-
-* Document the app at the correct layer: inline TSDoc for TypeScript APIs, Storybook for reusable UI components, and project docs for architecture and workflows.
-* Prefer selective documentation over broad comment spam; document public contracts, integration boundaries, and non-obvious behavior.
-* Keep the existing README and `.ai/` docs aligned with the implementation rather than creating overlapping documentation layers.
-
-### Why this matters
-
-This project has multiple contracts that are easy to misunderstand:
-
-* TMDB integration and normalized response logic in `src/lib/*`
-* account/session behavior in `api/*`
-* shared hooks and reusable UI behavior in `src/hooks/*` and `src/components/*`
-* route-level data fetching and page composition in `src/pages/*`
-
-TSDoc and generated API docs reduce onboarding time, make shared logic easier to maintain, and clarify the real public behavior of functions and components.
-
-### Documentation model
-
-#### 1. TSDoc for TypeScript contracts
-
-Use TSDoc for exported functions, hooks, utilities, and public component props.
-
-Priority files:
-
-* `src/lib/tmdb.ts`
-* `src/lib/utils.ts`
-* `src/hooks/usePageTitle.ts`
-* `src/hooks/usePagination.ts`
-* `src/hooks/useRatingDialog.ts`
-* `src/components/MediaCard.tsx`
-* `src/components/RatingDialog.tsx`
-* `src/components/ReviewSection.tsx`
-* `api/tmdb/*.ts`
-* `api/account/*.ts`
-
-Document:
-
-* purpose and intent
-* inputs and outputs
-* edge cases and error behavior
-* caching, auth, and side effects
-* expected return shape or normalized model
-
-#### 2. Storybook for reusable UI
-
-Use Storybook for interactive or visually stateful components whose behavior is easiest to understand by example.
-
-Best candidates:
-
-* `MediaCard`
-* `RatingDialog`
-* `PaginationControls`
-* `WatchLinkButton`
-* `ReviewSection`
-
-#### 3. Project docs for architecture and flow
-
-Use the existing README and `.ai/*.md` files for higher-level context:
-
-* app structure and routing
-* TMDB/public-vs-account flow
-* auth and session boundaries
-* deployment and environment assumptions
-
-### Implementation roadmap
-
-#### Phase 1: establish the documentation standard
-
-* Define which files should use TSDoc vs Storybook vs project docs.
-* Keep the standard narrow and reusable rather than forcing comments everywhere.
-* Align the README and `.ai/` documents with the same terminology and boundaries.
-
-#### Phase 2: document the public API surface
-
-* Add TSDoc to the TMDB service layer, utility helpers, and shared hooks.
-* Document request/response contracts and important edge cases.
-* Ensure exported public functions are self-describing.
-
-#### Phase 3: document major UI components
-
-* Add prop and behavior docs to key reusable UI components.
-* Add Storybook examples for complex or stateful components.
-* Document loading, empty, and error states where they affect behavior.
-
-#### Phase 4: document server endpoints and auth flow
-
-* Add endpoint-level notes for account and TMDB routes.
-* Explain auth boundaries, expected input, and error handling.
-* Keep docs specific to actual runtime behavior rather than generic API summaries.
-
-#### Phase 5: generate docs automatically
-
-* Add TypeDoc to generate API docs from TSDoc comments.
-* Keep generated output in a dedicated docs folder or internal site for review.
-* Exclude test-only files and internal implementation detail from public docs.
-
-### Quality bar
-
-Document exported functions, hooks, and component props when they are part of the app's public contract. Leave internal one-off logic undocumented unless it is complex or easily misunderstood.
-
-This approach keeps the project maintainable without creating redundant or noisy documentation.
-
-### Practical file-by-file priority
-
-Highest priority:
-
-* `src/lib/tmdb.ts`
-* `src/lib/utils.ts`
-* `src/hooks/usePageTitle.ts`
-* `src/hooks/usePagination.ts`
-* `src/hooks/useRatingDialog.ts`
-* `src/components/MediaCard.tsx`
-* `src/components/RatingDialog.tsx`
-* `src/components/ReviewSection.tsx`
-* `api/tmdb/*.ts`
-* `api/account/*.ts`
-
-Secondary priority:
-
-* `src/components/Layout.tsx`
-* `src/components/MediaSection.tsx`
-* `src/components/PaginationControls.tsx`
-* `src/components/WatchLinkButton.tsx`
-* `src/lib/accountCache.ts`
-* `src/lib/requestCache.ts`
-* `src/lib/embedSettings.ts`
-
-### Recommended end state
-
-The project should have:
-
-* TSDoc comments on public TypeScript functions and components
-* TypeDoc-generated project docs for API surfaces
-* Storybook coverage for the key UI components
-* A concise architecture doc for routing, data flow, and account flows
-* Enough inline explanation that a contributor can understand the app without reading every file in sequence
-
-This gives the project a Javadoc-style documentation story without over-documenting small internals, and it fits the current codebase structure and project goals.
 
 ## Native Android app in the same monorepo
 
@@ -477,3 +300,110 @@ For this project, keep the Android initiative lean and practical:
 This approach gives the best balance between learning value and engineering discipline without turning the repo into a complicated multi-platform product prematurely.
 
 This roadmap is intentionally focused on the current project reality: a local Android learning app using the same public API layer, not a public Play Store app or a full production cross-platform platform.
+
+## Multiple web UI experiences
+
+**Objective:** Let a user choose between the existing Cinema interface and a distinctly designed Expressive interface while keeping one web app, one route model, and the existing TMDB and account integrations.
+
+### Fit with the current application
+
+The app already has a small shared foundation that should remain the source of truth:
+
+* `src/App.tsx` owns the `HashRouter`, routes, lazy page boundaries, and root providers.
+* `src/lib/tmdb.ts` centralizes public catalog and account requests.
+* `TMDBAccountProvider`, `EmbedSettingsProvider`, `TitleProvider`, and `ThemeProvider` hold app-wide state.
+* Pages in `src/pages` currently combine data loading/orchestration with presentation to varying degrees; shared UI primitives live in `src/components` and `src/components/ui`.
+* The existing shadcn-style UI uses Tailwind and semantic CSS variables in `src/index.css`. Light/dark mode is a separate preference persisted in browser local storage.
+* Settings, content-country preferences, embed links, and the current light/dark theme are browser-local. The optional TMDB connection is not an app-owned user profile or a general preference-sync service.
+
+Treat the proposed architecture as a direction, not a mandate to move the app into new `core/`, `features/`, `shared/`, or monorepo packages. Keep the current structure and extract shared presentation-independent behavior only when a real seam is needed. In particular, do not duplicate API requests, account actions, route state, or business rules to achieve visual independence.
+
+### Product and architecture decisions
+
+* **Cinema** remains the default and should preserve its current appearance and behavior. Shared wiring for experience selection, providers, or routing may be needed; that is not a reason to rewrite Cinema's presentation.
+* **Expressive** is a second web presentation with its own tokens, components, layouts, navigation choices, and motion. Material 3 Expressive is a design reference, not a requirement to install or claim conformance to a separate component framework.
+* This roadmap is a starting point for exploration, not a fixed sequence or acceptance checklist. Change the scope, design direction, or architecture as implementation reveals new possibilities or lessons.
+* Keep existing URL paths and the shared router. The selected experience changes presentation, not domain behavior, TMDB endpoints, or account identity.
+* Keep experience selection separate from light/dark mode: a user can choose either experience and either supported color mode. Expressive may define its own light and dark palettes.
+* Initially persist the selected experience in browser local storage, matching the current theme and settings model. Do not promise login restoration or cross-device synchronization: the app has no app-owned profile/preferences API, and a TMDB connection does not provide one. Revisit server sync only after defining an appropriate identity, API contract, privacy behavior, and disconnected-user fallback.
+* Retain global providers and shared services above experience-specific presentation where that fits. Keep navigation, data, loading/error states, and actions behaviorally consistent while allowing each experience to render them differently.
+* Scope experience-specific styles and tokens so Expressive cannot unintentionally change Cinema. Preserve semantic color roles, accessible contrast, keyboard behavior, and reduced-motion support.
+* Liquid Glass, Cinematic, Retro, and other experiences are optional experiments, not commitments. Explore them whenever it is useful; the roadmap does not require waiting for complete parity first.
+
+### Experience independence
+
+Each experience should be independently understandable and maintainable as a presentation:
+
+* Each owns its design tokens, visual components, layouts, navigation presentation, responsive behavior, and interaction patterns.
+* Neither experience should depend on the other experience's components or styles. Shared primitives are appropriate only when they are genuinely presentation-neutral or intentionally part of a shared foundation.
+* Both can consume the existing TMDB service, account context, and other shared functionality. Extract hooks, services, or view models when that creates a useful seam, rather than forcing every page into a generic abstraction.
+* Adding or changing an experience may require updates to shared routing, selection, registration, or providers. It should not require changing another experience's presentation unless that presentation is intentionally being improved too.
+* Independence is a design goal, not a ban on experiments. Temporary duplication, prototypes, and architectural changes are acceptable learning tools; consolidate shared behavior when doing so improves clarity or reliability.
+
+### Feature-parity guide
+
+Use a route/feature inventory to understand the breadth of the app and track which parts of each experience are implemented. It should include the home and search flows; movie, TV, person, and episode details; media and people lists; release dates; settings; TMDB connection and callback; watchlists, favorites, ratings, and custom lists; loading, empty, and failure states.
+
+Feature parity is a useful long-term direction, not a release gate. It is fine to launch or keep Expressive intentionally partial while exploring a particular page, interaction, or design system; make the current coverage clear so the difference is understood. When implementing a feature in both experiences, verify meaningful actions and account/API outcomes, not only that the route renders. Update the inventory as implementation evolves.
+
+### Implementation roadmap
+
+#### Phase 1 — Inventory and boundaries
+
+* Map current routes, shared providers, existing light/dark behavior, and interactive features.
+* Mark which behaviors are already centralized (TMDB service, account context, shared hooks/components) and which page-level data/presentation logic is currently coupled.
+* Choose a stable experience identifier (`cinema` or `expressive`), Cinema as the fallback/default, and browser-local preference storage.
+* Define an initial route/feature inventory and visual/accessibility baseline for representative desktop and narrow-mobile widths.
+
+**Exit criteria:** The plan identifies a small first vertical slice and explicitly preserves existing routes, shared providers, account flows, and light/dark preference behavior.
+
+#### Phase 2 — Experience selection foundation
+
+* Add an experience state/selection boundary and choose an experience composition that is clear for the current app. Keep route definitions and common providers in `src/App.tsx` where appropriate; experience-specific composition may use dedicated page or layout implementations.
+* Add a Settings control for the experience, with clear labels, immediate preview/switching, and a visible selected state.
+* Persist and validate the preference locally; unknown, unavailable, or missing values should safely select Cinema.
+* Preserve the current URL, search query, filters, pagination, and other route state during a switch whenever those states are encoded in the URL or can be preserved without adding fragile synchronization.
+* Keep theme selection independent and ensure the existing saved light/dark choice continues to work after switching.
+
+**Exit criteria:** The selector survives reloads in the same browser, an invalid stored value does not break startup, and switching does not log the user out or alter account/API behavior.
+
+#### Phase 3 — Expressive design foundation and vertical slice
+
+* Define Expressive-specific color, typography, shape, spacing, elevation, focus, and motion tokens. Scope them to the selected experience rather than unintentionally replacing Cinema's global tokens.
+* Build the components and layout pieces that the design calls for. Avoid speculative framework work, but do not limit the experiment to the existing component library.
+* Implement one representative route and shared shell end to end, including loading, empty, error, navigation, and responsive states. Choose routes that exercise real app behavior (for example, home/search and a media detail) rather than a static mock screen.
+* Respect reduced-motion settings and verify contrast, focus visibility, semantic controls, and touch target sizing.
+
+**Exit criteria:** The vertical slice uses the existing TMDB service and providers, is visually distinct, works at desktop and narrow mobile widths, and causes no visual or behavioral regression in Cinema.
+
+#### Phase 4 — Expand route coverage incrementally
+
+* Implement Expressive routes in priority order using the parity inventory, sharing data-fetching/business logic and reusing only presentation-neutral components.
+* Extract hooks or view models from pages only when needed to prevent meaningful logic duplication; keep one-off logic local rather than creating a speculative feature framework.
+* Design each experience's responsive layout independently. Preserve intentional carousel behavior, safe areas, accessible dialogs, and the existing route model.
+* As coverage grows, consider account actions, settings, and loading/empty/error states alongside the main browsing routes; choose the next slice based on what is useful to build and learn.
+
+**Progress check:** Record which routes and features are available in each experience, where behavior differs, and what you want to explore next. Complete parity is an option for a mature milestone, not a prerequisite for continuing or shipping the experiment.
+
+#### Phase 5 — Verification and release
+
+* Add focused tests for preference persistence/fallback, switching, and representative experience-specific rendering; test shared actions against the existing service/context contracts where useful.
+* Run the existing test suite and production build. Exercise the routes and features touched by the current experiment in both experiences.
+* Check the layouts and interactions being changed at desktop and narrow smartphone widths; consider keyboard navigation, focus, contrast, reduced motion, theme combinations, loading/error states, and unintended horizontal overflow.
+* Confirm that switching experiences preserves URL-based state, active TMDB connection state, and existing browser settings where those behaviors are in scope.
+
+**Progress check:** The chosen scope works, Cinema remains the default unless intentionally changed, and any known gaps or behavior differences are documented. Validation should fit the experiment; it need not wait for full feature parity.
+
+#### Phase 6 — Evaluate future experiences
+
+Explore another experience whenever curiosity or a design question motivates it. Reuse the selection mechanism and shared functionality when helpful, and let the experiments reveal whether the current architecture needs to evolve; no speculative placeholder directory is needed.
+
+### Non-goals for the initial release
+
+* Requiring a new monorepo or `core/features/shared` folder hierarchy as a prerequisite.
+* Synchronizing UI preferences across devices or creating an app-owned profile system.
+* Accidentally changing shared API, account, routing, or state behavior when only presentation is intended to change.
+
+### Recommended first milestone
+
+Deliver the experience preference and a working Expressive slice while Cinema remains the default and retains its current user-facing behavior. Use real app functionality to explore how far the presentation can diverge, then decide whether to expand coverage, refine the architecture, or start another design experiment.
