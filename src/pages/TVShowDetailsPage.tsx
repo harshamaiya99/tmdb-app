@@ -363,7 +363,7 @@ export function TVShowDetailsPage() {
                   <span>{episodeRuntime} min/ep</span>
                 </div>
               )}
-              {rating !== undefined && (
+              {rating !== undefined && tvShow.vote_count > 0 && (
                 <div className="flex items-center gap-1">
                   <Star className="h-4 w-4 fill-current" />
                   <span className="font-medium text-foreground">{rating}</span>
@@ -463,7 +463,7 @@ export function TVShowDetailsPage() {
           </div>
         </div>
 
-        {(regionProviders.length || tvShow.production_companies?.length) && (
+        {Boolean(regionProviders.length > 0 || tvShow.production_companies?.length) && (
           <section className="mt-8 flex flex-wrap items-start gap-x-6 gap-y-6 border-t pt-6">
             {regionProviders.length > 0 && (
               <div className="w-fit max-w-full shrink-0">
@@ -1269,4 +1269,3 @@ export function TVShowDetailsPage() {
     </div>
   );
 }
-

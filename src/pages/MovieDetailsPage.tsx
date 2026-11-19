@@ -268,7 +268,7 @@ export function MovieDetailsPage() {
                     <span>{movie.runtime} min</span>
                   </div>
                 )}
-                {rating !== undefined && (
+                {rating !== undefined && movie.vote_count > 0 && (
                   <div className="flex items-center gap-1">
                     <Star className="h-4 w-4 fill-current" />
                     <span className="font-medium text-foreground">{rating}</span>
@@ -391,7 +391,7 @@ export function MovieDetailsPage() {
             )}
           </div>
 
-        {(regionProviders.length || movie.production_companies?.length) && (
+        {Boolean(regionProviders.length > 0 || movie.production_companies?.length) && (
           <section
             ref={companyInfoRef}
             className={`mt-4 flex flex-wrap items-start gap-x-6 gap-y-6 border-t pt-6 min-[360px]:col-span-2 md:col-span-2 md:mt-0 xl:col-start-1 xl:row-start-2${placeCompanyInfoBesideRightColumn ? ' xl:col-span-2' : hasRightColumn ? ' xl:col-span-3' : ' xl:col-span-2'}`}
@@ -781,4 +781,3 @@ export function MovieDetailsPage() {
     </div>
   );
 }
-
