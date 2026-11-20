@@ -4,6 +4,8 @@
 
 The app uses a lightweight, polished interface built with React, Tailwind CSS, and shadcn/ui-style primitives. The visual language is intentionally simple: neutral surfaces, subtle borders, rounded corners, and clear hierarchy that keeps the focus on the media content.
 
+The Settings page offers two independently selectable web experiences: **Classic** (the default) and **Midnight Matinee**. The choice is stored in this browser separately from light/dark mode. Midnight Matinee is an original, bold editorial direction with a plum-and-coral palette, lime accents, sculpted media cards, and expressive hover states. Its styles are scoped so Classic remains unchanged. Settings are divided into Content country, Embed links, and Appearance panels. Appearance combines experience and color mode; the navigator is horizontal on narrow screens and sticky on desktop. The visible names map to the stable `cinema` and `expressive` local preference values.
+
 ## Design Goals
 
 The UI is designed to feel:
@@ -58,6 +60,10 @@ The layout favors:
 
 The overall layout is deliberately airy, with enough spacing to keep the interface from feeling crowded.
 
+### Coordinated corner radii
+
+Use the shared radius scale mapped in `tailwind.config.js` (`sm`, `md`, `lg`, `xl`, `2xl`, `3xl`) instead of introducing arbitrary corner values for ordinary controls, cards, and containers. Nested surfaces should step down one size from their parent, and a control inside a bordered group should use a smaller radius than the group's frame. Whenever inner and outer borders are nested, keep their visible gap uniform on every side using the shared `--border-inset` token (currently `0.25rem`); account for that inset when coordinating nested corner radii. Apply this in every theme. Circular avatars and intentionally pill-shaped controls may use `rounded-full`; data visualization marks may use tiny explicit radii. Midnight Matinee may use a modestly larger radius scale, but reserve full pills/circles for controls designed that way. Avoid hover transforms on media tiles and media images that can overlap or obscure adjacent content; use non-moving border/color feedback instead.
+
 ## shadcn/ui-style Usage
 
 The project uses shadcn/ui-inspired primitives rather than a full component library dependency. Shared UI pieces live under [src/components/ui](src/components/ui).
@@ -70,6 +76,7 @@ The UI layer includes reusable wrappers for:
 - cards
 - badges
 - inputs
+- Radix-based custom select popovers
 - alerts
 - toasts
 - skeletons
@@ -79,6 +86,8 @@ Successful watchlist, favorite, and custom-list additions can provide an in-app 
 Toasts use a muted surface, a subtle foreground ring, and a stronger shadow so they remain distinct from the page background in both themes.
 
 These components are built as thin abstractions over Tailwind classes and semantic structure, which keeps the codebase consistent and easy to extend.
+
+Use the shared Radix Select primitive for option pickers throughout the app instead of native `<select>` controls. This keeps menus visually consistent across browsers and themes while preserving keyboard navigation and accessible combobox/listbox semantics. Reserve Radix Dropdown Menu for action menus.
 
 The authenticated `/settings` page keeps content country, embed links, and appearance in separate sections. Country options are loaded from TMDB configuration; the selected country and embed links are saved in browser storage. Theme selection updates the shared theme state immediately.
 

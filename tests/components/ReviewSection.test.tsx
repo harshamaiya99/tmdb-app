@@ -53,10 +53,12 @@ describe('ReviewSection', () => {
     );
     const sortSelect = screen.getByRole('combobox', { name: 'Sort reviews' });
 
-    fireEvent.change(sortSelect, { target: { value: 'highest-rated' } });
+    fireEvent.click(sortSelect);
+    fireEvent.click(screen.getByRole('option', { name: 'Highest rated' }));
     expect(getCardOrder()).toEqual(['review-card-review-high', 'review-card-review-1', 'review-card-review-low']);
 
-    fireEvent.change(sortSelect, { target: { value: 'newest' } });
+    fireEvent.click(sortSelect);
+    fireEvent.click(screen.getByRole('option', { name: 'Newest first' }));
     expect(getCardOrder()).toEqual(['review-card-review-low', 'review-card-review-1', 'review-card-review-high']);
   });
 

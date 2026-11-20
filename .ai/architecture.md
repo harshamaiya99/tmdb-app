@@ -16,12 +16,14 @@ This project is a React + TypeScript application for browsing TMDB media catalog
 
 The app boots from [src/main.tsx](src/main.tsx), which mounts the root React app into the DOM.
 
-The main application shell is defined in [src/App.tsx](src/App.tsx). It wires together:
+The main application shell is defined in [src/App.tsx](../src/App.tsx). It wires together:
 
 - account connection and status within the account pages
 - the browser router
-- global providers such as the title context
+- global providers such as the title, theme, and UI experience contexts
 - the toast container
+
+The UI experience preference (`cinema` or `expressive`) is stored locally in the current browser and applied at the document root. It changes presentation only; routes, TMDB services, account identity, content settings, and light/dark mode remain shared.
 
 ### Authentication flow
 

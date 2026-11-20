@@ -6,6 +6,7 @@ import { Card } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { type Movie, type TVShow, type PersonCredit, type PersonListResult } from '@/lib/tmdb';
 import { TMDBImage } from '@/components/TMDBImage';
+import { useExperience } from '@/contexts/ExperienceContext';
 import type { ReactNode } from 'react';
 
 type MediaCardProps =
@@ -13,6 +14,7 @@ type MediaCardProps =
   | { item: PersonListResult; type: 'person'; metadataAction?: ReactNode };
 
 export function MediaCard({ item, type, metadataAction }: MediaCardProps) {
+  const { experience } = useExperience();
   const isPerson = type === 'person';
   const title = isPerson ? item.name : ('title' in item && item.title ? item.title : ('name' in item ? item.name : ''));
   const imagePath = isPerson ? item.profile_path : item.poster_path;
@@ -24,7 +26,9 @@ export function MediaCard({ item, type, metadataAction }: MediaCardProps) {
     : null;
 
   return (
-    <Card className="group relative flex h-full flex-col overflow-hidden border-0 bg-card transition-all hover:shadow-lg">
+    <Card className={`group relative flex h-full flex-col overflow-hidden border border-transparent bg-card transition-colors hover:border-primary/40 ${
+      experience === 'expressive' ? 'expressive-media-card' : ''
+    }`}>
       <Link
         to={isPerson ? `/person/${item.id}` : `/${type}/${item.id}`}
         aria-label={`View ${title}`}
@@ -38,7 +42,7 @@ export function MediaCard({ item, type, metadataAction }: MediaCardProps) {
             width={500}
             height={750}
             sizes="(min-width: 1536px) 9vw, (min-width: 1024px) 12vw, (min-width: 640px) 20vw, 30vw"
-            className="h-full w-full object-cover transition-transform duration-300 group-hover:scale-105"
+            className="h-full w-full object-cover"
           />
         ) : (
           <div className="flex h-full w-full items-center justify-center bg-muted px-2 text-center text-xs text-muted-foreground" role="img" aria-label={`${title} poster unavailable`}>

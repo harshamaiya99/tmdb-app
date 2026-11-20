@@ -4,6 +4,7 @@ import ReactMarkdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
 import { Star, ChevronDown } from 'lucide-react';
 import { Button } from './ui/button';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from './ui/select';
 import { Review, tmdbService } from '../lib/tmdb';
 import { formatDate } from '../lib/utils';
 
@@ -172,19 +173,22 @@ export function ReviewSection({ reviews: initialReviews, mediaId, mediaType, tot
     <div className="mt-12 mb-12">
       <div className="mb-6 flex flex-wrap items-center justify-between gap-3">
         <h2 className="text-2xl font-bold">Reviews</h2>
-        <select
-          aria-label="Sort reviews"
+        <Select
           value={sortOrder}
-          onChange={(event) => {
-            if (isReviewSortOrder(event.target.value)) setSortOrder(event.target.value);
+          onValueChange={(value) => {
+            if (isReviewSortOrder(value)) setSortOrder(value);
           }}
-          className="h-10 w-[170px] rounded-md border border-input bg-background px-3 py-2 text-sm shadow-sm focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring"
         >
-          <option value="newest">Newest first</option>
-          <option value="oldest">Oldest first</option>
-          <option value="highest-rated">Highest rated</option>
-          <option value="lowest-rated">Lowest rated</option>
-        </select>
+          <SelectTrigger aria-label="Sort reviews" className="w-[170px]">
+            <SelectValue />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value="newest">Newest first</SelectItem>
+            <SelectItem value="oldest">Oldest first</SelectItem>
+            <SelectItem value="highest-rated">Highest rated</SelectItem>
+            <SelectItem value="lowest-rated">Lowest rated</SelectItem>
+          </SelectContent>
+        </Select>
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 grid-flow-row-dense auto-rows-[minmax(240px,auto)] md:auto-rows-[240px]">

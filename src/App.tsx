@@ -9,6 +9,7 @@ import { tmdbService } from '@/lib/tmdb';
 import { lazy, Suspense } from 'react';
 import { EmbedSettingsProvider } from '@/contexts/EmbedSettingsContext';
 import { TMDBAccountProvider } from '@/contexts/TMDBAccountContext';
+import { ExperienceProvider } from '@/contexts/ExperienceContext';
 import { ThemeProvider } from '@/hooks/useTheme';
 
 const HomePage = lazy(() => import('@/pages/HomePage').then(({ HomePage }) => ({ default: HomePage })));
@@ -42,38 +43,40 @@ function App() {
 
   return (
     <ThemeProvider>
-      <TitleProvider>
-        <HashRouter>
-          <TMDBAccountProvider>
-            <EmbedSettingsProvider>
-              <Suspense fallback={
-                <AppLoadingSkeleton />
-              }>
-                <Routes>
-                  <Route path="/" element={<Layout><HomePage /></Layout>} />
-                  <Route path="/about" element={<Layout><AboutPage /></Layout>} />
-                  <Route path="/settings" element={<Layout><SettingsPage /></Layout>} />
-                  <Route path="/account/callback" element={<AccountCallbackPage />} />
-                  <Route path="/account" element={<Navigate to="/account/watchlist" replace />} />
-                  <Route path="/account/lists" element={<Layout><AccountListsPage /></Layout>} />
-                  <Route path="/account/lists/:listId" element={<Layout><AccountListsPage /></Layout>} />
-                  <Route path="/account/:section" element={<Layout><AccountPage /></Layout>} />
-                  <Route path="/movie/:id" element={<Layout><MovieDetailsPage /></Layout>} />
-                  <Route path="/tv/:id" element={<Layout><TVShowDetailsPage /></Layout>} />
-                  <Route path="/person/:id" element={<Layout><PersonDetailsPage /></Layout>} />
-                  <Route path="/category/:category" element={<Layout><MediaListPage /></Layout>} />
-                  <Route path="/releases/:date" element={<Layout><ReleaseDateMoviesPage /></Layout>} />
-                  <Route path="/movie" element={<Layout><MediaListPage /></Layout>} />
-                  <Route path="/tv" element={<Layout><MediaListPage /></Layout>} />
-                  <Route path="/person" element={<Layout><PeopleListPage /></Layout>} />
-                  <Route path="*" element={<Navigate to="/" replace />} />
-                </Routes>
-              </Suspense>
-              <Toaster />
-            </EmbedSettingsProvider>
-          </TMDBAccountProvider>
-        </HashRouter>
-      </TitleProvider>
+      <ExperienceProvider>
+        <TitleProvider>
+          <HashRouter>
+            <TMDBAccountProvider>
+              <EmbedSettingsProvider>
+                <Suspense fallback={
+                  <AppLoadingSkeleton />
+                }>
+                  <Routes>
+                    <Route path="/" element={<Layout><HomePage /></Layout>} />
+                    <Route path="/about" element={<Layout><AboutPage /></Layout>} />
+                    <Route path="/settings" element={<Layout><SettingsPage /></Layout>} />
+                    <Route path="/account/callback" element={<AccountCallbackPage />} />
+                    <Route path="/account" element={<Navigate to="/account/watchlist" replace />} />
+                    <Route path="/account/lists" element={<Layout><AccountListsPage /></Layout>} />
+                    <Route path="/account/lists/:listId" element={<Layout><AccountListsPage /></Layout>} />
+                    <Route path="/account/:section" element={<Layout><AccountPage /></Layout>} />
+                    <Route path="/movie/:id" element={<Layout><MovieDetailsPage /></Layout>} />
+                    <Route path="/tv/:id" element={<Layout><TVShowDetailsPage /></Layout>} />
+                    <Route path="/person/:id" element={<Layout><PersonDetailsPage /></Layout>} />
+                    <Route path="/category/:category" element={<Layout><MediaListPage /></Layout>} />
+                    <Route path="/releases/:date" element={<Layout><ReleaseDateMoviesPage /></Layout>} />
+                    <Route path="/movie" element={<Layout><MediaListPage /></Layout>} />
+                    <Route path="/tv" element={<Layout><MediaListPage /></Layout>} />
+                    <Route path="/person" element={<Layout><PeopleListPage /></Layout>} />
+                    <Route path="*" element={<Navigate to="/" replace />} />
+                  </Routes>
+                </Suspense>
+                <Toaster />
+              </EmbedSettingsProvider>
+            </TMDBAccountProvider>
+          </HashRouter>
+        </TitleProvider>
+      </ExperienceProvider>
     </ThemeProvider>
   );
 }

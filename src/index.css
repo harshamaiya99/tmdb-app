@@ -41,6 +41,7 @@
 
 @layer base {
   :root {
+    --border-inset: 0.25rem;
     --background: 0 0% 100%;
     --foreground: 0 0% 3.9%;
     --card: 0 0% 100%;
@@ -60,7 +61,13 @@
     --border: 0 0% 89.8%;
     --input: 0 0% 89.8%;
     --ring: 0 0% 3.9%;
-    --radius: 0.5rem;
+    --radius: 0.625rem;
+    --radius-sm: calc(var(--radius) * 0.6);
+    --radius-md: calc(var(--radius) * 0.8);
+    --radius-lg: var(--radius);
+    --radius-xl: calc(var(--radius) * 1.4);
+    --radius-2xl: calc(var(--radius) * 1.8);
+    --radius-3xl: calc(var(--radius) * 2.4);
   }
 
   .dark {
@@ -83,6 +90,314 @@
     --border: 0 0% 14.9%;
     --input: 0 0% 14.9%;
     --ring: 0 0% 83.1%;
+  }
+
+  html[data-experience="expressive"] {
+    --radius: 0.75rem;
+    --radius-sm: calc(var(--radius) * 0.625);
+    --radius-md: calc(var(--radius) * 0.8);
+    --radius-lg: var(--radius);
+    --radius-xl: calc(var(--radius) * 1.35);
+    --radius-2xl: calc(var(--radius) * 1.7);
+    --radius-3xl: calc(var(--radius) * 2.2);
+    --background: 42 38% 95%;
+    --foreground: 267 27% 16%;
+    --card: 42 45% 99%;
+    --card-foreground: 267 27% 16%;
+    --popover: 42 45% 99%;
+    --popover-foreground: 267 27% 16%;
+    --primary: 345 76% 43%;
+    --primary-foreground: 0 0% 100%;
+    --secondary: 267 36% 89%;
+    --secondary-foreground: 267 38% 24%;
+    --muted: 36 24% 89%;
+    --muted-foreground: 267 13% 38%;
+    --accent: 72 77% 76%;
+    --accent-foreground: 82 66% 17%;
+    --destructive: 0 70% 48%;
+    --destructive-foreground: 0 0% 98%;
+    --border: 267 18% 80%;
+    --input: 267 18% 76%;
+    --ring: 345 76% 43%;
+  }
+
+  html.dark[data-experience="expressive"] {
+    --background: 267 24% 10%;
+    --foreground: 42 38% 94%;
+    --card: 267 21% 15%;
+    --card-foreground: 42 38% 94%;
+    --popover: 267 21% 15%;
+    --popover-foreground: 42 38% 94%;
+    --primary: 345 92% 72%;
+    --primary-foreground: 345 40% 15%;
+    --secondary: 267 22% 24%;
+    --secondary-foreground: 42 35% 91%;
+    --muted: 267 17% 21%;
+    --muted-foreground: 267 12% 73%;
+    --accent: 72 70% 66%;
+    --accent-foreground: 82 70% 13%;
+    --destructive: 0 62% 45%;
+    --destructive-foreground: 0 0% 98%;
+    --border: 267 16% 30%;
+    --input: 267 16% 34%;
+    --ring: 345 92% 72%;
+  }
+}
+
+html[data-experience="expressive"] body {
+  font-family: 'Inter', -apple-system, BlinkMacSystemFont, system-ui, sans-serif;
+}
+
+.search-control:focus-within {
+  border-color: hsl(var(--ring));
+  box-shadow: 0 0 0 1px hsl(var(--ring));
+}
+
+.search-control-input,
+.search-control-input:focus {
+  border: 0;
+  border-radius: 0;
+  box-shadow: none;
+}
+
+.search-control-button {
+  border-radius: calc(var(--radius-md) - var(--border-inset));
+}
+
+.media-category-toggle {
+  border-radius: var(--radius-md);
+  padding: var(--border-inset);
+}
+
+.media-category-toggle > button {
+  border-radius: calc(var(--radius-md) - var(--border-inset));
+}
+
+#root [data-experience="expressive"] > header {
+  border-bottom-color: hsl(var(--primary) / 0.2);
+  background-color: hsl(var(--background));
+}
+
+#root [data-experience="expressive"] [class~="rounded-lg"][class~="border"][class~="bg-card"] {
+  border-color: hsl(var(--border));
+  box-shadow: 0 2px 6px hsl(var(--foreground) / 0.06);
+}
+
+#root [data-experience="expressive"] button:not([role="switch"]) {
+  border-radius: var(--radius-md);
+  transition:
+    background-color 220ms cubic-bezier(0.2, 0, 0, 1),
+    color 220ms cubic-bezier(0.2, 0, 0, 1),
+    box-shadow 220ms cubic-bezier(0.2, 0, 0, 1),
+    transform 220ms cubic-bezier(0.2, 0, 0, 1);
+}
+
+#root [data-experience="expressive"] button[class~="w-9"][class~="h-9"],
+#root [data-experience="expressive"] button[class~="w-10"][class~="h-10"],
+#root [data-experience="expressive"] button[class~="size-9"] {
+  border-radius: 50%;
+}
+
+#root [data-experience="expressive"] .media-category-toggle {
+  border-radius: var(--radius-xl);
+  padding: var(--border-inset);
+}
+
+#root [data-experience="expressive"] .media-category-toggle > button {
+  border-radius: calc(var(--radius-xl) - var(--border-inset));
+}
+
+#root [data-experience="expressive"] input:not([type="radio"]):not([type="checkbox"]):not(.search-control-input),
+#root [data-experience="expressive"] select {
+  border-radius: var(--radius-md);
+}
+
+#root [data-experience="expressive"] button[class*="bg-primary"] {
+  box-shadow: 0 2px 0 hsl(var(--foreground) / 0.1);
+}
+
+#root [data-experience="expressive"] .settings-page {
+  padding-top: 0.5rem;
+}
+
+#root [data-experience="expressive"] .settings-navigation {
+  border: 1px solid hsl(var(--border));
+  border-radius: var(--radius-2xl);
+  background: hsl(var(--muted) / 0.62);
+  padding: 0.65rem;
+}
+
+#root [data-experience="expressive"] .settings-navigation-item {
+  min-height: 3.25rem;
+  border-radius: var(--radius-lg);
+  padding-inline: 0.75rem 1rem;
+  text-align: left;
+}
+
+#root [data-experience="expressive"] .settings-navigation-item[data-active="true"] {
+  background: hsl(var(--primary));
+  color: hsl(var(--primary-foreground));
+  box-shadow: none;
+}
+
+#root [data-experience="expressive"] .settings-navigation-icon {
+  display: grid;
+  width: 2.25rem;
+  height: 2.25rem;
+  flex: none;
+  place-items: center;
+}
+
+#root [data-experience="expressive"] .settings-panel {
+  overflow: hidden;
+  border: 1px solid hsl(var(--border));
+  border-radius: var(--radius-2xl);
+  background: hsl(var(--card));
+  box-shadow: 0 4px 12px hsl(var(--foreground) / 0.07);
+}
+
+#root [data-experience="expressive"] .settings-panel > div:first-child {
+  border-bottom: 1px solid hsl(var(--border));
+  background: hsl(var(--secondary) / 0.55);
+  padding: 1.75rem 1.75rem 1.25rem;
+}
+
+#root [data-experience="expressive"] .settings-panel h3 {
+  font-size: 1.35rem;
+  font-weight: 700;
+  letter-spacing: -0.035em;
+  line-height: 1.25;
+}
+
+#root [data-experience="expressive"] .settings-panel > div:nth-child(2) {
+  padding: 1.5rem 1.75rem 1.75rem;
+}
+
+#root [data-experience="expressive"] .settings-panel section.rounded-lg {
+  border-color: hsl(var(--border));
+  border-radius: var(--radius-xl);
+  background: hsl(var(--muted) / 0.5);
+}
+
+#root [data-experience="expressive"] .settings-experience-option {
+  border-color: hsl(var(--border));
+  border-radius: var(--radius-xl);
+  background: hsl(var(--muted) / 0.5);
+}
+
+#root [data-experience="expressive"] .settings-experience-option:has(input:checked) {
+  border: 2px solid hsl(var(--primary));
+  background: hsl(var(--secondary));
+  color: hsl(var(--secondary-foreground));
+}
+
+#root [data-experience="expressive"] .settings-navigation-item:not([data-active="true"]):hover {
+  background: hsl(var(--secondary));
+}
+
+.episode-credit-card:hover,
+.episode-credit-card:focus-visible {
+  color: hsl(var(--accent-foreground));
+}
+
+.episode-credit-card:hover .text-muted-foreground,
+.episode-credit-card:focus-visible .text-muted-foreground {
+  color: hsl(var(--accent-foreground) / 0.75);
+}
+
+#root [data-experience="expressive"] .media-section > div:first-child {
+  border-bottom: 2px solid hsl(var(--primary) / 0.26);
+  padding-bottom: 0.75rem;
+}
+
+#root [data-experience="expressive"] .media-section > div:first-child h2 {
+  font-weight: 800;
+  letter-spacing: -0.045em;
+}
+
+#root [data-experience="expressive"] .media-section > div:first-child h2::after {
+  display: inline-block;
+  width: 0.45rem;
+  height: 0.45rem;
+  margin-left: 0.55rem;
+  border-radius: 50%;
+  background: hsl(var(--primary));
+  content: "";
+  vertical-align: 0.12em;
+}
+
+#root [data-experience="expressive"] .media-section [class~="before:bg-gradient-to-r"]::before,
+#root [data-experience="expressive"] .media-section [class~="after:bg-gradient-to-l"]::after {
+  background-image: none;
+  background-color: hsl(var(--background));
+}
+
+#root [data-experience="expressive"] .expressive-media-card {
+  overflow: hidden;
+  border: 1px solid hsl(var(--border));
+  border-radius: var(--radius-xl);
+  background: hsl(var(--card));
+  box-shadow: 0 2px 6px hsl(var(--foreground) / 0.08);
+  transition: border-color 180ms ease, box-shadow 180ms ease;
+}
+
+#root [data-experience="expressive"] .expressive-media-card:hover {
+  border-color: hsl(var(--primary) / 0.55);
+  box-shadow: 0 4px 10px hsl(var(--foreground) / 0.12);
+}
+
+#root [data-experience="expressive"] .expressive-media-card [data-media-card-poster] {
+  border-radius: calc(var(--radius-xl) - var(--border-inset));
+  margin: var(--border-inset) var(--border-inset) 0;
+}
+
+#root [data-experience="expressive"] .expressive-media-card h3 {
+  font-weight: 700;
+  letter-spacing: -0.025em;
+}
+
+#root [data-experience="expressive"] .expressive-media-card .text-muted-foreground {
+  color: hsl(var(--muted-foreground));
+}
+
+html[data-experience="expressive"] [role="menu"] {
+  border-radius: var(--radius-2xl);
+  padding: 0.5rem;
+}
+
+html[data-experience="expressive"] [role="menu"] [role="menuitem"] {
+  min-height: 2.75rem;
+  margin-block: 0.125rem;
+  border-radius: var(--radius-md);
+  padding-inline: 1rem;
+}
+
+html[data-experience="expressive"] [role="menu"] [role="separator"] {
+  margin-inline: 0.5rem;
+}
+
+#root [data-experience="expressive"] nav[aria-label="Mobile main navigation"] a,
+#root [data-experience="expressive"] nav[aria-label="Mobile main navigation"] button {
+  border-radius: var(--radius-xl);
+}
+
+#root [data-experience="expressive"] button[class~="rounded-full"] {
+  border-radius: 9999px;
+}
+
+#root [data-experience="expressive"] .media-image-thumbnail {
+  border-radius: var(--radius-lg);
+}
+
+#root [data-experience="expressive"] .media-image-thumbnail img {
+  border-radius: inherit;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  #root [data-experience="expressive"] button,
+  #root [data-experience="expressive"] a,
+  #root [data-experience="expressive"] .expressive-media-card {
+    transition-duration: 0.01ms;
   }
 }
 
@@ -107,7 +422,7 @@
 .custom-scrollbar::-webkit-scrollbar-thumb {
   /* Uses the muted foreground color with some opacity for a subtle look */
   background-color: hsl(var(--muted-foreground) / 0.3);
-  border-radius: 20px;
+  border-radius: 9999px;
 }
 
 .custom-scrollbar::-webkit-scrollbar-thumb:hover {
@@ -138,7 +453,7 @@
 
 .season-ratings-scrollbar::-webkit-scrollbar-thumb {
   background-color: hsl(var(--muted-foreground) / 0.3);
-  border-radius: 20px;
+  border-radius: 9999px;
 }
 
 .season-ratings-scrollbar::-webkit-scrollbar-thumb:hover {
@@ -215,7 +530,7 @@
   margin: 0.75rem 0;
   overflow-x: auto;
   padding: 0.75rem;
-  border-radius: 0.5rem;
+  border-radius: var(--radius-md);
   background: hsl(var(--muted));
   color: hsl(var(--foreground));
 }

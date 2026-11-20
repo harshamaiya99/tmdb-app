@@ -24,7 +24,7 @@ A clean, minimal web app for browsing movies, TV shows, and people with data fro
 - Search movies, TV shows, and people
 - Deep-dive detail pages for movies, TV shows, and people
 - Connect a TMDB account to manage movie/TV watchlists, favorites, ratings, and mixed movie/TV custom lists
-- Dedicated Settings page for content country, embed links, and light/dark theme
+- Dedicated Settings page for content country, embed links, light/dark theme, and Classic/Midnight Matinee web experiences
 - About page with TMDB attribution
 - Installable as a web app from supported browsers
 - Responsive, content-first UI with reusable cards, shared media sections, and skeleton states

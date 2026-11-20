@@ -46,7 +46,7 @@ export function MediaCategoryToggle<T extends string>({
       role="group"
       aria-label={`${label} category`}
       className={cn(
-        'flex min-w-0 max-w-full items-center overflow-x-auto rounded-md border p-1 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden',
+        'media-category-toggle flex min-w-0 max-w-full items-center overflow-x-auto rounded-md border p-[var(--border-inset)] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden',
         className,
       )}
     >

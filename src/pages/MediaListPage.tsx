@@ -3,6 +3,7 @@ import { useParams, useLocation, useNavigate, useSearchParams } from 'react-rout
 import { SlidersHorizontal } from 'lucide-react';
 import * as DropdownMenu from '@radix-ui/react-dropdown-menu';
 import { Button } from '@/components/ui/button';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { MediaCard } from '@/components/MediaCard';
 import { MediaGridSkeleton } from '@/components/MediaGridSkeleton';
 import { PaginationControls } from '@/components/PaginationControls';
@@ -425,46 +426,55 @@ export function MediaListPage() {
         >
           {!languageMatch && (
             <div className="space-y-2">
-              <label htmlFor="media-language-filter" className="text-sm font-medium">Language</label>
-              <select
-                id="media-language-filter"
+              <label id="media-language-filter-label" className="text-sm font-medium">Language</label>
+              <Select
                 value={selectedLanguage}
-                onChange={(event) => updateLanguageFilter(event.target.value)}
-                className="h-9 w-full rounded-md border border-input bg-background px-3 py-1 text-sm focus:outline-none focus:ring-2 focus:ring-ring"
+                onValueChange={updateLanguageFilter}
               >
+                <SelectTrigger aria-labelledby="media-language-filter-label">
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
                 {LANGUAGE_OPTIONS.map((language) => (
-                  <option key={language.value} value={language.value}>{language.label}</option>
+                  <SelectItem key={language.value} value={language.value}>{language.label}</SelectItem>
                 ))}
-              </select>
+                </SelectContent>
+              </Select>
             </div>
           )}
 
           <div className="space-y-2">
-            <label htmlFor="media-genre-filter" className="text-sm font-medium">Genre</label>
-            <select
-              id="media-genre-filter"
+            <label id="media-genre-filter-label" className="text-sm font-medium">Genre</label>
+            <Select
               value={selectedGenre}
-              onChange={(event) => updateGenreFilter(event.target.value)}
-              className="h-9 w-full rounded-md border border-input bg-background px-3 py-1 text-sm focus:outline-none focus:ring-2 focus:ring-ring"
+              onValueChange={updateGenreFilter}
             >
+              <SelectTrigger aria-labelledby="media-genre-filter-label">
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
               {genreOptions.map((genre) => (
-                <option key={genre.value} value={genre.value}>{genre.label}</option>
+                <SelectItem key={genre.value} value={genre.value}>{genre.label}</SelectItem>
               ))}
-            </select>
+              </SelectContent>
+            </Select>
           </div>
 
           <div className="space-y-2">
-            <label htmlFor="media-sort-filter" className="text-sm font-medium">Sort by</label>
-            <select
-              id="media-sort-filter"
+            <label id="media-sort-filter-label" className="text-sm font-medium">Sort by</label>
+            <Select
               value={selectedSort}
-              onChange={(event) => updateSortFilter(event.target.value)}
-              className="h-9 w-full rounded-md border border-input bg-background px-3 py-1 text-sm focus:outline-none focus:ring-2 focus:ring-ring"
+              onValueChange={updateSortFilter}
             >
+              <SelectTrigger aria-labelledby="media-sort-filter-label">
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
               {availableSortOptions.map((option) => (
-                <option key={option.value} value={option.value}>{option.label}</option>
+                <SelectItem key={option.value} value={option.value}>{option.label}</SelectItem>
               ))}
-            </select>
+              </SelectContent>
+            </Select>
           </div>
           <div className="flex justify-end border-t pt-2">
             <Button

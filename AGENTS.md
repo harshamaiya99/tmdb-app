@@ -105,6 +105,8 @@ Before making changes, an AI should first understand the existing implementation
 - Use Tailwind utility classes for layout and styling.
 - Prefer the existing shadcn/ui-inspired primitives in [src/components/ui](src/components/ui) rather than building ad-hoc components.
 - Keep the UI visually consistent with the current dark/light theme support.
+- Corner radii must use the shared coordinated scale in `tailwind.config.js` across all themes and components. For nested surfaces, step down from the parent radius and account for the inset between them; do not introduce unrelated arbitrary radii for ordinary buttons, tiles, cards, or containers. Reserve full rounding for intentional circles/pills and tiny custom radii for data marks. Avoid hover transforms on media tiles and images that overlap or obscure adjacent content; prefer non-moving color or border feedback.
+- Whenever a component has inner and outer borders, keep the visible gap between them equal on every side. Use the shared `--border-inset` spacing token (currently `0.25rem`) for inset padding/margins, and account for the inset when coordinating nested corner radii. Apply this across themes and components.
 - Design every UI change and new feature for smartphone screens as well as larger screens. Use responsive layouts and breakpoints intentionally, keep controls comfortable to tap, and avoid narrow-screen overflow or cramped content.
 - When changing [src/components/MediaCard.tsx](src/components/MediaCard.tsx), preserve its uniform layout for people cards too, including the matching loading skeleton in [src/pages/PeopleListPage.tsx](src/pages/PeopleListPage.tsx).
 - Review cards are compact, card-click expandable, and should not show extra “Read more” text unless explicitly required by the design.
@@ -279,4 +281,3 @@ Update documentation when you change any of the following:
 - When a file is added, renamed, moved, or significantly refactored, update the project tree and any relevant descriptive notes in the same change.
 - If a file or directory has a major update in responsibility, behavior, or architecture, update the documentation description to reflect the new role immediately.
 - Treat project structure and documentation as part of the implementation, not as optional cleanup later.
-

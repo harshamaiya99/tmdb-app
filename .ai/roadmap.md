@@ -305,6 +305,10 @@ This roadmap is intentionally focused on the current project reality: a local An
 
 **Objective:** Let a user choose between the existing Cinema interface and a distinctly designed Expressive interface while keeping one web app, one route model, and the existing TMDB and account integrations.
 
+### Implementation progress
+
+The initial preference foundation is implemented: Classic (stable value `cinema`) is the validated fallback/default, and Settings can switch immediately to a browser-persisted Midnight Matinee style (stable value `expressive`), independent of light/dark mode. Settings use a section navigator for country, embed links, and appearance; the Appearance section combines experience and color-mode controls. Midnight Matinee uses a bold plum/coral/lime palette, sculpted media cards, and editorial section headings with original scoped styles. The shared router, data services, account providers, and existing page components are unchanged; independent route layouts and presentation components remain future work.
+
 ### Fit with the current application
 
 The app already has a small shared foundation that should remain the source of truth:
@@ -321,7 +325,7 @@ Treat the proposed architecture as a direction, not a mandate to move the app in
 ### Product and architecture decisions
 
 * **Cinema** remains the default and should preserve its current appearance and behavior. Shared wiring for experience selection, providers, or routing may be needed; that is not a reason to rewrite Cinema's presentation.
-* **Expressive** is a second web presentation with its own tokens, components, layouts, navigation choices, and motion. Material 3 Expressive is a design reference, not a requirement to install or claim conformance to a separate component framework.
+* **Expressive** is a second web presentation with its own original visual direction, tokens, components, layouts, navigation choices, and motion; it is not intended to emulate a specific commercial design system.
 * This roadmap is a starting point for exploration, not a fixed sequence or acceptance checklist. Change the scope, design direction, or architecture as implementation reveals new possibilities or lessons.
 * Keep existing URL paths and the shared router. The selected experience changes presentation, not domain behavior, TMDB endpoints, or account identity.
 * Keep experience selection separate from light/dark mode: a user can choose either experience and either supported color mode. Expressive may define its own light and dark palettes.

@@ -89,7 +89,7 @@ export function MediaSection({ title, items, type, category, titleAction, titleC
   });
 
   return (
-    <section className={`min-w-0 ${className ?? 'space-y-4'}`}>
+    <section className={`media-section min-w-0 ${className ?? 'space-y-4'}`}>
       <div className={cn(
         'mb-4',
         titleAction

@@ -13,6 +13,7 @@ import { useDebouncedValue } from '@/hooks/useDebouncedValue';
 import { useToast } from '@/components/ui/use-toast';
 import { useTMDBAccount } from '@/contexts/TMDBAccountContext';
 import { Footer } from '@/components/Footer';
+import { useExperience } from '@/contexts/ExperienceContext';
 
 interface LayoutProps {
   children: ReactNode;
@@ -98,6 +99,7 @@ function SearchSuggestions({
 }
 
 export function Layout({ children }: LayoutProps) {
+  const { experience } = useExperience();
   const [isMobileSearchOpen, setIsMobileSearchOpen] = useState(false);
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
@@ -258,16 +260,16 @@ export function Layout({ children }: LayoutProps) {
               ) : (
                 <DropdownMenu.Item
                   onSelect={handleConnectTMDBAccount}
-                  className="block cursor-pointer truncate rounded-sm text-sm font-medium text-foreground outline-none hover:text-primary focus:text-primary"
+                  className="flex min-h-10 cursor-pointer items-center truncate rounded-sm text-sm font-medium text-foreground outline-none hover:text-primary focus:text-primary"
                 >
                   Login to TMDB
                 </DropdownMenu.Item>
               )}
-              <span className="block truncate text-xs font-normal text-muted-foreground">
-                {isTMDBAccountConnected
-                  ? account?.name || 'Connected'
-                  : isListAccountConnected ? 'Custom lists connected' : 'Not connected'}
-              </span>
+              {(isTMDBAccountConnected || isListAccountConnected) && (
+                <span className="block truncate text-xs font-normal text-muted-foreground">
+                  {isTMDBAccountConnected ? account?.name || 'Connected' : 'Custom lists connected'}
+                </span>
+              )}
             </div>
           </div>
           {isTMDBAccountConnected && canConnectLists && !isListAccountConnected && (
@@ -343,7 +345,7 @@ export function Layout({ children }: LayoutProps) {
   );
 
   return (
-    <div className="flex min-h-screen flex-col bg-background">
+    <div data-experience={experience} className="flex min-h-screen flex-col bg-background">
       <header className="sticky top-0 z-50 border-b bg-background">
         <div className="container flex min-h-14 flex-wrap items-center justify-between gap-x-3 gap-y-2 py-2 md:h-14 md:flex-nowrap md:py-0">
           <div className="flex min-w-0 flex-1 items-center gap-2 md:flex-none">
@@ -412,7 +414,7 @@ export function Layout({ children }: LayoutProps) {
                 }}
                 className="flex min-w-0 flex-1 items-center gap-1 md:hidden"
               >
-                <div className="relative min-w-0 flex-1">
+                <div className="search-control relative flex h-10 min-w-0 flex-1 items-center overflow-hidden rounded-md border border-input bg-background">
                   <Input
                     ref={mobileSearchInputRef}
                     type="search"
@@ -426,7 +428,7 @@ export function Layout({ children }: LayoutProps) {
                     onChange={handleSearchInputChange}
                     onFocus={() => setSuggestionsOpen(true)}
                     onKeyDown={handleSearchKeyDown}
-                    className="h-10 pr-10"
+                    className="search-control-input h-full min-w-0 flex-1 border-0 bg-transparent pr-3 shadow-none focus-visible:ring-0"
                   />
                   <Button
                     type="submit"
@@ -434,7 +436,7 @@ export function Layout({ children }: LayoutProps) {
                     size="icon"
                     aria-label="Search"
                     title="Search"
-                    className="absolute right-0 top-0 h-10 w-10"
+                    className="search-control-button mr-[var(--border-inset)] h-8 w-8 shrink-0"
                   >
                     <Search className="h-4 w-4" />
                   </Button>
@@ -484,7 +486,7 @@ export function Layout({ children }: LayoutProps) {
               }}
               className="w-full md:w-52 lg:w-80"
             >
-              <div className="relative">
+              <div className="search-control relative flex h-10 items-center overflow-hidden rounded-md border border-input bg-background">
                 <Input
                   type="search"
                   role="combobox"
@@ -497,7 +499,7 @@ export function Layout({ children }: LayoutProps) {
                   onChange={handleSearchInputChange}
                   onFocus={() => setSuggestionsOpen(true)}
                   onKeyDown={handleSearchKeyDown}
-                  className="h-10 pr-10"
+                  className="search-control-input h-full min-w-0 flex-1 border-0 bg-transparent pr-3 shadow-none focus-visible:ring-0"
                 />
                 <Button
                   type="submit"
@@ -505,7 +507,7 @@ export function Layout({ children }: LayoutProps) {
                   size="icon"
                   aria-label="Search"
                   title="Search"
-                  className="absolute right-0 top-0 h-10 w-10"
+                  className="search-control-button mr-[var(--border-inset)] h-8 w-8 shrink-0"
                 >
                   <Search className="h-4 w-4" />
                 </Button>

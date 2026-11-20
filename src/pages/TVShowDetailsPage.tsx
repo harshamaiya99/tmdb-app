@@ -3,6 +3,7 @@ import { useEffect, useRef, useState } from 'react';
 import { useParams, useNavigate, Link, useSearchParams } from 'react-router-dom';
 import { ArrowLeft, ArrowRight, Calendar, Clock, ExternalLink, Star, PlayCircle, X, Users } from 'lucide-react';
 import { Button } from '@/components/ui/button';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Badge } from '@/components/ui/badge';
 import { Skeleton } from '@/components/ui/skeleton';
 import { MediaSection } from '@/components/MediaSection';
@@ -546,7 +547,7 @@ export function TVShowDetailsPage() {
               <section className="min-w-0 lg:col-span-3">
                 <div className="mb-4 flex items-start justify-between gap-4">
                   <h2 className="text-xl font-semibold">{activeCredits === 'cast' ? 'Cast' : 'Crew'}</h2>
-                  <div className="flex rounded-md border p-1" role="group" aria-label="Credits">
+                  <div className="media-category-toggle flex items-center border" role="group" aria-label="Credits">
                     <Button
                       type="button"
                       variant={activeCredits === 'cast' ? 'selected' : 'ghost'}
@@ -603,21 +604,25 @@ export function TVShowDetailsPage() {
           <div className="mt-12 pt-8 border-t">
             <div className="mb-6 flex flex-col items-stretch gap-3 sm:flex-row sm:items-center">
               <h2 className="text-2xl font-semibold leading-none">Episodes</h2>
-              <select
-                value={selectedSeason || ''}
-                onChange={(e) => {
+              <Select
+                value={selectedSeason ? String(selectedSeason) : undefined}
+                onValueChange={(value) => {
                   const newParams = new URLSearchParams(searchParams);
-                  newParams.set('season', e.target.value);
+                  newParams.set('season', value);
                   setSearchParams(newParams);
                 }}
-                className="flex h-10 w-full min-w-0 items-center justify-between rounded-md border border-input bg-background px-3 py-1 text-sm ring-offset-background placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 sm:w-[250px]"
               >
+                <SelectTrigger aria-label="Season" className="w-full min-w-0 sm:w-[250px]">
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
                 {tvShow.seasons.map((season) => (
-                  <option key={season.id} value={season.season_number}>
+                  <SelectItem key={season.id} value={String(season.season_number)}>
                     {season.name} ({season.episode_count} Episodes)
-                  </option>
+                  </SelectItem>
                 ))}
-              </select>
+                </SelectContent>
+              </Select>
             </div>
 
             {selectedSeasonDetails?.overview?.trim() && (
@@ -670,7 +675,7 @@ export function TVShowDetailsPage() {
             <section aria-labelledby="tv-media-title" className="mt-12 border-t pt-8">
               <div className="mb-6 flex flex-wrap items-center justify-between gap-3">
                 <h2 id="tv-media-title" className="text-2xl font-semibold">Media</h2>
-                <div className="flex rounded-md border p-1" role="group" aria-label="TV show media">
+                <div className="media-category-toggle flex items-center border" role="group" aria-label="TV show media">
                   <Button
                     type="button"
                     variant={activeShowMedia === 'images' ? 'selected' : 'ghost'}
@@ -705,7 +710,7 @@ export function TVShowDetailsPage() {
                         setSelectedShowImageIndex(index);
                       }}
                       aria-label={`View TV show ${image.type} ${index + 1}`}
-                      className="relative block h-32 shrink-0 overflow-hidden rounded-lg border bg-muted p-0"
+                      className="media-image-thumbnail relative block h-32 shrink-0 overflow-hidden rounded-lg border bg-muted p-0"
                       style={{ width: `${image.aspect_ratio * 8}rem` }}
                     >
                       <TMDBImage
@@ -714,7 +719,7 @@ export function TVShowDetailsPage() {
                         width={image.width}
                         height={image.height}
                         sizes={`${Math.ceil(image.aspect_ratio * 128)}px`}
-                        className="block h-full w-full object-contain transition-transform hover:scale-105"
+                        className="block h-full w-full object-contain"
                       />
                       <span className="pointer-events-none absolute left-2 top-2 rounded bg-black/65 px-2 py-1 text-[11px] font-medium capitalize text-white backdrop-blur-sm">
                         {image.type}
@@ -1010,7 +1015,7 @@ export function TVShowDetailsPage() {
                           Episode credits
                         </h3>
                         {(episodeCrew.length > 0 || episodeGuestStars.length > 0) && (
-                          <div className="flex rounded-md border p-1" role="group" aria-label="Episode credits">
+                          <div className="media-category-toggle flex items-center border" role="group" aria-label="Episode credits">
                           <Button
                             type="button"
                             variant={activeEpisodeCredits === 'guest_stars' ? 'selected' : 'ghost'}
@@ -1039,7 +1044,7 @@ export function TVShowDetailsPage() {
                             <Link
                               key={`${member.id}:${member.job}`}
                               to={`/person/${member.id}`}
-                              className="flex min-w-0 items-center gap-3 rounded-lg border p-2 transition-colors hover:bg-accent focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+                              className="episode-credit-card flex min-w-0 items-center gap-3 rounded-lg border p-2 transition-colors hover:bg-accent focus-visible:bg-accent focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
                             >
                               <div className="h-12 w-12 shrink-0 overflow-hidden rounded-md bg-muted">
                                 {member.profile_path ? (
@@ -1063,7 +1068,7 @@ export function TVShowDetailsPage() {
                             <Link
                               key={guest.id}
                               to={`/person/${guest.id}`}
-                              className="flex min-w-0 items-center gap-3 rounded-lg border p-2 transition-colors hover:bg-accent focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+                              className="episode-credit-card flex min-w-0 items-center gap-3 rounded-lg border p-2 transition-colors hover:bg-accent focus-visible:bg-accent focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
                             >
                               <div className="h-12 w-12 shrink-0 overflow-hidden rounded-md bg-muted">
                                 {guest.profile_path ? (
@@ -1087,7 +1092,7 @@ export function TVShowDetailsPage() {
                     <section aria-labelledby="episode-media-title" className="border-t pt-5">
                       <div className="mb-3 flex flex-wrap items-center justify-between gap-3">
                         <h3 id="episode-media-title" className="font-semibold">Episode media</h3>
-                        <div className="flex rounded-md border p-1" role="group" aria-label="Episode media">
+                        <div className="media-category-toggle flex items-center border" role="group" aria-label="Episode media">
                           <Button
                             type="button"
                             variant={activeEpisodeMedia === 'images' ? 'selected' : 'ghost'}

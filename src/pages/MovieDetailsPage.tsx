@@ -495,7 +495,7 @@ export function MovieDetailsPage() {
           <div className="mt-12 pt-8 border-t">
             <div className="flex items-center justify-between gap-4 mb-4">
               <h2 className="text-xl font-semibold">{activeCredits === 'cast' ? 'Cast' : 'Crew'}</h2>
-              <div className="flex rounded-md border p-1" role="group" aria-label="Credits">
+              <div className="media-category-toggle flex items-center border" role="group" aria-label="Credits">
                 <Button
                   type="button"
                   variant={activeCredits === 'cast' ? 'selected' : 'ghost'}
@@ -546,7 +546,7 @@ export function MovieDetailsPage() {
             <section aria-labelledby="movie-media-title" className="mt-12 border-t pt-8">
               <div className="mb-6 flex flex-wrap items-center justify-between gap-3">
                 <h2 id="movie-media-title" className="text-2xl font-semibold">Media</h2>
-                <div className="flex rounded-md border p-1" role="group" aria-label="Movie media">
+                <div className="media-category-toggle flex items-center border" role="group" aria-label="Movie media">
                   <Button
                     type="button"
                     variant={activeMovieMedia === 'images' ? 'selected' : 'ghost'}
@@ -582,7 +582,7 @@ export function MovieDetailsPage() {
                           setSelectedMovieImageIndex(index);
                         }}
                         aria-label={`View movie ${image.type} ${index + 1}`}
-                        className="relative block h-32 shrink-0 overflow-hidden rounded-lg border bg-muted p-0"
+                        className="media-image-thumbnail relative block h-32 shrink-0 overflow-hidden rounded-lg border bg-muted p-0"
                         style={{ width: `${image.aspect_ratio * 8}rem` }}
                       >
                         <TMDBImage
@@ -591,7 +591,7 @@ export function MovieDetailsPage() {
                           width={image.width}
                           height={image.height}
                           sizes={`${Math.ceil(image.aspect_ratio * 128)}px`}
-                          className="block h-full w-full object-contain transition-transform hover:scale-105"
+                          className="block h-full w-full object-contain"
                         />
                         <span className="pointer-events-none absolute left-2 top-2 rounded bg-black/65 px-2 py-1 text-[11px] font-medium capitalize text-white backdrop-blur-sm">
                           {image.type}
