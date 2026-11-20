@@ -307,7 +307,7 @@ This roadmap is intentionally focused on the current project reality: a local An
 
 ### Implementation progress
 
-The initial preference foundation is implemented: Classic (stable value `cinema`) is the validated fallback/default, and Settings can switch immediately to a browser-persisted Midnight Matinee style (stable value `expressive`), independent of light/dark mode. Settings use a section navigator for country, embed links, and appearance; the Appearance section combines experience and color-mode controls. Midnight Matinee uses a bold plum/coral/lime palette, sculpted media cards, and editorial section headings with original scoped styles. The shared router, data services, account providers, and existing page components are unchanged; independent route layouts and presentation components remain future work.
+The experience preference foundation is implemented: Classic (stable value `cinema`) is the validated fallback/default, and Settings can switch immediately to a browser-persisted Midnight Matinee style (stable value `expressive`), independent of light/dark mode. Settings use a section navigator for appearance, embed links, and content country. Both experiences currently share the same app shell, navigation, route structure, and page composition; Midnight Matinee applies its own scoped palette and visual styling. Further theme-specific visual refinement is the next step. A fully different shell or navigation structure is intentionally deferred.
 
 ### Fit with the current application
 

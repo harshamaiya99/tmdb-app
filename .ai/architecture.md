@@ -107,14 +107,14 @@ Keeping API logic in one place makes it easier to:
 
 ### App shell and layout
 
-- [src/components/Layout.tsx](src/components/Layout.tsx) provides the shared header, search form, navigation tabs, theme toggle, and logout action.
-- It is responsible for the persistent chrome that surrounds most page contents.
+- [src/components/Layout.tsx](../src/components/Layout.tsx) provides the shared header, search form, navigation, account menu, theme toggle, and footer for both UI experiences.
+- The selected experience changes scoped visual styles and tokens, not the shell, routes, page composition, or shared account/API behavior.
 
 ### Page components
 
 Pages live in [src/pages](src/pages):
 
-- [src/pages/HomePage.tsx](src/pages/HomePage.tsx) — displays independently selectable movie and TV categories, and handles search results
+- [src/pages/HomePage.tsx](../src/pages/HomePage.tsx) — displays independently selectable movie and TV categories, and handles search results
 - [src/pages/MediaListPage.tsx](src/pages/MediaListPage.tsx) — renders paginated lists for the main movie and TV category tabs, genres, companies, providers, and people-related media
 - [src/pages/ReleaseDateMoviesPage.tsx](src/pages/ReleaseDateMoviesPage.tsx) — renders paginated movie releases for a selected calendar date
 - [src/pages/MovieDetailsPage.tsx](src/pages/MovieDetailsPage.tsx) — shows movie metadata, cast, crew, related media, and watch links

@@ -35,6 +35,7 @@ The app is organized around a few clear layers:
 - App shell and routing live in [src/App.tsx](src/App.tsx); account access is handled through server-side sessions rather than a client-side route gate.
 - Route-level pages live in [src/pages](src/pages).
 - Reusable UI and feature components live in [src/components](src/components).
+- Classic and Midnight Matinee share the shell and route/page composition; the experience preference changes scoped styling only.
 - Shared state and app-wide context live in [src/contexts](src/contexts).
 - Reusable page-level hooks live in [src/hooks](src/hooks).
 - API integration and domain types live in [src/lib/tmdb.ts](src/lib/tmdb.ts).
