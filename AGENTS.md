@@ -35,7 +35,7 @@ The app is organized around a few clear layers:
 - App shell and routing live in [src/App.tsx](src/App.tsx); account access is handled through server-side sessions rather than a client-side route gate.
 - Route-level pages live in [src/pages](src/pages).
 - Reusable UI and feature components live in [src/components](src/components).
-- Classic and Midnight Matinee share the shell and route/page composition; the experience preference changes scoped styling only.
+- Each web experience has its own shell and visual identity. Studio uses the standard shell; Midnight Matinee and Screenroom use dedicated shells and home/search presentations while reusing shared TMDB and account behavior. Watch Tower is the project brand and remains in the footer.
 - Shared state and app-wide context live in [src/contexts](src/contexts).
 - Reusable page-level hooks live in [src/hooks](src/hooks).
 - API integration and domain types live in [src/lib/tmdb.ts](src/lib/tmdb.ts).
@@ -53,7 +53,7 @@ The app is organized around a few clear layers:
 
 - [src/App.tsx](src/App.tsx) – top-level router, public routes, and global providers
 - [src/pages](src/pages) – route pages such as home, details, lists, and account features
-- [src/components](src/components) – layout, media cards, review section, shared section composition, and shared UI wrappers
+- [src/components](src/components) – standard, Midnight Matinee, and Screenroom layouts and home/search views, media cards, review section, shared section composition, and shared UI wrappers
 - [src/components/ui](src/components/ui) – reusable base UI primitives
 - [src/contexts](src/contexts) – context providers such as title state
 - [src/hooks](src/hooks) – custom hooks, including page-title synchronization

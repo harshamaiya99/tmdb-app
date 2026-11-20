@@ -143,7 +143,7 @@ export function SettingsPage() {
     }
   };
 
-  const handleExperienceChange = (nextExperience: 'cinema' | 'expressive') => {
+  const handleExperienceChange = (nextExperience: 'cinema' | 'expressive' | 'screenroom') => {
     setExperienceError('');
     try {
       setExperience(nextExperience);
@@ -388,8 +388,9 @@ export function SettingsPage() {
                     <legend className="sr-only">Web experience</legend>
                     <div className="grid gap-3 sm:grid-cols-2">
                       {([
-                        { value: 'cinema', label: 'Classic', description: 'The familiar, minimal WATCHTOWER look.' },
+                        { value: 'cinema', label: 'Studio', description: 'A clean, considered interface for exploring film and television.' },
                         { value: 'expressive', label: 'Midnight Matinee', description: 'A bold, colorful style with cinematic character.' },
+                        { value: 'screenroom', label: 'Screenroom', description: 'A streaming-style experience built for browsing.' },
                       ] as const).map(({ value, label, description }) => (
                         <label
                           key={value}

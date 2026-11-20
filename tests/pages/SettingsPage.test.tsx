@@ -110,6 +110,7 @@ describe('SettingsPage', () => {
     );
 
     await user.click(screen.getByRole('button', { name: 'Appearance' }));
+    expect(screen.getByRole('radio', { name: /studio/i })).toBeChecked();
     await user.click(screen.getByRole('radio', { name: /midnight matinee/i }));
     expect(screen.getByRole('radio', { name: /midnight matinee/i })).toBeChecked();
     await user.click(screen.getByRole('switch', { name: 'Dark mode' }));
@@ -123,6 +124,30 @@ describe('SettingsPage', () => {
     expect(screen.getByRole('heading', { name: 'Web experience' })).toBeInTheDocument();
     expect(screen.getByRole('heading', { name: 'Appearance' })).toBeInTheDocument();
     expect(screen.queryByRole('button', { name: 'Web experience' })).not.toBeInTheDocument();
+  });
+
+  it('offers Screenroom as an independently selectable experience', async () => {
+    const user = userEvent.setup();
+    render(
+      <ThemeProvider>
+        <TitleProvider>
+          <MemoryRouter>
+            <ExperienceProvider>
+              <EmbedSettingsProvider>
+                <SettingsPage />
+              </EmbedSettingsProvider>
+            </ExperienceProvider>
+          </MemoryRouter>
+        </TitleProvider>
+      </ThemeProvider>,
+    );
+
+    await user.click(screen.getByRole('button', { name: 'Appearance' }));
+    await user.click(screen.getByRole('radio', { name: /screenroom/i }));
+
+    expect(screen.getByRole('radio', { name: /screenroom/i })).toBeChecked();
+    expect(localStorage.getItem('ui_experience')).toBe('screenroom');
+    await waitFor(() => expect(document.documentElement).toHaveAttribute('data-experience', 'screenroom'));
   });
 
   it('shows only the chosen settings section and marks its navigation item current', async () => {

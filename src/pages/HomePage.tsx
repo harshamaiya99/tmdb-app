@@ -13,6 +13,9 @@ import { useCachedQuery } from '@/hooks/useCachedQuery';
 import { useDebouncedValue } from '@/hooks/useDebouncedValue';
 import { usePageTitle } from '@/hooks/usePageTitle';
 import { useEmbedSettings } from '@/contexts/EmbedSettingsContext';
+import { useExperience } from '@/contexts/ExperienceContext';
+import { ScreenroomHomePage } from '@/components/ScreenroomHomePage';
+import { MidnightMatineeHomePage } from '@/components/MidnightMatineeHomePage';
 
 function SearchMessage({ message, error = false }: { message: string; error?: boolean }) {
   return (
@@ -36,6 +39,7 @@ function shuffleFeaturedItems(items: FeaturedMedia[]): FeaturedMedia[] {
 
 export function HomePage() {
   const [searchParams, setSearchParams] = useSearchParams();
+  const { experience } = useExperience();
   const [featuredIndex, setFeaturedIndex] = useState(0);
   const [displayedFeatured, setDisplayedFeatured] = useState<DisplayedFeatured | null>(null);
   const [titlesWithoutTrailers, setTitlesWithoutTrailers] = useState<Set<string>>(() => new Set());
@@ -213,6 +217,32 @@ export function HomePage() {
   );
   const searchLoading = hasActiveSearch && (!searchReady || searchMovies.loading || searchTV.loading || searchPeople.loading);
   const primaryError = movieList.error || tvList.error || trendingMovies.error || trendingTV.error || featuredDetails.error;
+
+  const presentationProps = {
+    hasActiveSearch,
+    searchTerm,
+    primaryLoading,
+    searchLoading,
+    primaryError: primaryError ?? undefined,
+    featured: displayedFeatured ?? undefined,
+    featuredDetailsError: featuredDetails.error ?? undefined,
+    searchMovies: searchMovies.data?.results ?? [],
+    searchMoviesError: searchMovies.error ?? undefined,
+    searchTV: searchTV.data?.results ?? [],
+    searchTVError: searchTV.error ?? undefined,
+    searchPeople: searchPeople.data?.results ?? [],
+    searchPeopleError: searchPeople.error ?? undefined,
+    movieItems: movieList.data?.results ?? [],
+    tvItems: tvList.data?.results ?? [],
+    movieCategory,
+    tvCategory,
+    onMovieCategoryChange: (value: typeof MOVIE_CATEGORIES[number]['value']) => updateCategory('movie_category', value),
+    onTVCategoryChange: (value: typeof TV_CATEGORIES[number]['value']) => updateCategory('tv_category', value),
+    region,
+  };
+
+  if (experience === 'screenroom') return <ScreenroomHomePage {...presentationProps} />;
+  if (experience === 'expressive') return <MidnightMatineeHomePage {...presentationProps} />;
 
   return (
     <main className="container py-6">

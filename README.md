@@ -24,7 +24,7 @@ A clean, minimal web app for browsing movies, TV shows, and people with data fro
 - Search movies, TV shows, and people
 - Deep-dive detail pages for movies, TV shows, and people
 - Connect a TMDB account to manage movie/TV watchlists, favorites, ratings, and mixed movie/TV custom lists
-- Dedicated Settings page for content country, embed links, light/dark theme, and Classic/Midnight Matinee web experiences
+- Dedicated Settings page for content country, embed links, light/dark theme, and Studio, Midnight Matinee, and Screenroom web experiences
 - About page with TMDB attribution
 - Installable as a web app from supported browsers
 - Responsive, content-first UI with reusable cards, shared media sections, and skeleton states
@@ -167,7 +167,7 @@ The site can be installed as an app from supported browsers when served over HTT
 │   │   ├── CreditsCarousel.tsx             # Cast and crew carousel UI
 │   │   ├── EpisodesRatingOverview.tsx      # Episode rating overview and summary
 │   │   ├── Footer.tsx                      # Shared site footer
-│   │   ├── Layout.tsx                      # Header, navigation, search, and profile controls
+│   │   ├── Layout.tsx                      # Studio shell and experience shell selector
 │   │   ├── LazySection.tsx                 # Defer rendering until a section is near the viewport
 │   │   ├── MediaCard.tsx                   # Reusable movie, TV, and person card
 │   │   ├── MediaCategoryToggle.tsx         # Movie/TV content toggle control
@@ -177,6 +177,10 @@ The site can be installed as an app from supported browsers when served over HTT
 │   │   ├── PaginationControls.tsx          # Page navigation controls
 │   │   ├── RatingDialog.tsx                # Rating modal and controls
 │   │   ├── ReviewSection.tsx               # Review cards with Markdown rendering
+│   │   ├── MidnightMatineeHomePage.tsx      # Midnight Matinee home and search composition
+│   │   ├── MidnightMatineeLayout.tsx        # Midnight Matinee sidebar and mobile navigation shell
+│   │   ├── ScreenroomHomePage.tsx           # Streaming-style Screenroom home and search views
+│   │   ├── ScreenroomLayout.tsx             # Screenroom navigation, search, and account shell
 │   │   ├── ThemeToggle.tsx                 # Light/dark theme toggle
 │   │   ├── TMDBImage.tsx                  # Responsive TMDB image loader and fallback
 │   │   ├── TVEpisodeRatingAction.tsx       # Per-episode rating action UI
@@ -227,6 +231,9 @@ The site can be installed as an app from supported browsers when served over HTT
 │   ├── components/
 │   │   ├── AccountCallbackPage.test.tsx     # OAuth callback page behavior
 │   │   ├── AccountMediaActions.test.tsx     # Account media action behavior
+│   │   ├── Layout.test.tsx                  # Experience shell routing and branding
+│   │   ├── MidnightMatineeHomePage.test.tsx # Midnight Matinee home/search behavior
+│   │   ├── ScreenroomHomePage.test.tsx      # Screenroom home/search behavior
 │   │   ├── Footer.test.tsx                  # Footer rendering behavior
 │   │   ├── MediaCard.test.tsx               # Media card rendering behavior
 │   │   ├── PaginationControls.test.tsx      # Pagination logic and keyboard behavior

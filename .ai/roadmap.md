@@ -303,11 +303,11 @@ This roadmap is intentionally focused on the current project reality: a local An
 
 ## Multiple web UI experiences
 
-**Objective:** Let a user choose between the existing Cinema interface and a distinctly designed Expressive interface while keeping one web app, one route model, and the existing TMDB and account integrations.
+**Objective:** Let a user choose among Studio, Midnight Matinee, and Screenroom web experiences while keeping one web app, one route model, and the existing TMDB and account integrations.
 
 ### Implementation progress
 
-The experience preference foundation is implemented: Classic (stable value `cinema`) is the validated fallback/default, and Settings can switch immediately to a browser-persisted Midnight Matinee style (stable value `expressive`), independent of light/dark mode. Settings use a section navigator for appearance, embed links, and content country. Both experiences currently share the same app shell, navigation, route structure, and page composition; Midnight Matinee applies its own scoped palette and visual styling. Further theme-specific visual refinement is the next step. A fully different shell or navigation structure is intentionally deferred.
+The experience preference foundation is implemented: Studio (stable value `cinema`) is the validated fallback/default, and Settings can switch immediately to browser-persisted Midnight Matinee (`expressive`) or Screenroom (`screenroom`), independent of light/dark mode. Settings use a section navigator for appearance, embed links, and content country. Each experience now has its own shell: Studio keeps the standard navigation, Midnight Matinee has a desktop library sidebar and mobile bottom navigation, and Screenroom has its own streaming-style header/navigation. Midnight Matinee and Screenroom each have distinct home/search presentations while sharing HomePage's TMDB query orchestration, account context, service layer, and media components. All keep Watch Tower branding in the shared footer; other routes retain their existing page compositions inside the selected shell.
 
 ### Fit with the current application
 
@@ -324,14 +324,15 @@ Treat the proposed architecture as a direction, not a mandate to move the app in
 
 ### Product and architecture decisions
 
-* **Cinema** remains the default and should preserve its current appearance and behavior. Shared wiring for experience selection, providers, or routing may be needed; that is not a reason to rewrite Cinema's presentation.
-* **Expressive** is a second web presentation with its own original visual direction, tokens, components, layouts, navigation choices, and motion; it is not intended to emulate a specific commercial design system.
+* **Studio** (stable value `cinema`) remains the default and should preserve its current appearance and behavior. Shared wiring for experience selection, providers, or routing may be needed; that is not a reason to rewrite its presentation.
+* **Midnight Matinee** is an original editorial theatre-inspired direction with its own shell, navigation, home/search composition, and scoped colors, tokens, and component styling.
+* **Screenroom** is an original streaming-style experience with its own shell and home/search composition. Its visual identity should not copy a commercial service's branding or exact interface.
 * This roadmap is a starting point for exploration, not a fixed sequence or acceptance checklist. Change the scope, design direction, or architecture as implementation reveals new possibilities or lessons.
 * Keep existing URL paths and the shared router. The selected experience changes presentation, not domain behavior, TMDB endpoints, or account identity.
-* Keep experience selection separate from light/dark mode: a user can choose either experience and either supported color mode. Expressive may define its own light and dark palettes.
+* Keep experience selection separate from light/dark mode: a user can choose any experience and either supported color mode. Each experience may define its own light and dark palettes.
 * Initially persist the selected experience in browser local storage, matching the current theme and settings model. Do not promise login restoration or cross-device synchronization: the app has no app-owned profile/preferences API, and a TMDB connection does not provide one. Revisit server sync only after defining an appropriate identity, API contract, privacy behavior, and disconnected-user fallback.
 * Retain global providers and shared services above experience-specific presentation where that fits. Keep navigation, data, loading/error states, and actions behaviorally consistent while allowing each experience to render them differently.
-* Scope experience-specific styles and tokens so Expressive cannot unintentionally change Cinema. Preserve semantic color roles, accessible contrast, keyboard behavior, and reduced-motion support.
+* Scope experience-specific styles and tokens so one experience cannot unintentionally change another. Preserve semantic color roles, accessible contrast, keyboard behavior, and reduced-motion support.
 * Liquid Glass, Cinematic, Retro, and other experiences are optional experiments, not commitments. Explore them whenever it is useful; the roadmap does not require waiting for complete parity first.
 
 ### Experience independence
@@ -339,7 +340,7 @@ Treat the proposed architecture as a direction, not a mandate to move the app in
 Each experience should be independently understandable and maintainable as a presentation:
 
 * Each owns its design tokens, visual components, layouts, navigation presentation, responsive behavior, and interaction patterns.
-* Neither experience should depend on the other experience's components or styles. Shared primitives are appropriate only when they are genuinely presentation-neutral or intentionally part of a shared foundation.
+* Experiences should not depend on one another's components or styles. Shared primitives are appropriate only when they are genuinely presentation-neutral or intentionally part of a shared foundation.
 * Both can consume the existing TMDB service, account context, and other shared functionality. Extract hooks, services, or view models when that creates a useful seam, rather than forcing every page into a generic abstraction.
 * Adding or changing an experience may require updates to shared routing, selection, registration, or providers. It should not require changing another experience's presentation unless that presentation is intentionally being improved too.
 * Independence is a design goal, not a ban on experiments. Temporary duplication, prototypes, and architectural changes are acceptable learning tools; consolidate shared behavior when doing so improves clarity or reliability.
@@ -348,7 +349,7 @@ Each experience should be independently understandable and maintainable as a pre
 
 Use a route/feature inventory to understand the breadth of the app and track which parts of each experience are implemented. It should include the home and search flows; movie, TV, person, and episode details; media and people lists; release dates; settings; TMDB connection and callback; watchlists, favorites, ratings, and custom lists; loading, empty, and failure states.
 
-Feature parity is a useful long-term direction, not a release gate. It is fine to launch or keep Expressive intentionally partial while exploring a particular page, interaction, or design system; make the current coverage clear so the difference is understood. When implementing a feature in both experiences, verify meaningful actions and account/API outcomes, not only that the route renders. Update the inventory as implementation evolves.
+Feature parity is a useful long-term direction, not a release gate. Experiences may remain intentionally partial while exploring a particular page, interaction, or design system; make the current coverage clear so the difference is understood. When implementing a feature in multiple experiences, verify meaningful actions and account/API outcomes, not only that the route renders. Update the inventory as implementation evolves.
 
 ### Implementation roadmap
 
@@ -356,7 +357,7 @@ Feature parity is a useful long-term direction, not a release gate. It is fine t
 
 * Map current routes, shared providers, existing light/dark behavior, and interactive features.
 * Mark which behaviors are already centralized (TMDB service, account context, shared hooks/components) and which page-level data/presentation logic is currently coupled.
-* Choose a stable experience identifier (`cinema` or `expressive`), Cinema as the fallback/default, and browser-local preference storage.
+* Choose stable experience identifiers (`cinema`, `expressive`, and `screenroom`), Studio as the fallback/default, and browser-local preference storage.
 * Define an initial route/feature inventory and visual/accessibility baseline for representative desktop and narrow-mobile widths.
 
 **Exit criteria:** The plan identifies a small first vertical slice and explicitly preserves existing routes, shared providers, account flows, and light/dark preference behavior.
@@ -365,24 +366,24 @@ Feature parity is a useful long-term direction, not a release gate. It is fine t
 
 * Add an experience state/selection boundary and choose an experience composition that is clear for the current app. Keep route definitions and common providers in `src/App.tsx` where appropriate; experience-specific composition may use dedicated page or layout implementations.
 * Add a Settings control for the experience, with clear labels, immediate preview/switching, and a visible selected state.
-* Persist and validate the preference locally; unknown, unavailable, or missing values should safely select Cinema.
+* Persist and validate the preference locally; unknown, unavailable, or missing values should safely select Studio.
 * Preserve the current URL, search query, filters, pagination, and other route state during a switch whenever those states are encoded in the URL or can be preserved without adding fragile synchronization.
 * Keep theme selection independent and ensure the existing saved light/dark choice continues to work after switching.
 
 **Exit criteria:** The selector survives reloads in the same browser, an invalid stored value does not break startup, and switching does not log the user out or alter account/API behavior.
 
-#### Phase 3 — Expressive design foundation and vertical slice
+#### Phase 3 — Experience design foundation and vertical slice
 
-* Define Expressive-specific color, typography, shape, spacing, elevation, focus, and motion tokens. Scope them to the selected experience rather than unintentionally replacing Cinema's global tokens.
+* Define each experience's color, typography, shape, spacing, elevation, focus, and motion tokens. Scope them to the selected experience rather than unintentionally replacing another experience's tokens.
 * Build the components and layout pieces that the design calls for. Avoid speculative framework work, but do not limit the experiment to the existing component library.
-* Implement one representative route and shared shell end to end, including loading, empty, error, navigation, and responsive states. Choose routes that exercise real app behavior (for example, home/search and a media detail) rather than a static mock screen.
+* Implement representative routes and shells end to end, including loading, empty, error, navigation, and responsive states. Midnight Matinee and Screenroom have distinct shells and home/search presentations; they reuse shared data fetching and account behavior.
 * Respect reduced-motion settings and verify contrast, focus visibility, semantic controls, and touch target sizing.
 
-**Exit criteria:** The vertical slice uses the existing TMDB service and providers, is visually distinct, works at desktop and narrow mobile widths, and causes no visual or behavioral regression in Cinema.
+**Exit criteria:** The vertical slice uses the existing TMDB service and providers, is visually distinct, works at desktop and narrow mobile widths, and causes no visual or behavioral regression in Studio.
 
 #### Phase 4 — Expand route coverage incrementally
 
-* Implement Expressive routes in priority order using the parity inventory, sharing data-fetching/business logic and reusing only presentation-neutral components.
+* Implement additional routes for experiences in priority order using the parity inventory, sharing data-fetching/business logic and reusing only presentation-neutral components.
 * Extract hooks or view models from pages only when needed to prevent meaningful logic duplication; keep one-off logic local rather than creating a speculative feature framework.
 * Design each experience's responsive layout independently. Preserve intentional carousel behavior, safe areas, accessible dialogs, and the existing route model.
 * As coverage grows, consider account actions, settings, and loading/empty/error states alongside the main browsing routes; choose the next slice based on what is useful to build and learn.
@@ -392,11 +393,11 @@ Feature parity is a useful long-term direction, not a release gate. It is fine t
 #### Phase 5 — Verification and release
 
 * Add focused tests for preference persistence/fallback, switching, and representative experience-specific rendering; test shared actions against the existing service/context contracts where useful.
-* Run the existing test suite and production build. Exercise the routes and features touched by the current experiment in both experiences.
+* Run the existing test suite and production build. Exercise the routes and features touched by the current experiment in each affected experience.
 * Check the layouts and interactions being changed at desktop and narrow smartphone widths; consider keyboard navigation, focus, contrast, reduced motion, theme combinations, loading/error states, and unintended horizontal overflow.
 * Confirm that switching experiences preserves URL-based state, active TMDB connection state, and existing browser settings where those behaviors are in scope.
 
-**Progress check:** The chosen scope works, Cinema remains the default unless intentionally changed, and any known gaps or behavior differences are documented. Validation should fit the experiment; it need not wait for full feature parity.
+**Progress check:** The chosen scope works, Studio remains the default unless intentionally changed, and any known gaps or behavior differences are documented. Validation should fit the experiment; it need not wait for full feature parity.
 
 #### Phase 6 — Evaluate future experiences
 
@@ -410,4 +411,4 @@ Explore another experience whenever curiosity or a design question motivates it.
 
 ### Recommended first milestone
 
-Deliver the experience preference and a working Expressive slice while Cinema remains the default and retains its current user-facing behavior. Use real app functionality to explore how far the presentation can diverge, then decide whether to expand coverage, refine the architecture, or start another design experiment.
+The experience preference and initial presentation slices are implemented: Studio remains the default; Midnight Matinee and Screenroom each have their own shell and home/search view, while reusing shared services and account behavior. The next step is to use the route/feature inventory to choose which additional routes to adapt, then record remaining behavior or responsive gaps without duplicating TMDB or account logic.

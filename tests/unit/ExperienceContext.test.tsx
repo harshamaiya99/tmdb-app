@@ -9,6 +9,7 @@ function ExperienceProbe() {
     <>
       <p>Current experience: {experience}</p>
       <button type="button" onClick={() => setExperience('expressive')}>Choose Expressive</button>
+      <button type="button" onClick={() => setExperience('screenroom')}>Choose Screenroom</button>
     </>
   );
 }
@@ -58,5 +59,20 @@ describe('ExperienceProvider', () => {
     );
 
     expect(screen.getByText('Current experience: expressive')).toBeInTheDocument();
+  });
+
+  it('accepts and persists the Screenroom experience', async () => {
+    const user = userEvent.setup();
+    render(
+      <ExperienceProvider>
+        <ExperienceProbe />
+      </ExperienceProvider>,
+    );
+
+    await user.click(screen.getByRole('button', { name: 'Choose Screenroom' }));
+
+    expect(screen.getByText('Current experience: screenroom')).toBeInTheDocument();
+    expect(localStorage.getItem('ui_experience')).toBe('screenroom');
+    expect(document.documentElement).toHaveAttribute('data-experience', 'screenroom');
   });
 });

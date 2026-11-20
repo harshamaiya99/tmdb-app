@@ -8,7 +8,7 @@ import {
   type ReactNode,
 } from 'react';
 
-export type UIExperience = 'cinema' | 'expressive';
+export type UIExperience = 'cinema' | 'expressive' | 'screenroom';
 
 interface ExperienceContextValue {
   experience: UIExperience;
@@ -20,9 +20,9 @@ const ExperienceContext = createContext<ExperienceContextValue | null>(null);
 
 function readExperience(): UIExperience {
   try {
-    return window.localStorage.getItem(EXPERIENCE_STORAGE_KEY) === 'expressive'
-      ? 'expressive'
-      : 'cinema';
+    const savedExperience = window.localStorage.getItem(EXPERIENCE_STORAGE_KEY);
+    if (savedExperience === 'expressive' || savedExperience === 'screenroom') return savedExperience;
+    return 'cinema';
   } catch {
     return 'cinema';
   }

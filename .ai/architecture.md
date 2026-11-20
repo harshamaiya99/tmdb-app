@@ -23,7 +23,7 @@ The main application shell is defined in [src/App.tsx](../src/App.tsx). It wires
 - global providers such as the title, theme, and UI experience contexts
 - the toast container
 
-The UI experience preference (`cinema` or `expressive`) is stored locally in the current browser and applied at the document root. It changes presentation only; routes, TMDB services, account identity, content settings, and light/dark mode remain shared.
+The UI experience preference (`cinema`, `expressive`, or `screenroom`) is stored locally in the current browser and applied at the document root. The experiences share routes, TMDB services, account identity, content settings, and light/dark mode, but each has its own shell and visual composition. Studio uses the standard shell, Midnight Matinee uses a desktop library sidebar with mobile bottom navigation, and Screenroom uses its own streaming-style navigation.
 
 ### Authentication flow
 
@@ -107,8 +107,9 @@ Keeping API logic in one place makes it easier to:
 
 ### App shell and layout
 
-- [src/components/Layout.tsx](../src/components/Layout.tsx) provides the shared header, search form, navigation, account menu, theme toggle, and footer for both UI experiences.
-- The selected experience changes scoped visual styles and tokens, not the shell, routes, page composition, or shared account/API behavior.
+- [src/components/Layout.tsx](../src/components/Layout.tsx) selects the Studio, [src/components/MidnightMatineeLayout.tsx](../src/components/MidnightMatineeLayout.tsx), or [src/components/ScreenroomLayout.tsx](../src/components/ScreenroomLayout.tsx) shell.
+- Each experience has its own shell and home/search presentation. The shared [src/pages/HomePage.tsx](../src/pages/HomePage.tsx) orchestrates TMDB requests and passes data into [src/components/MidnightMatineeHomePage.tsx](../src/components/MidnightMatineeHomePage.tsx) or [src/components/ScreenroomHomePage.tsx](../src/components/ScreenroomHomePage.tsx) for rendering. Neither presentation duplicates catalog requests.
+- Other routes retain their existing page compositions within the selected shell. All experiences share routing, account/API behavior, and the Watch Tower footer.
 
 ### Page components
 

@@ -28,7 +28,7 @@ export function MediaCard({ item, type, metadataAction }: MediaCardProps) {
   return (
     <Card className={`group relative flex h-full flex-col overflow-hidden border border-transparent bg-card transition-colors hover:border-primary/40 ${
       experience === 'expressive' ? 'expressive-media-card' : ''
-    }`}>
+    }${experience === 'screenroom' ? ' screenroom-media-card' : ''}`}>
       <Link
         to={isPerson ? `/person/${item.id}` : `/${type}/${item.id}`}
         aria-label={`View ${title}`}

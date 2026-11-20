@@ -5,7 +5,6 @@ import * as DropdownMenu from '@radix-ui/react-dropdown-menu';
 import { Link, NavLink, useNavigate, useSearchParams, useLocation } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { useTitle } from '@/contexts/TitleContext';
 import { tmdbService } from '@/lib/tmdb';
 import { TMDBImage } from '@/components/TMDBImage';
 import { useCachedQuery } from '@/hooks/useCachedQuery';
@@ -14,6 +13,8 @@ import { useToast } from '@/components/ui/use-toast';
 import { useTMDBAccount } from '@/contexts/TMDBAccountContext';
 import { Footer } from '@/components/Footer';
 import { useExperience } from '@/contexts/ExperienceContext';
+import { ScreenroomLayout } from '@/components/ScreenroomLayout';
+import { MidnightMatineeLayout } from '@/components/MidnightMatineeLayout';
 
 interface LayoutProps {
   children: ReactNode;
@@ -100,12 +101,17 @@ function SearchSuggestions({
 
 export function Layout({ children }: LayoutProps) {
   const { experience } = useExperience();
+  if (experience === 'screenroom') return <ScreenroomLayout>{children}</ScreenroomLayout>;
+  if (experience === 'expressive') return <MidnightMatineeLayout>{children}</MidnightMatineeLayout>;
+  return <StandardLayout>{children}</StandardLayout>;
+}
+
+function StandardLayout({ children }: LayoutProps) {
   const [isMobileSearchOpen, setIsMobileSearchOpen] = useState(false);
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
   const [searchQuery, setSearchQuery] = useState('');
   const [suggestionsOpen, setSuggestionsOpen] = useState(false);
-  const { title } = useTitle();
   const { toast } = useToast();
   const {
     account,
@@ -345,7 +351,7 @@ export function Layout({ children }: LayoutProps) {
   );
 
   return (
-    <div data-experience={experience} className="flex min-h-screen flex-col bg-background">
+    <div data-experience="cinema" className="flex min-h-screen flex-col bg-background">
       <header className="sticky top-0 z-50 border-b bg-background">
         <div className="container flex min-h-14 flex-wrap items-center justify-between gap-x-3 gap-y-2 py-2 md:h-14 md:flex-nowrap md:py-0">
           <div className="flex min-w-0 flex-1 items-center gap-2 md:flex-none">
@@ -364,31 +370,12 @@ export function Layout({ children }: LayoutProps) {
             <Link
               to="/"
               className={`flex min-w-0 items-center gap-2 ${isMobileSearchOpen ? 'hidden md:flex' : ''}`}
+              aria-label="Studio home"
             >
-              {!showBackButton && (
-                <img
-                  src={`${import.meta.env.BASE_URL}watch-tower_logo.png`}
-                  alt=""
-                  aria-hidden="true"
-                  className="h-7 w-7 shrink-0 rounded-md object-contain"
-                />
-              )}
-              {!showBackButton && (
-                <img
-                  src={`${import.meta.env.BASE_URL}watch-tower_text.png`}
-                  alt="WATCHTOWER"
-                  className="h-4 w-auto max-w-[120px] object-contain"
-                />
-              )}
-              {showBackButton && (
-                <span
-                  className={`min-w-0 truncate font-bold ${
-                    showBackButton ? 'max-w-[calc(100vw-16rem)]' : 'max-w-[calc(100vw-13.5rem)]'
-                  } md:max-w-none`}
-                >
-                  {title}
-                </span>
-              )}
+              <span className="studio-brand">
+                <span className="studio-brand-mark" aria-hidden="true"><Film className="h-4 w-4" /></span>
+                <span>STUDIO</span>
+              </span>
             </Link>
             {!isMobileSearchOpen && (
               <Button
