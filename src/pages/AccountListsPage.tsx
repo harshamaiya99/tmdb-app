@@ -10,6 +10,7 @@ import { PaginationControls } from '@/components/PaginationControls';
 import { MediaCategoryToggle, MEDIA_TYPE_OPTIONS } from '@/components/MediaCategoryToggle';
 import { MediaGridSkeleton } from '@/components/MediaGridSkeleton';
 import { useTMDBAccount } from '@/contexts/TMDBAccountContext';
+import { useEmbedSettings } from '@/contexts/EmbedSettingsContext';
 import { useCachedQuery } from '@/hooks/useCachedQuery';
 import { usePageTitle } from '@/hooks/usePageTitle';
 import { usePagination } from '@/hooks/usePagination';
@@ -18,6 +19,7 @@ import { tmdbService, type TMDBUserListItem } from '@/lib/tmdb';
 import { useToast } from '@/components/ui/use-toast';
 import { TMDBImage } from '@/components/TMDBImage';
 import { Input } from '@/components/ui/input';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 
 const USER_LIST_PAGE_SIZE = 20;
 
@@ -41,9 +43,19 @@ export function AccountListsPage() {
   } = useTMDBAccount();
   const { toast } = useToast();
   const navigate = useNavigate();
+  const { region } = useEmbedSettings();
   const { page, setPage, searchParams, setSearchParams } = usePagination();
   const [revision, setRevision] = useState(0);
   const [pendingMediaKey, setPendingMediaKey] = useState<string | null>(null);
+  const [isCreatingList, setIsCreatingList] = useState(false);
+  const [isSubmittingCreate, setIsSubmittingCreate] = useState(false);
+  const [newListName, setNewListName] = useState('');
+  const [newListDescription, setNewListDescription] = useState('');
+  const [newListIsPublic, setNewListIsPublic] = useState(false);
+  const [searchType, setSearchType] = useState<'movie' | 'tv'>('movie');
+  const [listSearchQuery, setListSearchQuery] = useState('');
+  const [submittedSearchQuery, setSubmittedSearchQuery] = useState('');
+  const [searchRequestRevision, setSearchRequestRevision] = useState(0);
   const [isDeleting, setIsDeleting] = useState(false);
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
   const deleteCancelButtonRef = useRef<HTMLButtonElement>(null);
@@ -83,6 +95,18 @@ export function AccountListsPage() {
     { enabled: isListAccountConnected && Boolean(listId) && mediaType !== 'all' },
   );
   const list = detailQuery.data;
+  const listSearchResultsQuery = useCachedQuery(
+    `account-list-search:${listAccountId}:${listId}:${searchType}:${region}:${submittedSearchQuery.toLowerCase()}:${searchRequestRevision}`,
+    async (signal) => {
+      if (searchType === 'movie') {
+        const response = await tmdbService.searchMovies(submittedSearchQuery, 1, { signal }, region);
+        return response.results.map((item) => ({ ...item, media_type: 'movie' as const }));
+      }
+      const response = await tmdbService.searchTVShows(submittedSearchQuery, 1, { signal });
+      return response.results.map((item) => ({ ...item, media_type: 'tv' as const }));
+    },
+    { enabled: isListAccountConnected && Boolean(list) && Boolean(listId) && Boolean(submittedSearchQuery) },
+  );
   usePageTitle(list ? list.name : 'Your Lists');
 
   const handleMediaTypeChange = (nextType: 'all' | 'movie' | 'tv') => {
@@ -91,6 +115,58 @@ export function AccountListsPage() {
     else nextParams.set('type', nextType);
     nextParams.delete('page');
     setSearchParams(nextParams);
+  };
+
+  const handleCreateList = async (event: FormEvent<HTMLFormElement>) => {
+    event.preventDefault();
+    const name = newListName.trim();
+    if (!name) return;
+    setIsSubmittingCreate(true);
+    try {
+      const createdList = await tmdbService.createUserList(
+        name,
+        newListDescription.trim(),
+        newListIsPublic,
+        region || 'US',
+      );
+      invalidateAccountCache();
+      toast({ title: `Created ${name}` });
+      navigate(`/account/lists/${createdList.id}`);
+    } catch (error) {
+      toast({
+        title: 'Could not create list',
+        description: error instanceof Error ? error.message : 'Please try again.',
+        variant: 'destructive',
+      });
+    } finally {
+      setIsSubmittingCreate(false);
+    }
+  };
+
+  const handleSearchListItems = (event: FormEvent<HTMLFormElement>) => {
+    event.preventDefault();
+    setSubmittedSearchQuery(listSearchQuery.trim());
+    setSearchRequestRevision((value) => value + 1);
+  };
+
+  const handleAddItem = async (item: TMDBUserListItem) => {
+    if (!listId) return;
+    const mediaKey = `${item.media_type}:${item.id}`;
+    setPendingMediaKey(mediaKey);
+    try {
+      await tmdbService.addMediaToUserList(listId, item.media_type, item.id);
+      invalidateAccountCache();
+      setRevision((value) => value + 1);
+      toast({ title: `Added ${item.media_type === 'movie' ? item.title : item.name} to list` });
+    } catch (error) {
+      toast({
+        title: 'Could not add title to list',
+        description: error instanceof Error ? error.message : 'Please try again.',
+        variant: 'destructive',
+      });
+    } finally {
+      setPendingMediaKey(null);
+    }
   };
 
   const handleRemoveItem = async (mediaType: 'movie' | 'tv', mediaId: number) => {
@@ -308,6 +384,71 @@ export function AccountListsPage() {
           </form>
         )}
 
+        <section aria-labelledby="add-list-items-title" className="space-y-3 rounded-lg border p-4">
+          <div>
+            <h2 id="add-list-items-title" className="font-semibold">Add titles to this list</h2>
+            <p className="text-sm text-muted-foreground">Search for a movie or TV show to add.</p>
+          </div>
+          <form onSubmit={handleSearchListItems} className="grid gap-2 sm:grid-cols-[minmax(0,1fr)_auto_auto]">
+            <label className="sr-only" htmlFor={`list-item-search-${listId}`}>Search titles</label>
+            <Input
+              id={`list-item-search-${listId}`}
+              type="search"
+              value={listSearchQuery}
+              placeholder="Search titles"
+              onChange={(event) => setListSearchQuery(event.currentTarget.value)}
+            />
+            <Select value={searchType} onValueChange={(value) => setSearchType(value === 'tv' ? 'tv' : 'movie')}>
+              <SelectTrigger aria-label="Title type" className="sm:w-36">
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="movie">Movies</SelectItem>
+                <SelectItem value="tv">TV shows</SelectItem>
+              </SelectContent>
+            </Select>
+            <Button type="submit" disabled={!list || !listSearchQuery.trim()}>Search</Button>
+          </form>
+          {submittedSearchQuery && (
+            <div aria-live="polite">
+              {listSearchResultsQuery.loading ? (
+                <p className="py-2 text-sm text-muted-foreground">Searching…</p>
+              ) : listSearchResultsQuery.error ? (
+                <Alert variant="destructive"><AlertDescription>{listSearchResultsQuery.error.message}</AlertDescription></Alert>
+              ) : listSearchResultsQuery.data?.length ? (
+                <ul className="space-y-2">
+                  {listSearchResultsQuery.data.map((item) => {
+                    const existingIds = [
+                      ...(list?.object_ids?.[item.media_type] ?? []).map(Number),
+                      ...(list?.results
+                        .filter((existingItem) => existingItem.media_type === item.media_type)
+                        .map((existingItem) => existingItem.id) ?? []),
+                    ];
+                    const isAdded = existingIds.includes(item.id);
+                    const title = item.media_type === 'movie' ? item.title : item.name;
+                    return (
+                      <li key={`${item.media_type}:${item.id}`} className="flex items-center justify-between gap-3 rounded-md border p-3">
+                        <span className="min-w-0 truncate text-sm">{title}</span>
+                        <Button
+                          type="button"
+                          size="sm"
+                          variant={isAdded ? 'selected' : 'outline'}
+                          disabled={!list || isAdded || pendingMediaKey !== null}
+                          onClick={() => void handleAddItem(item)}
+                        >
+                          {isAdded ? 'Added' : pendingMediaKey === `${item.media_type}:${item.id}` ? 'Adding…' : 'Add to list'}
+                        </Button>
+                      </li>
+                    );
+                  })}
+                </ul>
+              ) : (
+                <p className="py-2 text-sm text-muted-foreground">No matching titles found.</p>
+              )}
+            </div>
+          )}
+        </section>
+
         {isDeleteDialogOpen && (
           <div
             className="fixed inset-0 z-[100] flex items-center justify-center bg-black/60 p-4"
@@ -407,13 +548,57 @@ export function AccountListsPage() {
           </Button>
         ))}
       </nav>
+      <div className="flex flex-wrap items-center justify-between gap-3">
+        <p className="text-sm text-muted-foreground">Create and organize your personal movie and TV collections.</p>
+        {!isCreatingList && (
+          <Button type="button" onClick={() => setIsCreatingList(true)}>Create a list</Button>
+        )}
+      </div>
+      {isCreatingList && (
+        <form onSubmit={(event) => void handleCreateList(event)} className="max-w-xl space-y-3 rounded-lg border p-4">
+          <h2 className="font-semibold">Create a custom list</h2>
+          <label className="sr-only" htmlFor="new-account-list-name">List name</label>
+          <Input
+            id="new-account-list-name"
+            value={newListName}
+            maxLength={100}
+            required
+            placeholder="List name"
+            onChange={(event) => setNewListName(event.currentTarget.value)}
+          />
+          <label className="sr-only" htmlFor="new-account-list-description">Description (optional)</label>
+          <Input
+            id="new-account-list-description"
+            value={newListDescription}
+            maxLength={500}
+            placeholder="Description (optional)"
+            onChange={(event) => setNewListDescription(event.currentTarget.value)}
+          />
+          <label className="flex items-center gap-2 text-sm">
+            <input
+              type="checkbox"
+              checked={newListIsPublic}
+              onChange={(event) => setNewListIsPublic(event.currentTarget.checked)}
+            />
+            Make this list public
+          </label>
+          <div className="flex justify-end gap-2">
+            <Button type="button" variant="ghost" disabled={isSubmittingCreate} onClick={() => setIsCreatingList(false)}>
+              Cancel
+            </Button>
+            <Button type="submit" disabled={isSubmittingCreate || !newListName.trim()}>
+              {isSubmittingCreate ? 'Creating…' : 'Create list'}
+            </Button>
+          </div>
+        </form>
+      )}
       {listsQuery.loading ? (
         <MediaGridSkeleton />
       ) : listsQuery.error ? (
         <Alert variant="destructive"><AlertDescription>{listsQuery.error.message}</AlertDescription></Alert>
       ) : listSummaries.length === 0 ? (
         <div className="rounded-xl border border-dashed p-8 text-center text-sm text-muted-foreground">
-          No custom lists yet. Use <ListPlus aria-hidden="true" className="inline h-4 w-4" /> Add to list on a movie or TV show page to create one.
+          No custom lists yet. Create one here, or use <ListPlus aria-hidden="true" className="inline h-4 w-4" /> Add to list on a movie or TV show page.
         </div>
       ) : (
         <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">

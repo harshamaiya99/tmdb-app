@@ -68,7 +68,7 @@ The app displays the TMDB logo and attribution on its **About** page, available 
 3. Open http://localhost:5173 in your browser
 
 4. The deployed site browses without asking visitors for an API key. Plain `npm run dev` reads `TMDB_API_KEY` from your local `.env` file for direct catalog requests. This key is only used by local development, not account authorization. There is no API-key login page.
-5. To use watchlists, favorites, ratings, or custom lists on the deployed site, choose **Connect TMDB account** and approve access on TMDB. The app handles credentials on its server; users do not enter an API key or access token, and the app never asks for a TMDB password. Custom lists may require a separate TMDB approval the first time. Movies and TV shows can be saved to mixed custom lists from their detail pages; new lists are private by default.
+5. To use watchlists, favorites, ratings, or custom lists on the deployed site, choose **Connect TMDB account** and approve access on TMDB. The app handles credentials on its server; users do not enter an API key or access token, and the app never asks for a TMDB password. Custom lists may require a separate TMDB approval the first time. Create and manage lists under **Account → Custom Lists**, then add movies or TV shows either from their detail pages or by searching within a list. New lists are private by default, and visibility can be changed when creating or editing a list.
 
 ### Vercel account features setup
 
