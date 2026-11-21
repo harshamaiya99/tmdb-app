@@ -114,4 +114,22 @@ describe('MediaCard', () => {
 
     expect(screen.getByRole('heading', { name: 'Expressive film' }).closest('.expressive-media-card')).toBeInTheDocument();
   });
+
+  it('uses the Screenroom card treatment when that experience is selected', () => {
+    localStorage.setItem('ui_experience', 'screenroom');
+    const movie: Movie = {
+      id: 123,
+      title: 'Screenroom film',
+      poster_path: null,
+      backdrop_path: null,
+      overview: '',
+      release_date: '2024-01-01',
+      vote_average: 7.4,
+      vote_count: 10,
+    };
+
+    renderMovieCard(movie);
+
+    expect(screen.getByRole('heading', { name: 'Screenroom film' }).closest('.screenroom-media-card')).toBeInTheDocument();
+  });
 });

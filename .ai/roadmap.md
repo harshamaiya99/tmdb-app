@@ -315,7 +315,7 @@ The experience preference foundation is implemented: Studio (stable value `cinem
 |---|---|---|---|
 | Shell and navigation | Standard responsive shell | Editorial desktop sidebar and mobile bottom navigation | Streaming-style responsive header and navigation |
 | Home and search | Studio presentation | Distinct feature/search composition | Distinct hero/search composition |
-| Movie, TV, and person details | Shared routes and data behavior | Distinct detail styling and responsive layouts | Experience styling over the shared detail-page structure |
+| Movie, TV, and person details | Shared routes and data behavior | Distinct detail styling and responsive layouts | Cinematic backdrop/portrait hero hierarchy over shared detail routes and actions |
 | TV episode details | Episode selection/details within the TV page; no separate route | Same shared behavior | Same shared behavior |
 | Media, people, and release lists | Shared routes and behavior | Distinct list styling | Experience styling over shared list pages |
 | Account pages and custom lists | Shared account behavior | Distinct account styling | Experience styling over shared account pages |
@@ -324,7 +324,9 @@ The experience preference foundation is implemented: Studio (stable value `cinem
 
 This is a route/presentation inventory, not evidence of exhaustive visual or interaction parity. App-level smoke tests cover the About route, disconnected account state, TMDB callback, movie, TV, and person detail routes, media-list, people-list, and release routes, and connected watchlist, favorites, ratings, and custom-list routes in all three shells. Connected-account tests exercise removal, list editing, and item removal actions; detail-action tests verify adding movies and TV shows to watchlists, favorites, ratings, and existing or newly created custom lists in all three experiences, including failure feedback for account mutations, list creation, and partial create-and-add failures. Account list-management tests cover creating a custom list, searching and adding movies and TV shows, retrying creation, item addition, and the same search after an error, and canceling/retrying/succeeding at list deletion across all experiences. Focused tests also cover experience switching, both custom home/search presentations, shared account actions, and Settings behavior. Browser checks exercised movie, TV, person, media-list, people-list, and release pages in all experiences at mobile and desktop widths in light and dark modes, including horizontal-overflow and theme-token checks. The callback now uses the selected experience shell while retaining the same authorization messaging and destination. Screenroom's shared detail and secondary-page styles now target presentation-neutral `media-detail-*`, `person-details-*`, and `page-*` hooks rather than Midnight Matinee's `matinee-*` classes.
 
-**Recommended next:** return to product and design work rather than scheduling another testing-only slice. The main routes and connected-account flows now have representative cross-experience coverage; extend it when future features introduce new behavior or risk.
+Screenroom movie, TV, and person details now use TMDB backdrop or portrait imagery as a subdued hero layer, larger experience-specific title hierarchy, and clearer separation between the hero and supporting content without changing shared data or account actions.
+
+**Recommended next:** continue product and design work on the experience that would benefit most from a stronger layout identity. The main routes and connected-account flows now have representative cross-experience coverage; extend testing when future features introduce new behavior or risk.
 
 ### Fit with the current application
 

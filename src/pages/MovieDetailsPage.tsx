@@ -1,5 +1,5 @@
 // src/pages/MovieDetailsPage.tsx
-import { useEffect, useLayoutEffect, useRef, useState } from 'react';
+import { useEffect, useLayoutEffect, useRef, useState, type CSSProperties } from 'react';
 import { useParams, useNavigate, Link } from 'react-router-dom';
 import { ArrowLeft, ArrowRight, Calendar, Clock, ExternalLink, Star, X } from 'lucide-react';
 import { Button } from '@/components/ui/button';
@@ -203,7 +203,7 @@ export function MovieDetailsPage() {
     <div className="min-h-screen matinee-movie-details">
       <div className="container py-6">
         
-        <div className="matinee-movie-mobile-title mb-6 min-w-0 md:hidden">
+        <div className="matinee-movie-mobile-title media-detail-movie-mobile-title mb-6 min-w-0 md:hidden">
           <h1 className="break-words text-3xl font-bold tracking-tight md:text-4xl">{movie.title}</h1>
           {movie.tagline && (
             <p className="mt-1 text-sm italic text-muted-foreground">"{movie.tagline}"</p>
@@ -211,7 +211,14 @@ export function MovieDetailsPage() {
         </div>
 
         {/* TOP SECTION */}
-        <div className={`matinee-movie-hero-grid media-detail-movie-hero grid min-w-0 grid-cols-1 items-start gap-4 min-[360px]:grid-cols-[minmax(0,0.9fr)_minmax(0,1.1fr)] md:grid-cols-[200px_minmax(0,1fr)] md:gap-6${hasRightColumn ? ' matinee-movie-has-sidebar xl:grid-cols-[200px_minmax(0,1fr)_400px]' : ' xl:grid-cols-[200px_minmax(0,1fr)]'}`}>
+        <div
+          className={`matinee-movie-hero-grid media-detail-movie-hero grid min-w-0 grid-cols-1 items-start gap-4 min-[360px]:grid-cols-[minmax(0,0.9fr)_minmax(0,1.1fr)] md:grid-cols-[200px_minmax(0,1fr)] md:gap-6${hasRightColumn ? ' matinee-movie-has-sidebar xl:grid-cols-[200px_minmax(0,1fr)_400px]' : ' xl:grid-cols-[200px_minmax(0,1fr)]'}`}
+          style={{
+            '--screenroom-detail-backdrop': movie.backdrop_path
+              ? `url("${tmdbService.getImageUrl(movie.backdrop_path, 'w780')}")`
+              : 'none',
+          } as CSSProperties}
+        >
           
           {/* Poster and movie actions */}
           <div ref={posterColumnRef} className="matinee-movie-poster-column media-detail-movie-poster mx-auto w-full max-w-[180px] space-y-4 min-[360px]:mx-0 min-[360px]:max-w-none md:max-w-none xl:col-start-1 xl:row-start-1 xl:self-start">

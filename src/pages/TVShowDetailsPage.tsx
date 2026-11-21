@@ -1,5 +1,5 @@
 // src/pages/TVShowDetailsPage.tsx
-import { useEffect, useRef, useState } from 'react';
+import { useEffect, useRef, useState, type CSSProperties } from 'react';
 import { useParams, useNavigate, Link, useSearchParams } from 'react-router-dom';
 import { ArrowLeft, ArrowRight, Calendar, Clock, ExternalLink, Star, PlayCircle, X, Users } from 'lucide-react';
 import { Button } from '@/components/ui/button';
@@ -311,14 +311,21 @@ export function TVShowDetailsPage() {
   return (
     <div className="min-h-screen matinee-tv-details">
       <div className="container py-6">
-        <div className="matinee-tv-mobile-title mb-6 min-w-0 md:hidden">
+        <div className="matinee-tv-mobile-title media-detail-tv-mobile-title mb-6 min-w-0 md:hidden">
           <h1 className="break-words text-3xl font-bold tracking-tight md:text-4xl">{tvShow.name}</h1>
           {tvShow.tagline && (
             <p className="mt-1 text-sm italic text-muted-foreground">"{tvShow.tagline}"</p>
           )}
         </div>
 
-        <div className="matinee-tv-hero-grid media-detail-tv-hero grid min-w-0 grid-cols-1 items-start gap-4 min-[360px]:grid-cols-[minmax(0,0.9fr)_minmax(0,1.1fr)] md:grid-cols-[200px_minmax(0,1fr)] md:gap-6">
+        <div
+          className="matinee-tv-hero-grid media-detail-tv-hero grid min-w-0 grid-cols-1 items-start gap-4 min-[360px]:grid-cols-[minmax(0,0.9fr)_minmax(0,1.1fr)] md:grid-cols-[200px_minmax(0,1fr)] md:gap-6"
+          style={{
+            '--screenroom-detail-backdrop': tvShow.backdrop_path
+              ? `url("${tmdbService.getImageUrl(tvShow.backdrop_path, 'w780')}")`
+              : 'none',
+          } as CSSProperties}
+        >
           <div className="matinee-tv-poster-column media-detail-tv-poster mx-auto w-full max-w-[180px] space-y-4 min-[360px]:mx-0 min-[360px]:max-w-none md:max-w-none">
             {tvShow.poster_path ? (
               <TMDBImage path={tvShow.poster_path} alt={`${tvShow.name} poster`} width={500} height={750} sizes="(min-width: 768px) 200px, (min-width: 360px) 42vw, 180px" loading="eager" fetchPriority="high" className="block h-auto w-full max-w-full rounded-lg border" />

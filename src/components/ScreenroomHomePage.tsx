@@ -62,7 +62,7 @@ function SearchResultsSection({
       {error
         ? <SearchMessage error message={error.message} />
         : items.length
-          ? <MediaSection title="" items={items} type={type} hideSeeMore horizontalScroll limit={20} className="space-y-0 screenroom-search-results" horizontalColumns={7} />
+          ? <MediaSection title="" items={items} type={type} hideSeeMore horizontalScroll limit={20} className="space-y-0 screenroom-search-results" horizontalColumns={10} />
           : <SearchMessage message={`No ${title.toLowerCase()} found.`} />}
     </section>
   );

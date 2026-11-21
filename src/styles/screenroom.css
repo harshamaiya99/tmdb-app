@@ -181,7 +181,7 @@ html[data-experience="screenroom"] body {
   text-transform: uppercase;
 }
 
-.screenroom-hero-content h1 {
+html[data-experience="screenroom"] main .screenroom-hero-content h1 {
   max-width: 14ch;
   color: #fff;
   font-size: clamp(2.4rem, 6vw, 4.75rem);
@@ -288,21 +288,63 @@ html[data-experience="screenroom"] body {
 }
 
 .screenroom-media-card {
+  position: relative;
   border-color: hsl(var(--border));
   border-radius: var(--radius-lg);
-  background: hsl(var(--card));
+  background:
+    linear-gradient(145deg, hsl(var(--primary) / 0.045), transparent 42%),
+    hsl(var(--card));
   box-shadow: 0 3px 12px hsl(var(--foreground) / 0.08);
   transition: border-color 160ms ease, box-shadow 160ms ease;
 }
 
 .screenroom-media-card:hover {
-  border-color: hsl(var(--primary) / 0.7);
-  box-shadow: 0 7px 18px hsl(var(--foreground) / 0.14);
+  border-color: hsl(var(--primary) / 0.82);
+  box-shadow: 0 7px 20px hsl(var(--foreground) / 0.16);
 }
 
 .screenroom-media-card [data-media-card-poster] {
+  isolation: isolate;
   border-radius: calc(var(--radius-lg) - var(--border-inset));
   margin: var(--border-inset) var(--border-inset) 0;
+}
+
+.screenroom-media-card [data-media-card-poster]::after {
+  position: absolute;
+  z-index: 0;
+  inset: 45% 0 0;
+  background: linear-gradient(180deg, transparent, hsl(222 35% 4% / 0.24));
+  content: "";
+  pointer-events: none;
+}
+
+.screenroom-media-card [data-media-card-poster] > div.absolute {
+  z-index: 1;
+}
+
+.screenroom-media-card [data-media-card-poster] > div.absolute > div {
+  border: 1px solid rgb(255 255 255 / 0.25);
+  background: rgb(10 12 17 / 0.82);
+  color: #fff;
+  box-shadow: 0 2px 8px rgb(0 0 0 / 0.2);
+  backdrop-filter: blur(8px);
+}
+
+.screenroom-media-card h3 {
+  height: 2.3rem;
+  color: hsl(var(--card-foreground));
+  font-size: 0.8rem;
+  font-weight: 680;
+  line-height: 1.15rem;
+}
+
+.screenroom-media-card > div:last-child {
+  gap: 0.35rem;
+  padding: 0.65rem 0.7rem 0.75rem;
+}
+
+.screenroom-media-card > div:last-child p {
+  font-size: 0.68rem;
 }
 
 .screenroom-mobile-navigation {
@@ -386,6 +428,44 @@ html[data-experience="screenroom"] main .media-section > div:first-child {
 
 html[data-experience="screenroom"] main .media-section > div:first-child h2 {
   font-size: 1.4rem;
+}
+
+html[data-experience="screenroom"] main :is(
+  .page-media-list > :first-child,
+  .page-people-list > :first-child,
+  .page-release-list > h1
+) {
+  border: 1px solid hsl(var(--border));
+  border-inline-start: 3px solid hsl(var(--primary));
+  border-radius: var(--radius-xl);
+  background:
+    radial-gradient(ellipse at 100% 0%, hsl(var(--primary) / 0.1), transparent 58%),
+    hsl(var(--card));
+  padding: clamp(1rem, 3vw, 1.75rem);
+}
+
+html[data-experience="screenroom"] main :is(
+  .page-media-list > :first-child h1,
+  .page-people-list > :first-child h1,
+  .page-release-list > h1
+) {
+  margin: 0;
+  max-width: 24ch;
+  font-size: clamp(1.9rem, 4vw, 2.8rem);
+  letter-spacing: -0.045em;
+}
+
+html[data-experience="screenroom"] main .page-release-list > h1 + * {
+  margin-top: 2rem;
+}
+
+html[data-experience="screenroom"] main :is(.page-media-list, .page-people-list) .media-category-toggle {
+  scrollbar-width: thin;
+  scrollbar-color: hsl(var(--border)) transparent;
+}
+
+html[data-experience="screenroom"] main :is(.page-media-list, .page-people-list) .media-category-toggle > button {
+  flex-shrink: 0;
 }
 
 html[data-experience="screenroom"] main .media-section > div:first-child a {
@@ -614,5 +694,162 @@ html[data-experience="screenroom"] .screenroom-shell main :is(
   ) {
     border-radius: var(--radius-xl);
     padding: 0.75rem;
+  }
+}
+
+html[data-experience="screenroom"] main :is(
+  .media-detail-movie-hero,
+  .media-detail-tv-hero
+) {
+  position: relative;
+  isolation: isolate;
+  overflow: hidden;
+  border-color: hsl(var(--border) / 0.82);
+  background: hsl(var(--background));
+}
+
+html[data-experience="screenroom"] main :is(
+  .media-detail-movie-hero,
+  .media-detail-tv-hero
+)::before {
+  position: absolute;
+  z-index: -1;
+  inset: 0 0 auto;
+  height: min(100%, 30rem);
+  background-image:
+    linear-gradient(90deg, hsl(var(--background) / 0.9), hsl(var(--background) / 0.45) 72%),
+    linear-gradient(0deg, hsl(var(--background)), transparent 75%),
+    var(--screenroom-detail-backdrop, none);
+  background-position: center, center, center 35%;
+  background-size: cover;
+  content: "";
+  opacity: 0.82;
+  pointer-events: none;
+}
+
+html[data-experience="screenroom"] main :is(
+  .media-detail-movie-summary,
+  .media-detail-tv-summary
+) {
+  align-self: stretch;
+  border-color: hsl(var(--border) / 0.72);
+  background: hsl(var(--card) / 0.78);
+  box-shadow: 0 14px 36px hsl(222 35% 3% / 0.12);
+  backdrop-filter: blur(16px);
+}
+
+html[data-experience="screenroom"] main :is(
+  .media-detail-movie-summary h1,
+  .media-detail-tv-summary h1,
+  .media-detail-movie-mobile-title h1,
+  .media-detail-tv-mobile-title h1
+) {
+  max-width: 18ch;
+  font-size: clamp(2.1rem, 4.6vw, 3.8rem);
+  font-weight: 850;
+  letter-spacing: -0.055em;
+  line-height: 0.98;
+}
+
+html[data-experience="screenroom"] main :is(
+  .media-detail-movie-summary h1,
+  .media-detail-tv-summary h1,
+  .media-detail-movie-mobile-title h1,
+  .media-detail-tv-mobile-title h1
+)::before {
+  display: block;
+  margin-bottom: 0.75rem;
+  color: hsl(var(--primary));
+  font-size: 0.68rem;
+  font-weight: 800;
+  letter-spacing: 0.2em;
+  line-height: 1.2;
+  text-transform: uppercase;
+}
+
+html[data-experience="screenroom"] main :is(
+  .media-detail-movie-summary h1,
+  .media-detail-movie-mobile-title h1
+)::before {
+  content: "Now showing · Feature";
+}
+
+html[data-experience="screenroom"] main :is(
+  .media-detail-tv-summary h1,
+  .media-detail-tv-mobile-title h1
+)::before {
+  content: "Series spotlight";
+}
+
+html[data-experience="screenroom"] main :is(
+  .media-detail-movie-poster,
+  .media-detail-tv-poster
+) {
+  padding-top: 0.4rem;
+}
+
+html[data-experience="screenroom"] main :is(
+  .media-detail-movie-overview,
+  .media-detail-tv-overview
+) {
+  border-inline-start: 3px solid hsl(var(--primary) / 0.72);
+  background: hsl(var(--card) / 0.88);
+  box-shadow: 0 8px 24px hsl(222 35% 3% / 0.08);
+}
+
+html[data-experience="screenroom"] main :is(
+  .media-detail-movie-credits,
+  .media-detail-tv-credits,
+  .media-detail-tv-episodes,
+  .media-detail-movie-related,
+  .media-detail-tv-related,
+  .media-detail-movie-media,
+  .media-detail-tv-media
+) {
+  border-color: transparent;
+  border-top: 1px solid hsl(var(--border));
+  border-radius: 0;
+  background: transparent;
+  box-shadow: none;
+  padding-inline: 0;
+}
+
+html[data-experience="screenroom"] main :is(
+  .media-detail-movie-credits,
+  .media-detail-tv-credits,
+  .media-detail-tv-episodes,
+  .media-detail-movie-related,
+  .media-detail-tv-related,
+  .media-detail-movie-media,
+  .media-detail-tv-media
+) > :is(h2, div:first-child) {
+  padding-top: 0.35rem;
+}
+
+@media (max-width: 767px) {
+  html[data-experience="screenroom"] main :is(
+    .media-detail-movie-hero,
+    .media-detail-tv-hero
+  )::before {
+    height: 22rem;
+    background-image:
+      linear-gradient(180deg, hsl(var(--background) / 0.52), hsl(var(--background) / 0.9) 72%),
+      linear-gradient(0deg, hsl(var(--background)), transparent 84%),
+      var(--screenroom-detail-backdrop, none);
+    background-position: center, center, center 28%;
+  }
+
+  html[data-experience="screenroom"] main :is(
+    .media-detail-movie-mobile-title,
+    .media-detail-tv-mobile-title
+  ) {
+    padding: 0.25rem 0.15rem 0.5rem;
+  }
+
+  html[data-experience="screenroom"] main :is(
+    .media-detail-movie-mobile-title h1,
+    .media-detail-tv-mobile-title h1
+  ) {
+    font-size: clamp(2rem, 8vw, 2.8rem);
   }
 }

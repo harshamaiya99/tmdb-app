@@ -1,4 +1,4 @@
-import { useEffect, useState, type FormEvent, type ReactNode } from 'react';
+import { useEffect, useState, type FormEvent, type KeyboardEvent, type ReactNode } from 'react';
 import { Link, NavLink, useLocation, useNavigate, useSearchParams } from 'react-router-dom';
 import * as DropdownMenu from '@radix-ui/react-dropdown-menu';
 import {
@@ -12,6 +12,8 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { useToast } from '@/components/ui/use-toast';
 import { useTMDBAccount } from '@/contexts/TMDBAccountContext';
+import { useDebouncedValue } from '@/hooks/useDebouncedValue';
+import { SearchSuggestions, SearchSuggestionsLoading } from '@/components/SearchSuggestions';
 
 const SEARCH_ORIGIN_STORAGE_KEY = 'tmdb_search_origin';
 
@@ -33,6 +35,7 @@ export function MidnightMatineeLayout({ children }: { children: ReactNode }) {
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
   const [searchParams] = useSearchParams();
   const [query, setQuery] = useState(searchParams.get('query') ?? '');
+  const [suggestionsOpen, setSuggestionsOpen] = useState(false);
   const navigate = useNavigate();
   const location = useLocation();
   const { toast } = useToast();
@@ -47,10 +50,18 @@ export function MidnightMatineeLayout({ children }: { children: ReactNode }) {
   const visibleLibraryNavigation = libraryNavigation.filter(({ to }) => (
     to === '/account/lists' ? isListAccountConnected : isConnected
   ));
+  const normalizedQuery = query.trim();
+  const debouncedQuery = useDebouncedValue(normalizedQuery, 120);
+  const showSuggestions = suggestionsOpen && normalizedQuery.length >= 2;
+  const suggestionQueryReady = normalizedQuery === debouncedQuery;
 
   useEffect(() => {
     setQuery(searchParams.get('query') ?? '');
   }, [searchParams]);
+
+  useEffect(() => {
+    setSuggestionsOpen(false);
+  }, [location.pathname, location.search]);
 
   const restoreSearchOrigin = () => {
     const origin = sessionStorage.getItem(SEARCH_ORIGIN_STORAGE_KEY) || '/';
@@ -61,6 +72,7 @@ export function MidnightMatineeLayout({ children }: { children: ReactNode }) {
   const handleSearch = (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
     const trimmedQuery = query.trim();
+    setSuggestionsOpen(false);
     if (!trimmedQuery) {
       restoreSearchOrigin();
       return;
@@ -73,8 +85,19 @@ export function MidnightMatineeLayout({ children }: { children: ReactNode }) {
 
   const handleSearchChange = (value: string) => {
     setQuery(value);
-    if (!value.trim() && searchParams.get('query')) restoreSearchOrigin();
+    if (value.trim()) {
+      setSuggestionsOpen(true);
+    } else {
+      setSuggestionsOpen(false);
+      if (searchParams.get('query')) restoreSearchOrigin();
+    }
   };
+
+  const handleSearchKeyDown = (event: KeyboardEvent<HTMLInputElement>) => {
+    if (event.key === 'Escape') setSuggestionsOpen(false);
+  };
+
+  const closeSuggestions = () => setSuggestionsOpen(false);
 
   const handleConnect = () => {
     void connectTMDBAccount().catch((error: unknown) => {
@@ -171,19 +194,44 @@ export function MidnightMatineeLayout({ children }: { children: ReactNode }) {
               <span className="matinee-brand-mark" aria-hidden="true"><Theater className="h-4 w-4" /></span>
               <span>MIDNIGHT MATINEE</span>
             </Link>
-            <form onSubmit={handleSearch} role="search" className="matinee-search-form">
+            <form
+              onSubmit={handleSearch}
+              onBlur={(event) => {
+                if (!event.currentTarget.contains(event.relatedTarget as Node | null)) {
+                  setSuggestionsOpen(false);
+                }
+              }}
+              role="search"
+              className="matinee-search-form relative"
+            >
               <Search aria-hidden="true" className="matinee-search-icon" />
               <Input
                 type="search"
+                role="combobox"
                 aria-label="Search movies, TV shows, and people"
+                aria-autocomplete="list"
+                aria-expanded={showSuggestions}
+                aria-controls="matinee-search-suggestions"
                 placeholder="Search the collection"
                 value={query}
                 onChange={(event) => handleSearchChange(event.target.value)}
+                onFocus={() => setSuggestionsOpen(true)}
+                onKeyDown={handleSearchKeyDown}
                 className="matinee-search-input"
               />
               <Button type="submit" variant="ghost" size="icon" aria-label="Search" className="matinee-search-submit">
                 <Search aria-hidden="true" className="h-4 w-4" />
               </Button>
+              {showSuggestions && (suggestionQueryReady ? (
+                <SearchSuggestions
+                  id="matinee-search-suggestions"
+                  key={debouncedQuery}
+                  query={debouncedQuery}
+                  onSelect={closeSuggestions}
+                />
+              ) : (
+                <SearchSuggestionsLoading id="matinee-search-suggestions" />
+              ))}
             </form>
             <div className="matinee-topbar-actions">
               <ThemeToggle />

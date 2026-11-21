@@ -19,7 +19,7 @@ const movieFixture: Movie = {
   id: 501,
   title: 'Sample Feature',
   poster_path: null,
-  backdrop_path: null,
+  backdrop_path: '/sample-movie-backdrop.jpg',
   overview: 'A feature used to verify the detail page.',
   release_date: '2024-01-01',
   vote_count: 12,
@@ -30,7 +30,7 @@ const tvShowFixture: TVShow = {
   id: 502,
   name: 'Sample Series',
   poster_path: null,
-  backdrop_path: null,
+  backdrop_path: '/sample-tv-backdrop.jpg',
   overview: 'A series used to verify the detail page.',
   first_air_date: '2023-01-01',
   vote_count: 15,
@@ -114,7 +114,13 @@ describe('detail routes across web experiences', () => {
       const { container, unmount } = render(<App />);
 
       expect(await screen.findByText(route.description, {}, { timeout: 5000 })).toBeInTheDocument();
-      expect(container.querySelector(route.contentClass)).not.toBeNull();
+      const detailHero = container.querySelector<HTMLElement>(route.contentClass);
+      expect(detailHero).not.toBeNull();
+      if (id === 'screenroom' && !route.path.startsWith('/person/')) {
+        expect(detailHero?.style.getPropertyValue('--screenroom-detail-backdrop')).toContain(
+          'https://image.tmdb.org/t/p/w780/',
+        );
+      }
       await waitFor(() => {
         expect(document.documentElement).toHaveAttribute('data-experience', id);
         expect(screen.getAllByRole('link', { name: brand }).length).toBeGreaterThan(0);

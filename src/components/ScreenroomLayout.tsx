@@ -1,4 +1,4 @@
-import { useEffect, useState, type FormEvent, type ReactNode } from 'react';
+import { useEffect, useState, type FormEvent, type KeyboardEvent, type ReactNode } from 'react';
 import { Link, NavLink, useLocation, useNavigate, useSearchParams } from 'react-router-dom';
 import * as DropdownMenu from '@radix-ui/react-dropdown-menu';
 import { Bookmark, Film, Heart, Info, ListPlus, LogOut, Search, Settings2, Star, Tv, UserRound, Users } from 'lucide-react';
@@ -9,6 +9,8 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { useTMDBAccount } from '@/contexts/TMDBAccountContext';
 import { useToast } from '@/components/ui/use-toast';
+import { useDebouncedValue } from '@/hooks/useDebouncedValue';
+import { SearchSuggestions, SearchSuggestionsLoading } from '@/components/SearchSuggestions';
 
 const SEARCH_ORIGIN_STORAGE_KEY = 'tmdb_search_origin';
 
@@ -29,6 +31,7 @@ const accountNavigation = [
 export function ScreenroomLayout({ children }: { children: ReactNode }) {
   const [searchParams] = useSearchParams();
   const [query, setQuery] = useState(searchParams.get('query') ?? '');
+  const [suggestionsOpen, setSuggestionsOpen] = useState(false);
   const navigate = useNavigate();
   const location = useLocation();
   const { toast } = useToast();
@@ -40,14 +43,23 @@ export function ScreenroomLayout({ children }: { children: ReactNode }) {
     isConnected,
     isListAccountConnected,
   } = useTMDBAccount();
+  const normalizedQuery = query.trim();
+  const debouncedQuery = useDebouncedValue(normalizedQuery, 120);
+  const showSuggestions = suggestionsOpen && normalizedQuery.length >= 2;
+  const suggestionQueryReady = normalizedQuery === debouncedQuery;
 
   useEffect(() => {
     setQuery(searchParams.get('query') ?? '');
   }, [searchParams]);
 
+  useEffect(() => {
+    setSuggestionsOpen(false);
+  }, [location.pathname, location.search]);
+
   const handleSearch = (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
     const trimmedQuery = query.trim();
+    setSuggestionsOpen(false);
     if (!trimmedQuery) {
       restoreSearchOrigin();
       return;
@@ -66,8 +78,19 @@ export function ScreenroomLayout({ children }: { children: ReactNode }) {
 
   const handleSearchChange = (value: string) => {
     setQuery(value);
-    if (!value.trim()) restoreSearchOrigin();
+    if (value.trim()) {
+      setSuggestionsOpen(true);
+    } else {
+      setSuggestionsOpen(false);
+      restoreSearchOrigin();
+    }
   };
+
+  const handleSearchKeyDown = (event: KeyboardEvent<HTMLInputElement>) => {
+    if (event.key === 'Escape') setSuggestionsOpen(false);
+  };
+
+  const closeSuggestions = () => setSuggestionsOpen(false);
 
   const handleConnect = () => {
     void connectTMDBAccount().catch((error: unknown) => {
@@ -112,21 +135,46 @@ export function ScreenroomLayout({ children }: { children: ReactNode }) {
               </NavLink>
             ))}
           </nav>
-          <form onSubmit={handleSearch} role="search" className="screenroom-search-form ml-auto min-w-0 flex-1">
+          <form
+            onSubmit={handleSearch}
+            onBlur={(event) => {
+              if (!event.currentTarget.contains(event.relatedTarget as Node | null)) {
+                setSuggestionsOpen(false);
+              }
+            }}
+            role="search"
+            className="screenroom-search-form relative ml-auto min-w-0 flex-1"
+          >
             <div className="screenroom-search-control flex h-10 items-center">
               <Search aria-hidden="true" className="ml-3 h-4 w-4 shrink-0 text-muted-foreground" />
               <Input
                 type="search"
+                role="combobox"
                 aria-label="Search movies, TV shows, and people"
+                aria-autocomplete="list"
+                aria-expanded={showSuggestions}
+                aria-controls="screenroom-search-suggestions"
                 placeholder="Search the catalog"
                 value={query}
                 onChange={(event) => handleSearchChange(event.target.value)}
+                onFocus={() => setSuggestionsOpen(true)}
+                onKeyDown={handleSearchKeyDown}
                 className="h-full min-w-0 flex-1 border-0 bg-transparent shadow-none focus-visible:ring-0"
               />
               <Button type="submit" variant="ghost" size="icon" aria-label="Search" className="mr-1 h-8 w-8 shrink-0">
                 <Search aria-hidden="true" className="h-4 w-4" />
               </Button>
             </div>
+            {showSuggestions && (suggestionQueryReady ? (
+              <SearchSuggestions
+                id="screenroom-search-suggestions"
+                key={debouncedQuery}
+                query={debouncedQuery}
+                onSelect={closeSuggestions}
+              />
+            ) : (
+              <SearchSuggestionsLoading id="screenroom-search-suggestions" />
+            ))}
           </form>
           <div className="flex shrink-0 items-center gap-1">
             <ThemeToggle />

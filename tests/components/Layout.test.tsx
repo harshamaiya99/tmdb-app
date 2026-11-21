@@ -7,6 +7,14 @@ import { TitleProvider } from '@/contexts/TitleContext';
 import { TMDBAccountProvider } from '@/contexts/TMDBAccountContext';
 import { ThemeProvider } from '@/hooks/useTheme';
 import { Layout } from '@/components/Layout';
+import { tmdbService, type MultiSearchResult } from '@/lib/tmdb';
+import { clearRequestCache } from '@/lib/requestCache';
+
+const searchExperiences = [
+  { id: 'cinema', name: 'Studio' },
+  { id: 'expressive', name: 'Midnight Matinee' },
+  { id: 'screenroom', name: 'Screenroom' },
+] as const;
 
 function ExperienceSwitcher() {
   const { setExperience } = useExperience();
@@ -15,6 +23,7 @@ function ExperienceSwitcher() {
 
 describe('Layout', () => {
   beforeEach(() => {
+    clearRequestCache();
     localStorage.clear();
     localStorage.setItem('ui_experience', 'expressive');
     vi.stubGlobal('fetch', vi.fn().mockResolvedValue({
@@ -31,6 +40,57 @@ describe('Layout', () => {
 
   afterEach(() => {
     vi.unstubAllGlobals();
+    vi.restoreAllMocks();
+  });
+
+  it.each(searchExperiences)('shows live search suggestions in $name', async ({ id }) => {
+    localStorage.setItem('ui_experience', id);
+    const user = userEvent.setup();
+    const movie: MultiSearchResult = {
+      id: 987,
+      media_type: 'movie',
+      title: 'Autocomplete Sample',
+      poster_path: null,
+      backdrop_path: null,
+      overview: '',
+      release_date: '2024-01-01',
+      vote_count: 0,
+    };
+    vi.spyOn(tmdbService, 'searchMulti').mockResolvedValue({
+      page: 1,
+      results: [movie],
+      total_pages: 1,
+      total_results: 1,
+    });
+
+    render(
+      <ThemeProvider>
+        <ExperienceProvider>
+          <TitleProvider>
+            <MemoryRouter>
+              <TMDBAccountProvider>
+                <Layout><div>Page content</div></Layout>
+              </TMDBAccountProvider>
+            </MemoryRouter>
+          </TitleProvider>
+        </ExperienceProvider>
+      </ThemeProvider>,
+    );
+
+    if (id === 'cinema') {
+      await user.click(await screen.findByRole('button', { name: 'Open search' }));
+    }
+
+    const inputs = screen.getAllByRole('combobox', { name: 'Search movies, TV shows, and people' });
+    const input = id === 'cinema'
+      ? inputs.find((candidate) => candidate.getAttribute('aria-controls') === 'mobile-search-suggestions')
+      : inputs[0];
+    expect(input).toBeDefined();
+    if (!input) throw new Error(`Expected a search input for ${id}`);
+    await user.type(input, 'auto');
+
+    expect(await screen.findAllByRole('option', { name: 'Autocomplete Sample, Movie · 2024' })).not.toHaveLength(0);
+    expect(tmdbService.searchMulti).toHaveBeenCalledWith('auto', 1, { signal: expect.any(AbortSignal) });
   });
 
   it('uses the Studio brand by default and retains the Watch Tower footer', async () => {
