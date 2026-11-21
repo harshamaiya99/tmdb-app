@@ -20,6 +20,8 @@ export function PersonDetailsPage() {
   const [selectedImageIndex, setSelectedImageIndex] = useState<number | null>(null);
   const [selectedWikimediaIndex, setSelectedWikimediaIndex] = useState<number | null>(null);
   const [profileHeight, setProfileHeight] = useState(0);
+  const [profileWidth, setProfileWidth] = useState(0);
+  const [profileLeftInset, setProfileLeftInset] = useState(0);
   const [biographyVisibleLines, setBiographyVisibleLines] = useState(0);
   const [biographyExpanded, setBiographyExpanded] = useState(false);
   const [biographyOverflows, setBiographyOverflows] = useState(false);
@@ -41,24 +43,36 @@ export function PersonDetailsPage() {
     setBiographyExpanded(false);
     setBiographyOverflows(false);
     const profile = profileRef.current;
-    if (!profile) {
+    const hero = profile?.closest<HTMLElement>('.matinee-person-hero');
+    if (!profile || !hero) {
       setProfileHeight(0);
+      setProfileWidth(0);
+      setProfileLeftInset(0);
       return;
     }
 
-    const updateProfileHeight = () => {
+    const updateProfileSize = () => {
+      const heroRect = hero.getBoundingClientRect();
       const height = profile.getBoundingClientRect().height;
+      const imageRect = profile.querySelector<HTMLElement>(':scope > img, :scope > [role="img"]')
+        ?.getBoundingClientRect();
+      const width = imageRect?.width ?? profile.getBoundingClientRect().width;
+      const leftInset = imageRect ? imageRect.left - heroRect.left : profile.getBoundingClientRect().left - heroRect.left;
       setProfileHeight((current) => Math.abs(current - height) < 1 ? current : height);
+      setProfileWidth((current) => Math.abs(current - width) < 1 ? current : width);
+      setProfileLeftInset((current) => Math.abs(current - leftInset) < 1 ? current : leftInset);
     };
 
-    updateProfileHeight();
-    const observer = new ResizeObserver(updateProfileHeight);
+    updateProfileSize();
+    const observer = new ResizeObserver(updateProfileSize);
     observer.observe(profile);
-    window.addEventListener('resize', updateProfileHeight);
+    const profileImage = profile.querySelector<HTMLElement>(':scope > img, :scope > [role="img"]');
+    if (profileImage) observer.observe(profileImage);
+    window.addEventListener('resize', updateProfileSize);
 
     return () => {
       observer.disconnect();
-      window.removeEventListener('resize', updateProfileHeight);
+      window.removeEventListener('resize', updateProfileSize);
     };
   }, [person?.id]);
 
@@ -242,8 +256,11 @@ export function PersonDetailsPage() {
   ].filter((link): link is { label: string; href: string; icon: typeof Film } => Boolean(link));
 
   const personalInfoSection = (
-    <div className="matinee-person-info min-w-0 space-y-4 text-sm">
-      <h2 className="mb-2 text-xl font-semibold">Personal Info</h2>
+    <div
+      className="matinee-person-info min-w-0 space-y-4 text-sm"
+      style={profileWidth > 0 ? { width: `${profileWidth + profileLeftInset}px` } : undefined}
+    >
+      <h2 className="matinee-person-section-title mb-2 font-semibold">Personal Info</h2>
 
       <div>
         <p className="font-medium">Known For</p>
@@ -311,10 +328,10 @@ export function PersonDetailsPage() {
   const movieCreditsSection = movieCredits.length > 0 && (
     <MediaSection
       title="Movies"
-      titleClassName="text-xl"
+      titleClassName="matinee-person-section-title"
       items={movieCredits}
       type="movie"
-      className="space-y-4 matinee-person-movie-credits"
+      className="h-full space-y-4 matinee-person-movie-credits"
       horizontalScroll
       horizontalColumns={8}
       compactCharacter
@@ -327,7 +344,7 @@ export function PersonDetailsPage() {
   const tvCreditsSection = tvCredits.length > 0 && (
     <MediaSection
       title="TV Shows"
-      titleClassName="text-xl"
+      titleClassName="matinee-person-section-title"
       items={tvCredits}
       type="tv"
       className="space-y-4 matinee-person-tv-credits"
@@ -382,7 +399,7 @@ export function PersonDetailsPage() {
                 </h1>
                 {person.biography && (
                   <div className="matinee-person-biography">
-                    <h2 className="text-xl font-semibold mb-3">Biography</h2>
+                    <h2 className="matinee-person-section-title mb-3 font-semibold">Biography</h2>
                     <div
                       id="person-biography-content"
                       ref={biographyTextRef}
@@ -418,9 +435,9 @@ export function PersonDetailsPage() {
             </div>
           </div>
 
-          <div className="matinee-person-credits-row person-info-movies-row grid min-w-0 grid-cols-1 items-start gap-6">
+          <div className="matinee-person-credits-row person-info-movies-row grid min-w-0 grid-cols-1 items-stretch gap-6">
             {personalInfoSection}
-            {movieCreditsSection && <div className="min-w-0">{movieCreditsSection}</div>}
+            {movieCreditsSection && <div className="matinee-person-movie-column min-w-0">{movieCreditsSection}</div>}
           </div>
 
           {tvCreditsSection}
@@ -428,7 +445,7 @@ export function PersonDetailsPage() {
           {galleryImages.length > 0 && (
             <LazySection>
             <div className="matinee-person-gallery w-full border-t pt-8">
-              <h2 className="text-xl font-semibold mb-6">Gallery</h2>
+              <h2 className="matinee-person-section-title mb-6 font-semibold">Gallery</h2>
               <div className="grid grid-cols-3 gap-3 sm:gap-4 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-8 2xl:grid-cols-10">
                 {galleryImages.map((image, idx) => {
                   return (
@@ -459,7 +476,7 @@ export function PersonDetailsPage() {
             <LazySection>
               <section className="matinee-person-wikimedia w-full border-t pt-8" aria-labelledby="wikimedia-gallery-heading">
                 <div className="mb-6 flex flex-wrap items-center gap-3">
-                  <h2 id="wikimedia-gallery-heading" className="text-xl font-semibold">Wikimedia Commons</h2>
+                  <h2 id="wikimedia-gallery-heading" className="matinee-person-section-title font-semibold">Wikimedia Commons</h2>
                   <span className="rounded-full border px-2.5 py-1 text-xs text-muted-foreground">External source</span>
                 </div>
                 <p className="mb-5 text-sm text-muted-foreground">

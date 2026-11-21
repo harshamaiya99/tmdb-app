@@ -1113,16 +1113,29 @@ html[data-experience="screenroom"] body {
 
 #root [data-experience="expressive"] .matinee-person-details {
   --person-profile-column: clamp(13rem, 24vw, 16rem);
+  --person-hero-inline-padding: clamp(1rem, 2vw, 1.5rem);
+  --person-column-gap: clamp(1rem, 2vw, 1.75rem);
 }
 
 .matinee-person-details {
-  --person-profile-column: 200px;
+  --person-profile-column: 180px;
+  --person-hero-inline-padding: 0px;
+  --person-column-gap: 1.5rem;
 }
 
 @media (min-width: 768px) {
   .matinee-person-details .person-profile-bio-row,
   .matinee-person-details .person-info-movies-row {
     grid-template-columns: var(--person-profile-column) minmax(0, 1fr);
+  }
+
+  .matinee-person-details .person-profile-bio-row {
+    column-gap: var(--person-column-gap);
+  }
+
+  .matinee-person-details .person-info-movies-row {
+    grid-template-columns: calc(var(--person-profile-column) + var(--person-hero-inline-padding)) minmax(0, 1fr);
+    column-gap: var(--person-column-gap);
   }
 }
 
@@ -1141,7 +1154,7 @@ html[data-experience="screenroom"] body {
 }
 
 #root [data-experience="expressive"] .matinee-person-details .matinee-person-hero {
-  gap: 1.25rem;
+  gap: var(--person-column-gap);
   border: 1px solid hsl(var(--border));
   border-radius: var(--radius-2xl);
   background: hsl(var(--card));
@@ -1158,7 +1171,6 @@ html[data-experience="screenroom"] body {
 }
 
 #root [data-experience="expressive"] .matinee-person-details .matinee-person-info {
-  align-self: start;
   border: 1px solid hsl(var(--border));
   border-radius: var(--radius-xl);
   background: hsl(var(--background) / 0.55);
@@ -1248,7 +1260,12 @@ html[data-experience="screenroom"] body {
 
 @media (max-width: 767px) {
   #root [data-experience="expressive"] .matinee-person-details .matinee-person-profile {
-    max-width: 14rem;
+    width: var(--person-profile-column);
+    max-width: min(100%, 14rem);
+  }
+
+  #root [data-experience="expressive"] .matinee-person-details {
+    --person-profile-column: clamp(13rem, 24vw, 14rem);
   }
 
   #root [data-experience="expressive"] .matinee-person-details .matinee-person-info {
@@ -1258,6 +1275,48 @@ html[data-experience="screenroom"] body {
   #root [data-experience="expressive"] .matinee-person-details .matinee-person-movie-credits,
   #root [data-experience="expressive"] .matinee-person-details .matinee-person-tv-credits {
     padding: 0.75rem;
+  }
+}
+
+.matinee-person-details {
+  --person-section-title-size: 1.25rem;
+}
+
+.matinee-person-details .matinee-person-section-title {
+  font-size: var(--person-section-title-size);
+  line-height: 1.75rem;
+}
+
+.matinee-person-details .matinee-person-info {
+  box-sizing: border-box;
+  justify-self: start;
+}
+
+.matinee-person-details .matinee-person-movie-column,
+.matinee-person-details .matinee-person-movie-credits {
+  min-width: 0;
+  height: 100%;
+}
+
+.matinee-person-details .matinee-person-hero {
+  --person-hero-inline-padding: 0px;
+}
+
+@media (min-width: 768px) {
+  .matinee-person-details {
+    --person-profile-column: 200px;
+  }
+
+  .matinee-person-details .matinee-person-info {
+    height: 100%;
+    justify-self: start;
+  }
+}
+
+@media (max-width: 767px) {
+  .matinee-person-details .matinee-person-profile {
+    width: var(--person-profile-column);
+    max-width: min(100%, 180px);
   }
 }
 
@@ -1679,7 +1738,16 @@ html[data-experience="screenroom"] body {
 @media (prefers-reduced-motion: reduce) {
   .screenroom-nav-link,
   .screenroom-mobile-link,
-  .screenroom-media-card {
+  .screenroom-media-card,
+  html[data-experience="screenroom"] main :is(
+    .matinee-account-page,
+    .matinee-account-lists-page,
+    .matinee-settings-page,
+    .matinee-media-list-page,
+    .matinee-people-list-page,
+    .matinee-release-date-page,
+    .matinee-about-page
+  ) :is(button, a) {
     transition-duration: 0.01ms;
   }
 
@@ -1688,6 +1756,260 @@ html[data-experience="screenroom"] body {
   }
 }
 
+html[data-experience="screenroom"] main {
+  min-width: 0;
+  color: hsl(var(--foreground));
+}
+
+html[data-experience="screenroom"] main h1 {
+  color: hsl(var(--foreground));
+  font-size: clamp(1.9rem, 4vw, 3rem);
+  font-weight: 820;
+  letter-spacing: -0.05em;
+  line-height: 1.05;
+  text-wrap: balance;
+}
+
+html[data-experience="screenroom"] main h2 {
+  color: hsl(var(--foreground));
+  font-weight: 760;
+  letter-spacing: -0.035em;
+  text-wrap: balance;
+}
+
+html[data-experience="screenroom"] main .media-section > div:first-child {
+  border-bottom: 1px solid hsl(var(--border));
+  padding-bottom: 0.75rem;
+}
+
+html[data-experience="screenroom"] main .media-section > div:first-child h2 {
+  font-size: 1.4rem;
+}
+
+html[data-experience="screenroom"] main .media-section > div:first-child a {
+  color: hsl(var(--primary));
+  font-size: 0.8rem;
+  font-weight: 700;
+}
+
+html[data-experience="screenroom"] main div.rounded-lg.border:not(.screenroom-media-card) {
+  border-color: hsl(var(--border));
+  background-color: hsl(var(--card));
+  box-shadow: 0 5px 18px hsl(var(--foreground) / 0.06);
+}
+
+html[data-experience="screenroom"] [role="dialog"] {
+  border-color: hsl(var(--border));
+  border-radius: var(--radius-xl);
+  background-color: hsl(var(--card));
+  box-shadow: 0 18px 48px hsl(222 35% 3% / 0.42);
+}
+
+html[data-experience="screenroom"] main :is(input, select, textarea) {
+  border-color: hsl(var(--border));
+  background-color: hsl(var(--background));
+}
+
+html[data-experience="screenroom"] main :is(input, select, textarea):focus-visible {
+  outline-color: hsl(var(--ring));
+}
+
+html[data-experience="screenroom"] main :is(
+  .matinee-movie-hero-grid,
+  .matinee-tv-hero-grid,
+  .matinee-person-hero
+) {
+  border: 1px solid hsl(var(--border));
+  border-radius: var(--radius-2xl);
+  background:
+    radial-gradient(ellipse at 92% 0%, hsl(var(--primary) / 0.12), transparent 42%),
+    linear-gradient(145deg, hsl(var(--card)), hsl(var(--background)));
+  box-shadow: 0 12px 30px hsl(var(--foreground) / 0.08);
+  padding: clamp(0.75rem, 2.2vw, 1.5rem);
+}
+
+html[data-experience="screenroom"] .matinee-person-details {
+  --person-hero-inline-padding: clamp(0.75rem, 2.2vw, 1.5rem);
+  --person-column-gap: 1.5rem;
+}
+
+html[data-experience="screenroom"] main :is(
+  .matinee-movie-poster-column,
+  .matinee-tv-poster-column,
+  .matinee-person-profile
+) > :is(img, [role="img"]) {
+  overflow: hidden;
+  border: 1px solid hsl(var(--border));
+  border-radius: var(--radius-xl);
+  box-shadow: 0 10px 24px hsl(var(--foreground) / 0.18);
+}
+
+html[data-experience="screenroom"] main :is(
+  .matinee-movie-summary,
+  .matinee-tv-summary,
+  .matinee-person-info,
+  .matinee-person-movie-credits,
+  .matinee-person-tv-credits
+) {
+  min-width: 0;
+  border: 1px solid hsl(var(--border));
+  border-radius: var(--radius-xl);
+  background: hsl(var(--card) / 0.82);
+  padding: clamp(0.75rem, 1.8vw, 1.25rem);
+}
+
+html[data-experience="screenroom"] main :is(
+  .matinee-movie-metadata,
+  .matinee-tv-metadata
+) {
+  border-block: 1px solid hsl(var(--border));
+  padding-block: 0.75rem;
+}
+
+html[data-experience="screenroom"] main :is(
+  .matinee-movie-genres,
+  .matinee-tv-genres
+) a {
+  border-radius: 9999px;
+}
+
+html[data-experience="screenroom"] main :is(
+  .matinee-movie-overview,
+  .matinee-tv-overview,
+  .matinee-person-biography,
+  .matinee-person-gallery,
+  .matinee-person-wikimedia
+) {
+  border-color: hsl(var(--border));
+}
+
+html[data-experience="screenroom"] main :is(
+  .matinee-movie-overview,
+  .matinee-movie-sidebar section,
+  .matinee-movie-companies,
+  .matinee-movie-credits,
+  .matinee-movie-media,
+  .matinee-movie-related,
+  .matinee-tv-overview,
+  .matinee-tv-trailer,
+  .matinee-tv-mobile-trailer,
+  .matinee-tv-companies,
+  .matinee-tv-credits,
+  .matinee-tv-episodes,
+  .matinee-tv-media,
+  .matinee-tv-related
+) {
+  border: 1px solid hsl(var(--border));
+  border-radius: var(--radius-xl);
+  background: hsl(var(--card) / 0.72);
+  padding: clamp(0.75rem, 1.8vw, 1.25rem);
+}
+
+html[data-experience="screenroom"] main :is(
+  .matinee-movie-overview,
+  .matinee-movie-sidebar h2,
+  .matinee-movie-companies h2,
+  .matinee-movie-credits h2,
+  .matinee-movie-media h2,
+  .matinee-movie-related h2,
+  .matinee-tv-overview h2,
+  .matinee-tv-trailer h2,
+  .matinee-tv-mobile-trailer h2,
+  .matinee-tv-companies h2,
+  .matinee-tv-credits h2,
+  .matinee-tv-episodes h2,
+  .matinee-tv-media h2,
+  .matinee-tv-related h2
+) {
+  color: hsl(var(--foreground));
+}
+
+html[data-experience="screenroom"] main :is(
+  .matinee-tv-season-overview,
+  .matinee-tv-ratings
+) {
+  border: 1px solid hsl(var(--border));
+  border-radius: var(--radius-lg);
+  background: hsl(var(--background) / 0.62);
+  padding: 1rem;
+}
+
+html[data-experience="screenroom"] main .matinee-tv-episode-grid > div > button {
+  overflow: hidden;
+  border: 1px solid hsl(var(--border));
+  border-radius: var(--radius-lg);
+  background: hsl(var(--card));
+}
+
+html[data-experience="screenroom"] main .matinee-tv-episode-grid > div > button:hover {
+  border-color: hsl(var(--primary) / 0.65);
+}
+
+html[data-experience="screenroom"] main :is(
+  .matinee-person-info,
+  .matinee-person-biography,
+  .matinee-person-gallery,
+  .matinee-person-wikimedia
+) h2 {
+  font-size: 1.2rem;
+}
+
+html[data-experience="screenroom"] .matinee-person-details .matinee-person-section-title {
+  font-size: var(--person-section-title-size);
+}
+
+html[data-experience="screenroom"] main :is(
+  .matinee-account-page,
+  .matinee-account-lists-page,
+  .matinee-settings-page,
+  .matinee-media-list-page,
+  .matinee-people-list-page,
+  .matinee-release-date-page,
+  .matinee-about-page
+) {
+  min-width: 0;
+}
+
+html[data-experience="screenroom"] .screenroom-shell main :is(
+  .matinee-account-page,
+  .matinee-account-lists-page,
+  .matinee-settings-page,
+  .matinee-media-list-page,
+  .matinee-people-list-page,
+  .matinee-release-date-page,
+  .matinee-about-page
+) :is(button, a) {
+  transition: color 160ms ease, background-color 160ms ease, border-color 160ms ease;
+}
+
+html[data-experience="screenroom"] .screenroom-shell main :is(
+  .matinee-account-page,
+  .matinee-account-lists-page,
+  .matinee-settings-page,
+  .matinee-media-list-page,
+  .matinee-people-list-page,
+  .matinee-release-date-page,
+  .matinee-about-page
+) :is(button, a):focus-visible {
+  outline: 2px solid hsl(var(--ring));
+  outline-offset: 2px;
+}
+
+@media (max-width: 639px) {
+  html[data-experience="screenroom"] .screenroom-shell main :is(
+    .matinee-movie-hero-grid,
+    .matinee-tv-hero-grid,
+    .matinee-person-hero
+  ) {
+    border-radius: var(--radius-xl);
+    padding: 0.75rem;
+  }
+}
+
+.search-control:focus-within {
+  border-color: hsl(var(--ring));
+  box-shadow: 0 0 0 1px hsl(var(--ring));
+}
 .search-control:focus-within {
   border-color: hsl(var(--ring));
   box-shadow: 0 0 0 1px hsl(var(--ring));
