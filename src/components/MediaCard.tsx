@@ -10,10 +10,10 @@ import { useExperience } from '@/contexts/ExperienceContext';
 import type { ReactNode } from 'react';
 
 type MediaCardProps =
-  | { item: Movie | TVShow | PersonCredit; type: 'movie' | 'tv'; metadataAction?: ReactNode }
-  | { item: PersonListResult; type: 'person'; metadataAction?: ReactNode };
+  | { item: Movie | TVShow | PersonCredit; type: 'movie' | 'tv'; metadataAction?: ReactNode; compactCharacter?: boolean }
+  | { item: PersonListResult; type: 'person'; metadataAction?: ReactNode; compactCharacter?: boolean };
 
-export function MediaCard({ item, type, metadataAction }: MediaCardProps) {
+export function MediaCard({ item, type, metadataAction, compactCharacter = false }: MediaCardProps) {
   const { experience } = useExperience();
   const isPerson = type === 'person';
   const title = isPerson ? item.name : ('title' in item && item.title ? item.title : ('name' in item ? item.name : ''));
@@ -77,7 +77,12 @@ export function MediaCard({ item, type, metadataAction }: MediaCardProps) {
           <p className="line-clamp-1 text-[10px] text-muted-foreground">{item.known_for_department}</p>
         )}
         {'character' in item && item.character && (
-          <p className="break-words text-[9px] leading-3 text-muted-foreground italic">as {item.character}</p>
+          <p
+            className="break-words text-[9px] leading-3 text-muted-foreground italic"
+            style={compactCharacter ? { display: '-webkit-box', WebkitBoxOrient: 'vertical', WebkitLineClamp: 2, overflow: 'hidden' } : undefined}
+          >
+            as {item.character}
+          </p>
         )}
         {'job' in item && item.job && (
           <p className="break-words text-[9px] leading-3 text-muted-foreground">{item.job}</p>

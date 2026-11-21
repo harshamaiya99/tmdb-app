@@ -190,7 +190,7 @@ export function AccountListsPage() {
 
   if (!isListAccountConnected) {
     return (
-      <main className="container py-8">
+      <main className="container py-8 matinee-account-lists">
         <Card className="mx-auto max-w-xl">
           <CardContent className="space-y-4 p-6">
             <h1 className="text-xl font-semibold">Connect your TMDB account</h1>
@@ -226,7 +226,7 @@ export function AccountListsPage() {
     const loading = detailQuery.loading || (mediaType !== 'all' && filteredItemsQuery.loading);
     const error = detailQuery.error ?? (mediaType !== 'all' ? filteredItemsQuery.error : null);
     return (
-      <main className="container space-y-6 py-6">
+      <main className="container space-y-6 py-6 matinee-account-lists">
         <div className="flex flex-wrap items-center justify-between gap-4">
           <div className="min-w-0">
             <h1 className="flex flex-wrap items-baseline gap-x-2 break-words text-3xl font-bold tracking-tight">
@@ -396,7 +396,7 @@ export function AccountListsPage() {
   const totalPages = Math.min(listsQuery.data?.total_pages ?? 1, 500);
 
   return (
-    <main className="container space-y-6 py-6">
+    <main className="container space-y-6 py-6 matinee-account-lists">
       <div>
         <h1 className="text-3xl font-bold tracking-tight">Your Lists</h1>
       </div>

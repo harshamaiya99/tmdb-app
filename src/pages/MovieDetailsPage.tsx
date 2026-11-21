@@ -200,10 +200,10 @@ export function MovieDetailsPage() {
   }, []);
 
   return (
-    <div className="min-h-screen">
+    <div className="min-h-screen matinee-movie-details">
       <div className="container py-6">
         
-        <div className="mb-6 min-w-0 md:hidden">
+        <div className="matinee-movie-mobile-title mb-6 min-w-0 md:hidden">
           <h1 className="break-words text-3xl font-bold tracking-tight md:text-4xl">{movie.title}</h1>
           {movie.tagline && (
             <p className="mt-1 text-sm italic text-muted-foreground">"{movie.tagline}"</p>
@@ -211,10 +211,10 @@ export function MovieDetailsPage() {
         </div>
 
         {/* TOP SECTION */}
-        <div className={`grid min-w-0 grid-cols-1 items-start gap-4 min-[360px]:grid-cols-[minmax(0,0.9fr)_minmax(0,1.1fr)] md:grid-cols-[200px_minmax(0,1fr)] md:gap-6${hasRightColumn ? ' xl:grid-cols-[200px_minmax(0,1fr)_400px]' : ' xl:grid-cols-[200px_minmax(0,1fr)]'}`}>
+        <div className={`matinee-movie-hero-grid grid min-w-0 grid-cols-1 items-start gap-4 min-[360px]:grid-cols-[minmax(0,0.9fr)_minmax(0,1.1fr)] md:grid-cols-[200px_minmax(0,1fr)] md:gap-6${hasRightColumn ? ' matinee-movie-has-sidebar xl:grid-cols-[200px_minmax(0,1fr)_400px]' : ' xl:grid-cols-[200px_minmax(0,1fr)]'}`}>
           
           {/* Poster and movie actions */}
-          <div ref={posterColumnRef} className="mx-auto w-full max-w-[180px] space-y-4 min-[360px]:mx-0 min-[360px]:max-w-none md:max-w-none xl:col-start-1 xl:row-start-1 xl:self-start">
+          <div ref={posterColumnRef} className="matinee-movie-poster-column mx-auto w-full max-w-[180px] space-y-4 min-[360px]:mx-0 min-[360px]:max-w-none md:max-w-none xl:col-start-1 xl:row-start-1 xl:self-start">
             {movie.poster_path ? (
               <TMDBImage path={movie.poster_path} alt={`${movie.title} poster`} width={500} height={750} sizes="(min-width: 768px) 200px, (min-width: 360px) 42vw, 180px" loading="eager" fetchPriority="high" className="block h-auto w-full max-w-full rounded-lg border shadow-sm" />
             ) : (
@@ -234,9 +234,9 @@ export function MovieDetailsPage() {
 
           <div className="contents md:grid md:min-w-0 md:grid-cols-1 md:gap-y-4 xl:contents">
             <div ref={detailsColumnRef} className="contents md:col-start-1 md:row-start-1 md:flex md:flex-col md:gap-4 xl:col-start-2 xl:row-start-1 xl:self-start">
-            <div className="min-w-0 flex flex-col gap-6 min-[360px]:col-start-2">
+            <div className="matinee-movie-summary min-w-0 flex flex-col gap-6 min-[360px]:col-start-2">
               <div className="hidden md:block">
-                <h1 className="break-words text-3xl font-bold tracking-tight">{movie.title}</h1>
+                <h1 className="matinee-movie-title break-words text-3xl font-bold tracking-tight">{movie.title}</h1>
                 {movie.tagline && (
                   <p className="mt-1 text-sm italic text-muted-foreground">"{movie.tagline}"</p>
                 )}
@@ -255,7 +255,7 @@ export function MovieDetailsPage() {
                 </p>
               )}
 
-              <div className="flex flex-wrap items-center gap-4 mt-3 text-sm text-muted-foreground">
+              <div className="matinee-movie-metadata flex flex-wrap items-center gap-4 mt-3 text-sm text-muted-foreground">
                 {releaseDate && (
                   <div className="flex items-center gap-1">
                     <Calendar className="h-4 w-4" />
@@ -290,7 +290,7 @@ export function MovieDetailsPage() {
               </div>
 
               {movie.genres && movie.genres.length > 0 && (
-                <div className="flex flex-wrap gap-2">
+                <div className="matinee-movie-genres flex flex-wrap gap-2">
                   {movie.genres.map((genre) => (
                     <Link key={genre.id} to={`/category/genre-movie-${genre.id}`} className="inline-flex">
                       <Badge variant="secondary">{genre.name}</Badge>
@@ -348,7 +348,7 @@ export function MovieDetailsPage() {
             </div>
 
             {movie.overview && (
-              <section className="min-[360px]:col-span-2">
+              <section className="matinee-movie-overview min-[360px]:col-span-2">
                 <h2 className="mb-2 text-xl font-semibold">Overview</h2>
                 <p className="leading-relaxed text-muted-foreground">{movie.overview}</p>
               </section>
@@ -356,7 +356,7 @@ export function MovieDetailsPage() {
             </div>
 
             {(trailer || hasCollection) && (
-              <div ref={rightColumnRef} className={`hidden min-w-0 space-y-8 md:col-start-1 md:row-start-2 md:block xl:col-start-3 xl:row-start-1 xl:self-start${placeCompanyInfoBesideRightColumn ? ' xl:row-span-2' : ''}`}>
+              <div ref={rightColumnRef} className={`matinee-movie-sidebar hidden min-w-0 space-y-8 md:col-span-2 md:col-start-1 md:row-start-2 md:block xl:col-span-1 xl:col-start-3 xl:row-start-1 xl:self-start${placeCompanyInfoBesideRightColumn ? ' xl:row-span-2' : ''}`}>
                 {trailer && (
                   <section className="min-w-0">
                     <h2 className="mb-2 text-xl font-semibold">Trailer</h2>
@@ -394,7 +394,7 @@ export function MovieDetailsPage() {
         {Boolean(regionProviders.length > 0 || movie.production_companies?.length) && (
           <section
             ref={companyInfoRef}
-            className={`mt-4 flex flex-wrap items-start gap-x-6 gap-y-6 border-t pt-6 min-[360px]:col-span-2 md:col-span-2 md:mt-0 xl:col-start-1 xl:row-start-2${placeCompanyInfoBesideRightColumn ? ' xl:col-span-2' : hasRightColumn ? ' xl:col-span-3' : ' xl:col-span-2'}`}
+            className={`matinee-movie-companies mt-4 flex flex-wrap items-start gap-x-6 gap-y-6 border-t pt-6 min-[360px]:col-span-2 md:col-span-2 md:mt-0 xl:col-start-1 xl:row-start-2${placeCompanyInfoBesideRightColumn ? ' xl:col-span-2' : hasRightColumn ? ' xl:col-span-3' : ' xl:col-span-2'}`}
           >
             {regionProviders.length > 0 && (
               <div className="w-fit max-w-full shrink-0">
@@ -492,7 +492,7 @@ export function MovieDetailsPage() {
 
         {/* Cast and crew */}
         {(cast.length > 0 || crew.length > 0) && (
-          <div className="mt-12 pt-8 border-t">
+          <div className="matinee-movie-credits mt-12 pt-8 border-t">
             <div className="flex items-center justify-between gap-4 mb-4">
               <h2 className="text-xl font-semibold">{activeCredits === 'cast' ? 'Cast' : 'Crew'}</h2>
               <div className="media-category-toggle flex items-center border" role="group" aria-label="Credits">
@@ -543,7 +543,7 @@ export function MovieDetailsPage() {
 
         {(movieImages.length > 0 || movieVideos.length > 0) && (
           <LazySection>
-            <section aria-labelledby="movie-media-title" className="mt-12 border-t pt-8">
+            <section aria-labelledby="movie-media-title" className="matinee-movie-media mt-12 border-t pt-8">
               <div className="mb-6 flex flex-wrap items-center justify-between gap-3">
                 <h2 id="movie-media-title" className="text-2xl font-semibold">Media</h2>
                 <div className="media-category-toggle flex items-center border" role="group" aria-label="Movie media">
@@ -743,7 +743,7 @@ export function MovieDetailsPage() {
               hideSeeMore={!hasMoreRelatedMovies}
               limit={20}
               horizontalScroll
-              className="mt-12 border-t pt-8"
+              className="matinee-movie-related mt-12 border-t pt-8"
               titleClassName="text-2xl font-semibold tracking-normal"
             />
           </LazySection>

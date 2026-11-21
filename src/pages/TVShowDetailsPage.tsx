@@ -309,17 +309,17 @@ export function TVShowDetailsPage() {
   const hasSeasonRatings = tvShow.seasons?.some((season) => season.season_number > 0) ?? false;
 
   return (
-    <div className="min-h-screen">
+    <div className="min-h-screen matinee-tv-details">
       <div className="container py-6">
-        <div className="mb-6 min-w-0 md:hidden">
+        <div className="matinee-tv-mobile-title mb-6 min-w-0 md:hidden">
           <h1 className="break-words text-3xl font-bold tracking-tight md:text-4xl">{tvShow.name}</h1>
           {tvShow.tagline && (
             <p className="mt-1 text-sm italic text-muted-foreground">"{tvShow.tagline}"</p>
           )}
         </div>
 
-        <div className="grid min-w-0 grid-cols-1 items-start gap-4 min-[360px]:grid-cols-[minmax(0,0.9fr)_minmax(0,1.1fr)] md:grid-cols-[200px_minmax(0,1fr)] md:gap-6">
-          <div className="mx-auto w-full max-w-[180px] space-y-4 min-[360px]:mx-0 min-[360px]:max-w-none md:max-w-none">
+        <div className="matinee-tv-hero-grid grid min-w-0 grid-cols-1 items-start gap-4 min-[360px]:grid-cols-[minmax(0,0.9fr)_minmax(0,1.1fr)] md:grid-cols-[200px_minmax(0,1fr)] md:gap-6">
+          <div className="matinee-tv-poster-column mx-auto w-full max-w-[180px] space-y-4 min-[360px]:mx-0 min-[360px]:max-w-none md:max-w-none">
             {tvShow.poster_path ? (
               <TMDBImage path={tvShow.poster_path} alt={`${tvShow.name} poster`} width={500} height={750} sizes="(min-width: 768px) 200px, (min-width: 360px) 42vw, 180px" loading="eager" fetchPriority="high" className="block h-auto w-full max-w-full rounded-lg border" />
             ) : (
@@ -330,9 +330,9 @@ export function TVShowDetailsPage() {
 
           <div className="contents md:grid md:min-w-0 md:grid-cols-1 md:gap-y-4 xl:grid-cols-[minmax(0,1fr)_400px] xl:gap-6">
             <div className="contents md:col-start-1 md:row-start-1 md:flex md:flex-col md:gap-4">
-            <div className="min-w-0 flex flex-col gap-6 min-[360px]:col-start-2">
+            <div className="matinee-tv-summary min-w-0 flex flex-col gap-6 min-[360px]:col-start-2">
             <div className="hidden md:block">
-              <h1 className="break-words text-3xl font-bold tracking-tight">{tvShow.name}</h1>
+              <h1 className="matinee-tv-title break-words text-3xl font-bold tracking-tight">{tvShow.name}</h1>
               {tvShow.tagline && (
                 <p className="mt-1 text-sm italic text-muted-foreground">"{tvShow.tagline}"</p>
               )}
@@ -351,7 +351,7 @@ export function TVShowDetailsPage() {
               </p>
             )}
 
-            <div className="flex flex-wrap items-center gap-4 text-sm text-muted-foreground">
+            <div className="matinee-tv-metadata flex flex-wrap items-center gap-4 text-sm text-muted-foreground">
               {firstAirYear && (
                 <div className="flex items-center gap-1">
                   <Calendar className="h-4 w-4" />
@@ -386,7 +386,7 @@ export function TVShowDetailsPage() {
             </div>
 
             {tvShow.genres && tvShow.genres.length > 0 && (
-              <div className="flex flex-wrap gap-2">
+              <div className="matinee-tv-genres flex flex-wrap gap-2">
                 {tvShow.genres.map((genre) => (
                   <Link key={genre.id} to={`/category/genre-tv-${genre.id}`} className="inline-flex">
                     <Badge variant="secondary">{genre.name}</Badge>
@@ -438,7 +438,7 @@ export function TVShowDetailsPage() {
             </div>
 
             {tvShow.overview && (
-              <section className="min-[360px]:col-span-2">
+              <section className="matinee-tv-overview min-[360px]:col-span-2">
                 <h2 className="mb-2 text-xl font-semibold">Overview</h2>
                 <p className="leading-relaxed text-muted-foreground">{tvShow.overview}</p>
               </section>
@@ -446,7 +446,7 @@ export function TVShowDetailsPage() {
             </div>
 
             {tvShow.videos?.results.find((v) => v.type === 'Trailer' && v.site === 'YouTube') && (
-              <section className="hidden min-w-0 md:col-start-1 md:row-start-2 md:block xl:col-start-2 xl:row-start-1">
+              <section className="matinee-tv-trailer hidden min-w-0 md:col-start-1 md:row-start-2 md:block xl:col-start-2 xl:row-start-1">
                 <h2 className="mb-2 text-xl font-semibold">Trailer</h2>
                 <div className="aspect-video w-full min-w-0 overflow-hidden rounded-lg border">
                   <iframe
@@ -465,7 +465,7 @@ export function TVShowDetailsPage() {
         </div>
 
         {Boolean(regionProviders.length > 0 || tvShow.production_companies?.length) && (
-          <section className="mt-8 flex flex-wrap items-start gap-x-6 gap-y-6 border-t pt-6">
+          <section className="matinee-tv-companies mt-8 flex flex-wrap items-start gap-x-6 gap-y-6 border-t pt-6">
             {regionProviders.length > 0 && (
               <div className="w-fit max-w-full shrink-0">
                 <h2 className="mb-3 text-xl font-semibold">Streaming On in {region}</h2>
@@ -525,7 +525,7 @@ export function TVShowDetailsPage() {
         )}
 
         {tvShow.videos?.results.find((v) => v.type === 'Trailer' && v.site === 'YouTube') && (
-          <section className="mt-8 md:hidden">
+          <section className="matinee-tv-mobile-trailer mt-8 md:hidden">
             <h2 className="mb-2 text-xl font-semibold">Trailer</h2>
             <div className="aspect-video w-full min-w-0 overflow-hidden rounded-lg border">
               <iframe
@@ -542,9 +542,9 @@ export function TVShowDetailsPage() {
         )}
 
         {(hasCredits || hasSeasonRatings) && (
-          <div className="mt-12 grid gap-6 border-t pt-8 lg:grid-cols-5">
+          <div className="matinee-tv-credits mt-12 grid gap-6 border-t pt-8 lg:grid-cols-5">
             {hasCredits && (
-              <section className="min-w-0 lg:col-span-3">
+              <section className="matinee-tv-cast min-w-0 lg:col-span-3">
                 <div className="mb-4 flex items-start justify-between gap-4">
                   <h2 className="text-xl font-semibold">{activeCredits === 'cast' ? 'Cast' : 'Crew'}</h2>
                   <div className="media-category-toggle flex items-center border" role="group" aria-label="Credits">
@@ -587,7 +587,7 @@ export function TVShowDetailsPage() {
 
             {hasSeasonRatings && (
               <section
-                className={`min-w-0 ${hasCredits ? 'lg:col-span-2' : 'lg:col-span-5'}`}
+                className={`matinee-tv-ratings min-w-0 ${hasCredits ? 'lg:col-span-2' : 'lg:col-span-5'}`}
                 aria-labelledby="season-ratings-title"
               >
                 <h2 id="season-ratings-title" className="mb-4 text-xl font-semibold">Season Ratings</h2>
@@ -601,7 +601,7 @@ export function TVShowDetailsPage() {
 
         {/* Episodes */}
         {tvShow.seasons && tvShow.seasons.length > 0 && (
-          <div className="mt-12 pt-8 border-t">
+          <div className="matinee-tv-episodes mt-12 pt-8 border-t">
             <div className="mb-6 flex flex-col items-stretch gap-3 sm:flex-row sm:items-center">
               <h2 className="text-2xl font-semibold leading-none">Episodes</h2>
               <Select
@@ -626,7 +626,7 @@ export function TVShowDetailsPage() {
             </div>
 
             {selectedSeasonDetails?.overview?.trim() && (
-              <div className="mb-6">
+              <div className="matinee-tv-season-overview mb-6">
                 <h3 className="mb-2 text-lg font-semibold">
                   {selectedSeasonDetails.name || `Season ${selectedSeason}`} Overview
                 </h3>
@@ -634,7 +634,7 @@ export function TVShowDetailsPage() {
               </div>
             )}
 
-            <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5">
+            <div className="matinee-tv-episode-grid grid grid-cols-1 gap-6 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5">
               {loadingEpisodes ? (
                 [...Array(5)].map((_, index) => (
                   <Skeleton key={index} className="h-64 w-full rounded-xl" />
@@ -672,7 +672,7 @@ export function TVShowDetailsPage() {
 
         {(showImages.length > 0 || (tvShow.videos?.results.length ?? 0) > 0) && (
           <LazySection>
-            <section aria-labelledby="tv-media-title" className="mt-12 border-t pt-8">
+            <section aria-labelledby="tv-media-title" className="matinee-tv-media mt-12 border-t pt-8">
               <div className="mb-6 flex flex-wrap items-center justify-between gap-3">
                 <h2 id="tv-media-title" className="text-2xl font-semibold">Media</h2>
                 <div className="media-category-toggle flex items-center border" role="group" aria-label="TV show media">
@@ -796,7 +796,7 @@ export function TVShowDetailsPage() {
               hideSeeMore={!hasMoreRelatedShows}
               limit={20}
               horizontalScroll
-              className="mt-12 border-t pt-8"
+              className="matinee-tv-related mt-12 border-t pt-8"
               titleClassName="text-2xl font-semibold tracking-normal"
             />
           </LazySection>

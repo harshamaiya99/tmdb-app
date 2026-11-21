@@ -19,10 +19,14 @@ export function PersonDetailsPage() {
   const { id } = useParams<{ id: string }>();
   const [selectedImageIndex, setSelectedImageIndex] = useState<number | null>(null);
   const [selectedWikimediaIndex, setSelectedWikimediaIndex] = useState<number | null>(null);
-  const [creditsFullWidth, setCreditsFullWidth] = useState(false);
+  const [profileHeight, setProfileHeight] = useState(0);
+  const [biographyVisibleLines, setBiographyVisibleLines] = useState(0);
+  const [biographyExpanded, setBiographyExpanded] = useState(false);
+  const [biographyOverflows, setBiographyOverflows] = useState(false);
   const dialogRef = useRef<HTMLDivElement>(null);
-  const personalInfoRef = useRef<HTMLDivElement>(null);
-  const biographyRef = useRef<HTMLDivElement>(null);
+  const profileRef = useRef<HTMLDivElement>(null);
+  const biographyColumnRef = useRef<HTMLDivElement>(null);
+  const biographyTextRef = useRef<HTMLDivElement>(null);
   const galleryTriggerRef = useRef<HTMLButtonElement | null>(null);
   const navigate = useNavigate();
 
@@ -34,29 +38,59 @@ export function PersonDetailsPage() {
   const person = personQuery.data ?? null;
 
   useLayoutEffect(() => {
-    const personalInfo = personalInfoRef.current;
-    const biography = biographyRef.current;
-    if (!personalInfo || !biography) {
-      setCreditsFullWidth(false);
+    setBiographyExpanded(false);
+    setBiographyOverflows(false);
+    const profile = profileRef.current;
+    if (!profile) {
+      setProfileHeight(0);
       return;
     }
 
-    const updateCreditsPlacement = () => {
-      const biographyIsAsTallAsPersonalInfo = biography.getBoundingClientRect().height >= personalInfo.getBoundingClientRect().height;
-      setCreditsFullWidth((current) => current === biographyIsAsTallAsPersonalInfo ? current : biographyIsAsTallAsPersonalInfo);
+    const updateProfileHeight = () => {
+      const height = profile.getBoundingClientRect().height;
+      setProfileHeight((current) => Math.abs(current - height) < 1 ? current : height);
     };
 
-    updateCreditsPlacement();
-    const observer = new ResizeObserver(updateCreditsPlacement);
-    observer.observe(personalInfo);
-    observer.observe(biography);
-    window.addEventListener('resize', updateCreditsPlacement);
+    updateProfileHeight();
+    const observer = new ResizeObserver(updateProfileHeight);
+    observer.observe(profile);
+    window.addEventListener('resize', updateProfileHeight);
 
     return () => {
       observer.disconnect();
-      window.removeEventListener('resize', updateCreditsPlacement);
+      window.removeEventListener('resize', updateProfileHeight);
     };
-  }, [person?.id, person?.biography]);
+  }, [person?.id]);
+
+  useLayoutEffect(() => {
+    const biographyColumn = biographyColumnRef.current;
+    const biographyText = biographyTextRef.current;
+    if (!biographyColumn || !biographyText || !profileHeight) return;
+
+    const updateOverflow = () => {
+      if (!biographyExpanded) {
+        const textStyle = getComputedStyle(biographyText);
+        const lineHeight = Number.parseFloat(textStyle.lineHeight);
+        const columnTop = biographyColumn.getBoundingClientRect().top;
+        const textTop = biographyText.getBoundingClientRect().top;
+        if (!Number.isFinite(lineHeight) || lineHeight <= 0) return;
+
+        const visibleLines = Math.max(1, Math.floor((profileHeight - (textTop - columnTop)) / lineHeight));
+        const visibleHeight = visibleLines * lineHeight;
+        setBiographyVisibleLines((current) => current === visibleLines ? current : visibleLines);
+        setBiographyOverflows(biographyText.scrollHeight > visibleHeight + 1);
+      }
+    };
+    updateOverflow();
+    const observer = new ResizeObserver(updateOverflow);
+    observer.observe(biographyColumn);
+    observer.observe(biographyText);
+    window.addEventListener('resize', updateOverflow);
+    return () => {
+      observer.disconnect();
+      window.removeEventListener('resize', updateOverflow);
+    };
+  }, [biographyExpanded, person?.biography, profileHeight]);
 
   const wikimediaQuery = useCachedQuery<WikimediaImage[]>(
     `wikimedia-person:${id ?? 'none'}`,
@@ -207,6 +241,62 @@ export function PersonDetailsPage() {
     },
   ].filter((link): link is { label: string; href: string; icon: typeof Film } => Boolean(link));
 
+  const personalInfoSection = (
+    <div className="matinee-person-info min-w-0 space-y-4 text-sm">
+      <h2 className="mb-2 text-xl font-semibold">Personal Info</h2>
+
+      <div>
+        <p className="font-medium">Known For</p>
+        <p className="text-muted-foreground">{person.known_for_department}</p>
+      </div>
+
+      {birthDate && (
+        <div>
+          <p className="font-medium">Born</p>
+          <p className="text-muted-foreground">
+            {birthDate}
+            {birthAge !== null && <span> ({birthAge})</span>}
+          </p>
+        </div>
+      )}
+
+      {deathDate && (
+        <div>
+          <p className="font-medium flex items-center gap-1"><Calendar className="w-4 h-4" /> Died</p>
+          <p className="text-muted-foreground">{deathDate}</p>
+        </div>
+      )}
+
+      {person.place_of_birth && (
+        <div>
+          <p className="font-medium">Place of Birth</p>
+          <p className="text-muted-foreground">{person.place_of_birth}</p>
+        </div>
+      )}
+
+      {socialLinks.length > 0 && (
+        <div>
+          <p className="font-medium">Social</p>
+          <div className="mt-2 flex flex-wrap gap-2">
+            {socialLinks.map(({ label, href, icon: Icon }) => (
+              <a
+                key={label}
+                href={href}
+                target="_blank"
+                rel="noreferrer"
+                aria-label={label}
+                title={label}
+                className="inline-flex h-10 w-10 items-center justify-center rounded-full border border-border bg-muted/50 text-foreground transition hover:bg-muted"
+              >
+                <Icon className="h-4 w-4" />
+              </a>
+            ))}
+          </div>
+        </div>
+      )}
+    </div>
+  );
+
   const credits = sortPersonCredits(
     mergePersonCredits([
       ...(person.combined_credits?.cast ?? []),
@@ -221,11 +311,13 @@ export function PersonDetailsPage() {
   const movieCreditsSection = movieCredits.length > 0 && (
     <MediaSection
       title="Movies"
+      titleClassName="text-xl"
       items={movieCredits}
       type="movie"
-      className="space-y-4"
+      className="space-y-4 matinee-person-movie-credits"
       horizontalScroll
-      horizontalColumns={creditsFullWidth ? 10 : 8}
+      horizontalColumns={8}
+      compactCharacter
       limit={20}
       actionLabel="See All"
       category={`person-${person.id}-movies`}
@@ -235,11 +327,13 @@ export function PersonDetailsPage() {
   const tvCreditsSection = tvCredits.length > 0 && (
     <MediaSection
       title="TV Shows"
+      titleClassName="text-xl"
       items={tvCredits}
       type="tv"
-      className="space-y-4"
+      className="space-y-4 matinee-person-tv-credits"
       horizontalScroll
       horizontalColumns={10}
+      compactCharacter
       limit={20}
       actionLabel="See All"
       category={`person-${person.id}-tv`}
@@ -252,23 +346,22 @@ export function PersonDetailsPage() {
     : wikimediaQuery.data?.[selectedWikimediaIndex] ?? null;
 
   return (
-    <div className="min-h-screen">
+    <div className="min-h-screen matinee-person-details">
       <div className="container py-6">
-        <div className="space-y-8">
-          <h1 className="text-3xl font-bold tracking-tight md:hidden">
+        <div className="matinee-person-content space-y-8">
+          <h1 className="matinee-person-mobile-title text-3xl font-bold tracking-tight md:hidden">
             {person.name}
           </h1>
 
-          <div className="grid min-w-0 grid-cols-1 items-start gap-4 min-[360px]:grid-cols-[minmax(0,0.9fr)_minmax(0,1.1fr)] md:grid-cols-[200px_minmax(0,1fr)] md:gap-6">
-            <div className="contents md:col-start-1 md:row-start-1 md:flex md:flex-col md:gap-6">
-            <div className="mx-auto w-full max-w-[180px] min-[360px]:mx-0 min-[360px]:max-w-none md:max-w-none">
+          <div className="matinee-person-hero person-profile-bio-row grid min-w-0 grid-cols-1 items-start gap-4 md:gap-6">
+            <div ref={profileRef} className="matinee-person-profile mx-auto w-full max-w-[180px] md:mx-0 md:max-w-none">
               {person.profile_path ? (
                 <TMDBImage
                   path={person.profile_path}
                   alt={`${person.name} profile`}
                   width={500}
                   height={750}
-                  sizes="(min-width: 768px) 200px, (min-width: 360px) 42vw, 180px"
+                  sizes="(min-width: 768px) 256px, 180px"
                   loading="eager"
                   fetchPriority="high"
                   className="block h-auto w-full max-w-full rounded-xl border bg-muted shadow-sm"
@@ -280,69 +373,27 @@ export function PersonDetailsPage() {
               )}
             </div>
 
-            <div ref={personalInfoRef} className="min-w-0 space-y-4 text-sm min-[360px]:col-start-2 md:col-start-1 md:row-start-2">
-                <h2 className="mb-2 text-xl font-semibold">Personal Info</h2>
-
-                <div>
-                  <p className="font-medium">Known For</p>
-                  <p className="text-muted-foreground">{person.known_for_department}</p>
-                </div>
-
-                {birthDate && (
-                  <div>
-                    <p className="font-medium">Born</p>
-                    <p className="text-muted-foreground">
-                      {birthDate}
-                      {birthAge !== null && <span> ({birthAge})</span>}
-                    </p>
-                  </div>
-                )}
-
-                {deathDate && (
-                  <div>
-                    <p className="font-medium flex items-center gap-1"><Calendar className="w-4 h-4" /> Died</p>
-                    <p className="text-muted-foreground">{deathDate}</p>
-                  </div>
-                )}
-
-                {person.place_of_birth && (
-                  <div>
-                    <p className="font-medium">Place of Birth</p>
-                    <p className="text-muted-foreground">{person.place_of_birth}</p>
-                  </div>
-                )}
-
-                {socialLinks.length > 0 && (
-                  <div>
-                    <p className="font-medium">Social</p>
-                    <div className="mt-2 flex flex-wrap gap-2">
-                      {socialLinks.map(({ label, href, icon: Icon }) => (
-                        <a
-                          key={label}
-                          href={href}
-                          target="_blank"
-                          rel="noreferrer"
-                          aria-label={label}
-                          title={label}
-                          className="inline-flex h-10 w-10 items-center justify-center rounded-full border border-border bg-muted/50 text-foreground transition hover:bg-muted"
-                        >
-                          <Icon className="h-4 w-4" />
-                        </a>
-                      ))}
-                    </div>
-                  </div>
-                )}
-            </div>
-            </div>
-
-            <div className="min-w-0 space-y-8 min-[360px]:col-span-2 md:col-span-1 md:col-start-2 md:row-start-1">
-                <h1 className="hidden text-3xl font-bold tracking-tight md:block">
+            <div
+              ref={biographyColumnRef}
+              className="matinee-person-biography-column relative min-w-0"
+            >
+                <h1 className="matinee-person-title hidden text-3xl font-bold tracking-tight md:block">
                   {person.name}
                 </h1>
                 {person.biography && (
-                  <div ref={biographyRef}>
+                  <div className="matinee-person-biography">
                     <h2 className="text-xl font-semibold mb-3">Biography</h2>
-                    <div className="text-muted-foreground leading-relaxed text-sm md:text-base [&_p]:mb-4 [&_p:last-child]:mb-0 [&_a]:text-primary [&_a:hover]:underline [&_strong]:text-foreground [&_em]:text-foreground">
+                    <div
+                      id="person-biography-content"
+                      ref={biographyTextRef}
+                      className="relative text-muted-foreground leading-relaxed text-sm md:text-base [&_p]:mb-4 [&_p:last-child]:mb-0 [&_a]:text-primary [&_a:hover]:underline [&_strong]:text-foreground [&_em]:text-foreground"
+                      style={!biographyExpanded && biographyVisibleLines > 0 ? {
+                        display: '-webkit-box',
+                        WebkitBoxOrient: 'vertical',
+                        WebkitLineClamp: biographyVisibleLines,
+                        overflow: 'hidden',
+                      } : undefined}
+                    >
                       <ReactMarkdown remarkPlugins={[remarkGfm]} components={{
                         a: ({ node, ...props }) => (
                           <a {...props} target="_blank" rel="noreferrer" />
@@ -350,20 +401,34 @@ export function PersonDetailsPage() {
                       }}>
                         {person.biography}
                       </ReactMarkdown>
+                      {biographyOverflows && (
+                        <button
+                          type="button"
+                          className={`text-primary hover:underline ${biographyExpanded ? 'inline' : "absolute bottom-0 right-0 whitespace-nowrap bg-background before:mr-1 before:content-['…']"}`}
+                          aria-controls="person-biography-content"
+                          aria-expanded={biographyExpanded}
+                          onClick={() => setBiographyExpanded((expanded) => !expanded)}
+                        >
+                          {biographyExpanded ? 'Show less' : 'See more'}
+                        </button>
+                      )}
                     </div>
                   </div>
                 )}
-              {!creditsFullWidth && movieCreditsSection}
             </div>
           </div>
 
-          {creditsFullWidth && movieCreditsSection}
+          <div className="matinee-person-credits-row person-info-movies-row grid min-w-0 grid-cols-1 items-start gap-6">
+            {personalInfoSection}
+            {movieCreditsSection && <div className="min-w-0">{movieCreditsSection}</div>}
+          </div>
+
           {tvCreditsSection}
 
           {galleryImages.length > 0 && (
             <LazySection>
-            <div className="w-full border-t pt-8">
-              <h2 className="text-2xl font-semibold mb-6">Gallery</h2>
+            <div className="matinee-person-gallery w-full border-t pt-8">
+              <h2 className="text-xl font-semibold mb-6">Gallery</h2>
               <div className="grid grid-cols-3 gap-3 sm:gap-4 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-8 2xl:grid-cols-10">
                 {galleryImages.map((image, idx) => {
                   return (
@@ -392,9 +457,9 @@ export function PersonDetailsPage() {
 
           {wikimediaQuery.data && wikimediaQuery.data.length > 0 && (
             <LazySection>
-              <section className="w-full border-t pt-8" aria-labelledby="wikimedia-gallery-heading">
+              <section className="matinee-person-wikimedia w-full border-t pt-8" aria-labelledby="wikimedia-gallery-heading">
                 <div className="mb-6 flex flex-wrap items-center gap-3">
-                  <h2 id="wikimedia-gallery-heading" className="text-2xl font-semibold">Wikimedia Commons</h2>
+                  <h2 id="wikimedia-gallery-heading" className="text-xl font-semibold">Wikimedia Commons</h2>
                   <span className="rounded-full border px-2.5 py-1 text-xs text-muted-foreground">External source</span>
                 </div>
                 <p className="mb-5 text-sm text-muted-foreground">

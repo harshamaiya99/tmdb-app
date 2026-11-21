@@ -9,7 +9,7 @@ export function AccountCallbackPage() {
   const wasDenied = searchParams.get('error') === 'denied';
 
   return (
-    <div className="flex min-h-screen flex-col bg-background">
+    <div className="matinee-account-callback flex min-h-screen flex-col bg-background">
       <main className="container flex flex-1 items-center justify-center py-8">
         <Card className="w-full max-w-md">
           <CardHeader>

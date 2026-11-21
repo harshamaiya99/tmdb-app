@@ -21,9 +21,10 @@ interface MediaSectionProps {
   gridClassName?: string;
   horizontalScroll?: boolean;
   horizontalColumns?: 6 | 7 | 8 | 10;
+  compactCharacter?: boolean;
 }
 
-export function MediaSection({ title, items, type, category, titleAction, titleClassName, hideSeeMore = false, actionLabel = 'See More', limit = 10, className, gridClassName, horizontalScroll = false, horizontalColumns = 10 }: MediaSectionProps) {
+export function MediaSection({ title, items, type, category, titleAction, titleClassName, hideSeeMore = false, actionLabel = 'See More', limit = 10, className, gridClassName, horizontalScroll = false, horizontalColumns = 10, compactCharacter = false }: MediaSectionProps) {
   const scrollContainerRef = useRef<HTMLDivElement>(null);
   const [canScrollLeft, setCanScrollLeft] = useState(false);
   const [canScrollRight, setCanScrollRight] = useState(false);
@@ -80,7 +81,7 @@ export function MediaSection({ title, items, type, category, titleAction, titleC
     const card = type === 'person' ? (
       <MediaCard key={item.id} item={item as PersonListResult} type="person" />
     ) : (
-      <MediaCard key={item.id} item={item as Movie | TVShow | PersonCredit} type={type} />
+      <MediaCard key={item.id} item={item as Movie | TVShow | PersonCredit} type={type} compactCharacter={compactCharacter} />
     );
 
     return horizontalScroll ? (

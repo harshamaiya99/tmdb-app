@@ -493,7 +493,7 @@ export function MediaListPage() {
   );
 
   return (
-    <main className="container py-4">
+    <main className="container py-4 matinee-media-list">
         {(showMovieCategories || showTVCategories) && (
           <div className="mb-6 grid grid-cols-[minmax(0,1fr)_auto] items-center gap-x-3 gap-y-3 sm:flex sm:gap-4">
             <h1 className="min-w-0 text-3xl font-bold tracking-tight">{showMovieCategories ? 'Movies' : 'TV Shows'}</h1>

@@ -733,6 +733,534 @@ html[data-experience="screenroom"] body {
   gap: 2.25rem;
 }
 
+#root [data-experience="expressive"] .matinee-movie-details .matinee-movie-mobile-title {
+  border-bottom: 1px solid hsl(var(--primary) / 0.3);
+  padding-bottom: 1rem;
+}
+
+#root [data-experience="expressive"] .matinee-movie-details .matinee-movie-mobile-title h1,
+#root [data-experience="expressive"] .matinee-movie-details .matinee-movie-title {
+  color: hsl(var(--foreground));
+  font-size: clamp(1.8rem, 4vw, 3.25rem);
+  font-weight: 820;
+  letter-spacing: -0.055em;
+  line-height: 1.02;
+}
+
+#root [data-experience="expressive"] .matinee-movie-details .matinee-movie-mobile-title p,
+#root [data-experience="expressive"] .matinee-movie-details .matinee-movie-summary > div:first-child p {
+  color: hsl(var(--primary));
+  font-size: 0.9rem;
+}
+
+#root [data-experience="expressive"] .matinee-movie-details .matinee-movie-hero-grid {
+  gap: 1.25rem;
+  border: 1px solid hsl(var(--border));
+  border-radius: var(--radius-2xl);
+  background: hsl(var(--card));
+  padding: clamp(0.75rem, 2.4vw, 1.5rem);
+  box-shadow: 0 5px 18px hsl(var(--foreground) / 0.07);
+}
+
+#root [data-experience="expressive"] .matinee-movie-details .matinee-movie-poster-column {
+  max-width: 16rem;
+}
+
+#root [data-experience="expressive"] .matinee-movie-details .matinee-movie-poster-column > img,
+#root [data-experience="expressive"] .matinee-movie-details .matinee-movie-poster-column > [role="img"] {
+  overflow: hidden;
+  border: 3px solid hsl(var(--secondary));
+  border-radius: var(--radius-xl);
+  box-shadow: 0 8px 20px hsl(var(--foreground) / 0.16);
+}
+
+#root [data-experience="expressive"] .matinee-movie-details .matinee-movie-summary {
+  gap: 1.15rem;
+}
+
+#root [data-experience="expressive"] .matinee-movie-details .matinee-movie-summary > div:first-child {
+  display: grid;
+  gap: 0.55rem;
+}
+
+#root [data-experience="expressive"] .matinee-movie-details .matinee-movie-summary > div:first-child::before {
+  color: hsl(var(--primary));
+  content: "FEATURE PRESENTATION";
+  font-size: 0.66rem;
+  font-weight: 850;
+  letter-spacing: 0.16em;
+}
+
+#root [data-experience="expressive"] .matinee-movie-details .matinee-movie-metadata {
+  gap: 0.5rem;
+  margin-top: 0;
+}
+
+#root [data-experience="expressive"] .matinee-movie-details .matinee-movie-metadata > div {
+  display: inline-flex;
+  min-height: 2rem;
+  align-items: center;
+  gap: 0.35rem;
+  border: 1px solid hsl(var(--border));
+  border-radius: var(--radius-md);
+  background: hsl(var(--background) / 0.55);
+  padding: 0.3rem 0.55rem;
+}
+
+#root [data-experience="expressive"] .matinee-movie-details .matinee-movie-metadata > div:has(svg.lucide-star) {
+  border-color: hsl(var(--primary) / 0.4);
+  color: hsl(var(--primary));
+}
+
+#root [data-experience="expressive"] .matinee-movie-details .matinee-movie-genres a > span {
+  border-color: hsl(var(--primary) / 0.2);
+  border-radius: var(--radius-md);
+  background: hsl(var(--primary) / 0.08);
+  color: hsl(var(--foreground));
+}
+
+#root [data-experience="expressive"] .matinee-movie-details .matinee-movie-overview {
+  border-top: 1px solid hsl(var(--primary) / 0.24);
+  padding-top: 1rem;
+}
+
+#root [data-experience="expressive"] .matinee-movie-details .matinee-movie-overview h2,
+#root [data-experience="expressive"] .matinee-movie-details .matinee-movie-sidebar h2,
+#root [data-experience="expressive"] .matinee-movie-details .matinee-movie-companies h2 {
+  color: hsl(var(--foreground));
+  font-weight: 780;
+  letter-spacing: -0.035em;
+}
+
+#root [data-experience="expressive"] .matinee-movie-details .matinee-movie-sidebar section {
+  overflow: hidden;
+  border: 1px solid hsl(var(--border));
+  border-radius: var(--radius-xl);
+  background: hsl(var(--background) / 0.5);
+  padding: 0.75rem;
+}
+
+#root [data-experience="expressive"] .matinee-movie-details .matinee-movie-sidebar iframe {
+  border-radius: var(--radius-md);
+}
+
+#root [data-experience="expressive"] .matinee-movie-details .matinee-movie-companies,
+#root [data-experience="expressive"] .matinee-movie-details .matinee-movie-credits,
+#root [data-experience="expressive"] .matinee-movie-details .matinee-movie-media,
+#root [data-experience="expressive"] .matinee-movie-details .matinee-movie-related {
+  border-color: hsl(var(--primary) / 0.26);
+}
+
+#root [data-experience="expressive"] .matinee-movie-details .matinee-movie-credits,
+#root [data-experience="expressive"] .matinee-movie-details .matinee-movie-media,
+#root [data-experience="expressive"] .matinee-movie-details .matinee-movie-related {
+  padding-top: 1.5rem;
+}
+
+@media (min-width: 768px) {
+  #root [data-experience="expressive"] .matinee-movie-details .matinee-movie-hero-grid {
+    gap: clamp(1rem, 2vw, 1.75rem);
+    padding: clamp(1rem, 2vw, 1.5rem);
+  }
+
+  #root [data-experience="expressive"] .matinee-movie-details .matinee-movie-hero-grid.matinee-movie-has-sidebar {
+    grid-template-columns: minmax(13rem, 16rem) minmax(0, 1fr);
+  }
+
+  #root [data-experience="expressive"] .matinee-movie-details .matinee-movie-poster-column {
+    width: 100%;
+    max-width: 16rem;
+  }
+
+  #root [data-experience="expressive"] .matinee-movie-details .matinee-movie-summary {
+    padding: 0.5rem 0;
+  }
+}
+
+@media (min-width: 1280px) {
+  #root [data-experience="expressive"] .matinee-movie-details .matinee-movie-hero-grid.matinee-movie-has-sidebar {
+    grid-template-columns: minmax(14rem, 17rem) minmax(0, 1fr) minmax(18rem, 24rem);
+  }
+
+  #root [data-experience="expressive"] .matinee-movie-details .matinee-movie-hero-grid:not(.matinee-movie-has-sidebar) {
+    grid-template-columns: minmax(14rem, 17rem) minmax(0, 1fr);
+  }
+}
+
+@media (max-width: 767px) {
+  #root [data-experience="expressive"] .matinee-movie-details .matinee-movie-poster-column {
+    max-width: 14rem;
+  }
+
+  #root [data-experience="expressive"] .matinee-movie-details .matinee-movie-overview {
+    padding-top: 0.85rem;
+  }
+}
+
+#root [data-experience="expressive"] .matinee-tv-details .matinee-tv-mobile-title {
+  border-bottom: 1px solid hsl(var(--primary) / 0.3);
+  padding-bottom: 1rem;
+}
+
+#root [data-experience="expressive"] .matinee-tv-details .matinee-tv-mobile-title h1,
+#root [data-experience="expressive"] .matinee-tv-details .matinee-tv-title {
+  color: hsl(var(--foreground));
+  font-size: clamp(1.8rem, 4vw, 3.25rem);
+  font-weight: 820;
+  letter-spacing: -0.055em;
+  line-height: 1.02;
+}
+
+#root [data-experience="expressive"] .matinee-tv-details .matinee-tv-mobile-title p,
+#root [data-experience="expressive"] .matinee-tv-details .matinee-tv-summary > div:first-child p {
+  color: hsl(var(--primary));
+  font-size: 0.9rem;
+}
+
+#root [data-experience="expressive"] .matinee-tv-details .matinee-tv-hero-grid {
+  gap: 1.25rem;
+  border: 1px solid hsl(var(--border));
+  border-radius: var(--radius-2xl);
+  background: hsl(var(--card));
+  padding: clamp(0.75rem, 2.4vw, 1.5rem);
+  box-shadow: 0 5px 18px hsl(var(--foreground) / 0.07);
+}
+
+#root [data-experience="expressive"] .matinee-tv-details .matinee-tv-poster-column {
+  max-width: 16rem;
+}
+
+#root [data-experience="expressive"] .matinee-tv-details .matinee-tv-poster-column > img,
+#root [data-experience="expressive"] .matinee-tv-details .matinee-tv-poster-column > [role="img"] {
+  overflow: hidden;
+  border: 3px solid hsl(var(--secondary));
+  border-radius: var(--radius-xl);
+  box-shadow: 0 8px 20px hsl(var(--foreground) / 0.16);
+}
+
+#root [data-experience="expressive"] .matinee-tv-details .matinee-tv-summary {
+  gap: 1.15rem;
+}
+
+#root [data-experience="expressive"] .matinee-tv-details .matinee-tv-summary > div:first-child {
+  display: grid;
+  gap: 0.55rem;
+}
+
+#root [data-experience="expressive"] .matinee-tv-details .matinee-tv-summary > div:first-child::before {
+  color: hsl(var(--primary));
+  content: "SERIES PRESENTATION";
+  font-size: 0.66rem;
+  font-weight: 850;
+  letter-spacing: 0.16em;
+}
+
+#root [data-experience="expressive"] .matinee-tv-details .matinee-tv-metadata {
+  gap: 0.5rem;
+}
+
+#root [data-experience="expressive"] .matinee-tv-details .matinee-tv-metadata > div {
+  display: inline-flex;
+  min-height: 2rem;
+  align-items: center;
+  gap: 0.35rem;
+  border: 1px solid hsl(var(--border));
+  border-radius: var(--radius-md);
+  background: hsl(var(--background) / 0.55);
+  padding: 0.3rem 0.55rem;
+}
+
+#root [data-experience="expressive"] .matinee-tv-details .matinee-tv-metadata > div:has(svg.lucide-star) {
+  border-color: hsl(var(--primary) / 0.4);
+  color: hsl(var(--primary));
+}
+
+#root [data-experience="expressive"] .matinee-tv-details .matinee-tv-genres a > span {
+  border-color: hsl(var(--primary) / 0.2);
+  border-radius: var(--radius-md);
+  background: hsl(var(--primary) / 0.08);
+  color: hsl(var(--foreground));
+}
+
+#root [data-experience="expressive"] .matinee-tv-details .matinee-tv-overview {
+  border-top: 1px solid hsl(var(--primary) / 0.24);
+  padding-top: 1rem;
+}
+
+#root [data-experience="expressive"] .matinee-tv-details .matinee-tv-overview h2,
+#root [data-experience="expressive"] .matinee-tv-details .matinee-tv-trailer h2,
+#root [data-experience="expressive"] .matinee-tv-details .matinee-tv-mobile-trailer h2,
+#root [data-experience="expressive"] .matinee-tv-details .matinee-tv-companies h2,
+#root [data-experience="expressive"] .matinee-tv-details .matinee-tv-credits h2,
+#root [data-experience="expressive"] .matinee-tv-details .matinee-tv-episodes h2,
+#root [data-experience="expressive"] .matinee-tv-details .matinee-tv-media h2,
+#root [data-experience="expressive"] .matinee-tv-details .matinee-tv-related h2 {
+  color: hsl(var(--foreground));
+  font-weight: 780;
+  letter-spacing: -0.035em;
+}
+
+#root [data-experience="expressive"] .matinee-tv-details .matinee-tv-trailer > div,
+#root [data-experience="expressive"] .matinee-tv-details .matinee-tv-mobile-trailer > div {
+  overflow: hidden;
+  border-color: hsl(var(--border));
+  border-radius: var(--radius-xl);
+  background: hsl(var(--background));
+  padding: var(--border-inset);
+}
+
+#root [data-experience="expressive"] .matinee-tv-details .matinee-tv-trailer iframe,
+#root [data-experience="expressive"] .matinee-tv-details .matinee-tv-mobile-trailer iframe {
+  border-radius: calc(var(--radius-xl) - var(--border-inset));
+}
+
+#root [data-experience="expressive"] .matinee-tv-details .matinee-tv-companies,
+#root [data-experience="expressive"] .matinee-tv-details .matinee-tv-credits,
+#root [data-experience="expressive"] .matinee-tv-details .matinee-tv-episodes,
+#root [data-experience="expressive"] .matinee-tv-details .matinee-tv-media,
+#root [data-experience="expressive"] .matinee-tv-details .matinee-tv-related {
+  border-color: hsl(var(--primary) / 0.26);
+}
+
+#root [data-experience="expressive"] .matinee-tv-details .matinee-tv-season-overview {
+  border: 1px solid hsl(var(--border));
+  border-radius: var(--radius-xl);
+  background: hsl(var(--card));
+  padding: 1rem;
+}
+
+#root [data-experience="expressive"] .matinee-tv-details .matinee-tv-season-overview h3 {
+  font-weight: 750;
+  letter-spacing: -0.025em;
+}
+
+#root [data-experience="expressive"] .matinee-tv-details .matinee-tv-episode-grid > div > button {
+  border-color: hsl(var(--border));
+  border-radius: var(--radius-xl);
+  background: hsl(var(--card));
+  box-shadow: 0 2px 6px hsl(var(--foreground) / 0.07);
+}
+
+#root [data-experience="expressive"] .matinee-tv-details .matinee-tv-episode-grid > div > button:hover {
+  border-color: hsl(var(--primary) / 0.55);
+  box-shadow: 0 5px 12px hsl(var(--foreground) / 0.1);
+}
+
+#root [data-experience="expressive"] .matinee-tv-details .matinee-tv-episode-grid > div > button > div:first-child img {
+  object-position: center;
+}
+
+#root [data-experience="expressive"] .matinee-tv-details .matinee-tv-episode-grid > div > button h3 {
+  letter-spacing: -0.02em;
+}
+
+#root [data-experience="expressive"] .matinee-tv-details .matinee-tv-ratings > div {
+  border-color: hsl(var(--border));
+  border-radius: var(--radius-xl);
+  background: hsl(var(--card));
+}
+
+#root [data-experience="expressive"] .matinee-tv-details .matinee-tv-credits,
+#root [data-experience="expressive"] .matinee-tv-details .matinee-tv-episodes,
+#root [data-experience="expressive"] .matinee-tv-details .matinee-tv-media,
+#root [data-experience="expressive"] .matinee-tv-details .matinee-tv-related {
+  padding-top: 1.5rem;
+}
+
+@media (min-width: 768px) {
+  #root [data-experience="expressive"] .matinee-tv-details .matinee-tv-hero-grid {
+    grid-template-columns: minmax(13rem, 16rem) minmax(0, 1fr);
+    gap: clamp(1rem, 2vw, 1.75rem);
+    padding: clamp(1rem, 2vw, 1.5rem);
+  }
+
+  #root [data-experience="expressive"] .matinee-tv-details .matinee-tv-poster-column {
+    width: 100%;
+    max-width: 16rem;
+  }
+
+  #root [data-experience="expressive"] .matinee-tv-details .matinee-tv-summary {
+    padding: 0.5rem 0;
+  }
+
+  #root [data-experience="expressive"] .matinee-tv-details .matinee-tv-credits {
+    border: 0;
+    border-radius: var(--radius-2xl);
+    background: hsl(var(--card));
+    padding: 1.25rem;
+  }
+}
+
+@media (min-width: 1280px) {
+  #root [data-experience="expressive"] .matinee-tv-details .matinee-tv-hero-grid {
+    grid-template-columns: minmax(14rem, 17rem) minmax(0, 1fr);
+  }
+}
+
+@media (max-width: 767px) {
+  #root [data-experience="expressive"] .matinee-tv-details .matinee-tv-poster-column {
+    max-width: 14rem;
+  }
+
+  #root [data-experience="expressive"] .matinee-tv-details .matinee-tv-overview {
+    padding-top: 0.85rem;
+  }
+}
+
+#root [data-experience="expressive"] .matinee-person-details .matinee-person-content {
+  gap: 1.5rem;
+}
+
+#root [data-experience="expressive"] .matinee-person-details {
+  --person-profile-column: clamp(13rem, 24vw, 16rem);
+}
+
+.matinee-person-details {
+  --person-profile-column: 200px;
+}
+
+@media (min-width: 768px) {
+  .matinee-person-details .person-profile-bio-row,
+  .matinee-person-details .person-info-movies-row {
+    grid-template-columns: var(--person-profile-column) minmax(0, 1fr);
+  }
+}
+
+#root [data-experience="expressive"] .matinee-person-details .matinee-person-mobile-title {
+  border-bottom: 1px solid hsl(var(--primary) / 0.3);
+  padding-bottom: 1rem;
+}
+
+#root [data-experience="expressive"] .matinee-person-details .matinee-person-mobile-title,
+#root [data-experience="expressive"] .matinee-person-details .matinee-person-title {
+  color: hsl(var(--foreground));
+  font-size: clamp(1.8rem, 4vw, 3.25rem);
+  font-weight: 820;
+  letter-spacing: -0.055em;
+  line-height: 1.02;
+}
+
+#root [data-experience="expressive"] .matinee-person-details .matinee-person-hero {
+  gap: 1.25rem;
+  border: 1px solid hsl(var(--border));
+  border-radius: var(--radius-2xl);
+  background: hsl(var(--card));
+  padding: clamp(0.75rem, 2.4vw, 1.5rem);
+  box-shadow: 0 5px 18px hsl(var(--foreground) / 0.07);
+}
+
+#root [data-experience="expressive"] .matinee-person-details .matinee-person-profile img,
+#root [data-experience="expressive"] .matinee-person-details .matinee-person-profile [role="img"] {
+  overflow: hidden;
+  border: 3px solid hsl(var(--secondary));
+  border-radius: var(--radius-xl);
+  box-shadow: 0 8px 20px hsl(var(--foreground) / 0.16);
+}
+
+#root [data-experience="expressive"] .matinee-person-details .matinee-person-info {
+  align-self: start;
+  border: 1px solid hsl(var(--border));
+  border-radius: var(--radius-xl);
+  background: hsl(var(--background) / 0.55);
+  padding: 1rem;
+}
+
+#root [data-experience="expressive"] .matinee-person-details .matinee-person-info h2,
+#root [data-experience="expressive"] .matinee-person-details .matinee-person-biography h2,
+#root [data-experience="expressive"] .matinee-person-details .matinee-person-gallery h2,
+#root [data-experience="expressive"] .matinee-person-details .matinee-person-wikimedia h2 {
+  color: hsl(var(--foreground));
+  font-weight: 780;
+  letter-spacing: -0.035em;
+}
+
+#root [data-experience="expressive"] .matinee-person-details .matinee-person-info > div > p:first-child {
+  color: hsl(var(--primary));
+  font-weight: 700;
+}
+
+#root [data-experience="expressive"] .matinee-person-details .matinee-person-info a[aria-label] {
+  border-color: hsl(var(--border));
+  border-radius: var(--radius-md);
+  background: hsl(var(--card));
+}
+
+#root [data-experience="expressive"] .matinee-person-details .matinee-person-info a[aria-label]:hover {
+  border-color: hsl(var(--primary) / 0.6);
+  background: hsl(var(--secondary));
+}
+
+#root [data-experience="expressive"] .matinee-person-details .matinee-person-biography {
+  border-top: 1px solid hsl(var(--primary) / 0.24);
+  padding-top: 1rem;
+}
+
+#root [data-experience="expressive"] .matinee-person-details .matinee-person-biography-column > h1 {
+  margin-bottom: 1.25rem;
+}
+
+#root [data-experience="expressive"] .matinee-person-details .matinee-person-movie-credits,
+#root [data-experience="expressive"] .matinee-person-details .matinee-person-tv-credits {
+  min-width: 0;
+  border: 1px solid hsl(var(--border));
+  border-radius: var(--radius-xl);
+  background: hsl(var(--card));
+  padding: 1rem;
+  box-shadow: 0 3px 10px hsl(var(--foreground) / 0.06);
+}
+
+#root [data-experience="expressive"] .matinee-person-details .matinee-person-movie-credits > div:first-child,
+#root [data-experience="expressive"] .matinee-person-details .matinee-person-tv-credits > div:first-child {
+  border-bottom: 1px solid hsl(var(--primary) / 0.26);
+}
+
+#root [data-experience="expressive"] .matinee-person-details .matinee-person-gallery,
+#root [data-experience="expressive"] .matinee-person-details .matinee-person-wikimedia {
+  border-color: hsl(var(--primary) / 0.26);
+  padding-top: 1.5rem;
+}
+
+#root [data-experience="expressive"] .matinee-person-details .matinee-person-gallery button,
+#root [data-experience="expressive"] .matinee-person-details .matinee-person-wikimedia button {
+  border-color: hsl(var(--border));
+  border-radius: var(--radius-xl);
+  background: hsl(var(--card));
+  padding: var(--border-inset);
+}
+
+#root [data-experience="expressive"] .matinee-person-details .matinee-person-gallery button img,
+#root [data-experience="expressive"] .matinee-person-details .matinee-person-wikimedia button img {
+  border-radius: calc(var(--radius-xl) - var(--border-inset));
+}
+
+@media (min-width: 768px) {
+  #root [data-experience="expressive"] .matinee-person-details .matinee-person-hero {
+    grid-template-columns: var(--person-profile-column) minmax(0, 1fr);
+    gap: clamp(1rem, 2vw, 1.75rem);
+    padding: clamp(1rem, 2vw, 1.5rem);
+  }
+
+  #root [data-experience="expressive"] .matinee-person-details .matinee-person-profile {
+    width: 100%;
+    max-width: 16rem;
+  }
+}
+
+@media (max-width: 767px) {
+  #root [data-experience="expressive"] .matinee-person-details .matinee-person-profile {
+    max-width: 14rem;
+  }
+
+  #root [data-experience="expressive"] .matinee-person-details .matinee-person-info {
+    padding: 0.75rem;
+  }
+
+  #root [data-experience="expressive"] .matinee-person-details .matinee-person-movie-credits,
+  #root [data-experience="expressive"] .matinee-person-details .matinee-person-tv-credits {
+    padding: 0.75rem;
+  }
+}
+
 .matinee-search-group {
   min-width: 0;
 }
@@ -1415,10 +1943,143 @@ html[data-experience="expressive"] [role="menu"] [role="separator"] {
   border-radius: inherit;
 }
 
+#root [data-experience="expressive"] .matinee-media-list > div:first-child,
+#root [data-experience="expressive"] .matinee-people-list > div:first-child {
+  border-bottom: 1px solid hsl(var(--primary) / 0.3);
+  padding-bottom: 1rem;
+}
+
+#root [data-experience="expressive"] .matinee-media-list h1,
+#root [data-experience="expressive"] .matinee-people-list h1,
+#root [data-experience="expressive"] .matinee-release-list > h1,
+#root [data-experience="expressive"] .matinee-account-page h1,
+#root [data-experience="expressive"] .matinee-account-lists h1,
+#root [data-experience="expressive"] .matinee-about h1 {
+  color: hsl(var(--foreground));
+  font-size: clamp(1.7rem, 3.5vw, 2.5rem);
+  font-weight: 820;
+  letter-spacing: -0.05em;
+  line-height: 1.08;
+}
+
+#root [data-experience="expressive"] .matinee-media-list .media-category-toggle,
+#root [data-experience="expressive"] .matinee-people-list .media-category-toggle,
+#root [data-experience="expressive"] .matinee-account-page .media-category-toggle,
+#root [data-experience="expressive"] .matinee-account-lists .media-category-toggle {
+  max-width: 100%;
+}
+
+#root [data-experience="expressive"] .matinee-media-list [aria-label="Media filters"] {
+  border-color: hsl(var(--border));
+  border-radius: var(--radius-xl);
+  background: hsl(var(--card));
+  box-shadow: 0 8px 24px hsl(var(--foreground) / 0.18);
+}
+
+#root [data-experience="expressive"] .matinee-media-list .rounded-xl.border.border-dashed,
+#root [data-experience="expressive"] .matinee-people-list .rounded-xl.border.border-dashed,
+#root [data-experience="expressive"] .matinee-release-list .rounded-xl.border.border-dashed,
+#root [data-experience="expressive"] .matinee-account-page .rounded-xl.border.border-dashed,
+#root [data-experience="expressive"] .matinee-account-lists .rounded-xl.border.border-dashed {
+  border-color: hsl(var(--primary) / 0.38);
+  border-radius: var(--radius-2xl);
+  background: hsl(var(--card));
+  padding: clamp(1.5rem, 4vw, 2.5rem);
+}
+
+#root [data-experience="expressive"] .matinee-account-page > nav[aria-label="Account lists"],
+#root [data-experience="expressive"] .matinee-account-lists > nav[aria-label="Account lists"] {
+  gap: 0.35rem;
+  border-color: hsl(var(--primary) / 0.3);
+}
+
+#root [data-experience="expressive"] .matinee-account-page > nav[aria-label="Account lists"] > a,
+#root [data-experience="expressive"] .matinee-account-lists > nav[aria-label="Account lists"] > a {
+  border-radius: var(--radius-md);
+}
+
+#root [data-experience="expressive"] .matinee-account-lists a.block > div {
+  border-color: hsl(var(--border));
+  border-radius: var(--radius-xl);
+  background: hsl(var(--card));
+  box-shadow: 0 3px 10px hsl(var(--foreground) / 0.07);
+  transition: border-color 180ms ease, box-shadow 180ms ease;
+}
+
+#root [data-experience="expressive"] .matinee-account-lists a.block:hover > div {
+  border-color: hsl(var(--primary) / 0.5);
+  box-shadow: 0 5px 14px hsl(var(--foreground) / 0.1);
+}
+
+#root [data-experience="expressive"] .matinee-account-page > div:first-child > div:first-child h1,
+#root [data-experience="expressive"] .matinee-account-lists > div:first-child > div:first-child h1 {
+  row-gap: 0.4rem;
+}
+
+#root [data-experience="expressive"] .matinee-about > header {
+  border-bottom: 1px solid hsl(var(--primary) / 0.3);
+  padding-bottom: 1rem;
+}
+
+#root [data-experience="expressive"] .matinee-about > header p {
+  color: hsl(var(--muted-foreground));
+}
+
+#root [data-experience="expressive"] .matinee-about > section {
+  border-color: hsl(var(--border));
+  border-radius: var(--radius-2xl);
+  background: hsl(var(--card));
+  box-shadow: 0 4px 12px hsl(var(--foreground) / 0.07);
+}
+
+#root [data-experience="expressive"] .matinee-about > section h2 {
+  color: hsl(var(--foreground));
+  font-weight: 780;
+  letter-spacing: -0.035em;
+}
+
+html[data-experience="expressive"] #root .matinee-account-callback main > div {
+  border-color: hsl(var(--border));
+  border-radius: var(--radius-2xl);
+  background: hsl(var(--card));
+  box-shadow: 0 8px 28px hsl(var(--foreground) / 0.12);
+}
+
+html[data-experience="expressive"] #root .matinee-account-callback main > div h3 {
+  font-size: 1.4rem;
+  font-weight: 780;
+  letter-spacing: -0.035em;
+}
+
+html[data-experience="expressive"] #root .matinee-account-callback [role="alert"] {
+  border-radius: var(--radius-xl);
+}
+
+#root [data-experience="expressive"] .matinee-media-list > div:last-child > nav[aria-label="Pagination"],
+#root [data-experience="expressive"] .matinee-people-list nav[aria-label="Pagination"],
+#root [data-experience="expressive"] .matinee-release-list nav[aria-label="Pagination"],
+#root [data-experience="expressive"] .matinee-account-page nav[aria-label="Pagination"],
+#root [data-experience="expressive"] .matinee-account-lists nav[aria-label="Pagination"] {
+  border-color: hsl(var(--primary) / 0.26);
+}
+
+@media (max-width: 639px) {
+  #root [data-experience="expressive"] .matinee-media-list > div:first-child,
+  #root [data-experience="expressive"] .matinee-people-list > div:first-child {
+    align-items: start;
+  }
+
+  #root [data-experience="expressive"] .matinee-account-page > div:first-child,
+  #root [data-experience="expressive"] .matinee-account-lists > div:first-child {
+    align-items: stretch;
+  }
+}
+
 @media (prefers-reduced-motion: reduce) {
   #root [data-experience="expressive"] button,
   #root [data-experience="expressive"] a,
   #root [data-experience="expressive"] .expressive-media-card,
+  #root [data-experience="expressive"] .matinee-account-lists a.block > div,
   #root [data-experience="expressive"] .matinee-sidebar-link,
   #root [data-experience="expressive"] .matinee-mobile-link,
   #root [data-experience="expressive"] .matinee-feature-skeleton {

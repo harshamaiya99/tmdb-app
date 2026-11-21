@@ -114,7 +114,7 @@ export function AccountPage() {
 
   if (!isConnected || !account) {
     return (
-      <main className="container py-8">
+      <main className="container py-8 matinee-account-page">
         <Card className="mx-auto max-w-xl">
           <CardContent className="space-y-4 p-6">
             <h1 className="text-xl font-semibold">Connect your TMDB account</h1>
@@ -136,7 +136,7 @@ export function AccountPage() {
   }
 
   return (
-    <main className="container space-y-6 py-6">
+    <main className="container space-y-6 py-6 matinee-account-page">
       <div className="flex flex-wrap items-end justify-between gap-4">
         <div>
           <h1 className="text-3xl font-bold tracking-tight">{pageTitle}</h1>
