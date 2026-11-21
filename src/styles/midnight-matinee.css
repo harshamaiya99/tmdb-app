@@ -607,17 +607,19 @@ html[data-experience="expressive"] body {
   gap: 1.15rem;
 }
 
-#root [data-experience="expressive"] .matinee-movie-details .matinee-movie-summary > div:first-child {
-  display: grid;
-  gap: 0.55rem;
-}
+@media (min-width: 768px) {
+  #root [data-experience="expressive"] .matinee-movie-details .matinee-movie-summary > div:first-child {
+    display: grid;
+    gap: 0.55rem;
+  }
 
-#root [data-experience="expressive"] .matinee-movie-details .matinee-movie-summary > div:first-child::before {
-  color: hsl(var(--primary));
-  content: "FEATURE PRESENTATION";
-  font-size: 0.66rem;
-  font-weight: 850;
-  letter-spacing: 0.16em;
+  #root [data-experience="expressive"] .matinee-movie-details .matinee-movie-summary > div:first-child::before {
+    color: hsl(var(--primary));
+    content: "FEATURE PRESENTATION";
+    font-size: 0.66rem;
+    font-weight: 850;
+    letter-spacing: 0.16em;
+  }
 }
 
 #root [data-experience="expressive"] .matinee-movie-details .matinee-movie-metadata {
@@ -771,17 +773,19 @@ html[data-experience="expressive"] body {
   gap: 1.15rem;
 }
 
-#root [data-experience="expressive"] .matinee-tv-details .matinee-tv-summary > div:first-child {
-  display: grid;
-  gap: 0.55rem;
-}
+@media (min-width: 768px) {
+  #root [data-experience="expressive"] .matinee-tv-details .matinee-tv-summary > div:first-child {
+    display: grid;
+    gap: 0.55rem;
+  }
 
-#root [data-experience="expressive"] .matinee-tv-details .matinee-tv-summary > div:first-child::before {
-  color: hsl(var(--primary));
-  content: "SERIES PRESENTATION";
-  font-size: 0.66rem;
-  font-weight: 850;
-  letter-spacing: 0.16em;
+  #root [data-experience="expressive"] .matinee-tv-details .matinee-tv-summary > div:first-child::before {
+    color: hsl(var(--primary));
+    content: "SERIES PRESENTATION";
+    font-size: 0.66rem;
+    font-weight: 850;
+    letter-spacing: 0.16em;
+  }
 }
 
 #root [data-experience="expressive"] .matinee-tv-details .matinee-tv-metadata {
