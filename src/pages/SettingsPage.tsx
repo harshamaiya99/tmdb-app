@@ -176,7 +176,7 @@ export function SettingsPage() {
   ] as const;
 
   return (
-    <div className="settings-page mx-auto max-w-6xl">
+    <div className="settings-page page-settings mx-auto max-w-6xl">
       <div className="grid gap-6 lg:grid-cols-[14rem_minmax(0,1fr)]">
         <nav aria-label="Settings sections" className="settings-navigation min-w-0 lg:sticky lg:top-20 lg:self-start">
           <div className="flex gap-2 overflow-x-auto pb-2 lg:flex-col lg:overflow-visible lg:pb-0">

@@ -257,10 +257,10 @@ export function PersonDetailsPage() {
 
   const personalInfoSection = (
     <div
-      className="matinee-person-info min-w-0 space-y-4 text-sm"
+      className="matinee-person-info person-details-info min-w-0 space-y-4 text-sm"
       style={profileWidth > 0 ? { width: `${profileWidth + profileLeftInset}px` } : undefined}
     >
-      <h2 className="matinee-person-section-title mb-2 font-semibold">Personal Info</h2>
+      <h2 className="matinee-person-section-title person-section-title mb-2 font-semibold">Personal Info</h2>
 
       <div>
         <p className="font-medium">Known For</p>
@@ -328,10 +328,10 @@ export function PersonDetailsPage() {
   const movieCreditsSection = movieCredits.length > 0 && (
     <MediaSection
       title="Movies"
-      titleClassName="matinee-person-section-title"
+      titleClassName="matinee-person-section-title person-section-title"
       items={movieCredits}
       type="movie"
-      className="h-full space-y-4 matinee-person-movie-credits"
+      className="h-full space-y-4 matinee-person-movie-credits person-details-movie-credits"
       horizontalScroll
       horizontalColumns={8}
       compactCharacter
@@ -344,10 +344,10 @@ export function PersonDetailsPage() {
   const tvCreditsSection = tvCredits.length > 0 && (
     <MediaSection
       title="TV Shows"
-      titleClassName="matinee-person-section-title"
+      titleClassName="matinee-person-section-title person-section-title"
       items={tvCredits}
       type="tv"
-      className="space-y-4 matinee-person-tv-credits"
+      className="space-y-4 matinee-person-tv-credits person-details-tv-credits"
       horizontalScroll
       horizontalColumns={10}
       compactCharacter
@@ -363,15 +363,15 @@ export function PersonDetailsPage() {
     : wikimediaQuery.data?.[selectedWikimediaIndex] ?? null;
 
   return (
-    <div className="min-h-screen matinee-person-details">
+    <div className="min-h-screen matinee-person-details person-details">
       <div className="container py-6">
         <div className="matinee-person-content space-y-8">
           <h1 className="matinee-person-mobile-title text-3xl font-bold tracking-tight md:hidden">
             {person.name}
           </h1>
 
-          <div className="matinee-person-hero person-profile-bio-row grid min-w-0 grid-cols-1 items-start gap-4 md:gap-6">
-            <div ref={profileRef} className="matinee-person-profile mx-auto w-full max-w-[180px] md:mx-0 md:max-w-none">
+          <div className="matinee-person-hero person-details-hero person-profile-bio-row grid min-w-0 grid-cols-1 items-start gap-4 md:gap-6">
+            <div ref={profileRef} className="matinee-person-profile person-details-profile mx-auto w-full max-w-[180px] md:mx-0 md:max-w-none">
               {person.profile_path ? (
                 <TMDBImage
                   path={person.profile_path}
@@ -392,14 +392,14 @@ export function PersonDetailsPage() {
 
             <div
               ref={biographyColumnRef}
-              className="matinee-person-biography-column relative min-w-0"
+              className="matinee-person-biography-column person-details-biography-column relative min-w-0"
             >
                 <h1 className="matinee-person-title hidden text-3xl font-bold tracking-tight md:block">
                   {person.name}
                 </h1>
                 {person.biography && (
-                  <div className="matinee-person-biography">
-                    <h2 className="matinee-person-section-title mb-3 font-semibold">Biography</h2>
+                  <div className="matinee-person-biography person-details-biography">
+                    <h2 className="matinee-person-section-title person-section-title mb-3 font-semibold">Biography</h2>
                     <div
                       id="person-biography-content"
                       ref={biographyTextRef}
@@ -444,8 +444,8 @@ export function PersonDetailsPage() {
 
           {galleryImages.length > 0 && (
             <LazySection>
-            <div className="matinee-person-gallery w-full border-t pt-8">
-              <h2 className="matinee-person-section-title mb-6 font-semibold">Gallery</h2>
+            <div className="matinee-person-gallery person-details-gallery w-full border-t pt-8">
+              <h2 className="matinee-person-section-title person-section-title mb-6 font-semibold">Gallery</h2>
               <div className="grid grid-cols-3 gap-3 sm:gap-4 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-8 2xl:grid-cols-10">
                 {galleryImages.map((image, idx) => {
                   return (
@@ -474,9 +474,9 @@ export function PersonDetailsPage() {
 
           {wikimediaQuery.data && wikimediaQuery.data.length > 0 && (
             <LazySection>
-              <section className="matinee-person-wikimedia w-full border-t pt-8" aria-labelledby="wikimedia-gallery-heading">
+              <section className="matinee-person-wikimedia person-details-wikimedia w-full border-t pt-8" aria-labelledby="wikimedia-gallery-heading">
                 <div className="mb-6 flex flex-wrap items-center gap-3">
-                  <h2 id="wikimedia-gallery-heading" className="matinee-person-section-title font-semibold">Wikimedia Commons</h2>
+                  <h2 id="wikimedia-gallery-heading" className="matinee-person-section-title person-section-title font-semibold">Wikimedia Commons</h2>
                   <span className="rounded-full border px-2.5 py-1 text-xs text-muted-foreground">External source</span>
                 </div>
                 <p className="mb-5 text-sm text-muted-foreground">

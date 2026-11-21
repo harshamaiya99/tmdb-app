@@ -42,7 +42,7 @@ export function PeopleListPage() {
   };
 
   return (
-    <main className="container py-4 matinee-people-list">
+    <main className="container py-4 matinee-people-list page-people-list">
       <div className="mb-6 grid grid-cols-[minmax(0,1fr)_auto] items-center gap-x-3 gap-y-3 sm:flex sm:gap-4">
         <h1 className="min-w-0 text-3xl font-bold tracking-tight">People</h1>
         <div className="col-span-2 min-w-0 sm:col-span-1">

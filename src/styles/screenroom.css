@@ -342,13 +342,13 @@ html[data-experience="screenroom"] body {
   .screenroom-mobile-link,
   .screenroom-media-card,
   html[data-experience="screenroom"] main :is(
-    .matinee-account-page,
-    .matinee-account-lists-page,
-    .matinee-settings-page,
-    .matinee-media-list-page,
-    .matinee-people-list-page,
-    .matinee-release-date-page,
-    .matinee-about-page
+    .page-account,
+    .page-account-lists,
+    .page-settings,
+    .page-media-list,
+    .page-people-list,
+    .page-release-list,
+    .page-about
   ) :is(button, a) {
     transition-duration: 0.01ms;
   }
@@ -407,6 +407,15 @@ html[data-experience="screenroom"] [role="dialog"] {
   box-shadow: 0 18px 48px hsl(222 35% 3% / 0.42);
 }
 
+html[data-experience="screenroom"] .account-callback-page > div {
+  border-color: hsl(var(--border));
+  border-radius: var(--radius-2xl);
+  background:
+    radial-gradient(ellipse at 92% 0%, hsl(var(--primary) / 0.1), transparent 42%),
+    hsl(var(--card));
+  box-shadow: 0 12px 30px hsl(var(--foreground) / 0.1);
+}
+
 html[data-experience="screenroom"] main :is(input, select, textarea) {
   border-color: hsl(var(--border));
   background-color: hsl(var(--background));
@@ -417,9 +426,9 @@ html[data-experience="screenroom"] main :is(input, select, textarea):focus-visib
 }
 
 html[data-experience="screenroom"] main :is(
-  .matinee-movie-hero-grid,
-  .matinee-tv-hero-grid,
-  .matinee-person-hero
+  .media-detail-movie-hero,
+  .media-detail-tv-hero,
+  .person-details-hero
 ) {
   border: 1px solid hsl(var(--border));
   border-radius: var(--radius-2xl);
@@ -430,15 +439,15 @@ html[data-experience="screenroom"] main :is(
   padding: clamp(0.75rem, 2.2vw, 1.5rem);
 }
 
-html[data-experience="screenroom"] .matinee-person-details {
+html[data-experience="screenroom"] .person-details {
   --person-hero-inline-padding: clamp(0.75rem, 2.2vw, 1.5rem);
   --person-column-gap: 1.5rem;
 }
 
 html[data-experience="screenroom"] main :is(
-  .matinee-movie-poster-column,
-  .matinee-tv-poster-column,
-  .matinee-person-profile
+  .media-detail-movie-poster,
+  .media-detail-tv-poster,
+  .person-details-profile
 ) > :is(img, [role="img"]) {
   overflow: hidden;
   border: 1px solid hsl(var(--border));
@@ -447,11 +456,11 @@ html[data-experience="screenroom"] main :is(
 }
 
 html[data-experience="screenroom"] main :is(
-  .matinee-movie-summary,
-  .matinee-tv-summary,
-  .matinee-person-info,
-  .matinee-person-movie-credits,
-  .matinee-person-tv-credits
+  .media-detail-movie-summary,
+  .media-detail-tv-summary,
+  .person-details-info,
+  .person-details-movie-credits,
+  .person-details-tv-credits
 ) {
   min-width: 0;
   border: 1px solid hsl(var(--border));
@@ -461,45 +470,45 @@ html[data-experience="screenroom"] main :is(
 }
 
 html[data-experience="screenroom"] main :is(
-  .matinee-movie-metadata,
-  .matinee-tv-metadata
+  .media-detail-movie-metadata,
+  .media-detail-tv-metadata
 ) {
   border-block: 1px solid hsl(var(--border));
   padding-block: 0.75rem;
 }
 
 html[data-experience="screenroom"] main :is(
-  .matinee-movie-genres,
-  .matinee-tv-genres
+  .media-detail-movie-genres,
+  .media-detail-tv-genres
 ) a {
   border-radius: 9999px;
 }
 
 html[data-experience="screenroom"] main :is(
-  .matinee-movie-overview,
-  .matinee-tv-overview,
-  .matinee-person-biography,
-  .matinee-person-gallery,
-  .matinee-person-wikimedia
+  .media-detail-movie-overview,
+  .media-detail-tv-overview,
+  .person-details-biography,
+  .person-details-gallery,
+  .person-details-wikimedia
 ) {
   border-color: hsl(var(--border));
 }
 
 html[data-experience="screenroom"] main :is(
-  .matinee-movie-overview,
-  .matinee-movie-sidebar section,
-  .matinee-movie-companies,
-  .matinee-movie-credits,
-  .matinee-movie-media,
-  .matinee-movie-related,
-  .matinee-tv-overview,
-  .matinee-tv-trailer,
-  .matinee-tv-mobile-trailer,
-  .matinee-tv-companies,
-  .matinee-tv-credits,
-  .matinee-tv-episodes,
-  .matinee-tv-media,
-  .matinee-tv-related
+  .media-detail-movie-overview,
+  .media-detail-movie-sidebar section,
+  .media-detail-movie-companies,
+  .media-detail-movie-credits,
+  .media-detail-movie-media,
+  .media-detail-movie-related,
+  .media-detail-tv-overview,
+  .media-detail-tv-trailer,
+  .media-detail-tv-mobile-trailer,
+  .media-detail-tv-companies,
+  .media-detail-tv-credits,
+  .media-detail-tv-episodes,
+  .media-detail-tv-media,
+  .media-detail-tv-related
 ) {
   border: 1px solid hsl(var(--border));
   border-radius: var(--radius-xl);
@@ -508,27 +517,27 @@ html[data-experience="screenroom"] main :is(
 }
 
 html[data-experience="screenroom"] main :is(
-  .matinee-movie-overview,
-  .matinee-movie-sidebar h2,
-  .matinee-movie-companies h2,
-  .matinee-movie-credits h2,
-  .matinee-movie-media h2,
-  .matinee-movie-related h2,
-  .matinee-tv-overview h2,
-  .matinee-tv-trailer h2,
-  .matinee-tv-mobile-trailer h2,
-  .matinee-tv-companies h2,
-  .matinee-tv-credits h2,
-  .matinee-tv-episodes h2,
-  .matinee-tv-media h2,
-  .matinee-tv-related h2
+  .media-detail-movie-overview,
+  .media-detail-movie-sidebar h2,
+  .media-detail-movie-companies h2,
+  .media-detail-movie-credits h2,
+  .media-detail-movie-media h2,
+  .media-detail-movie-related h2,
+  .media-detail-tv-overview h2,
+  .media-detail-tv-trailer h2,
+  .media-detail-tv-mobile-trailer h2,
+  .media-detail-tv-companies h2,
+  .media-detail-tv-credits h2,
+  .media-detail-tv-episodes h2,
+  .media-detail-tv-media h2,
+  .media-detail-tv-related h2
 ) {
   color: hsl(var(--foreground));
 }
 
 html[data-experience="screenroom"] main :is(
-  .matinee-tv-season-overview,
-  .matinee-tv-ratings
+  .media-detail-tv-season-overview,
+  .media-detail-tv-ratings
 ) {
   border: 1px solid hsl(var(--border));
   border-radius: var(--radius-lg);
@@ -536,62 +545,62 @@ html[data-experience="screenroom"] main :is(
   padding: 1rem;
 }
 
-html[data-experience="screenroom"] main .matinee-tv-episode-grid > div > button {
+html[data-experience="screenroom"] main .media-detail-tv-episode-grid > div > button {
   overflow: hidden;
   border: 1px solid hsl(var(--border));
   border-radius: var(--radius-lg);
   background: hsl(var(--card));
 }
 
-html[data-experience="screenroom"] main .matinee-tv-episode-grid > div > button:hover {
+html[data-experience="screenroom"] main .media-detail-tv-episode-grid > div > button:hover {
   border-color: hsl(var(--primary) / 0.65);
 }
 
 html[data-experience="screenroom"] main :is(
-  .matinee-person-info,
-  .matinee-person-biography,
-  .matinee-person-gallery,
-  .matinee-person-wikimedia
+  .person-details-info,
+  .person-details-biography,
+  .person-details-gallery,
+  .person-details-wikimedia
 ) h2 {
   font-size: 1.2rem;
 }
 
-html[data-experience="screenroom"] .matinee-person-details .matinee-person-section-title {
+html[data-experience="screenroom"] .person-details .person-section-title {
   font-size: var(--person-section-title-size);
 }
 
 html[data-experience="screenroom"] main :is(
-  .matinee-account-page,
-  .matinee-account-lists-page,
-  .matinee-settings-page,
-  .matinee-media-list-page,
-  .matinee-people-list-page,
-  .matinee-release-date-page,
-  .matinee-about-page
+  .page-account,
+  .page-account-lists,
+  .page-settings,
+  .page-media-list,
+  .page-people-list,
+  .page-release-list,
+  .page-about
 ) {
   min-width: 0;
 }
 
 html[data-experience="screenroom"] .screenroom-shell main :is(
-  .matinee-account-page,
-  .matinee-account-lists-page,
-  .matinee-settings-page,
-  .matinee-media-list-page,
-  .matinee-people-list-page,
-  .matinee-release-date-page,
-  .matinee-about-page
+  .page-account,
+  .page-account-lists,
+  .page-settings,
+  .page-media-list,
+  .page-people-list,
+  .page-release-list,
+  .page-about
 ) :is(button, a) {
   transition: color 160ms ease, background-color 160ms ease, border-color 160ms ease;
 }
 
 html[data-experience="screenroom"] .screenroom-shell main :is(
-  .matinee-account-page,
-  .matinee-account-lists-page,
-  .matinee-settings-page,
-  .matinee-media-list-page,
-  .matinee-people-list-page,
-  .matinee-release-date-page,
-  .matinee-about-page
+  .page-account,
+  .page-account-lists,
+  .page-settings,
+  .page-media-list,
+  .page-people-list,
+  .page-release-list,
+  .page-about
 ) :is(button, a):focus-visible {
   outline: 2px solid hsl(var(--ring));
   outline-offset: 2px;
@@ -599,9 +608,9 @@ html[data-experience="screenroom"] .screenroom-shell main :is(
 
 @media (max-width: 639px) {
   html[data-experience="screenroom"] .screenroom-shell main :is(
-    .matinee-movie-hero-grid,
-    .matinee-tv-hero-grid,
-    .matinee-person-hero
+    .media-detail-movie-hero,
+    .media-detail-tv-hero,
+    .person-details-hero
   ) {
     border-radius: var(--radius-xl);
     padding: 0.75rem;

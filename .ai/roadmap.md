@@ -309,6 +309,23 @@ This roadmap is intentionally focused on the current project reality: a local An
 
 The experience preference foundation is implemented: Studio (stable value `cinema`) is the validated fallback/default, and Settings can switch immediately to browser-persisted Midnight Matinee (`expressive`) or Screenroom (`screenroom`), independent of light/dark mode. Settings use a section navigator for appearance, embed links, and content country. Each experience has its own shell: Studio keeps the standard navigation, Midnight Matinee has a desktop library sidebar and mobile bottom navigation, and Screenroom has its own streaming-style header/navigation. Midnight Matinee has distinct home/search, movie/TV/person detail, media and people list, release-date, account, and information-page styling; Screenroom has a coordinated visual treatment across home/search, detail, browse/list, release-date, account, settings, information, and authorization callback screens. All presentations share TMDB query orchestration, account context, service layer, and behavior, and retain Watch Tower branding in the shared footer. Further experience-specific refinements remain optional follow-up work.
 
+### Current route and parity snapshot
+
+| Surface | Studio | Midnight Matinee | Screenroom |
+|---|---|---|---|
+| Shell and navigation | Standard responsive shell | Editorial desktop sidebar and mobile bottom navigation | Streaming-style responsive header and navigation |
+| Home and search | Studio presentation | Distinct feature/search composition | Distinct hero/search composition |
+| Movie, TV, and person details | Shared routes and data behavior | Distinct detail styling and responsive layouts | Experience styling over the shared detail-page structure |
+| TV episode details | Episode selection/details within the TV page; no separate route | Same shared behavior | Same shared behavior |
+| Media, people, and release lists | Shared routes and behavior | Distinct list styling | Experience styling over shared list pages |
+| Account pages and custom lists | Shared account behavior | Distinct account styling | Experience styling over shared account pages |
+| Settings and About | Shared page behavior | Experience-specific styling | Experience styling over shared pages |
+| TMDB authorization callback | Callback page in Studio shell | Callback page in Midnight Matinee shell | Callback page in Screenroom shell |
+
+This is a route/presentation inventory, not evidence of exhaustive visual or interaction parity. App-level smoke tests now cover the About route, disconnected account state, and TMDB callback in all three shells; focused tests also cover experience switching, both custom home/search presentations, shared account actions, and Settings behavior. Movie, TV, person, media-list, people-list, and release routes still need comparable all-experience smoke coverage. The callback now uses the selected experience shell while retaining the same authorization messaging and destination. Screenroom's shared detail and secondary-page styles now target presentation-neutral `media-detail-*`, `person-details-*`, and `page-*` hooks rather than Midnight Matinee's `matinee-*` classes.
+
+**Recommended next slice:** extend the route smoke coverage to movie, TV, person, browse, and release pages in all experiences, with mocked TMDB responses and assertions for the rendered content and key actions. Then exercise the touched routes at narrow mobile and desktop widths in both color modes. Keep this incremental; do not make complete feature parity a prerequisite for design exploration.
+
 ### Fit with the current application
 
 The app already has a small shared foundation that should remain the source of truth:

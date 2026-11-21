@@ -55,7 +55,7 @@ function App() {
                     <Route path="/" element={<Layout><HomePage /></Layout>} />
                     <Route path="/about" element={<Layout><AboutPage /></Layout>} />
                     <Route path="/settings" element={<Layout><SettingsPage /></Layout>} />
-                    <Route path="/account/callback" element={<AccountCallbackPage />} />
+                    <Route path="/account/callback" element={<Layout><AccountCallbackPage /></Layout>} />
                     <Route path="/account" element={<Navigate to="/account/watchlist" replace />} />
                     <Route path="/account/lists" element={<Layout><AccountListsPage /></Layout>} />
                     <Route path="/account/lists/:listId" element={<Layout><AccountListsPage /></Layout>} />

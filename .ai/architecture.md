@@ -65,7 +65,7 @@ Routing is defined in [src/App.tsx](src/App.tsx) with React Router's `HashRouter
 
 - Public and account routes are available without a personal API key; disconnected account pages offer TMDB authorization.
 - The app uses a catch-all redirect back to `/` for unknown routes.
-- The layout shell remains consistent across most pages through the shared layout wrapper.
+- [src/components/Layout.tsx](../src/components/Layout.tsx) selects the active experience shell for routed pages, including the TMDB authorization callback.
 
 ## 4. API Layer
 
@@ -124,7 +124,7 @@ Pages live in [src/pages](src/pages):
 - [src/pages/PeopleListPage.tsx](src/pages/PeopleListPage.tsx) — shows a list of people results
 - [src/pages/AccountPage.tsx](src/pages/AccountPage.tsx) — displays and manages the connected account's movie and TV lists
 - [src/pages/AccountListsPage.tsx](src/pages/AccountListsPage.tsx) — browses, displays, and manages mixed-media TMDB custom lists
-- [src/pages/AccountCallbackPage.tsx](src/pages/AccountCallbackPage.tsx) — completes TMDB v3 account and v4 custom-list consent flows
+- [src/pages/AccountCallbackPage.tsx](src/pages/AccountCallbackPage.tsx) — displays the secure TMDB authorization return status inside the selected experience shell
 - [src/pages/AboutPage.tsx](src/pages/AboutPage.tsx) — displays application information and required TMDB attribution
 
 ### Shared feature components

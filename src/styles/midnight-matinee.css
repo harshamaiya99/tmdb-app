@@ -1599,20 +1599,20 @@ html[data-experience="expressive"] [role="menu"] [role="separator"] {
   letter-spacing: -0.035em;
 }
 
-html[data-experience="expressive"] #root .matinee-account-callback main > div {
+html[data-experience="expressive"] #root .account-callback-page > div {
   border-color: hsl(var(--border));
   border-radius: var(--radius-2xl);
   background: hsl(var(--card));
   box-shadow: 0 8px 28px hsl(var(--foreground) / 0.12);
 }
 
-html[data-experience="expressive"] #root .matinee-account-callback main > div h3 {
+html[data-experience="expressive"] #root .account-callback-page > div h3 {
   font-size: 1.4rem;
   font-weight: 780;
   letter-spacing: -0.035em;
 }
 
-html[data-experience="expressive"] #root .matinee-account-callback [role="alert"] {
+html[data-experience="expressive"] #root .account-callback-page [role="alert"] {
   border-radius: var(--radius-xl);
 }
 

@@ -42,7 +42,7 @@ export function ReleaseDateMoviesPage() {
   };
 
   return (
-    <main className="container py-6 matinee-release-list">
+    <main className="container py-6 matinee-release-list page-release-list">
       <h1 className="mb-6 text-3xl font-bold tracking-tight">{title}</h1>
 
       {!validDate ? (
