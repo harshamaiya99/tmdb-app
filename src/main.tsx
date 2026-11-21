@@ -2,6 +2,10 @@ import React from 'react'
 import ReactDOM from 'react-dom/client'
 import App from './App.tsx'
 import './index.css'
+// Load experience styles after shared foundations so scoped rules retain precedence.
+import './styles/studio.css'
+import './styles/midnight-matinee.css'
+import './styles/screenroom.css'
 
 if (import.meta.env.PROD && 'serviceWorker' in navigator) {
   window.addEventListener('load', () => {

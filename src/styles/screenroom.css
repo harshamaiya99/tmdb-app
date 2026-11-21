@@ -1,0 +1,609 @@
+/* Screenroom experience styles. */
+
+html[data-experience="screenroom"] {
+  --radius: 0.65rem;
+  --radius-sm: calc(var(--radius) * 0.6);
+  --radius-md: calc(var(--radius) * 0.8);
+  --radius-lg: var(--radius);
+  --radius-xl: calc(var(--radius) * 1.25);
+  --radius-2xl: calc(var(--radius) * 1.6);
+  --radius-3xl: calc(var(--radius) * 2);
+  --background: 220 20% 96%;
+  --foreground: 223 25% 12%;
+  --card: 0 0% 100%;
+  --card-foreground: 223 25% 12%;
+  --popover: 0 0% 100%;
+  --popover-foreground: 223 25% 12%;
+  --primary: 28 91% 46%;
+  --primary-foreground: 0 0% 100%;
+  --secondary: 216 18% 90%;
+  --secondary-foreground: 223 25% 18%;
+  --muted: 216 18% 91%;
+  --muted-foreground: 220 10% 40%;
+  --accent: 196 80% 42%;
+  --accent-foreground: 0 0% 100%;
+  --destructive: 0 70% 48%;
+  --destructive-foreground: 0 0% 98%;
+  --border: 220 14% 82%;
+  --input: 220 14% 78%;
+  --ring: 28 91% 46%;
+}
+
+html.dark[data-experience="screenroom"] {
+  --background: 222 24% 7%;
+  --foreground: 220 16% 94%;
+  --card: 222 20% 11%;
+  --card-foreground: 220 16% 94%;
+  --popover: 222 20% 12%;
+  --popover-foreground: 220 16% 94%;
+  --primary: 31 94% 60%;
+  --primary-foreground: 222 28% 9%;
+  --secondary: 222 17% 16%;
+  --secondary-foreground: 220 16% 92%;
+  --muted: 222 17% 15%;
+  --muted-foreground: 220 10% 68%;
+  --accent: 195 78% 47%;
+  --accent-foreground: 222 30% 8%;
+  --destructive: 0 62% 48%;
+  --destructive-foreground: 0 0% 98%;
+  --border: 222 14% 23%;
+  --input: 222 14% 25%;
+  --ring: 31 94% 60%;
+}
+
+html[data-experience="screenroom"] body {
+  font-family: 'Inter', -apple-system, BlinkMacSystemFont, system-ui, sans-serif;
+}
+
+.screenroom-header {
+  border-color: hsl(var(--border));
+  background-color: hsl(var(--background) / 0.96);
+  box-shadow: 0 4px 18px hsl(var(--foreground) / 0.08);
+  backdrop-filter: blur(14px);
+}
+
+.screenroom-brand {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.6rem;
+  color: hsl(var(--foreground));
+  font-size: 0.9rem;
+  font-weight: 850;
+  letter-spacing: 0.12em;
+}
+
+.screenroom-brand-mark {
+  display: grid;
+  width: 2.25rem;
+  height: 2.25rem;
+  place-items: center;
+  border-radius: var(--radius-md);
+  background: hsl(var(--primary));
+  color: hsl(var(--primary-foreground));
+}
+
+.screenroom-nav-link,
+.screenroom-mobile-link {
+  display: inline-flex;
+  min-height: 2.5rem;
+  align-items: center;
+  gap: 0.5rem;
+  border-radius: var(--radius-md);
+  padding: 0.55rem 0.75rem;
+  color: hsl(var(--muted-foreground));
+  font-size: 0.82rem;
+  font-weight: 650;
+  white-space: nowrap;
+  transition: color 160ms ease, background-color 160ms ease;
+}
+
+.screenroom-nav-link:hover,
+.screenroom-nav-link.is-active,
+.screenroom-mobile-link:hover,
+.screenroom-mobile-link.is-active {
+  background: hsl(var(--secondary));
+  color: hsl(var(--foreground));
+}
+
+.screenroom-search-control {
+  min-width: 0;
+  overflow: hidden;
+  border: 1px solid hsl(var(--input));
+  border-radius: var(--radius-lg);
+  background: hsl(var(--card));
+}
+
+.screenroom-search-control:focus-within {
+  border-color: hsl(var(--ring));
+  box-shadow: 0 0 0 2px hsl(var(--ring) / 0.18);
+}
+
+.screenroom-account-trigger {
+  border-color: hsl(var(--border));
+  background: hsl(var(--card));
+}
+
+.screenroom-hero {
+  position: relative;
+  display: flex;
+  min-height: clamp(24rem, 48vw, 36rem);
+  align-items: flex-end;
+  overflow: hidden;
+  isolation: isolate;
+  border: 1px solid hsl(var(--border));
+  border-radius: var(--radius-2xl);
+  background: #10131b;
+  box-shadow: 0 12px 30px hsl(var(--foreground) / 0.16);
+}
+
+.screenroom-hero-backdrop,
+.screenroom-hero-backdrop-fallback,
+.screenroom-hero-shade {
+  position: absolute;
+  inset: 0;
+  z-index: -1;
+  height: 100%;
+  width: 100%;
+}
+
+.screenroom-hero-backdrop {
+  object-fit: cover;
+  object-position: center 30%;
+}
+
+.screenroom-hero-backdrop-fallback {
+  background:
+    radial-gradient(ellipse at 70% 30%, hsl(var(--accent) / 0.34), transparent 55%),
+    linear-gradient(125deg, #151923, #252533);
+}
+
+.screenroom-hero-shade {
+  background: linear-gradient(90deg, rgb(8 10 15 / 0.96) 0%, rgb(8 10 15 / 0.82) 38%, rgb(8 10 15 / 0.12) 100%),
+    linear-gradient(0deg, rgb(8 10 15 / 0.42), transparent 55%);
+}
+
+.screenroom-hero-content {
+  display: flex;
+  width: min(100%, 46rem);
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 0.8rem;
+  padding: clamp(1.25rem, 4vw, 3.25rem);
+  color: #fff;
+}
+
+.screenroom-eyebrow,
+.screenroom-page-heading > p {
+  color: hsl(var(--primary));
+  font-size: 0.72rem;
+  font-weight: 800;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+}
+
+.screenroom-hero-content h1 {
+  max-width: 14ch;
+  color: #fff;
+  font-size: clamp(2.4rem, 6vw, 4.75rem);
+  font-weight: 850;
+  letter-spacing: -0.055em;
+  line-height: 0.98;
+  text-wrap: balance;
+}
+
+.screenroom-hero-meta {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.8rem;
+  color: rgb(255 255 255 / 0.84);
+  font-size: 0.88rem;
+  font-weight: 650;
+}
+
+.screenroom-hero-meta span {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.3rem;
+}
+
+.screenroom-hero-meta span:first-child {
+  color: hsl(var(--primary));
+}
+
+.screenroom-hero-genres {
+  color: rgb(255 255 255 / 0.88);
+  font-size: 0.85rem;
+  font-weight: 650;
+}
+
+.screenroom-hero-overview {
+  display: -webkit-box;
+  max-width: 42rem;
+  overflow: hidden;
+  color: rgb(255 255 255 / 0.8);
+  font-size: 0.95rem;
+  line-height: 1.65;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 3;
+}
+
+.screenroom-trailer-button {
+  border-color: rgb(255 255 255 / 0.45);
+  background: rgb(10 12 17 / 0.48);
+  color: #fff;
+}
+
+.screenroom-trailer-button:hover {
+  background: rgb(10 12 17 / 0.72);
+  color: #fff;
+}
+
+.screenroom-hero [aria-label="TMDB account actions"] button {
+  border-color: rgb(255 255 255 / 0.5);
+  background: rgb(10 12 17 / 0.5);
+  color: #fff;
+}
+
+.screenroom-hero-skeleton {
+  min-height: clamp(24rem, 48vw, 36rem);
+  border-radius: var(--radius-2xl);
+  background: hsl(var(--muted));
+  animation: screenroom-pulse 1.6s ease-in-out infinite;
+}
+
+@keyframes screenroom-pulse {
+  50% { opacity: 0.55; }
+}
+
+.screenroom-home .media-section > div:first-child {
+  border-bottom: 1px solid hsl(var(--border));
+  padding-bottom: 0.75rem;
+}
+
+.screenroom-home .media-section > div:first-child h2,
+.screenroom-search-section > h2 {
+  font-size: 1.45rem;
+  font-weight: 750;
+  letter-spacing: -0.035em;
+}
+
+.screenroom-home .screenroom-search-results > div:first-child {
+  display: none;
+}
+
+.screenroom-search-section {
+  min-width: 0;
+}
+
+.screenroom-search-section > h2 {
+  margin-bottom: 0.9rem;
+}
+
+.screenroom-page-heading h1 {
+  margin-top: 0.35rem;
+  font-size: clamp(1.8rem, 4vw, 2.75rem);
+  font-weight: 800;
+  letter-spacing: -0.045em;
+}
+
+.screenroom-media-card {
+  border-color: hsl(var(--border));
+  border-radius: var(--radius-lg);
+  background: hsl(var(--card));
+  box-shadow: 0 3px 12px hsl(var(--foreground) / 0.08);
+  transition: border-color 160ms ease, box-shadow 160ms ease;
+}
+
+.screenroom-media-card:hover {
+  border-color: hsl(var(--primary) / 0.7);
+  box-shadow: 0 7px 18px hsl(var(--foreground) / 0.14);
+}
+
+.screenroom-media-card [data-media-card-poster] {
+  border-radius: calc(var(--radius-lg) - var(--border-inset));
+  margin: var(--border-inset) var(--border-inset) 0;
+}
+
+.screenroom-mobile-navigation {
+  scrollbar-width: none;
+}
+
+@media (max-width: 639px) {
+  .screenroom-header-main {
+    flex-wrap: wrap;
+    gap: 0.5rem 0.75rem;
+  }
+
+  .screenroom-header-main > .screenroom-search-form {
+    order: 2;
+    flex-basis: 100%;
+  }
+
+  .screenroom-hero {
+    min-height: 29rem;
+  }
+
+  .screenroom-hero-shade {
+    background: linear-gradient(0deg, rgb(8 10 15 / 0.97) 0%, rgb(8 10 15 / 0.8) 44%, rgb(8 10 15 / 0.12) 100%);
+  }
+
+  .screenroom-hero-backdrop {
+    object-position: 58% top;
+  }
+
+  .screenroom-hero-content {
+    gap: 0.7rem;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .screenroom-nav-link,
+  .screenroom-mobile-link,
+  .screenroom-media-card,
+  html[data-experience="screenroom"] main :is(
+    .matinee-account-page,
+    .matinee-account-lists-page,
+    .matinee-settings-page,
+    .matinee-media-list-page,
+    .matinee-people-list-page,
+    .matinee-release-date-page,
+    .matinee-about-page
+  ) :is(button, a) {
+    transition-duration: 0.01ms;
+  }
+
+  .screenroom-hero-skeleton {
+    animation: none;
+  }
+}
+
+html[data-experience="screenroom"] main {
+  min-width: 0;
+  color: hsl(var(--foreground));
+}
+
+html[data-experience="screenroom"] main h1 {
+  color: hsl(var(--foreground));
+  font-size: clamp(1.9rem, 4vw, 3rem);
+  font-weight: 820;
+  letter-spacing: -0.05em;
+  line-height: 1.05;
+  text-wrap: balance;
+}
+
+html[data-experience="screenroom"] main h2 {
+  color: hsl(var(--foreground));
+  font-weight: 760;
+  letter-spacing: -0.035em;
+  text-wrap: balance;
+}
+
+html[data-experience="screenroom"] main .media-section > div:first-child {
+  border-bottom: 1px solid hsl(var(--border));
+  padding-bottom: 0.75rem;
+}
+
+html[data-experience="screenroom"] main .media-section > div:first-child h2 {
+  font-size: 1.4rem;
+}
+
+html[data-experience="screenroom"] main .media-section > div:first-child a {
+  color: hsl(var(--primary));
+  font-size: 0.8rem;
+  font-weight: 700;
+}
+
+html[data-experience="screenroom"] main div.rounded-lg.border:not(.screenroom-media-card) {
+  border-color: hsl(var(--border));
+  background-color: hsl(var(--card));
+  box-shadow: 0 5px 18px hsl(var(--foreground) / 0.06);
+}
+
+html[data-experience="screenroom"] [role="dialog"] {
+  border-color: hsl(var(--border));
+  border-radius: var(--radius-xl);
+  background-color: hsl(var(--card));
+  box-shadow: 0 18px 48px hsl(222 35% 3% / 0.42);
+}
+
+html[data-experience="screenroom"] main :is(input, select, textarea) {
+  border-color: hsl(var(--border));
+  background-color: hsl(var(--background));
+}
+
+html[data-experience="screenroom"] main :is(input, select, textarea):focus-visible {
+  outline-color: hsl(var(--ring));
+}
+
+html[data-experience="screenroom"] main :is(
+  .matinee-movie-hero-grid,
+  .matinee-tv-hero-grid,
+  .matinee-person-hero
+) {
+  border: 1px solid hsl(var(--border));
+  border-radius: var(--radius-2xl);
+  background:
+    radial-gradient(ellipse at 92% 0%, hsl(var(--primary) / 0.12), transparent 42%),
+    linear-gradient(145deg, hsl(var(--card)), hsl(var(--background)));
+  box-shadow: 0 12px 30px hsl(var(--foreground) / 0.08);
+  padding: clamp(0.75rem, 2.2vw, 1.5rem);
+}
+
+html[data-experience="screenroom"] .matinee-person-details {
+  --person-hero-inline-padding: clamp(0.75rem, 2.2vw, 1.5rem);
+  --person-column-gap: 1.5rem;
+}
+
+html[data-experience="screenroom"] main :is(
+  .matinee-movie-poster-column,
+  .matinee-tv-poster-column,
+  .matinee-person-profile
+) > :is(img, [role="img"]) {
+  overflow: hidden;
+  border: 1px solid hsl(var(--border));
+  border-radius: var(--radius-xl);
+  box-shadow: 0 10px 24px hsl(var(--foreground) / 0.18);
+}
+
+html[data-experience="screenroom"] main :is(
+  .matinee-movie-summary,
+  .matinee-tv-summary,
+  .matinee-person-info,
+  .matinee-person-movie-credits,
+  .matinee-person-tv-credits
+) {
+  min-width: 0;
+  border: 1px solid hsl(var(--border));
+  border-radius: var(--radius-xl);
+  background: hsl(var(--card) / 0.82);
+  padding: clamp(0.75rem, 1.8vw, 1.25rem);
+}
+
+html[data-experience="screenroom"] main :is(
+  .matinee-movie-metadata,
+  .matinee-tv-metadata
+) {
+  border-block: 1px solid hsl(var(--border));
+  padding-block: 0.75rem;
+}
+
+html[data-experience="screenroom"] main :is(
+  .matinee-movie-genres,
+  .matinee-tv-genres
+) a {
+  border-radius: 9999px;
+}
+
+html[data-experience="screenroom"] main :is(
+  .matinee-movie-overview,
+  .matinee-tv-overview,
+  .matinee-person-biography,
+  .matinee-person-gallery,
+  .matinee-person-wikimedia
+) {
+  border-color: hsl(var(--border));
+}
+
+html[data-experience="screenroom"] main :is(
+  .matinee-movie-overview,
+  .matinee-movie-sidebar section,
+  .matinee-movie-companies,
+  .matinee-movie-credits,
+  .matinee-movie-media,
+  .matinee-movie-related,
+  .matinee-tv-overview,
+  .matinee-tv-trailer,
+  .matinee-tv-mobile-trailer,
+  .matinee-tv-companies,
+  .matinee-tv-credits,
+  .matinee-tv-episodes,
+  .matinee-tv-media,
+  .matinee-tv-related
+) {
+  border: 1px solid hsl(var(--border));
+  border-radius: var(--radius-xl);
+  background: hsl(var(--card) / 0.72);
+  padding: clamp(0.75rem, 1.8vw, 1.25rem);
+}
+
+html[data-experience="screenroom"] main :is(
+  .matinee-movie-overview,
+  .matinee-movie-sidebar h2,
+  .matinee-movie-companies h2,
+  .matinee-movie-credits h2,
+  .matinee-movie-media h2,
+  .matinee-movie-related h2,
+  .matinee-tv-overview h2,
+  .matinee-tv-trailer h2,
+  .matinee-tv-mobile-trailer h2,
+  .matinee-tv-companies h2,
+  .matinee-tv-credits h2,
+  .matinee-tv-episodes h2,
+  .matinee-tv-media h2,
+  .matinee-tv-related h2
+) {
+  color: hsl(var(--foreground));
+}
+
+html[data-experience="screenroom"] main :is(
+  .matinee-tv-season-overview,
+  .matinee-tv-ratings
+) {
+  border: 1px solid hsl(var(--border));
+  border-radius: var(--radius-lg);
+  background: hsl(var(--background) / 0.62);
+  padding: 1rem;
+}
+
+html[data-experience="screenroom"] main .matinee-tv-episode-grid > div > button {
+  overflow: hidden;
+  border: 1px solid hsl(var(--border));
+  border-radius: var(--radius-lg);
+  background: hsl(var(--card));
+}
+
+html[data-experience="screenroom"] main .matinee-tv-episode-grid > div > button:hover {
+  border-color: hsl(var(--primary) / 0.65);
+}
+
+html[data-experience="screenroom"] main :is(
+  .matinee-person-info,
+  .matinee-person-biography,
+  .matinee-person-gallery,
+  .matinee-person-wikimedia
+) h2 {
+  font-size: 1.2rem;
+}
+
+html[data-experience="screenroom"] .matinee-person-details .matinee-person-section-title {
+  font-size: var(--person-section-title-size);
+}
+
+html[data-experience="screenroom"] main :is(
+  .matinee-account-page,
+  .matinee-account-lists-page,
+  .matinee-settings-page,
+  .matinee-media-list-page,
+  .matinee-people-list-page,
+  .matinee-release-date-page,
+  .matinee-about-page
+) {
+  min-width: 0;
+}
+
+html[data-experience="screenroom"] .screenroom-shell main :is(
+  .matinee-account-page,
+  .matinee-account-lists-page,
+  .matinee-settings-page,
+  .matinee-media-list-page,
+  .matinee-people-list-page,
+  .matinee-release-date-page,
+  .matinee-about-page
+) :is(button, a) {
+  transition: color 160ms ease, background-color 160ms ease, border-color 160ms ease;
+}
+
+html[data-experience="screenroom"] .screenroom-shell main :is(
+  .matinee-account-page,
+  .matinee-account-lists-page,
+  .matinee-settings-page,
+  .matinee-media-list-page,
+  .matinee-people-list-page,
+  .matinee-release-date-page,
+  .matinee-about-page
+) :is(button, a):focus-visible {
+  outline: 2px solid hsl(var(--ring));
+  outline-offset: 2px;
+}
+
+@media (max-width: 639px) {
+  html[data-experience="screenroom"] .screenroom-shell main :is(
+    .matinee-movie-hero-grid,
+    .matinee-tv-hero-grid,
+    .matinee-person-hero
+  ) {
+    border-radius: var(--radius-xl);
+    padding: 0.75rem;
+  }
+}

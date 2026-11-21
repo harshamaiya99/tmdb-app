@@ -20,7 +20,7 @@ The UI is designed to feel:
 
 ### Color system
 
-The app uses a semantic design-token approach through CSS variables defined in [src/index.css](src/index.css).
+The app uses a semantic design-token approach through CSS variables defined in [src/index.css](src/index.css). Shared foundations and fallback light/dark tokens live in that entry stylesheet; Studio, Midnight Matinee, and Screenroom presentation and palette overrides live in [src/styles/studio.css](../src/styles/studio.css), [src/styles/midnight-matinee.css](../src/styles/midnight-matinee.css), and [src/styles/screenroom.css](../src/styles/screenroom.css), respectively. Studio is a first-class experience: its neutral appearance intentionally uses the shared default tokens, while Studio-specific identity and presentation belong in `studio.css`. `src/main.tsx` imports all experience stylesheets after the shared stylesheet so scoped rules retain their intended cascade. Keep experience-specific components/layout styling in their corresponding stylesheet.
 
 Core tokens include:
 
@@ -89,7 +89,7 @@ These components are built as thin abstractions over Tailwind classes and semant
 
 Use the shared Radix Select primitive for option pickers throughout the app instead of native `<select>` controls. This keeps menus visually consistent across browsers and themes while preserving keyboard navigation and accessible combobox/listbox semantics. Reserve Radix Dropdown Menu for action menus.
 
-The authenticated `/settings` page keeps content country, embed links, and appearance in separate sections. Country options are loaded from TMDB configuration; the selected country and embed links are saved in browser storage. Theme selection updates the shared theme state immediately.
+The authenticated `/settings` page keeps content country, embed links, and appearance in separate sections. Its section navigation is a left sidebar on desktop and a horizontally scrollable row on narrow screens across all experiences. Country options are loaded from TMDB configuration; the selected country and embed links are saved in browser storage. Theme selection updates the shared theme state immediately.
 
 ### Component conventions
 

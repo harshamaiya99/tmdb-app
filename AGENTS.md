@@ -58,7 +58,10 @@ The app is organized around a few clear layers:
 - [src/contexts](src/contexts) – context providers such as title state
 - [src/hooks](src/hooks) – custom hooks, including page-title synchronization
 - [src/lib](src/lib) – TMDB API integration and helper utilities
-- [src/styles](src/styles) – styling assets if introduced later
+- [src/index.css](src/index.css) – Tailwind layers, shared component styles, and semantic theme tokens
+- [src/styles/studio.css](src/styles/studio.css) – scoped Studio presentation
+- [src/styles/midnight-matinee.css](src/styles/midnight-matinee.css) – scoped Midnight Matinee presentation
+- [src/styles/screenroom.css](src/styles/screenroom.css) – scoped Screenroom presentation
 
 ## Architectural Decision Framework
 

@@ -158,9 +158,13 @@ The site can be installed as an app from supported browsers when served over HTT
 │   └── watch-tower_text.png                 # Brand wordmark used in the app header
 ├── src/
 │   ├── App.tsx                             # App routes and global providers
-│   ├── index.css                           # Tailwind layers, shared styles, and theme variables
+│   ├── index.css                           # Tailwind layers, shared styles, and semantic theme tokens
 │   ├── main.tsx                            # React application entry point
 │   ├── vite-env.d.ts                       # Vite environment declarations
+│   ├── styles/
+│   │   ├── studio.css                      # Scoped Studio presentation
+│   │   ├── midnight-matinee.css            # Scoped Midnight Matinee presentation
+│   │   └── screenroom.css                  # Scoped Screenroom presentation
 │   ├── components/
 │   │   ├── AccountMediaActions.tsx         # Shared account actions for media pages
 │   │   ├── AddToListButton.tsx              # Add media to a user-managed TMDB list

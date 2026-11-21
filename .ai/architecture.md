@@ -187,6 +187,8 @@ Example:
 
 The application uses Tailwind CSS for layout and styling, with reusable primitives in [src/components/ui](src/components/ui).
 
+Shared Tailwind layers, fallback semantic color/radius tokens, and presentation-neutral component styles are defined in [src/index.css](../src/index.css). Studio, Midnight Matinee, and Screenroom presentation is kept in [src/styles/studio.css](../src/styles/studio.css), [src/styles/midnight-matinee.css](../src/styles/midnight-matinee.css), and [src/styles/screenroom.css](../src/styles/screenroom.css), imported after the shared stylesheet from [src/main.tsx](../src/main.tsx). Studio is a first-class experience whose neutral palette intentionally uses the shared default light/dark tokens; the other experiences override palette and radius tokens in their own scoped stylesheets. Keep experience-specific selectors scoped and preserve import order so visual rules do not leak across experiences.
+
 Common patterns include:
 
 - cards with hover states
